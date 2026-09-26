@@ -1,0 +1,408 @@
+<title>Clay or Ink</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,500;0,700;1,500&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --ground:#F4F5F2; --paper:#FBFBF9; --ink:#1D2321; --muted:#5A635F; --rule:#D8DCD7;
+  --clay:#8A5A2B; --clay-wash:#F0E6DA; --iron:#2F4E6B; --iron-wash:#DFE7EE;
+  --go:#2F6B45; --stop:#9B3B2E; --note:#7A6420;
+  --display:"Spectral", Georgia, "Times New Roman", serif;
+  --body:"Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --ground:#131715; --paper:#1A1F1C; --ink:#E4E8E4; --muted:#9BA49F; --rule:#2E3531;
+    --clay:#D9A06A; --clay-wash:#2B231B; --iron:#93B4D3; --iron-wash:#1D2630;
+    --go:#7CC495; --stop:#E58D7F; --note:#D9C27A;
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#131715; --paper:#1A1F1C; --ink:#E4E8E4; --muted:#9BA49F; --rule:#2E3531;
+  --clay:#D9A06A; --clay-wash:#2B231B; --iron:#93B4D3; --iron-wash:#1D2630;
+  --go:#7CC495; --stop:#E58D7F; --note:#D9C27A;
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font:17px/1.6 var(--body);margin:0;padding-inline:20px;padding-block:0 80px}
+.wrap{max-width:820px;margin:0 auto}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:clamp(2.4rem,6vw,3.6rem);font-weight:700;letter-spacing:-.01em}
+h2{font-size:2rem;font-weight:700}
+h3{font-size:1.3rem;font-weight:700;margin-top:2.2rem}
+p{margin:0}
+.flow>*+*{margin-top:1rem}
+a{color:inherit;text-decoration-color:var(--muted);text-underline-offset:3px}
+a:hover{text-decoration-color:currentColor}
+a:focus-visible{outline:2px solid var(--iron);outline-offset:2px}
+.label{font:600 .72rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:.86em}
+header{padding-block:64px 36px;border-bottom:1px solid var(--rule)}
+header .lede{font-size:1.2rem;color:var(--muted);max-width:62ch;margin-top:1rem}
+header .meta{display:flex;flex-wrap:wrap;gap:8px 24px;margin-top:1.5rem}
+nav.toc{display:flex;flex-wrap:wrap;gap:8px;padding-block:18px;border-bottom:1px solid var(--rule)}
+nav.toc a{font:600 .85rem/1 var(--body);padding:8px 12px;border:1px solid var(--rule);border-radius:4px;text-decoration:none;background:var(--paper)}
+nav.toc a:hover{border-color:var(--muted)}
+section{padding-block:56px 8px}
+.part-head{display:flex;flex-direction:column;gap:10px;padding-bottom:1.2rem;border-bottom:2px solid var(--accent)}
+.part-head .label{color:var(--accent)}
+.pe{--accent:var(--clay);--wash:var(--clay-wash)}
+.htr{--accent:var(--iron);--wash:var(--iron-wash)}
+.thesis{background:var(--wash);padding:22px 24px;margin-top:1.6rem;border-radius:3px}
+.thesis .t{font-family:var(--display);font-style:italic;font-size:1.35rem;line-height:1.35;margin-top:.5rem}
+.body{max-width:68ch}
+ul.tight{margin:.6rem 0 0;padding-left:1.2rem}
+ul.tight li+li{margin-top:.35rem}
+.table{overflow-x:auto;margin-top:1rem;border:1px solid var(--rule);background:var(--paper);border-radius:3px}
+table{border-collapse:collapse;width:100%;font-size:.93rem;min-width:560px}
+th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--rule)}
+tr:last-child td{border-bottom:0}
+th{font:600 .72rem/1.3 var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);background:var(--ground)}
+td.num{font-variant-numeric:tabular-nums;white-space:nowrap;font-family:var(--mono);font-size:.84rem}
+.pill{display:inline-block;font:600 .7rem/1 var(--mono);letter-spacing:.06em;padding:4px 7px;border-radius:3px;border:1px solid currentColor;white-space:nowrap}
+.pill.go{color:var(--go)} .pill.stop{color:var(--stop)} .pill.note{color:var(--note)}
+/* timeline */
+.timeline{margin-top:1rem;overflow-x:auto;border:1px solid var(--rule);background:var(--paper);border-radius:3px}
+.tl{display:grid;grid-template-columns:repeat(8,minmax(92px,1fr));min-width:760px}
+.tl .m{padding:10px 10px 14px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:8px}
+.tl .m:last-child{border-right:0}
+.tl .mh{font:600 .72rem/1 var(--mono);color:var(--muted);letter-spacing:.08em}
+.tl .w{font-size:.82rem;line-height:1.35}
+.tl .g{font:600 .72rem/1.3 var(--mono);color:var(--accent);border-top:2px solid var(--accent);padding-top:6px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:1rem}
+.cols>div{border-top:1px solid var(--rule);padding-top:12px}
+@media (max-width:640px){.cols{grid-template-columns:1fr}}
+.cut{color:var(--muted)}
+.cut li::marker{content:"✕  ";color:var(--stop)}
+.verdict{margin-top:1.4rem;padding:18px 20px;border:1px solid var(--rule);border-left:4px solid var(--note);background:var(--paper)}
+blockquote{margin:1rem 0 0;padding:0 0 0 18px;border-left:2px solid var(--accent);font-family:var(--display);font-size:1.08rem;line-height:1.55;color:var(--ink)}
+.refs{font-size:.88rem;color:var(--muted)}
+.refs li+li{margin-top:.3rem}
+footer{margin-top:64px;padding-top:20px;border-top:1px solid var(--rule);font-size:.88rem;color:var(--muted)}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="label">Advanced Software Engineering Project · research proposal</div>
+  <h1 style="margin-top:14px">Clay or Ink</h1>
+  <p class="lede">Two computer-vision thesis proposals, each put together by two research agents with different lenses. Each agent searched the literature for gaps, wrote a draft, critiqued its partner's draft and offered a counterproposal. Each topic below is the combined result, with the ideas that didn't survive review marked as cut.</p>
+  <div class="meta">
+    <span class="label">Drafted 16 Sep 2026</span>
+    <span class="label">Scope: ~8 months · 1–2 people · free-tier GPU</span>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <a href="#compare">At a glance</a>
+  <a href="#pe">I · Proto-Elamite</a>
+  <a href="#htr">II · Cursive transcription</a>
+  <a href="#decide">Recommendation</a>
+  <a href="#refs">Key sources</a>
+</nav>
+
+<section id="compare">
+  <div class="label">At a glance</div>
+  <h2 style="margin-top:8px">The pitches, after review</h2>
+  <p class="body" style="margin-top:1rem">Both pitches needed reframing before they could hold up. "Decode Proto-Elamite" isn't achievable, and the obvious AI-for-meaning angle has already been published. "Near-zero error on millions of pages" can't be claimed honestly. Underneath each pitch, though, the agents found a gap that is real and defensible.</p>
+  <div class="table">
+    <table>
+      <thead><tr><th></th><th>I · Proto-Elamite</th><th>II · Cursive HTR</th></tr></thead>
+      <tbody>
+        <tr><td><b>Original pitch</b></td><td>AI infers meaning without a translation key</td><td>Near-zero-error transcription of dark archives</td></tr>
+        <tr><td><b>What survived</b></td><td>The first dataset of sign images located on real tablet photos, plus a tool that flags places where the clay and the transliteration disagree</td><td>A pipeline where language models suggest edits but the image decides, with a certified error bound on the text it releases without review</td></tr>
+        <tr><td><b>Verified gap</b></td><td>Every published ML model of Proto-Elamite uses idealised sign drawings, never the signs on real clay</td><td>No work combines an LLM/VLM suggesting edits, an image check on each edit, a statistical guarantee and hallucination metrics, all on historical handwriting</td></tr>
+        <tr><td><b>Data</b></td><td>~1,600 tablets; images owned by museums, non-commercial use only; permission needed</td><td>Open datasets (READ 2016, Bentham, CATMuS, VOC ground truth) plus ~300–500 lines never published online</td></tr>
+        <tr><td><b>External dependency</b></td><td><span class="pill stop">HIGH</span> needs a Proto-Elamite expert and written CDLI permission</td><td><span class="pill go">LOW</span> an archive partner for the held-out pages helps but isn't essential</td></tr>
+        <tr><td><b>Scooping risk</b></td><td>One active group (Born, Kelley, Monroe, Sarkar)</td><td>A fast-moving field with 5+ relevant preprints in 2026 alone</td></tr>
+        <tr><td><b>Fit for a software engineering degree</b></td><td>Good: data pipeline, transliteration parser, concordance viewer</td><td>Strong: modular pipeline, PAGE-XML provenance, a tested scoring package, cost instrumentation</td></tr>
+        <tr><td><b>Headline if it works</b></td><td>"Proto-Elamite research can finally check its transcriptions against the clay"</td><td>"How much of an archive can be released with a certified error rate, and where hallucinations hide"</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ PART I ============ -->
+<section id="pe" class="pe">
+  <div class="part-head">
+    <div class="label">Part I · Proto-Elamite (c. 3100–2900 BCE)</div>
+    <h2>From Archetype to Clay</h2>
+    <p style="color:var(--muted)">Locating Proto-Elamite signs on real tablets, using the numerals as anchors, with collation support for the corpus</p>
+  </div>
+
+  <div class="thesis">
+    <div class="label">Thesis in one sentence</div>
+    <p class="t">Numerals are the best-understood and most visually distinctive part of the script, so we detect them first, use them to cut each tablet face into entry-sized segments, and match the undeciphered signs in each segment to their transliterations. The result is the first image-grounded dataset of Proto-Elamite sign tokens.</p>
+  </div>
+
+  <h3>Why this and not "decipherment"</h3>
+  <div class="body flow" style="margin-top:.8rem">
+    <p>One group, Born, Kelley, Monroe and Sarkar, has already published steadily on the machine-learning version of this pitch. Their work covers sign clustering and topic models (2019), embeddings of sign images (2021), header detection (2022), deep clustering of the sign inventory (2023) and numeral disambiguation (2025). The 2025 paper already maps which signs appear with which number system, so "infer meaning from numerals" is taken.</p>
+    <p>Both agents independently found the same opening, in Born et&nbsp;al.&nbsp;2023. Their visual models use <b>one idealised Dahl drawing per sign type</b> (1,319 images), and they note the drawings "smooth over many of the irregularities of the original shapes drawn on clay." Nobody has built a sign detector or a token-level image dataset for Proto-Elamite. A method for this exists in cuneiform research: Dencker et&nbsp;al.&nbsp;2020 trained a detector using only the transliterations as labels.</p>
+  </div>
+
+  <h3>The key technical fix from review</h3>
+  <div class="body flow" style="margin-top:.8rem">
+    <p>Both first drafts assumed tablets could be matched to transliterations row by row. The critique showed that this breaks:</p>
+    <ul class="tight">
+      <li>Proto-Elamite has no ruled cells. Entries often start at the bottom of one column and carry on at the top of the next (Englund 2004).</li>
+      <li>Each line of the CDLI transliteration is one <i>logical entry</i>, not one physical line on the tablet (Born et&nbsp;al.&nbsp;2025).</li>
+      <li>The reverse side is rotated, and older sign lists print some signs mirrored.</li>
+    </ul>
+    <p><b>Solution:</b> numerals are pressed in with a round stylus, while other signs are incised, and every entry ends in a numeral. Detecting numerals first turns one hard layout-parsing problem into many small alignment problems.</p>
+  </div>
+
+  <h3>Core deliverable</h3>
+  <div class="cols">
+    <div><div class="label">Dataset</div><p style="margin-top:6px"><b>PE-Tokens v1:</b> token-level boxes linked to CDLI tablet numbers, entries and sign names. There is a hand-annotated gold set of ~40–50 tablets. Only annotations and image references are released, never the museum images themselves.</p></div>
+    <div><div class="label">Pipeline</div><p style="margin-top:6px">Tablet-face extraction → separate detection for impressed numerals and incised signs → numeral-anchored segmentation → alignment inside each segment (DINOv2 features, CC-BY Dahl drawings as templates, position priors, rotation and mirroring handled) → EM self-training.</p></div>
+    <div><div class="label">Collation flags</div><p style="margin-top:6px">A ranked list of places where the image disagrees with the transliteration, starting with numerals: count or shape mismatches, and notations that are invalid in every number system.</p></div>
+    <div><div class="label">Software engineering</div><p style="margin-top:6px">A concordance and review viewer ("show every M288 on clay") that logs expert decisions, plus a tested transliteration parser, data version control, CI and a checklist for a licence-compliant release.</p></div>
+  </div>
+
+  <h3>Optional extension (only if gate G3 passes)</h3>
+  <p class="body" style="margin-top:.8rem"><b>A pre-registered audit of sign variants on real clay.</b> Before seeing any results, fix a list of ≤30 sign pairs: Dahl's tilde variants, the merges Born 2023 proposed, and matched random controls. Test each pair with MMD on the image embeddings of gold or position-aligned tokens. Tokens aligned by template matching are excluded, because they bias the result toward signs that already look like the drawing. Also check whether an apparent variant just tracks individual tablets. Validate on scripts with known answers (Cypro-Greek, Linear B glyphs) and with planted merges. Results are reported as "visually distinct / indistinguishable / insufficient evidence", never as claims about sign identity.</p>
+
+  <h3>Eight months, four gates</h3>
+  <div class="timeline" role="region" aria-label="Proto-Elamite timeline">
+    <div class="tl">
+      <div class="m"><div class="mh">M1</div><div class="w">Data audit via CDLI API; pin versions (2018 / 2022 / current); contact expert, CDLI and SFU group; parser and repo</div><div class="g">G0 · week 3<br>access</div></div>
+      <div class="m"><div class="mh">M2</div><div class="w">Annotation guide; gold set part 1 (photos first); second annotator on 5 tablets</div><div class="g">G1<br>annotators agree</div></div>
+      <div class="m"><div class="mh">M3</div><div class="w">Numeral detector and counter; numeral-anchored entry segmentation</div><div class="g">G2<br>photos workable</div></div>
+      <div class="m"><div class="mh">M4</div><div class="w">Sign alignment inside segments; EM rounds; gold part 2 (frozen test set); ablations</div></div>
+      <div class="m"><div class="mh">M5</div><div class="w">Collation flags; correction-history benchmark; planted-error set</div><div class="g">G3<br>extension?</div></div>
+      <div class="m"><div class="mh">M6</div><div class="w">Viewer v1; expert blind review session 1 (~3 h)</div></div>
+      <div class="m"><div class="mh">M7</div><div class="w">Extension, or more coverage; expert session 2 (~2 h)</div></div>
+      <div class="m"><div class="mh">M8</div><div class="w">Write-up; release; workshop or data paper (ML4AL, ICDAR workshop, JOHD)</div></div>
+    </div>
+  </div>
+  <div class="table">
+    <table>
+      <thead><tr><th>Gate</th><th>Go criterion (indicative; fix in M1 pre-registration)</th><th>If no-go</th></tr></thead>
+      <tbody>
+        <tr><td><b>G0</b> <span class="mono">wk 3</span></td><td>≥300 tablets with usable photos; CDLI confirms in writing that annotations can be released; a named Proto-Elamite expert commits ~8–10 h</td><td>Fall back to a line-art + proto-cuneiform methods thesis, or a fragment-join ranker</td></tr>
+        <tr><td><b>G1</b> <span class="mono">M2</span></td><td>Annotator agreement on sign labels κ ≥ 0.75; box IoU ≥ 0.6; ≤1.5 h per median tablet</td><td>Gold labels only for numerals plus the top-100 signs</td></tr>
+        <tr><td><b>G2</b> <span class="mono">M3</span></td><td>On photos: numeral recall ≥ ~0.8; entry segmentation ≥ ~0.7</td><td>Narrow to reading and auditing numerals on the best-imaged subset. Still a complete thesis.</td></tr>
+        <tr><td><b>G3</b> <span class="mono">M5</span></td><td>Alignment ≥ 0.7 for frequent signs; ≥15 pre-registered pairs with ≥15 tokens on each side</td><td>No extension; spend M6–M7 on coverage and expert review</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Evaluation without circular results</h3>
+  <div class="table">
+    <table>
+      <thead><tr><th>Claim</th><th>Ground truth</th><th>Measure</th></tr></thead>
+      <tbody>
+        <tr><td>Signs are localised and aligned</td><td>Gold boxes (tablet-level splits; joined fragments kept in one split)</td><td>mAP@0.5, token alignment accuracy, coverage at 90% precision, broken down by image type, museum, sign frequency and damage; DETR and template-matching baselines</td></tr>
+        <tr><td>Numerals are read correctly</td><td>Gold boxes + the Born 2025 expert-verified test set (48 numerals, small)</td><td>Digit and count accuracy; validity under Born 2025's reading rules</td></tr>
+        <tr><td>Flags find real errors</td><td>① Planted errors in 3% of tokens<br>② <b>Correction-history benchmark</b>: real expert corrections made between CDLI versions<br>③ Blind expert review with decoys</td><td>Precision/recall and AUROC; recall@k on real past corrections; expert precision vs decoys (Fisher exact test)</td></tr>
+        <tr><td><i>(ext.)</i> Sign-variant pairs</td><td>Scripts with known answers + planted merges</td><td>V-measure/AUROC on known scripts; per-pair MMD with Benjamini–Hochberg correction; report only findings stable in ≥5 of 6 seed × backbone runs</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="body" style="margin-top:.8rem;color:var(--muted)"><b>Reporting rule:</b> say "accuracy" only where ground truth exists. Findings about the script itself are "flagged" or "supported by visual evidence". The word "decipherment" appears nowhere.</p>
+
+  <h3>Cut during review</h3>
+  <ul class="tight cut">
+    <li><b>Inferring meaning from numerals</b>: already done in Born et&nbsp;al.&nbsp;2025 §5. The "known" meanings used to evaluate it were themselves inferred from numerals, so the evaluation would be circular.</li>
+    <li><b>Testing proposed Proto-Elamite ↔ Linear Elamite sign matches</b>: the matches were partly chosen because the signs look alike, so a visual test would pass by construction. Linear Elamite also has only ~45 inscriptions in a different genre, and Dahl 2023 disputes that the scripts are related at all.</li>
+    <li><b>Estimating the size of the sign inventory</b>: the published spread of 287 to 1,623 signs comes from how scholars define a sign, which clustering can't settle.</li>
+    <li><b>Training on hand copies first</b>: many transliterations were made from those copies, so agreement between them is partly guaranteed. Copies are useful for bootstrapping, but they are never evidence.</li>
+  </ul>
+
+  <h3>Draft abstract</h3>
+  <blockquote>Proto-Elamite, the writing system of Iran around 3100–2900 BCE, survives on roughly 1,600 clay tablets and remains undeciphered apart from its numerals. Recent computational studies have revealed structure in the script, but all of them work from scholars' transliterations or from a single idealised drawing per sign. None has looked at the signs as they were actually pressed and drawn into clay. This thesis builds the first image-grounded dataset of Proto-Elamite sign tokens. Numeral notations anchor each tablet face into entry-sized segments, which are then aligned to the Cuneiform Digital Library Initiative's transliterations under weak supervision. On top of this alignment we build a tool that ranks places where the clay and the transliteration appear to disagree. We evaluate it against planted errors, against corrections specialists have already made across successive corpus versions, and in a blinded review by a Proto-Elamite specialist. We do not claim to decipher the script. We build infrastructure the field lacks: a way to see, query and check every attestation of a sign on the tablets themselves.</blockquote>
+
+  <h3>Prerequisites to secure first</h3>
+  <ul class="tight body">
+    <li><b>A named Proto-Elamite expert</b> for ~8–10 h, e.g. Kelley, Monroe or Dahl. Contact the SFU group (Born, Sarkar) early: they are the natural advisers and also the main scooping risk.</li>
+    <li><b>Written CDLI confirmation</b> (and museum confirmation if CDLI requires it) for bulk research download and releasing annotations keyed to CDLI tablet numbers. Ask whether higher-resolution or RTI images are available.</li>
+    <li>Working CDLI API access. The GitHub dump hasn't been updated since August 2022.</li>
+    <li>The Born 2025 numeral test set; library access to Englund 2004, Dahl 2019, Kelley 2026 and Monroe et&nbsp;al. 2025 (paywalled; check for overlapping work).</li>
+    <li>Supervisor sign-off that decipherment is out of scope.</li>
+  </ul>
+</section>
+
+<!-- ============ PART II ============ -->
+<section id="htr" class="htr">
+  <div class="part-head">
+    <div class="label">Part II · Historical cursive transcription</div>
+    <h2>Verify, Don't Rewrite</h2>
+    <p style="color:var(--muted)">Image-checked, risk-certified transcription of historical handwriting</p>
+  </div>
+
+  <div class="thesis">
+    <div class="label">Thesis in one sentence</div>
+    <p class="t">A vision-language model proposes the reading, an independent handwriting recogniser checks every disputed word against the image, and a per-collection statistical calibration decides which words can be released without review, with a certified bound on their error rate. Everything else is flagged.</p>
+  </div>
+
+  <h3>The trap is real, and it's measurable</h3>
+  <div class="body flow" style="margin-top:.8rem">
+    <p>Evidence from 2025–26 backs the pitch's core claim. Correcting transcriptions with an LLM often <i>makes them worse</i> (Crosilla 2025; Levchenko 2025). ICDAR 2026 HIPE-OCRepair calls over-correction a "recurring challenge". WildHandBench finds that 63–91% of model errors are driven by language expectations, against 49% for humans.</p>
+    <p>Frontier models are also very good. Humphries reports ~1.7% CER for Gemini 3 on English, where ~61% of the remaining errors are silent spelling "standardisation". So the trap lives mainly in <b>non-English, abbreviated, damaged material, names and numbers</b>. The thesis targets exactly those, rather than trying to beat Gemini on English CER.</p>
+  </div>
+
+  <h3>Reframing "near-zero error"</h3>
+  <div class="verdict body">
+    <p><b>Drop:</b> near-zero error at page level. It isn't achievable on messy cursive, and reviewers would reject the claim.</p>
+    <p style="margin-top:.6rem"><b>Replace with:</b> <i>near-zero <u>unflagged</u> error, certified per collection</i>, plus <i>no silent normalisation</i>. Every word is either auto-accepted (bounded error), flagged (with alternatives and image evidence) or marked illegible. Normalised text goes in a separate, labelled layer.</p>
+    <p style="margin-top:.6rem" class="mono">"On collection X, calibrated with 400 random lines, N% of words were released; with 90% confidence the error among released words is ≤ 2%. Under an unseen hand the bound was violated in V% of resamples."</p>
+  </div>
+
+  <h3>Core deliverable</h3>
+  <div class="cols">
+    <div><div class="label">1 · Propose</div><p style="margin-top:6px">An open local VLM (CHURRO 3B, EMNLP 2025, 15.5× cheaper than Gemini 2.5 Pro) as the main model, with one commercial model on capped, cached subsets. A PyLaia CTC recogniser, fine-tuned per collection, produces an N-best list and posteriors.</p></div>
+    <div><div class="label">2 · Verify</div><p style="margin-top:6px">Align the VLM and CTC readings. For each disputed word, a small learned gate combines: the length-normalised visual support ratio from forced alignment, membership of the N-best list, agreement between the two models, consistency across image views, period-LM vs modern-LM surprisal, and token class. Names, numbers and dates get stricter thresholds.</p></div>
+    <div><div class="label">3 · Certify</div><p style="margin-top:6px">A threshold is calibrated on <b>one random line from each of 300–500 random pages</b>, which makes calibration lines independent by design. Conformal risk control bounds the share of all words that are accepted and wrong; Learn-then-Test bounds the error rate among accepted words.</p></div>
+    <div><div class="label">4 · Deliver</div><p style="margin-top:6px">PAGE-XML with per-word confidence, alternatives and provenance; a review screen showing only flagged spans, with timing logs; cost per page; and <b>HalluTrap-HTR</b>, a probe suite with a pip-installable, CI-tested scoring package.</p></div>
+  </div>
+
+  <h3>How many calibration words the guarantee needs</h3>
+  <p class="body" style="margin-top:.8rem">Exact one-sided binomial test, counting accepted words only. The takeaway: a 1% target is cheap to certify only when coverage is sacrificed. A realistic target is α = 1–2% with 300–500 random lines per collection. For names and numbers the rate is reported empirically, not certified, because there aren't enough of them.</p>
+  <div class="table">
+    <table>
+      <thead><tr><th>Target α</th><th>True error on accepted words</th><th>Words needed, δ = 0.10</th><th>Words needed, δ = 0.05</th></tr></thead>
+      <tbody>
+        <tr><td class="num">1%</td><td class="num">0%</td><td class="num">230</td><td class="num">300</td></tr>
+        <tr><td class="num">1%</td><td class="num">0.5%</td><td class="num">390</td><td class="num">780</td></tr>
+        <tr><td class="num">1%</td><td class="num">0.8%</td><td class="num">3,610</td><td class="num">5,990</td></tr>
+        <tr><td class="num">2%</td><td class="num">1.0%</td><td class="num">270</td><td class="num">390</td></tr>
+        <tr><td class="num">2%</td><td class="num">1.6%</td><td class="num">1,800</td><td class="num">3,050</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Optional extension (decided at G4): do hallucinations break archival search?</h3>
+  <p class="body" style="margin-top:.8rem">Compare rare-entity search over four indexes: keyword relevance computed from the CTC model (standing in for the probabilistic indexing archives already run: HIMANIS, Carabela, PARES), raw VLM transcripts, gated output, and gated output with each word's calibrated alternatives also indexed. Compare at <b>matched index size</b>. Build lexicons from training documents only, and report out-of-vocabulary queries separately. Real archives already run probabilistic search, yet VLM papers report only CER and WER.</p>
+
+  <h3>Eight months, five gates</h3>
+  <div class="timeline" role="region" aria-label="HTR timeline">
+    <div class="tl">
+      <div class="m"><div class="mh">M1</div><div class="w">Check licences; PyLaia baselines; split generator (5 roles); API response cache; start sourcing held-out pages</div><div class="g">G0<br>data + baselines</div></div>
+      <div class="m"><div class="mh">M2</div><div class="w">VLM + ungated correction runs; first visual-support scores; scoring package v0</div><div class="g">G1<br>trap real + signal</div></div>
+      <div class="m"><div class="mh">M3</div><div class="w">Gate features + combiner; probe suite v1 (traps, occlusion, control lines)</div></div>
+      <div class="m"><div class="mh">M4</div><div class="w">Compare all systems on faithfulness; 300-error human annotation (κ)</div><div class="g">G2<br>fewer introduced errors</div></div>
+      <div class="m"><div class="mh">M5</div><div class="w">Risk controller; 100-resplit validity study; writer and collection shift tests; review screen</div><div class="g">G3<br>certification</div></div>
+      <div class="m"><div class="mh">M6</div><div class="w">Held-out slice; contamination delta; cost per page model; containers</div><div class="g">G4<br>extension?</div></div>
+      <div class="m"><div class="mh">M7</div><div class="w">Search extension, or robustness and analysis</div></div>
+      <div class="m"><div class="mh">M8</div><div class="w">Write-up; fresh-machine reproducibility run; release benchmark v1.0</div></div>
+    </div>
+  </div>
+  <div class="table">
+    <table>
+      <thead><tr><th>Gate</th><th>Go criterion</th><th>If no-go</th></tr></thead>
+      <tbody>
+        <tr><td><b>G0</b> <span class="mono">M1</span></td><td>Licences cleared; baseline CER ≤ ~15% on ≥2 collections; source of held-out never-online pages confirmed</td><td>Swap collection; use a recently released set as the "fresh" slice and say so</td></tr>
+        <tr><td><b>G1</b> <span class="mono">M2</span></td><td>Trap is real: ungated correction precision &lt; 0.95, or ≥1% of name/number tokens broken, on a non-English set. <b>And</b> the gate separates good edits from bad at AUROC ≥ 0.80.</td><td>Pivot to a benchmark + systematic comparison thesis. Still complete.</td></tr>
+        <tr><td><b>G2</b> <span class="mono">M4</span></td><td>Errors the corrector introduces drop ≥30–50% vs ungated multimodal correction, at ≤1 point CER cost</td><td>Report the trade-off frontier honestly; certify S0/S4 outputs instead</td></tr>
+        <tr><td><b>G3</b> <span class="mono">M5</span></td><td>≥50% coverage at α = 2%, δ = 0.1, with ≤500 calibration lines; violation rate ≤ δ</td><td>Relax to α = 5%, or report the expected-risk version only</td></tr>
+        <tr><td><b>G4</b> <span class="mono">M6</span></td><td>Core frozen and reproducible end to end from one command</td><td>Skip the extension</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Evaluation protocol</h3>
+  <div class="table">
+    <table>
+      <thead><tr><th>Dimension</th><th>Metrics</th></tr></thead>
+      <tbody>
+        <tr><td><b>Data</b></td><td>READ 2016 (German, main); VOC / notarial ground truth (Dutch; flagged as contaminated); Bentham (English; contaminated slice); CATMuS Medieval subset (abbreviations); <b>300–500 never-online lines</b>, double-keyed (the key uncontaminated test)</td></tr>
+        <tr><td><b>Accuracy</b></td><td>CER/WER, strict and METATR-normalised, per slice, bootstrap CIs over documents</td></tr>
+        <tr><td><b>Faithfulness</b></td><td>Fixed vs introduced error rate, correction precision/recall, clean-line change rate</td></tr>
+        <tr><td><b>Hallucination</b></td><td>Exact match on names and numbers; modernisation rate; <i>unmarked</i> text invented under graded occlusion; share of prior-driven errors from a 300-error human typology. Unsupported words are judged by a <b>different</b> recogniser than the gate.</td></tr>
+        <tr><td><b>Reliability</b></td><td>Risk–coverage curves, AURC, guarantee violation rate over ≥100 resplits, leave-one-writer-out and cross-collection</td></tr>
+        <tr><td><b>Cost and effort</b></td><td>GPU-seconds and API USD per page (dated prices), flagged words per page, review minutes (sensitivity analysis), cost per useful page</td></tr>
+        <tr><td><b>Baselines</b></td><td>CTC ± LM · CHURRO zero-shot · commercial VLM · text-only LLM correction · ungated multimodal correction · GRC-style view-consistency abstention · CTC confidence thresholding · ours + ablations</td></tr>
+        <tr><td><b>Hygiene</b></td><td>Five disjoint document-level splits (HTR training, tuning, gate training, calibration, test); nothing tuned on calibration data; record/replay cache with model ID and date</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Division of work</h3>
+  <div class="cols">
+    <div><div class="label">ML / research</div><ul class="tight"><li>CTC fine-tuning, temperature calibration, N-best lists</li><li>VLM prompting; visual support score; gate combiner</li><li>Conformal risk control / Learn-then-Test; shift and validity studies</li><li>Metric definitions; human error typology</li><li><i>(ext.)</i> calibrated alternative sets</li></ul></div>
+    <div><div class="label">Software engineering</div><ul class="tight"><li>Modular pipeline with swappable proposer, verifier and controller</li><li>PAGE-XML I/O with provenance (compatible with eScriptorium and Transkribus)</li><li>Leakage-safe split generator with tests that assert splits are disjoint</li><li>Scoring package + CI; occlusion generator; annotation and review tools</li><li>Record/replay API cache; containers; cost instrumentation; <i>(ext.)</i> search harness</li></ul></div>
+  </div>
+  <p class="body" style="margin-top:.8rem;color:var(--muted)">Interface between the two sides: a line-level JSONL schema fixed in M1. ML components are pure functions over it, so the harness can run, cache and score them independently.</p>
+
+  <h3>Cut during review</h3>
+  <ul class="tight cut">
+    <li><b>Token-level LLM decoding constrained to the recogniser's candidates</b>: Athar (2026) found that choosing among a recogniser's top-25 candidates recovered &lt;4% of the possible gain. Engineering cost is high for an uncertain payoff. It comes back only if M3 shows an oracle gap of ≥1–2 WER points.</li>
+    <li><b>Per-class "≤0.1% error on names" guarantees</b>: that would need ~3,000 calibration names, and 300 lines hold ~150–300.</li>
+    <li><b>Layout analysis research, active learning, a phone-capture app, a real user study</b>: too much for the timeline. Phone capture survives as one robustness slice, and review time is simulated unless ethics approval arrives early.</li>
+    <li><b>"First provenance audit trail"</b> as a novelty claim: Athar already exports auditable PAGE-XML. It remains an engineering deliverable.</li>
+  </ul>
+
+  <h3>Closest prior work, and where the novelty sits</h3>
+  <p class="body" style="margin-top:.8rem">Each ingredient has prior art: <b>Athar</b> (review with bounded alternatives, Arabic manuscripts), <b>GRC</b> (abstention for VLM OCR via cross-view agreement; scene text, empirical, <i>not</i> conformal), <b>WildHandBench</b> (prior-driven error metric; modern handwriting), <b>OmniHandwritingOCR</b> ("plausible but visually unsupported corrections"). No paper the agents checked combines them on historical handwriting with a certified guarantee and shift measurement. Claim the combination, and avoid "first X" for any single component.</p>
+
+  <h3>Draft abstract</h3>
+  <blockquote>Vision-language models now transcribe historical handwriting well, but on archival material they make the most dangerous kind of error. They produce fluent, plausible text that is not on the page: modernised spellings, "corrected" names, altered numbers. Character error rates hide these errors, and search engines spread them. We present an open pipeline in which a VLM proposes and an independent, visually grounded recogniser checks every disputed word by forced alignment. A per-collection calibration on a few hundred random lines then decides which words are released with a certified error bound, and flags the rest with image evidence and alternatives. We also release HalluTrap-HTR, a benchmark that separates the errors a corrector introduces from those it fixes, with slices for rare names, numbers, archaic spellings, abbreviations and controlled illegibility. On Early Modern German, Dutch and English collections we report how much of each archive can be released with certified low error, how quickly the guarantee breaks for unseen hands, and what it costs per page. The goal is not error-free transcription. It is to make every remaining error visible.</blockquote>
+</section>
+
+<!-- ============ DECISION ============ -->
+<section id="decide">
+  <div class="label">Recommendation</div>
+  <h2 style="margin-top:8px">Which to pursue</h2>
+  <div class="body flow" style="margin-top:1rem">
+    <p><b>Default to Part II (Verify, Don't Rewrite)</b> unless you can clear Part I's week-3 gate. For an Advanced Software Engineering project it is the safer and stronger fit:</p>
+    <ul class="tight">
+      <li>The data is open.</li>
+      <li>Every headline metric has real ground truth.</li>
+      <li>The software-engineering deliverables are central, not bolted on.</li>
+      <li>Every gate failure still leaves a complete thesis (a benchmark plus a systematic comparison).</li>
+    </ul>
+    <p><b>Part I has the higher ceiling of prestige, but also higher dependencies.</b> It stands or falls on things you can't control from a keyboard: a Proto-Elamite expert's time, CDLI's written permission, and whether tablet photos are good enough. Nearly all of its ground truth also depends on expert review.</p>
+    <p><b>A cheap way to decide:</b> spend the next two weeks on Part I's gate-0 checks while starting Part II's baselines, since the M1 work for Part II is useful either way.</p>
+    <ol class="tight">
+      <li>Email CDLI about image and annotation permissions.</li>
+      <li>Contact one Proto-Elamite scholar.</li>
+      <li>Count tablets with usable photos via the CDLI API.</li>
+    </ol>
+    <p>If all three come back positive, Part I is a genuinely distinctive thesis. Otherwise, go with Part II.</p>
+  </div>
+  <div class="verdict body">
+    <p class="label" style="color:var(--note)">Before citing anything</p>
+    <p style="margin-top:.5rem">The agents checked most key sources at abstract level and marked each one read, abstract-only or unverified in their notes. Several 2026 arXiv preprints are recent and unreviewed. A few figures, such as Loghi's reported accuracy, Humphries' cost numbers and some dataset licences, came from search snippets only. Read the full papers before they go into a formal proposal. Re-run the novelty search at M1 and M5; both fields are moving monthly.</p>
+  </div>
+</section>
+
+<section id="refs">
+  <div class="label">Key sources</div>
+  <h2 style="margin-top:8px">Where the gaps came from</h2>
+  <div class="cols">
+    <div>
+      <div class="label" style="color:var(--clay)">Proto-Elamite</div>
+      <ul class="tight refs">
+        <li>Born et al. 2023, sign inventory clustering, CAWL · <a href="https://aclanthology.org/2023.cawl-1.11/">ACL Anthology</a></li>
+        <li>Born et al. 2025, numeral disambiguation · <a href="https://arxiv.org/abs/2502.00090">arXiv 2502.00090</a></li>
+        <li>Born et al. 2019 / 2021 / 2022 · <a href="https://aclanthology.org/W19-2516/">W19-2516</a>, <a href="https://aclanthology.org/2021.findings-acl.362/">Findings 2021</a>, <a href="https://aclanthology.org/2022.emnlp-main.620/">EMNLP 2022</a></li>
+        <li>Dencker et al. 2020, weakly supervised cuneiform detection · <a href="https://doi.org/10.1371/journal.pone.0243039">PLOS ONE</a></li>
+        <li>ProtoSnap, ICLR 2025 · <a href="https://arxiv.org/abs/2502.00129">arXiv 2502.00129</a></li>
+        <li>Desset et al. 2022, Linear Elamite · <a href="https://doi.org/10.1515/za-2022-0003">ZA</a>; Dahl 2023 counterpoint, Akkadica 144</li>
+        <li>Pandey 2023, Unicode proposal · <a href="https://www.unicode.org/L2/L2023/23196-proto-elamite.pdf">L2/23-196</a></li>
+        <li>Dahl sign drawings (CC-BY) · <a href="https://github.com/cdli-gh/proto-elamite_data">cdli-gh/proto-elamite_data</a>; CDLI <a href="https://cdli.earth/terms-of-use">terms</a></li>
+        <li>eBL sign detection 2026 · <a href="https://arxiv.org/abs/2606.22608">arXiv 2606.22608</a> (sets the baseline bar; different script)</li>
+      </ul>
+    </div>
+    <div>
+      <div class="label" style="color:var(--iron)">Cursive HTR</div>
+      <ul class="tight refs">
+        <li>Athar, candidate-selection analysis · <a href="https://arxiv.org/abs/2608.19385">arXiv 2608.19385</a></li>
+        <li>GRC, risk control for VLM OCR · <a href="https://arxiv.org/abs/2603.19790">arXiv 2603.19790</a></li>
+        <li>WildHandBench, prior-driven errors · <a href="https://arxiv.org/abs/2608.22959">arXiv 2608.22959</a></li>
+        <li>HIPE-OCRepair, ICDAR 2026 · <a href="https://arxiv.org/abs/2607.08143">arXiv 2607.08143</a></li>
+        <li>CHURRO, EMNLP 2025 · <a href="https://arxiv.org/abs/2509.19768">arXiv 2509.19768</a></li>
+        <li>Crosilla et al. 2025 · <a href="https://arxiv.org/abs/2503.15195">arXiv 2503.15195</a>; Levchenko 2025 · <a href="https://arxiv.org/abs/2510.06743">arXiv 2510.06743</a></li>
+        <li>OmniHandwritingOCR, CIKM 2026 · <a href="https://arxiv.org/abs/2608.18586">arXiv 2608.18586</a></li>
+        <li>Consensus Entropy · <a href="https://arxiv.org/abs/2504.11101">arXiv 2504.11101</a>; METATR · <a href="https://arxiv.org/abs/2605.26712">arXiv 2605.26712</a></li>
+        <li>Conformal Risk Control · <a href="https://arxiv.org/abs/2208.02814">arXiv 2208.02814</a></li>
+        <li>Humphries, Unlocking the Archives · <a href="https://arxiv.org/abs/2411.03340">arXiv 2411.03340</a></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<footer>
+  The full agent drafts and cross-reviews (with verification tags for every citation) are saved in <span class="mono">research/agent-notes/</span> in the project folder.
+</footer>
+</div>

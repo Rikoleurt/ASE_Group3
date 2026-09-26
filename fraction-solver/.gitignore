@@ -1,0 +1,11 @@
+# Cached corpora. Both are CC BY-NC-SA 4.0 and must not be redistributed:
+# lineara.eu / SigLA for Linear A, DAMOS (Univ. of Oslo) for Linear B.
+# The manifests carry checksums so a rebuild is reproducible without shipping the data.
+data/cache/
+data/damos/
+data/manifest.json
+data/damos_manifest.json
+
+__pycache__/
+*.pyc
+out/
