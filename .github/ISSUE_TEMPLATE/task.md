@@ -1,3 +1,11 @@
+---
+name: Task
+about: Create a technical or organizational task
+title: "[TASK] "
+labels: ""
+assignees: ""
+---
+
 ## Task Description
 
 Clear description of what needs to be done.

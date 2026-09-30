@@ -1,3 +1,11 @@
+---
+name: User Story
+about: Create a new user story
+title: "[STORY] "
+labels: ""
+assignees: ""
+---
+
 ## User Story
 
 As a [type of user],
