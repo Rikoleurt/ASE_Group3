@@ -1,1 +1,18 @@
 @import "tailwindcss";
+
+/* For now, this is the theme I picked, but we can still change this
+   as we go (https://colorhunt.co/palette/f9e6a8f2a900cc6f004d2a00). */
+@theme {
+  --color-page: #f9e6a8;
+  --color-bar: #f2a900;
+  --color-card: #e9d289;
+  --color-ink: #4d2a00;
+  --color-accent: #cc6f00;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink);
+  }
+}
