@@ -3,8 +3,9 @@ import hmac
 import secrets
 
 from mysql.connector.errors import IntegrityError
+from mysql.connector.errorcode import ER_DUP_ENTRY
 
-from backend.app.data.data_controller import DataController
+from backend.app.data_controller.data_controller import DataController
 from backend.app.model.user import User
 
 
@@ -40,6 +41,8 @@ def verify_password(password: str, stored_password: str) -> bool:
         iterations = int(iterations_text)
         salt = bytes.fromhex(salt_hex)
         expected = bytes.fromhex(expected_hex)
+        if not 1 <= iterations <= 2_000_000 or len(salt) != 16 or len(expected) != 32:
+            return False
     except (ValueError, TypeError):
         return False
 
@@ -99,8 +102,10 @@ class UserDataController(DataController):
                     user_id = cursor.lastrowid
                 finally:
                     cursor.close()
-        except IntegrityError:
-            return None
+        except IntegrityError as error:
+            if error.errno == ER_DUP_ENTRY:
+                return None
+            raise
 
         return User(
             id=user_id,

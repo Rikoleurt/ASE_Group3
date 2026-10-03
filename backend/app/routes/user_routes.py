@@ -1,11 +1,19 @@
-from fastapi import APIRouter, HTTPException, status
+from typing import Annotated
 
-from backend.app.data.user_data_controller import UserDataController
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from backend.app.data_controller.user_data_controller import UserDataController
 from backend.app.model.user import LoginResponse, UserCreate, UserLogin, UserPublic
 
 
 router = APIRouter(prefix="/users", tags=["users"])
-user_data_controller = UserDataController()
+
+
+def get_user_data_controller() -> UserDataController:
+    return UserDataController()
+
+
+UserController = Annotated[UserDataController, Depends(get_user_data_controller)]
 
 
 @router.post(
@@ -13,7 +21,7 @@ user_data_controller = UserDataController()
     response_model=UserPublic,
     status_code=status.HTTP_201_CREATED,
 )
-def register(payload: UserCreate) -> UserPublic:
+def register(payload: UserCreate, user_data_controller: UserController) -> UserPublic:
     user = user_data_controller.create_user(
         email=str(payload.email),
         password=payload.password,
@@ -33,7 +41,7 @@ def register(payload: UserCreate) -> UserPublic:
     response_model=LoginResponse,
     status_code=status.HTTP_200_OK,
 )
-def login(payload: UserLogin) -> LoginResponse:
+def login(payload: UserLogin, user_data_controller: UserController) -> LoginResponse:
     user = user_data_controller.authenticate(
         email=str(payload.email),
         password=payload.password,

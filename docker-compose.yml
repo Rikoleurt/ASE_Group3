@@ -4,15 +4,21 @@ services:
     container_name: ase-mysql
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: ase
-      MYSQL_USER: ase
-      MYSQL_PASSWORD: ase
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-ase}
+      MYSQL_USER: ${MYSQL_USER:-ase}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-ase}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:${MYSQL_PORT:-3306}:3306"
     volumes:
       - ase_mysql_data:/var/lib/mysql
-      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+      - ./backend/app/database/init.sql:/docker-entrypoint-initdb.d/001-init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
 
 volumes:
   ase_mysql_data:
