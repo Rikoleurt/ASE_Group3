@@ -49,7 +49,8 @@ The application reads `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`
 and `MYSQL_DATABASE`. Defaults are `127.0.0.1`, `3306`, `ase`, `ase`, and `ase`.
 Compose also reads `.env` and uses `MYSQL_ROOT_PASSWORD` (default `root`).
 These default credentials and the seeded account are for local development.
-FastAPI does not load `.env` automatically; export it as above.
+`npm run dev` and `npm run dev:backend` load `.env` automatically.
+For a direct `uvicorn` launch, export it as above.
 
 ## Start MySQL and FastAPI
 
@@ -77,7 +78,7 @@ uv sync --project backend
 uv run --project backend uvicorn backend.app.main:app --reload
 ```
 
-`npm run dev:backend` uses this uv command; `npm run dev` also starts the frontend.
+`npm run dev:backend` uses uv with `--env-file .env`; `npm run dev` also starts the frontend.
 The frontend requires Node `^22.18.0 || >=24.12.0`.
 
 ## Database initialization
