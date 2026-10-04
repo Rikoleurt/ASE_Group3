@@ -70,6 +70,7 @@ def verify_password(password: str, stored_password: str) -> bool:
 
 
 class UserDataController(DataController):
+    #region getter
     def get_by_email(self, email: str) -> User | None:
         """
         Get a user by email address.
@@ -134,9 +135,60 @@ class UserDataController(DataController):
             password=row["password"],
         )
 
-    def get_by_id(self, user_id: int) -> User | None:
-        raise NotImplementedError
+    def get_email_by_id(self, user_id: int) -> str | None:
+        """
+        Gets the email according to the user id.
+        :param user_id:
+        :return:
+        """
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    """
+                    SELECT email
+                    FROM `user`
+                    WHERE id = %s
+                    LIMIT 1
+                    """,
+                    (user_id,),
+                )
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
+        if row is None:
+            return None
 
+        return row["email"]
+
+    def get_username_by_id(self, user_id: int) -> str | None:
+        """
+        Gets the username according to the user id.
+        :param user_id:
+        :return:
+        """
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    """
+                    SELECT username
+                    FROM `user`
+                    WHERE id = %s
+                    LIMIT 1
+                    """,
+                    (user_id,),
+                )
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
+        if row is None:
+            return None
+        return row["username"]
+
+    #endregion
+
+    #region setter
     def create_user(self, email: str, username: str, password: str) -> User | None:
         normalized_email = _normalize_email(email)
         password_hash = hash_password(password)
@@ -166,7 +218,9 @@ class UserDataController(DataController):
             username=username,
             password=password_hash,
         )
+    #endregion
 
+    #region other
     def authenticate(self, email: str, username: str | None, password: str) -> User | None:
         """
         Authenticates a user by email or username, password is mandatory.
@@ -183,3 +237,4 @@ class UserDataController(DataController):
         if user is None or not verify_password(password, user.password):
             return None
         return user
+    #endregion

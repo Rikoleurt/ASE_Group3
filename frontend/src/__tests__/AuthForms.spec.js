@@ -3,11 +3,13 @@ import { flushPromises, mount } from '@vue/test-utils'
 import { createMemoryHistory, createRouter } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import SignupView from '../views/SignupView.vue'
+import { clearCurrentUserId, getCurrentUserId } from '../state/currentUser'
 
 let wrapper
 
 afterEach(() => {
   wrapper?.unmount()
+  clearCurrentUserId()
   vi.unstubAllGlobals()
 })
 
@@ -17,6 +19,7 @@ async function render(path = '/login') {
     routes: [
       { path: '/login', component: LoginView },
       { path: '/signup', component: SignupView },
+      { path: '/profile', component: { template: '<h1>Profile</h1>' } },
     ],
   })
   await router.push(path)
@@ -35,13 +38,13 @@ async function submit() {
 }
 
 describe('Authentication forms', () => {
-  it('logs in through the API and clears the password', async () => {
+  it('logs in through the API and opens the profile using only the user ID', async () => {
     const fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({ authenticated: true, user: { id: 1, email: 'dev@ase3.com' } }),
     })
     vi.stubGlobal('fetch', fetch)
-    await render()
+    const router = await render()
     expect(wrapper.find('input[name="username"]').exists()).toBe(false)
     await submit()
     expect(fetch).toHaveBeenCalledWith('/api/users/login', {
@@ -49,8 +52,10 @@ describe('Authentication forms', () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email: 'dev@ase3.com', password: 'dev' }),
     })
-    expect(wrapper.get('[role="status"]').text()).toContain('Successfully logged in as dev@ase3.com')
-    expect(wrapper.get('input[name="password"]').element.value).toBe('')
+    expect(router.currentRoute.value.path).toBe('/profile')
+    expect(getCurrentUserId()).toBe(1)
+    expect(sessionStorage.getItem('ase.profileUserId')).toBe('1')
+    expect(wrapper.find('input[name="password"]').exists()).toBe(false)
   })
 
   it('navigates to signup using the button below the login form', async () => {

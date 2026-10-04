@@ -31,3 +31,11 @@ class UserPublic(BaseModel):
 class LoginResponse(BaseModel):
     authenticated: bool
     user: UserPublic
+
+
+class UserEmail(BaseModel):
+    email: EmailStr
+
+
+class UserUsername(BaseModel):
+    username: str

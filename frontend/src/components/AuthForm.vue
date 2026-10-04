@@ -1,12 +1,14 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { rememberUserId } from '../state/currentUser'
 
 const props = defineProps({
   mode: { type: String, required: true, validator: (value) => ['login', 'register'].includes(value) },
 })
 
 const isRegister = computed(() => props.mode === 'register')
+const router = useRouter()
 const email = ref('')
 const username = ref('')
 const password = ref('')
@@ -46,7 +48,8 @@ async function submit() {
     if (isRegister.value) {
       success.value = 'Your account has been created. You can now log in.'
     } else if (data.authenticated && data.user?.email) {
-      success.value = `Successfully logged in as ${data.user.email}.`
+      rememberUserId(data.user.id)
+      await router.push('/profile')
     } else {
       error.value = 'Your login could not be confirmed. Please try again.'
     }

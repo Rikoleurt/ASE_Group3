@@ -31,6 +31,10 @@ def test_mysql_registration_login_uniqueness_and_seed():
             user = controller.get_by_email(email)
             assert user.id == registered.json()["id"]
             assert user.username == registered.json()["username"] == payload["username"]
+            for field in ("email", "username"):
+                profile_field = client.get(f"/users/{user.id}/{field}")
+                assert profile_field.status_code == 200
+                assert profile_field.json() == {field: payload[field]}
             assert user.password != payload["password"]
             assert verify_password(payload["password"], user.password)
             assert "password" not in registered.json()

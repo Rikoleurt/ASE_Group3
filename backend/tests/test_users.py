@@ -198,3 +198,35 @@ def test_health_and_openapi_import_without_mysql():
         paths = client.get("/openapi.json").json()["paths"]
     assert "post" in paths["/users/register"]
     assert "post" in paths["/users/login"]
+
+
+@pytest.mark.parametrize("field,value", [("email", "dev@ase3.com"), ("username", "Developer")])
+def test_profile_field_returns_selected_value_without_password(client, connection, field, value):
+    cursor = connection.cursor.return_value
+    cursor.execute.return_value = None
+    cursor.fetchone.return_value = {field: value}
+    response = client.get(f"/users/42/{field}")
+    assert response.status_code == 200
+    assert response.json() == {field: value}
+    sql, parameters = cursor.execute.call_args.args
+    assert f"SELECT {field}" in sql
+    assert "password" not in sql
+    assert "WHERE id = %s" in sql
+    assert parameters == (42,)
+    cursor.close.assert_called_once()
+    connection.close.assert_called_once()
+
+
+@pytest.mark.parametrize("field", ["email", "username"])
+def test_profile_field_returns_not_found(client, connection, field):
+    connection.cursor.return_value.fetchone.return_value = None
+    response = client.get(f"/users/42/{field}")
+    assert response.status_code == 404
+    assert response.json() == {"detail": "User not found."}
+
+
+@pytest.mark.parametrize("field", ["email", "username"])
+@pytest.mark.parametrize("user_id", ["0", "-1", "invalid"])
+def test_profile_field_rejects_invalid_id(client, connection, field, user_id):
+    assert client.get(f"/users/{user_id}/{field}").status_code == 422
+    connection.cursor.assert_not_called()

@@ -63,6 +63,7 @@ const activeClass = 'font-bold underline'
  
             <RouterLink
                 to="/profile"
+                aria-label="Profile"
                 class="block h-[52px] w-[52px] overflow-hidden rounded-full hover:ring-2 hover:ring-accent focus-visible:ring-2 focus-visible:ring-accent"
                 exact-active-class="ring-2 ring-accent">
                 <!-- TODO: Do we want profile pictures to fetch from be or just have a placeholder? -->
