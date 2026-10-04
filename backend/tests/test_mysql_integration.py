@@ -25,18 +25,20 @@ def test_mysql_registration_login_uniqueness_and_seed():
             assert seed.status_code == 200
             assert "password" not in seed.json()["user"]
 
-            payload = {"email": email, "password": "integration-secret"}
+            payload = {"email": email, "username": f"test-{uuid4().hex}", "password": "integration-secret"}
             registered = client.post("/users/register", json=payload)
             assert registered.status_code == 201
             user = controller.get_by_email(email)
             assert user.id == registered.json()["id"]
+            assert user.username == registered.json()["username"] == payload["username"]
             assert user.password != payload["password"]
             assert verify_password(payload["password"], user.password)
             assert "password" not in registered.json()
 
             duplicate = client.post("/users/register", json={**payload, "email": email.upper()})
             assert duplicate.status_code == 409
-            logged_in = client.post("/users/login", json=payload)
+            login_payload = {"email": email, "password": payload["password"]}
+            logged_in = client.post("/users/login", json=login_payload)
             assert logged_in.status_code == 200
             assert logged_in.json()["user"] == registered.json()
             assert client.post("/users/login", json={**payload, "password": "wrong"}).status_code == 401

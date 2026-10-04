@@ -9,12 +9,11 @@ from backend.app.model.user import LoginResponse, UserCreate, UserLogin, UserPub
 router = APIRouter(prefix="/users", tags=["users"])
 
 
+
 def get_user_data_controller() -> UserDataController:
     return UserDataController()
 
-
 UserController = Annotated[UserDataController, Depends(get_user_data_controller)]
-
 
 @router.post(
     "/register",
@@ -24,6 +23,7 @@ UserController = Annotated[UserDataController, Depends(get_user_data_controller)
 def register(payload: UserCreate, user_data_controller: UserController) -> UserPublic:
     user = user_data_controller.create_user(
         email=str(payload.email),
+        username=str(payload.username),
         password=payload.password,
     )
 
@@ -33,7 +33,7 @@ def register(payload: UserCreate, user_data_controller: UserController) -> UserP
             detail="An account with this email already exists.",
         )
 
-    return UserPublic(id=user.id, email=user.email)
+    return UserPublic(id=user.id, email=user.email, username=user.username)
 
 
 @router.post(
@@ -44,6 +44,7 @@ def register(payload: UserCreate, user_data_controller: UserController) -> UserP
 def login(payload: UserLogin, user_data_controller: UserController) -> LoginResponse:
     user = user_data_controller.authenticate(
         email=str(payload.email),
+        username=payload.username,
         password=payload.password,
     )
 
@@ -55,5 +56,5 @@ def login(payload: UserLogin, user_data_controller: UserController) -> LoginResp
 
     return LoginResponse(
         authenticated=True,
-        user=UserPublic(id=user.id, email=user.email),
+        user=UserPublic(id=user.id, email=user.email, username=user.username),
     )

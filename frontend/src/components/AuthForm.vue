@@ -8,6 +8,7 @@ const props = defineProps({
 
 const isRegister = computed(() => props.mode === 'register')
 const email = ref('')
+const username = ref('')
 const password = ref('')
 const pending = ref(false)
 const error = ref('')
@@ -20,17 +21,22 @@ async function submit() {
   success.value = ''
 
   try {
+    const payload = { email: email.value.trim(), password: password.value }
+    if (isRegister.value) payload.username = username.value.trim()
+
     const response = await fetch(`/api/users/${props.mode}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.value.trim(), password: password.value }),
+      body: JSON.stringify(payload),
     })
 
     if (!response.ok) {
       const messages = {
         401: 'Incorrect email or password.',
         409: 'An account with this email already exists. Please log in.',
-        422: 'Please check your email and password.',
+        422: isRegister.value
+          ? 'Please check your email, username and password.'
+          : 'Please check your email and password.',
       }
       error.value = messages[response.status] || 'The service is unavailable. Please try again later.'
       return
@@ -60,7 +66,7 @@ async function submit() {
         {{ isRegister ? 'Create an account' : 'Log in' }}
       </h1>
       <p class="mt-2 text-sm">
-        {{ isRegister ? 'Sign up with your email and a password.' : 'Log in with your email and password.' }}
+        {{ isRegister ? 'Sign up with your email, username and password.' : 'Log in with your email and password.' }}
       </p>
 
       <form class="mt-7 space-y-5" :aria-busy="pending" @submit.prevent="submit">
@@ -71,9 +77,26 @@ async function submit() {
             v-model="email"
             name="email"
             type="email"
+            :autocomplete="isRegister ? 'email' : 'username'"
+            required
+            maxlength="255"
+            :disabled="pending"
+            class="w-full rounded-lg border border-ink/30 bg-white px-3 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
+          />
+        </div>
+
+        <div v-if="isRegister">
+          <label for="auth-username" class="mb-2 block font-semibold">Username</label>
+          <input
+            id="auth-username"
+            v-model="username"
+            name="username"
+            type="text"
             autocomplete="username"
             required
             maxlength="255"
+            pattern=".*\S.*"
+            title="Enter a username with at least one non-space character."
             :disabled="pending"
             class="w-full rounded-lg border border-ink/30 bg-white px-3 py-2.5 text-ink focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-60"
           />

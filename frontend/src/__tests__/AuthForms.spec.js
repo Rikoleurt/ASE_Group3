@@ -27,6 +27,8 @@ async function render(path = '/login') {
 
 async function submit() {
   await wrapper.get('input[name="email"]').setValue('dev@ase3.com')
+  const username = wrapper.find('input[name="username"]')
+  if (username.exists()) await username.setValue('  Developer  ')
   await wrapper.get('input[name="password"]').setValue('dev')
   await wrapper.get('form').trigger('submit')
   await flushPromises()
@@ -40,6 +42,7 @@ describe('Authentication forms', () => {
     })
     vi.stubGlobal('fetch', fetch)
     await render()
+    expect(wrapper.find('input[name="username"]').exists()).toBe(false)
     await submit()
     expect(fetch).toHaveBeenCalledWith('/api/users/login', {
       method: 'POST',
@@ -60,12 +63,14 @@ describe('Authentication forms', () => {
   })
 
   it('registers through the API and offers a return to login', async () => {
-    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 2, email: 'dev@ase3.com' }) })
+    const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 2, email: 'dev@ase3.com', username: 'Developer' }) })
     vi.stubGlobal('fetch', fetch)
     const router = await render('/signup')
+    expect(wrapper.get('input[name="username"]').attributes('required')).toBeDefined()
+    expect(wrapper.get('input[name="username"]').attributes('maxlength')).toBe('255')
     await submit()
     expect(fetch).toHaveBeenCalledWith('/api/users/register', expect.objectContaining({
-      body: JSON.stringify({ email: 'dev@ase3.com', password: 'dev' }),
+      body: JSON.stringify({ email: 'dev@ase3.com', password: 'dev', username: 'Developer' }),
     }))
     expect(wrapper.get('[role="status"]').text()).toContain('Your account has been created')
     await wrapper.get('a[href="/login"]').trigger('click')
@@ -92,6 +97,16 @@ describe('Authentication forms', () => {
     await render()
     await submit()
     expect(wrapper.get('[role="alert"]').text()).toContain('Unable to reach the server')
+  })
+
+  it('requires a non-blank username for registration', async () => {
+    await render('/signup')
+    const username = wrapper.get('input[name="username"]')
+    expect(username.element.checkValidity()).toBe(false)
+    await username.setValue('   ')
+    expect(username.element.checkValidity()).toBe(false)
+    await username.setValue('Developer')
+    expect(username.element.checkValidity()).toBe(true)
   })
 
   it('prevents duplicate submissions while the request is pending', async () => {

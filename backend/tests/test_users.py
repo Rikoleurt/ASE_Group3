@@ -79,14 +79,15 @@ def test_mysql_configuration_uses_environment(monkeypatch):
 def test_registration_stores_hash_and_returns_public_user(client, connection):
     cursor = connection.cursor.return_value
     cursor.lastrowid = 42
-    response = client.post("/users/register", json={"email": "Student@ASE3.com", "password": "secret"})
+    response = client.post("/users/register", json={"email": "Student@ASE3.com", "username": "Student", "password": "secret"})
     assert response.status_code == 201
-    assert response.json() == {"id": 42, "email": "student@ase3.com"}
+    assert response.json() == {"id": 42, "email": "student@ase3.com", "username": "Student"}
     sql, parameters = cursor.execute.call_args.args
-    assert "VALUES (%s, %s)" in sql
+    assert "VALUES (%s, %s, %s)" in sql
     assert parameters[0] == "student@ase3.com"
-    assert verify_password("secret", parameters[1])
-    assert parameters[1] != "secret"
+    assert parameters[1] == "Student"
+    assert verify_password("secret", parameters[2])
+    assert parameters[2] != "secret"
     connection.commit.assert_called_once()
     connection.rollback.assert_not_called()
     cursor.close.assert_called_once()
@@ -95,7 +96,7 @@ def test_registration_stores_hash_and_returns_public_user(client, connection):
 
 def test_duplicate_email_rolls_back_and_returns_conflict(client, connection):
     connection.cursor.return_value.execute.side_effect = IntegrityError(errno=ER_DUP_ENTRY)
-    response = client.post("/users/register", json={"email": "dev@ase3.com", "password": "dev"})
+    response = client.post("/users/register", json={"email": "dev@ase3.com", "username": "dev", "password": "dev"})
     assert response.status_code == 409
     connection.rollback.assert_called_once()
     connection.commit.assert_not_called()
@@ -106,7 +107,7 @@ def test_duplicate_email_rolls_back_and_returns_conflict(client, connection):
 def test_other_integrity_errors_are_not_reported_as_duplicate(connection):
     connection.cursor.return_value.execute.side_effect = IntegrityError(errno=ER_BAD_NULL_ERROR)
     with pytest.raises(IntegrityError):
-        UserDataController().create_user("dev@ase3.com", "dev")
+        UserDataController().create_user("dev@ase3.com", "dev", "dev")
     connection.rollback.assert_called_once()
     connection.close.assert_called_once()
 
@@ -122,11 +123,11 @@ def test_transaction_error_rolls_back_and_closes(connection):
 
 def test_login_returns_public_user(client, connection):
     connection.cursor.return_value.fetchone.return_value = {
-        "id": 1, "email": "dev@ase3.com", "password": hash_password("dev"),
+        "id": 1, "email": "dev@ase3.com", "username": "dev", "password": hash_password("dev"),
     }
     response = client.post("/users/login", json={"email": "DEV@ase3.com", "password": "dev"})
     assert response.status_code == 200
-    assert response.json() == {"authenticated": True, "user": {"id": 1, "email": "dev@ase3.com"}}
+    assert response.json() == {"authenticated": True, "user": {"id": 1, "email": "dev@ase3.com", "username": "dev"}}
     sql, parameters = connection.cursor.return_value.execute.call_args.args
     assert "WHERE email = %s" in sql
     assert parameters == ("dev@ase3.com",)
@@ -136,7 +137,7 @@ def test_login_returns_public_user(client, connection):
 @pytest.mark.parametrize("exists", [True, False])
 def test_login_uses_same_error_for_wrong_password_and_unknown_user(client, connection, exists):
     connection.cursor.return_value.fetchone.return_value = (
-        {"id": 1, "email": "dev@ase3.com", "password": hash_password("dev")}
+        {"id": 1, "email": "dev@ase3.com", "username": "dev", "password": hash_password("dev")}
         if exists else None
     )
     response = client.post("/users/login", json={"email": "dev@ase3.com", "password": "wrong"})
@@ -153,7 +154,20 @@ def test_login_uses_same_error_for_wrong_password_and_unknown_user(client, conne
     {"password": "dev"},
 ])
 def test_invalid_credentials_are_rejected_before_database_access(client, connection, route, payload):
+    if route == "register":
+        payload = {**payload, "username": "dev"}
     assert client.post(f"/users/{route}", json=payload).status_code == 422
+    connection.cursor.assert_not_called()
+
+
+@pytest.mark.parametrize("username", [None, "", "   ", "x" * 256])
+def test_registration_rejects_missing_or_invalid_username(client, connection, username):
+    payload = {"email": "dev@ase3.com", "password": "dev"}
+    if username is not None:
+        payload["username"] = username
+    response = client.post("/users/register", json=payload)
+    assert response.status_code == 422
+    assert any(error["loc"] == ["body", "username"] for error in response.json()["detail"])
     connection.cursor.assert_not_called()
 
 
@@ -168,12 +182,12 @@ def test_lookup_parameterizes_untrusted_input(connection):
 
 def test_routes_support_controller_injection():
     controller = MagicMock()
-    controller.authenticate.return_value = User(id=7, email="dev@ase3.com", password="private-hash")
+    controller.authenticate.return_value = User(id=7, email="dev@ase3.com", username="dev", password="private-hash")
     app.dependency_overrides[get_user_data_controller] = lambda: controller
     try:
         with TestClient(app) as client:
             response = client.post("/users/login", json={"email": "dev@ase3.com", "password": "dev"})
-        assert response.json() == {"authenticated": True, "user": {"id": 7, "email": "dev@ase3.com"}}
+        assert response.json() == {"authenticated": True, "user": {"id": 7, "email": "dev@ase3.com", "username": "dev"}}
     finally:
         app.dependency_overrides.clear()
 

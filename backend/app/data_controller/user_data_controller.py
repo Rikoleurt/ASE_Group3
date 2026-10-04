@@ -14,11 +14,25 @@ _PASSWORD_ITERATIONS = 600_000
 
 
 def _normalize_email(email: str) -> str:
+    """
+    Normalize an email address to lower case.
+    :param email:
+    :return: Email address to lower case
+    """
     return email.strip().lower()
 
+def _normalize_username(username: str) -> str:
+    """
+    Normalize a username to lower case.
+    :param username:
+    :return: Lower case username
+    """
+    return username.strip().lower()
 
 def hash_password(password: str) -> str:
-    """Hash a password using PBKDF2-HMAC-SHA256 with a random salt."""
+    """
+    Hash a password using PBKDF2-HMAC-SHA256 with a random salt.
+    """
     salt = secrets.token_bytes(16)
     digest = hashlib.pbkdf2_hmac(
         "sha256",
@@ -57,14 +71,18 @@ def verify_password(password: str, stored_password: str) -> bool:
 
 class UserDataController(DataController):
     def get_by_email(self, email: str) -> User | None:
+        """
+        Get a user by email address.
+        :param email:
+        :return:
+        """
         normalized_email = _normalize_email(email)
-
         with self.connection() as connection:
             cursor = connection.cursor(dictionary=True)
             try:
                 cursor.execute(
                     """
-                    SELECT id, email, password
+                    SELECT id, email, username, password
                     FROM `user`
                     WHERE email = %s
                     LIMIT 1
@@ -81,10 +99,45 @@ class UserDataController(DataController):
         return User(
             id=row["id"],
             email=row["email"],
+            username=row["username"],
             password=row["password"],
         )
 
-    def create_user(self, email: str, password: str) -> User | None:
+    def get_by_username(self, username: str) -> User | None:
+        """
+        Get a user by username.
+        :param username:
+        :return:
+        """
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    """
+                    SELECT id, email, username, password
+                    FROM `user`
+                    WHERE username = %s
+                    LIMIT 1
+                    """,
+                    (username,),
+                )
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
+        if row is None:
+            return None
+
+        return User(
+            id=row["id"],
+            email=row["email"],
+            username=row["username"],
+            password=row["password"],
+        )
+
+    def get_by_id(self, user_id: int) -> User | None:
+        raise NotImplementedError
+
+    def create_user(self, email: str, username: str, password: str) -> User | None:
         normalized_email = _normalize_email(email)
         password_hash = hash_password(password)
 
@@ -94,10 +147,10 @@ class UserDataController(DataController):
                 try:
                     cursor.execute(
                         """
-                        INSERT INTO `user` (email, password)
-                        VALUES (%s, %s)
+                        INSERT INTO `user` (email, username, password)
+                        VALUES (%s, %s, %s)
                         """,
-                        (normalized_email, password_hash),
+                        (normalized_email, username, password_hash),
                     )
                     user_id = cursor.lastrowid
                 finally:
@@ -110,11 +163,23 @@ class UserDataController(DataController):
         return User(
             id=user_id,
             email=normalized_email,
+            username=username,
             password=password_hash,
         )
 
-    def authenticate(self, email: str, password: str) -> User | None:
-        user = self.get_by_email(email)
+    def authenticate(self, email: str, username: str | None, password: str) -> User | None:
+        """
+        Authenticates a user by email or username, password is mandatory.
+        :param email:
+        :param username:
+        :param password:
+        :return:
+        """
+        user = None
+        if email is not None:
+            user = self.get_by_email(email)
+        elif username is not None:
+            user = self.get_by_username(username)
         if user is None or not verify_password(password, user.password):
             return None
         return user
