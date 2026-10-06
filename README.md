@@ -1,141 +1,108 @@
-# ASE Group 3 — FastAPI and MySQL
+# ASE Group 3 — Exploring Linear A
 
-The Python import root is this repository (`ASE_Group3`), not `backend`.
-Run all commands below from the repository root. Python 3.12+ and Docker Compose
-are required; Docker Desktop must be running when using Docker.
+This project explores the analysis of Linear A tablets. The web application combines
+a **Vue** frontend, a **FastAPI** backend, and a **MySQL** database for user
+accounts. It provides registration, login, a user profile, and an initial image
+analysis demonstration using the HT13 tablet.
 
-## Architecture
+## 1. Installation and configuration
 
-```text
-backend/
-├── __init__.py
-├── app/
-│   ├── __init__.py
-│   ├── main.py
-│   ├── model/user.py
-│   ├── data_controller/
-│   │   ├── data_controller.py
-│   │   └── user_data_controller.py
-│   ├── routes/user_routes.py
-│   └── database/init.sql
-├── tests/
-└── pyproject.toml
-```
+Requirements: **Node.js `^22.18.0` or `>=24.12.0`**, **Python 3.12+**, **uv**, and
+**Docker with Docker Compose** to run MySQL. You can also use a local MySQL server.
 
-Imports use `backend.app...`. Routes handle HTTP requests and responses; data
-controllers handle authentication, parameterized SQL, connections and transactions.
-MySQL enforces uniqueness on `user.email`. Emails are normalized to lowercase.
-Passwords are stored as salted PBKDF2-HMAC-SHA256 hashes (600,000 iterations).
-API responses never include the password or its hash.
-
-## Install and configure
+Run the commands from the repository root:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements-dev.txt
-cp .env.example .env
-```
-
-Edit `.env` if needed, then export it in the terminal used to run FastAPI:
-
-```bash
-set -a
-source .env
-set +a
-```
-
-The application reads `MYSQL_HOST`, `MYSQL_PORT`, `MYSQL_USER`, `MYSQL_PASSWORD`
-and `MYSQL_DATABASE`. Defaults are `127.0.0.1`, `3306`, `ase`, `ase`, and `ase`.
-Compose also reads `.env` and uses `MYSQL_ROOT_PASSWORD` (default `root`).
-These default credentials and the seeded account are for local development.
-`npm run dev` and `npm run dev:backend` load `.env` automatically.
-For a direct `uvicorn` launch, export it as above.
-
-## Start MySQL and FastAPI
-
-```bash
-docker compose up -d --wait mysql
-uvicorn backend.app.main:app --reload
-```
-
-If ports 3306 or 8000 are occupied, use another port without stopping existing
-services (set `MYSQL_PORT=3307` in `.env` to keep this choice):
-
-```bash
-export MYSQL_PORT=3307
-docker compose up -d --wait mysql
-uvicorn backend.app.main:app --reload --port 8001
-```
-
-OpenAPI documentation: http://127.0.0.1:8000/docs. Health check: `/health`.
-Importing the application or calling `/health` does not require a database connection.
-
-Alternatively, with uv, keep the same working directory:
-
-```bash
+npm install
+npm --prefix frontend install
 uv sync --project backend
-uv run --project backend uvicorn backend.app.main:app --reload
 ```
 
-`npm run dev:backend` uses uv with `--env-file .env`; `npm run dev` also starts the frontend.
-The frontend requires Node `^22.18.0 || >=24.12.0`.
+Create a `.env` file at the repository root, or update the existing file:
 
-## Database initialization
+```dotenv
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=3306
+MYSQL_DATABASE=ase3
+MYSQL_USER=ase
+MYSQL_PASSWORD=ase
+MYSQL_ROOT_PASSWORD=root
+```
 
-Compose mounts `backend/app/database/init.sql`. It creates the `user` table
-(`id`, `email`, `password`) and the initial account `dev@ase3.com` / `dev`.
-The SQL seed contains only a password hash. The SQL runs in the database selected
-by `MYSQL_DATABASE`, so changing its name works on a fresh volume.
+These credentials are intended for local development. The `.env` file is ignored
+by Git and loaded automatically when the application starts.
+Keep `MYSQL_DATABASE=ase3`: the initialization script uses this name.
 
-Initialization scripts and creation variables apply only to an empty MySQL data
-directory; an existing volume is preserved (see the
-[official MySQL image documentation](https://hub.docker.com/_/mysql)).
-To apply the schema and seed to an existing Compose database without deleting data:
+### MySQL with Docker
+
+Start Docker, then start the database:
 
 ```bash
-docker compose exec -T mysql sh -c 'MYSQL_PWD="$MYSQL_PASSWORD" mysql -u "$MYSQL_USER" "$MYSQL_DATABASE"' < backend/app/database/init.sql
+docker compose up -d --wait mysql
 ```
 
-The script is idempotent and does not overwrite an existing user's password.
-For a local MySQL server, create the database and database user first, then run
-`mysql -h 127.0.0.1 -u ase -p ase < backend/app/database/init.sql` (adapt the names).
+On the first run, Docker creates the database and MySQL user, then executes
+[init.sql](backend/app/database/init.sql) to create the users table and the demo
+account: **`dev@ase3.com` / `dev`**.
+Data is persisted in a volume; initialization does not run again on an existing
+volume. If port 3306 is already in use, set `MYSQL_PORT=3307` in `.env` before
+starting Docker Compose.
 
-## API
+### Alternative: MySQL without Docker
 
-Both routes accept JSON with `email` and `password`:
+On a local MySQL server, run the script with an administrator account:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/users/register \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"student@ase3.com","password":"my-password"}'
-
-curl -X POST http://127.0.0.1:8000/users/login \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"dev@ase3.com","password":"dev"}'
+mysql -u root -p < backend/app/database/init.sql
 ```
 
-Registration returns `201` with `{ "id": 2, "email": "student@ase3.com" }`
-(the ID is generated), or `409` for a duplicate email. Login returns `200` with
-`{ "authenticated": true, "user": { "id": 1, "email": "dev@ase3.com" } }`,
-or `401` for incorrect credentials. Invalid input returns `422`.
-Login validates credentials; it does not issue a session or JWT.
+Then create a dedicated user and grant access to the database from a MySQL
+administrator session:
 
-## Tests
+```sql
+CREATE USER IF NOT EXISTS 'ase'@'localhost' IDENTIFIED BY 'ase';
+GRANT ALL PRIVILEGES ON ase3.* TO 'ase'@'localhost';
+```
+
+Update `.env` to match this server's credentials and port.
+`MYSQL_ROOT_PASSWORD` is only used for initialization with Docker.
+
+## 2. Run the application
+
+Once MySQL is running:
 
 ```bash
-python -m pytest backend/tests -q
-RUN_MYSQL_TESTS=1 python -m pytest backend/tests -q
+npm run dev
 ```
 
-The first command tests routes, real controllers, hashing and SQL using a mocked
-MySQL connection. The second also exercises a running, initialized MySQL database;
-it creates a uniquely named test account and deletes only that account afterward.
-With uv, replace `python` by `uv run --project backend python`.
+This command starts the frontend and backend together:
 
-The independent fraction solver needs its own scientific dependencies:
+- Application: http://localhost:5173
+- Interactive API documentation: http://127.0.0.1:8000/docs
+- HT13 demo: http://localhost:5173/tablet-demo
+
+The demo requires the `yolo26n.pt` file at the repository root. It uses a generic
+YOLO model that has not yet been trained to recognize Linear A signs.
+
+Stop the application with `Ctrl+C`. To stop MySQL when running it with Docker:
 
 ```bash
-uv run --project backend --with numpy --with scipy --with pillow --with sympy python -m pytest fraction-solver/tests -q
-npm --prefix frontend run test:unit -- --run
+docker compose stop mysql
 ```
+
+## 3. The role of `fraction-solver`
+
+The [fraction-solver](fraction-solver/README.md) directory contains an independent
+Python research tool. Using tablet transcriptions, it turns quantities and totals
+into equations to investigate the values of fraction signs, with exact rational
+arithmetic.
+
+It complements visual analysis by exploring the numerical consistency of
+transcriptions and the limits of what can be inferred. The
+[study findings](fraction-solver/FINDINGS.md) indicate that the available
+arithmetic evidence is insufficient to determine all unknown values.
+
+This tool is not integrated into the web interface and is not required for
+`npm run dev`. Its setup and commands are documented in its
+[README](fraction-solver/README.md); run those commands from the `fraction-solver/`
+directory.
