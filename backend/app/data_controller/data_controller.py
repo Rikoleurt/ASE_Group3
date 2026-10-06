@@ -7,7 +7,9 @@ from mysql.connector.connection import MySQLConnection
 
 
 class DataController:
-    """Base class responsible for opening/closing MySQL connections."""
+    """
+    Base class responsible for opening/closing MySQL connections.
+    """
 
     def __init__(self) -> None:
         self.config = {

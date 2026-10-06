@@ -15,7 +15,7 @@ _PASSWORD_ITERATIONS = 600_000
 
 def _normalize_email(email: str) -> str:
     """
-    Normalize an email address to lower case.
+    Normalizes an email address to lower case.
     :param email:
     :return: Email address to lower case
     """
@@ -23,7 +23,7 @@ def _normalize_email(email: str) -> str:
 
 def _normalize_username(username: str) -> str:
     """
-    Normalize a username to lower case.
+    Normalizes a username to lower case.
     :param username:
     :return: Lower case username
     """
@@ -31,7 +31,9 @@ def _normalize_username(username: str) -> str:
 
 def hash_password(password: str) -> str:
     """
-    Hash a password using PBKDF2-HMAC-SHA256 with a random salt.
+    Hashes a password using PBKDF2-HMAC-SHA256 with a random salt.
+    :param password:
+    :return:
     """
     salt = secrets.token_bytes(16)
     digest = hashlib.pbkdf2_hmac(
@@ -47,7 +49,12 @@ def hash_password(password: str) -> str:
 
 
 def verify_password(password: str, stored_password: str) -> bool:
-    """Verify a plaintext password against the stored PBKDF2 representation."""
+    """
+    Verifies a plaintext password against the stored PBKDF2 representation.
+    :param password:
+    :param stored_password:
+    :return:
+    """
     try:
         scheme, iterations_text, salt_hex, expected_hex = stored_password.split("$", 3)
         if scheme != _PASSWORD_SCHEME:
@@ -70,6 +77,9 @@ def verify_password(password: str, stored_password: str) -> bool:
 
 
 class UserDataController(DataController):
+    """
+    Inherit from DataController. This class is used whenever we want to query user data.
+    """
     #region getter
     def get_by_email(self, email: str) -> User | None:
         """
@@ -190,6 +200,13 @@ class UserDataController(DataController):
 
     #region setter
     def create_user(self, email: str, username: str, password: str) -> User | None:
+        """
+        Creates a new user using email, username, and password.
+        :param email:
+        :param username:
+        :param password:
+        :return:
+        """
         normalized_email = _normalize_email(email)
         password_hash = hash_password(password)
 

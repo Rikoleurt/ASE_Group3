@@ -10,7 +10,7 @@ YOLO_WEIGHTS = Path(__file__).resolve().parents[2] / "yolo26n.pt"
 
 def ht13_result(image_path: Path = HT13_IMAGE):
     """
-    Run the local pretrained checkpoint, including legitimate empty results
+    Run the local pretrained model, including legitimate empty results
     """
     if not YOLO_WEIGHTS.is_file():
         raise FileNotFoundError("Pretrained yolo26n.pt is required at the repository root.")
