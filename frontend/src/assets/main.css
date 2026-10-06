@@ -8,6 +8,11 @@
   --color-card: #e9d289;
   --color-ink: #4d2a00;
   --color-accent: #cc6f00;
+
+  /* Tablet confidence scores */
+  --color-confidence-high: #15803d;
+  --color-confidence-mid: #d97706;
+  --color-confidence-low: #dc2626;
 }
 
 @layer base {
