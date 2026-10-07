@@ -12,6 +12,11 @@ const routes = [
     component: () => import('../views/TabletDemoView.vue'),
   },
   {
+    path: '/tablet-reading',
+    name: 'tablet-reading',
+    component: () => import('../views/TabletReadingView.vue'),
+  },
+  {
     path: '/cluster',
     name: 'cluster',
     component: () => import('../views/ClusterView.vue'),

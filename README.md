@@ -103,7 +103,25 @@ in its [README](fraction-solver/README.md); run those commands from the
 `fraction-solver/` directory. It also builds the training data for a Linear A sign
 detector, described next.
 
-## 4. Training data for a sign detector
+## 4. Tablet reading
+
+http://localhost:5173/tablet-reading shows what HT 13 says, using `fraction-solver`
+with no trained model:
+
+- **Transcription** from lineara.eu (fetched once into `fraction-solver/data/cache/`
+  if it is not cached yet).
+- **Arithmetic check**: entries are summed exactly, fraction signs included, and
+  compared with the scribe's total. HT 13 is off by ½, which lineara.eu misses
+  because it checks whole numbers only.
+- **Fraction signs identified by shape**: each fraction sign's drawing is matched
+  against drawings from other tablets (88% correct on fraction signs in our
+  tests). This needs the sign drawings: run `python -m la.cli images` in
+  `fraction-solver/`.
+
+API: `GET /tablets/{id}/reading`, `GET /tablets/{id}/fraction-signs`,
+`GET /tablets/{id}/signs/{position}.png`, with ids like `HT-13`.
+
+## 5. Training data for a sign detector
 
 No hand labelling is needed. lineara.eu publishes, for each tablet, a tracing of the
 whole tablet and a crop of each sign cut from the same drawing. `fraction-solver`
@@ -122,10 +140,14 @@ uv run --project backend yolo detect train data=fraction-solver/out/yolo_signs/d
 ```
 
 Training writes `runs/detect/train/weights/best.pt`. It needs a GPU (or Google
-Colab) to finish in reasonable time. The demo does not use trained weights yet: it
-still loads `yolo26n.pt`, so pointing the backend at the trained model is a next step.
+Colab) to finish in reasonable time. Copy it to `models/linear_a_signs.pt` (or set
+`SIGN_DETECTOR_WEIGHTS`) and restart the backend: the demo then uses it instead of
+`yolo26n.pt`.
+
 `python -m la.cli dataset --labels role` gives one class per sign role
 (syllabogram, logogram, fraction, transaction) instead of a single `sign` class.
+With a model trained that way, boxes labelled `fraction` also get shape-matched
+guesses for which fraction sign they are.
 
 Known limitation: lineara.eu has crops only for signs, so numerals (tally strokes)
 and the occasional sign without a crop are left unboxed. A model trained on this

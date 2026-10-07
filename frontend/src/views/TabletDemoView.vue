@@ -97,6 +97,9 @@ onMounted(loadPredictions)
         <button type="button" @click="loadPredictions">Try again</button>
       </template>
       <p v-else-if="!predictions.length" role="status">No detections found on HT13.</p>
+      <RouterLink to="/tablet-reading" class="mt-3 inline-block font-bold underline hover:text-accent">
+        Read this tablet: transcription and arithmetic check
+      </RouterLink>
     </section>
 
     <div class="hidden w-0.5 bg-ink md:block" />

@@ -6,7 +6,13 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 from backend.app.main import app
-from backend.app.tablet_demo import HT13_IMAGE, annotate_ht13, ht13_result
+from backend.app.tablet_demo import HT13_IMAGE, SIGN_IMGSZ, active_weights, annotate_ht13, ht13_result
+
+
+@pytest.fixture(autouse=True)
+def no_trained_detector(monkeypatch, tmp_path):
+    # Tests describe the baseline unless they opt in, even where trained weights exist locally.
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", tmp_path / "missing-signs.pt")
 
 
 def test_ht13_endpoint_runs_pretrained_inference_without_database():
@@ -67,6 +73,7 @@ def test_predictions_endpoint_serializes_real_boxes_as_normalized_coordinates():
     assert data == {
         "width": 100,
         "height": 200,
+        "trained": False,
         "predictions": [{
             "id": 1,
             "label": "object",
@@ -87,7 +94,37 @@ def test_predictions_endpoint_preserves_empty_results():
         with TestClient(app) as client:
             response = client.get("/tablet-demo/ht13/predictions")
     assert response.status_code == 200
-    assert response.json() == {"width": 100, "height": 200, "predictions": []}
+    assert response.json() == {"width": 100, "height": 200, "trained": False, "predictions": []}
+
+
+def test_trained_sign_weights_are_preferred_when_present(monkeypatch, tmp_path):
+    trained = tmp_path / "linear_a_signs.pt"
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", trained)
+    assert active_weights()[2] is False
+    trained.write_bytes(b"weights")
+    assert active_weights() == (trained, SIGN_IMGSZ, True)
+
+
+def test_only_fraction_boxes_from_the_trained_detector_get_shape_guesses(monkeypatch, tmp_path):
+    from ultralytics.engine.results import Results
+
+    trained = tmp_path / "linear_a_signs.pt"
+    trained.write_bytes(b"weights")
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", trained)
+    image = np.full((200, 100, 3), 255, dtype=np.uint8)
+    image[50:90, 20:30] = 0
+    result = Results(image, path=str(HT13_IMAGE), names={0: "syllabogram", 2: "fraction"},
+                     boxes=np.array([[10, 40, 40, 120, 0.9, 2], [50, 40, 90, 120, 0.8, 0]]))
+    guesses = [{"sign": "A707", "label": "J", "distance": 4.0}]
+    with patch("backend.app.tablet_demo.ht13_result", return_value=result), \
+         patch("backend.app.reading.identify_mask", return_value=guesses) as identify:
+        with TestClient(app) as client:
+            data = client.get("/tablet-demo/ht13/predictions").json()
+    assert data["trained"] is True
+    fraction, syllabogram = data["predictions"]
+    assert fraction["shapeGuesses"] == guesses
+    assert "shapeGuesses" not in syllabogram
+    identify.assert_called_once()
 
 
 def test_predictions_endpoint_reports_unavailable_model():

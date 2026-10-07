@@ -3,6 +3,7 @@ const avatarUrl = ''
 const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},
+    {to: '/tablet-reading', label: 'Tablet Reading', icon: 'lines'},
     {to: '/cluster', label: 'Cluster', icon: 'chart'},
 ]
 const userLinks = [
@@ -33,6 +34,16 @@ const activeClass = 'font-bold underline'
                     fill="currentColor"
                     fill-rule="evenodd"
                     d="M6 2h13a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 4v2.5h7V6Z"
+                />
+            </svg>
+
+            <svg v-else-if="link.icon === 'lines'" class="h-6 w-6" viewBox="0 0 24 24">
+                <path
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    d="M4 6h16M4 12h10M4 18h13"
                 />
             </svg>
 
