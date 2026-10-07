@@ -1,0 +1,13 @@
+[project]
+name = "character-detection"
+version = "0.1.0"
+description = "ASE Group 3 printed character detection (digits and Latin letters)"
+requires-python = ">=3.12"
+dependencies = [
+    "ultralytics",
+    "pillow",
+    "pillow-heif",
+]
+
+[tool.uv]
+package = false

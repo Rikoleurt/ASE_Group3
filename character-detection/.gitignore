@@ -1,0 +1,6 @@
+# Photos, Label Studio exports and the built dataset stay local.
+data/
+
+# Training runs, weights and pretrained checkpoints.
+runs/
+*.pt
