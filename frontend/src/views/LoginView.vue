@@ -23,7 +23,7 @@
         required
         class="w-full rounded-lg bg-page px-3 py-2 placeholder:text-ink/40 focus:outline-2 focus:outline-accent"
       />
-      
+
       <input
         v-model="password"
         type="password"

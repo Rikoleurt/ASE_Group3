@@ -4,14 +4,17 @@ version = "0.1.0"
 description = "ASE Group 3 backend"
 requires-python = ">=3.12"
 dependencies = [
-    "fastapi",
-    "uvicorn[standard]",
+    "fastapi>=0.115,<1.0",
+    "uvicorn[standard]>=0.30,<1.0",
+    "email-validator>=2.2,<3.0",
+    "mysql-connector-python>=9.0,<10.0",
+    "ultralytics>=8.4,<9.0",
 ]
 
 [dependency-groups]
 dev = [
-    "httpx",
-    "pytest",
+    "httpx>=0.27,<1.0",
+    "pytest>=8.0,<10.0",
 ]
 
 [tool.uv]

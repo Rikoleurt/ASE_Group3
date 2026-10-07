@@ -1,19 +1,13 @@
 from fastapi import FastAPI
+from backend.app.routes.tablet_demo_routes import router as tablet_demo_router
+from backend.app.routes.user_routes import router as user_router
 
-app = FastAPI(
-    title="ASE Group 3 API",
-    version="0.1.0",
-)
+app = FastAPI(title="ASE Backend")
 
+app.include_router(user_router)
+app.include_router(tablet_demo_router)
 
-@app.get("/")
-def root():
-    return {"message": "ASE Group 3 backend is running"}
-
-
-@app.get("/api/health")
-def health():
-    return {
-        "status": "ok",
-        "message": "Backend is communicating with the frontend"
-    }
+# Quick debug to test backend connectivity to the frontend.
+@app.get("/health")
+def health() -> dict[str, str]:
+    return {"status": "ok"}
