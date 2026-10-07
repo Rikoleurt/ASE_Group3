@@ -404,6 +404,35 @@ def cmd_recover(args: argparse.Namespace) -> None:
     print(f"\nWrote {OUT_DIR / 'recover_la.json'}")
 
 
+def cmd_images(args: argparse.Namespace) -> None:
+    from la import signboxes
+
+    docs = load_cached()
+    usable = sum(signboxes.has_boxes(d) for d in docs.values())
+    print(f"Fetching tracings and sign crops for {usable} tablets (resumable)...")
+    stats = signboxes.download_images(docs, delay=args.delay)
+    print(f"  new {stats.requested}, already cached {stats.cached}, failed {stats.failed}")
+
+
+def cmd_dataset(args: argparse.Namespace) -> None:
+    """Sign boxes for every tracing, written as a YOLO detection dataset."""
+    from la import signboxes
+
+    out = Path(args.out) if args.out else signboxes.DATASET_DIR
+    report = signboxes.build_dataset(load_cached(), out=out, labels=args.labels,
+                                     val_fraction=args.val_fraction, min_match=args.min_match,
+                                     workers=args.workers)
+    tablets, boxes = report["tablets"], report["boxes"]
+    print(f"Tablets: train {tablets['train']}, val {tablets['val']} (held out: {', '.join(report['held_out'])})")
+    print(f"Boxes:   train {boxes['train']}, val {boxes['val']}")
+    print(f"Crops rejected (ink did not line up): {len(report['rejected'])}")
+    shrunk = sum(s < 1.0 for s in report["scales"].values())
+    print(f"Tracings smaller than their crops: {shrunk}/{len(report['scales'])}")
+    for name, n in sorted(report["classes"].items(), key=lambda kv: -kv[1]):
+        print(f"  {name:12s} {n}")
+    print(f"\nWrote {out / 'data.yaml'} (licence notice in LICENCE.txt; do not redistribute)")
+
+
 def cmd_lb_fetch(args: argparse.Namespace) -> None:
     from la.lb.fetch import main as lb_fetch_main
 
@@ -616,6 +645,18 @@ def main() -> None:
     p_recover.add_argument("--show", type=int, default=6,
                            help="how many candidate restorations to print per section")
 
+    p_images = sub.add_parser("images", help="fetch tablet tracings and sign crops (resumable)")
+    p_images.add_argument("--delay", type=float, default=0.4, help="seconds between requests")
+
+    p_dataset = sub.add_parser("dataset", help="build a YOLO sign-detection dataset from the tracings")
+    p_dataset.add_argument("--labels", choices=["sign", "role"], default="sign",
+                           help="one 'sign' class (default), or one class per sign role")
+    p_dataset.add_argument("--val-fraction", type=float, default=0.15)
+    p_dataset.add_argument("--min-match", type=float, default=0.85,
+                           help="fraction of a crop's ink that must land on tracing ink")
+    p_dataset.add_argument("--out", help="output directory (default out/yolo_signs)")
+    p_dataset.add_argument("--workers", type=int, default=4, help="parallel processes (default 4)")
+
     sub.add_parser("lb-fetch", help="crawl and cache the DAMOS Linear B corpus (resumable)")
 
     p_lb_audit = sub.add_parser(
@@ -649,6 +690,10 @@ def main() -> None:
         cmd_ratios(args)
     elif args.command == "recover":
         cmd_recover(args)
+    elif args.command == "images":
+        cmd_images(args)
+    elif args.command == "dataset":
+        cmd_dataset(args)
     elif args.command == "lb-fetch":
         cmd_lb_fetch(args)
     elif args.command == "lb-audit":

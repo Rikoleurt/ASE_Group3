@@ -98,7 +98,38 @@ transcriptions and the limits of what can be inferred. The
 [study findings](fraction-solver/FINDINGS.md) indicate that the available
 arithmetic evidence is insufficient to determine all unknown values.
 
-This tool is not integrated into the web interface and is not required for
-`npm run dev`. Its setup and commands are documented in its
-[README](fraction-solver/README.md); run those commands from the `fraction-solver/`
-directory.
+This tool is not required for `npm run dev`. Its setup and commands are documented
+in its [README](fraction-solver/README.md); run those commands from the
+`fraction-solver/` directory. It also builds the training data for a Linear A sign
+detector, described next.
+
+## 4. Training data for a sign detector
+
+No hand labelling is needed. lineara.eu publishes, for each tablet, a tracing of the
+whole tablet and a crop of each sign cut from the same drawing. `fraction-solver`
+finds each crop on its tracing (estimating the scale where the tracing was shrunk),
+which gives the sign boxes, and writes them as a YOLO dataset
+([la/signboxes.py](fraction-solver/la/signboxes.py)). On the current corpus this
+gives 4,704 boxes on 730 tablets. HT 13 is held out because the demo shows it.
+
+```bash
+cd fraction-solver
+python -m la.cli fetch      # once: cache the lineara.eu documents (~15 min)
+python -m la.cli images     # tracings and sign crops (~40 min, resumable)
+python -m la.cli dataset    # writes out/yolo_signs/ and prints a summary
+cd ..
+uv run --project backend yolo detect train data=fraction-solver/out/yolo_signs/data.yaml model=yolo26n.pt imgsz=1024 epochs=100
+```
+
+Training writes `runs/detect/train/weights/best.pt`. It needs a GPU (or Google
+Colab) to finish in reasonable time. The demo does not use trained weights yet: it
+still loads `yolo26n.pt`, so pointing the backend at the trained model is a next step.
+`python -m la.cli dataset --labels role` gives one class per sign role
+(syllabogram, logogram, fraction, transaction) instead of a single `sign` class.
+
+Known limitation: lineara.eu has crops only for signs, so numerals (tally strokes)
+and the occasional sign without a crop are left unboxed. A model trained on this
+data treats them as background and will not find numerals.
+
+The tracings are CC BY-NC-SA 4.0 (SigLA, lineara.eu). The images, the dataset and
+trained weights stay local and are ignored by Git; do not redistribute them.
