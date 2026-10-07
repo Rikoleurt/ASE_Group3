@@ -17,7 +17,7 @@ class DataController:
             "port": int(os.getenv("MYSQL_PORT", "3306")),
             "user": os.getenv("MYSQL_USER", "ase"),
             "password": os.getenv("MYSQL_PASSWORD", "ase"),
-            "database": os.getenv("MYSQL_DATABASE", "ase"),
+            "database": os.getenv("MYSQL_DATABASE", "ase3"),
             "connection_timeout": 5,
         }
 

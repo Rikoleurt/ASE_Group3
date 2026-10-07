@@ -4,6 +4,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "concurrently -n BACKEND,FRONTEND \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "predev:backend": "node -e \"const fs=require('fs');if(!fs.existsSync('.env')){fs.copyFileSync('.env.example','.env');console.log('Created .env from .env.example')}\"",
     "dev:backend": "uv run --project backend --env-file .env uvicorn backend.app.main:app --reload",
     "dev:frontend": "npm --prefix frontend run dev"
   },

@@ -18,15 +18,11 @@ npm --prefix frontend install
 uv sync --project backend
 ```
 
-Create a `.env` file at the repository root, or update the existing file:
+Settings live in a `.env` file at the repository root. `npm run dev` creates it from
+[.env.example](.env.example) the first time, or you can copy it yourself:
 
-```dotenv
-MYSQL_HOST=127.0.0.1
-MYSQL_PORT=3306
-MYSQL_DATABASE=ase3
-MYSQL_USER=ase
-MYSQL_PASSWORD=ase
-MYSQL_ROOT_PASSWORD=root
+```bash
+cp .env.example .env
 ```
 
 These credentials are intended for local development. The `.env` file is ignored
