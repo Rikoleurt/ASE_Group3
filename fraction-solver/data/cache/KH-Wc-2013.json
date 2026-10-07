@@ -1,0 +1,73 @@
+{
+ "id": "KH Wc 2013",
+ "url": "https://lineara.eu/documents/KH-Wc-2013/",
+ "site": "Khania",
+ "support": "roundel",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "*411-vs"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "A411",
+    "reading": ""
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/KH-Wc-2013-1440w-05da0d9a7a.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A411c",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-Wc-2013_1-1407w-5d90684a77.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "*411-vs",
+   "signs": [
+    {
+     "text": "*411",
+     "kind": "sure"
+    },
+    {
+     "text": "vs",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 1,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

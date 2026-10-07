@@ -1,0 +1,107 @@
+{
+ "id": "HT 112b",
+ "url": "https://lineara.eu/documents/HT-112b/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "HT Scribe 9",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "[?]"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A303",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 6
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 6
+  }
+ ],
+ "damaged_slots": 5,
+ "tracing": "https://lineara.eu/img/tracings/HT-112b-1004w-56e1559a1e.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A303",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-112b_1-197w-9c083449c2.png"
+  },
+  {
+   "position": 2,
+   "sign": "",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/HT-112b_2-247w-2a88b4c103.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "[?]",
+   "signs": [
+    {
+     "text": "",
+     "kind": "unknown"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 2,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

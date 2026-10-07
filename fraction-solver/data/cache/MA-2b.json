@@ -1,0 +1,224 @@
+{
+ "id": "MA 2b",
+ "url": "https://lineara.eu/documents/MA-2b/",
+ "site": "Mallia",
+ "support": "tablet",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "[?]-re-ti",
+  "ti",
+  "ja-ku",
+  "ti"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "sign",
+    "id": "AB37",
+    "reading": "ti"
+   },
+   {
+    "kind": "number",
+    "value": 4
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB37",
+    "reading": "ti"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB57",
+    "reading": "ja"
+   },
+   {
+    "kind": "sign",
+    "id": "AB81",
+    "reading": "ku"
+   },
+   {
+    "kind": "number",
+    "value": 2
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB37",
+    "reading": "ti"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 4
+  },
+  {
+   "line": 2,
+   "value": 1
+  },
+  {
+   "line": 3,
+   "value": 2
+  }
+ ],
+ "damaged_slots": 3,
+ "tracing": "https://lineara.eu/img/tracings/MA-2b-1440w-5d76c8f400.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/MA-2b_1-101w-14af6ddc45.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB27",
+   "reading": "re",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-2b_2-275w-88664bfa77.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB37",
+   "reading": "ti",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-2b_3-273w-72e1354f59.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB37",
+   "reading": "ti",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-2b_4-206w-8563bfff66.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB57",
+   "reading": "ja",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-2b_5-139w-edf6707cef.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB81",
+   "reading": "ku",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-2b_6-246w-574d4ca1cb.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB37",
+   "reading": "ti",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-2b_7-316w-717327a1e2.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "[?]-re-ti",
+   "signs": [
+    {
+     "text": "",
+     "kind": "unknown"
+    },
+    {
+     "text": "re",
+     "kind": "sure"
+    },
+    {
+     "text": "ti",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ti",
+   "signs": [
+    {
+     "text": "ti",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ja-ku",
+   "signs": [
+    {
+     "text": "ja",
+     "kind": "sure"
+    },
+    {
+     "text": "ku",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ti",
+   "signs": [
+    {
+     "text": "ti",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 7,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

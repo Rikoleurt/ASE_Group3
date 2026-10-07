@@ -1,0 +1,129 @@
+{
+ "id": "KH 33",
+ "url": "https://lineara.eu/documents/KH-33/",
+ "site": "Khania",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "[?]-a"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A624",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB08",
+    "reading": "a"
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 3,
+   "value": 1
+  }
+ ],
+ "damaged_slots": 6,
+ "tracing": "https://lineara.eu/img/tracings/KH-33-887w-82bac4ef8f.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A624",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-33_1-355w-9bf9bdb0a6.png"
+  },
+  {
+   "position": 2,
+   "sign": "",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/KH-33_2-168w-5be0805865.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB08",
+   "reading": "a",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-33_3-327w-5ca59aa608.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "[?]-a",
+   "signs": [
+    {
+     "text": "",
+     "kind": "unknown"
+    },
+    {
+     "text": "a",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 3,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

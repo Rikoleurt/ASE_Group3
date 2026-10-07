@@ -1,0 +1,101 @@
+{
+ "id": "KH 77",
+ "url": "https://lineara.eu/documents/KH-77/",
+ "site": "Khania",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "[?]"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A303",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "fraction",
+    "id": "A710",
+    "reading": "W"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 3,
+ "tracing": "https://lineara.eu/img/tracings/KH-77-932w-64d3135da5.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A626",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-77_1-286w-18582588e2.png"
+  },
+  {
+   "position": 2,
+   "sign": "A710",
+   "reading": "W",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-77_2-222w-022fe44c82.png"
+  },
+  {
+   "position": 3,
+   "sign": "",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/KH-77_3-139w-18e710b12f.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "[?]",
+   "signs": [
+    {
+     "text": "",
+     "kind": "unknown"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 3,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

@@ -1,0 +1,198 @@
+{
+ "id": "MA 1a",
+ "url": "https://lineara.eu/documents/MA-1a/",
+ "site": "Mallia",
+ "support": "tablet",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "i-du-wi",
+  "qe-de-mi-nu"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "AB28",
+    "reading": "i"
+   },
+   {
+    "kind": "sign",
+    "id": "AB51",
+    "reading": "du"
+   },
+   {
+    "kind": "sign",
+    "id": "AB40",
+    "reading": "wi"
+   },
+   {
+    "kind": "sign",
+    "id": "AB47",
+    "reading": ""
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB78",
+    "reading": "qe"
+   },
+   {
+    "kind": "sign",
+    "id": "AB45",
+    "reading": "de"
+   },
+   {
+    "kind": "sign",
+    "id": "AB73",
+    "reading": "mi"
+   },
+   {
+    "kind": "sign",
+    "id": "AB55",
+    "reading": "nu"
+   },
+   {
+    "kind": "divider"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/MA-1a-1440w-f4f1c4905e.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB28",
+   "reading": "i",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_1-271w-4774ec76a9.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB51",
+   "reading": "du",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_2-324w-9d9fc1be00.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB40",
+   "reading": "wi",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_3-201w-fc23e079e8.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB47",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_4-289w-43b7b12a7f.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB78",
+   "reading": "qe",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_5-198w-bf46be762f.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB45",
+   "reading": "de",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_6-277w-8f56c97908.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB73",
+   "reading": "mi",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_7-231w-1ea29039c0.png"
+  },
+  {
+   "position": 8,
+   "sign": "AB55",
+   "reading": "nu",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-1a_8-147w-0c92ed1e17.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "i-du-wi",
+   "signs": [
+    {
+     "text": "i",
+     "kind": "sure"
+    },
+    {
+     "text": "du",
+     "kind": "sure"
+    },
+    {
+     "text": "wi",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "qe-de-mi-nu",
+   "signs": [
+    {
+     "text": "qe",
+     "kind": "sure"
+    },
+    {
+     "text": "de",
+     "kind": "sure"
+    },
+    {
+     "text": "mi",
+     "kind": "sure"
+    },
+    {
+     "text": "nu",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 8,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

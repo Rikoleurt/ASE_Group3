@@ -1,0 +1,75 @@
+{
+ "id": "KH Zc 106",
+ "url": "https://lineara.eu/documents/KH-Zc-106/",
+ "site": "Khania",
+ "support": "inked inscription",
+ "period": "LM IIIA",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [
+  "sa-sa-ra-me"
+ ],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "sa-sa-ra-me",
+   "signs": [
+    {
+     "text": "sa",
+     "kind": "sure"
+    },
+    {
+     "text": "sa",
+     "kind": "sure"
+    },
+    {
+     "text": "ra",
+     "kind": "sure"
+    },
+    {
+     "text": "me",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": null,
+ "conflicts": [
+  {
+   "field": "w",
+   "ours": "sa-sa-ra-me",
+   "ours_final_sign": "AB013 (me)",
+   "theirs": "]...-sa-sa-ra-mi",
+   "theirs_final_sign": "AB073 (mi)",
+   "our_source": "lineara.xyz",
+   "their_source": "RILA Supplement 1 Index des signes, sequence ][.]-31-31-60-73",
+   "note": "The whole dispute is one sign in final position. RILA Supplement 1 itself flags the reading uncertain and prints two variants. The initial ja- is a RILA Supplement 1 restoration, not an observation. The editio princeps, Hallager 2016 pages 290 to 293 figure 81, is not acquired."
+  }
+ ],
+ "rila": {
+  "period": "LM IIIA",
+  "period_certainty": "stated",
+  "period_source": "RILA Supplement 1 introduction, period paragraph",
+  "period_note": "LM IIIA1 in the RILA Supplement 1 concordance row and in the Hallager 2016 chapter title; the concordance metadata is marked UNCERTAIN in our own verification"
+ },
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": "The one source of this record, lineara.xyz, gives no sign-by-sign text for it. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

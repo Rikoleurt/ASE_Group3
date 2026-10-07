@@ -1,0 +1,244 @@
+{
+ "id": "HT 131b",
+ "url": "https://lineara.eu/documents/HT-131b/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "[?]",
+  "po-to-ku-ro"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB30",
+    "reading": "ni_FIC"
+   },
+   {
+    "kind": "number",
+    "value": 30
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB122",
+    "reading": "OLIV"
+   },
+   {
+    "kind": "number",
+    "value": 2
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A589",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB11",
+    "reading": "po"
+   },
+   {
+    "kind": "sign",
+    "id": "AB05",
+    "reading": "to"
+   },
+   {
+    "kind": "sign",
+    "id": "AB81",
+    "reading": "ku"
+   },
+   {
+    "kind": "sign",
+    "id": "AB02",
+    "reading": "ro"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "number",
+    "value": 452
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 2,
+   "value": 30
+  },
+  {
+   "line": 3,
+   "value": 2
+  },
+  {
+   "line": 5,
+   "value": 452
+  }
+ ],
+ "damaged_slots": 7,
+ "tracing": "https://lineara.eu/img/tracings/HT-131b-933w-c9f2ec894b.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_1-134w-9834ea3146.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB30",
+   "reading": "ni FIC",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_2-133w-104a4d2f7f.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB122",
+   "reading": "OLIV",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_3-189w-cc8726d8dd.png"
+  },
+  {
+   "position": 4,
+   "sign": "A589",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_4-192w-ab23cb8a9b.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB11",
+   "reading": "po",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_5-97w-daa8993369.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB05",
+   "reading": "to",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_6-94w-bed922cec1.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB81",
+   "reading": "ku",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_7-156w-d1207afb60.png"
+  },
+  {
+   "position": 8,
+   "sign": "AB02",
+   "reading": "ro",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_8-87w-aff318917b.png"
+  },
+  {
+   "position": 9,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-131b_9-97w-5fb842800f.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "[?]",
+   "signs": [
+    {
+     "text": "",
+     "kind": "unknown"
+    }
+   ]
+  },
+  {
+   "word": "po-to-ku-ro",
+   "signs": [
+    {
+     "text": "po",
+     "kind": "sure"
+    },
+    {
+     "text": "to",
+     "kind": "sure"
+    },
+    {
+     "text": "ku",
+     "kind": "sure"
+    },
+    {
+     "text": "ro",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 9,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

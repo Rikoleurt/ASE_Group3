@@ -1,0 +1,72 @@
+{
+ "id": "HT Wa 1019γ",
+ "url": "https://lineara.eu/documents/HT-Wa-1019-gamma/",
+ "site": "Haghia Triada",
+ "support": "nodule",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "sigla"
+ ],
+ "words": [
+  "si-tu"
+ ],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": null,
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB41",
+   "reading": "si",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-Wa-1019-_1-485w-03a23d3e80.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB69",
+   "reading": "tu",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-Wa-1019-_2-509w-5befe6768f.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "si-tu",
+   "signs": [
+    {
+     "text": "si",
+     "kind": "sure"
+    },
+    {
+     "text": "tu",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 2,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": "The sign-by-sign text on this site comes from lineara.xyz, which holds no text under this id. SigLA's tracing of each sign is above. SigLA's word list is below. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

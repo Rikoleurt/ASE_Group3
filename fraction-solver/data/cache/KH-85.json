@@ -1,0 +1,208 @@
+{
+ "id": "KH 85",
+ "url": "https://lineara.eu/documents/KH-85/",
+ "site": "Khania",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "KH Scribe 1",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A615",
+    "reading": ""
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A308",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A651",
+    "reading": ""
+   },
+   {
+    "kind": "fraction",
+    "id": "A708",
+    "reading": "K"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A131c",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A304",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A303",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "fraction",
+    "id": "A703",
+    "reading": "D"
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 11,
+ "tracing": "https://lineara.eu/img/tracings/KH-85-1279w-b40252df15.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A615",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_1-212w-7879eb1f1a.png"
+  },
+  {
+   "position": 2,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_2-144w-1f485f01c1.png"
+  },
+  {
+   "position": 3,
+   "sign": "A308",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_3-189w-398c527589.png"
+  },
+  {
+   "position": 4,
+   "sign": "A651",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_4-294w-851d7ba638.png"
+  },
+  {
+   "position": 5,
+   "sign": "A708",
+   "reading": "K",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_5-204w-ee9557f014.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB131c",
+   "reading": "VIN",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_6-263w-e2c218461b.png"
+  },
+  {
+   "position": 7,
+   "sign": "A633",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_7-565w-33e2e73193.png"
+  },
+  {
+   "position": 8,
+   "sign": "A703",
+   "reading": "D",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_8-120w-58de4d123c.png"
+  },
+  {
+   "position": 9,
+   "sign": "AB302",
+   "reading": "OLE",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-85_9-181w-7d276da083.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": {
+  "value": 9,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

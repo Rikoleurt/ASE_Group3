@@ -1,0 +1,394 @@
+{
+ "id": "HT 129",
+ "url": "https://lineara.eu/documents/HT-129/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "HT Scribe 15",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "tu-ru-ta",
+  "qi-ri-na-AB120/GRA"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "sign",
+    "id": "AB66",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB120",
+    "reading": "GRA"
+   },
+   {
+    "kind": "number",
+    "value": 33
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   },
+   {
+    "kind": "fraction",
+    "id": "A702",
+    "reading": "B"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A304",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 10
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB30",
+    "reading": "ni_FIC"
+   },
+   {
+    "kind": "number",
+    "value": 22
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB69",
+    "reading": "tu"
+   },
+   {
+    "kind": "sign",
+    "id": "AB21f",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB53",
+    "reading": "ri"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "sign",
+    "id": "AB120",
+    "reading": "GRA"
+   },
+   {
+    "kind": "number",
+    "value": 40
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A608",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 1
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A618",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 6
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A302",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 33
+  },
+  {
+   "line": 2,
+   "value": 10
+  },
+  {
+   "line": 3,
+   "value": 22
+  },
+  {
+   "line": 4,
+   "value": 40
+  },
+  {
+   "line": 5,
+   "value": 1
+  },
+  {
+   "line": 6,
+   "value": 6
+  }
+ ],
+ "damaged_slots": 5,
+ "tracing": "https://lineara.eu/img/tracings/HT-129-1440w-b9475b94ec.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB69",
+   "reading": "tu",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_1-146w-9b9331198f.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB26",
+   "reading": "ru",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_2-165w-2fe1b3b46d.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB66",
+   "reading": "ta2",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_3-185w-1dbc10c82d.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB120",
+   "reading": "GRA",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_4-197w-19e062305b.png"
+  },
+  {
+   "position": 5,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_5-140w-c6d9fab606.png"
+  },
+  {
+   "position": 6,
+   "sign": "A702",
+   "reading": "B",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_6-157w-fdcf35b424.png"
+  },
+  {
+   "position": 7,
+   "sign": "A304",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_7-122w-7455446dc1.png"
+  },
+  {
+   "position": 8,
+   "sign": "AB30",
+   "reading": "ni FIC",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_8-205w-daf00c2fc3.png"
+  },
+  {
+   "position": 9,
+   "sign": "AB69",
+   "reading": "tu",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_9-179w-de22763868.png"
+  },
+  {
+   "position": 10,
+   "sign": "AB21f",
+   "reading": "qi OVIS",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_10-191w-00cc7f0ff3.png"
+  },
+  {
+   "position": 11,
+   "sign": "AB53",
+   "reading": "ri",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_11-114w-ad036fa1b5.png"
+  },
+  {
+   "position": 12,
+   "sign": "AB06",
+   "reading": "na",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_12-148w-088edacc8d.png"
+  },
+  {
+   "position": 13,
+   "sign": "AB120",
+   "reading": "GRA",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_13-215w-5c6b60bf3e.png"
+  },
+  {
+   "position": 14,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_14-112w-5cf7158771.png"
+  },
+  {
+   "position": 15,
+   "sign": "A608",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_15-242w-0e400de362.png"
+  },
+  {
+   "position": 16,
+   "sign": "A618",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-129_16-198w-434018d70c.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "tu-ru-ta",
+   "signs": [
+    {
+     "text": "tu",
+     "kind": "sure"
+    },
+    {
+     "text": "ru",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "qi-ri-na-AB120/GRA",
+   "signs": [
+    {
+     "text": "qi",
+     "kind": "sure"
+    },
+    {
+     "text": "ri",
+     "kind": "sure"
+    },
+    {
+     "text": "na",
+     "kind": "sure"
+    },
+    {
+     "text": "AB120/GRA",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 16,
+  "counted_by": "SigLA",
+  "note": {
+   "was": 15,
+   "source": "SigLA live 2026-08-14",
+   "unlisted_positions": [],
+   "change": "SigLA inserted fraction A707 at position 5; every later sign moved down one. The document now carries two A707."
+  }
+ },
+ "conflicts": [
+  {
+   "field": "w",
+   "ours": "tu-ru-ta",
+   "theirs": "ki-re-ta2",
+   "ours_layer": "words (w): SigLA, through our own import",
+   "theirs_layer": "unicode_text (u): lineara.xyz glyph string",
+   "difference": "position 1: word layer AB069 (tu), glyph layer AB067 (ki); position 2: word layer AB026 (ru), glyph layer AB027 (re)",
+   "our_source": "SigLA, through our own import; the same reading stands in the SigLA document page of 2026-08-14",
+   "their_source": "lineara.xyz, the unicode_text of this record, decoded by Unicode 16.0 character name: U+10638 AB067 ki, U+10619 AB027 re, U+10637 AB066 ta2",
+   "note": "Found by the cross-layer check of 2026-09-18 (word 1 of the record). The two layers of this one record read a different sign at the same position. Position 3 is not in dispute: SigLA reads ta2 (AB066) there and the word layer shows ta only because the old importer cut the subscript."
+  }
+ ],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

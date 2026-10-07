@@ -1,0 +1,164 @@
+{
+ "id": "MA 4a",
+ "url": "https://lineara.eu/documents/MA-4a/",
+ "site": "Mallia",
+ "support": "tablet",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "ta-hide+b"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   },
+   {
+    "kind": "sign",
+    "id": "A602",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 15
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A603",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 120
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A601",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 53
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A600",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 30
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 15
+  },
+  {
+   "line": 2,
+   "value": 120
+  },
+  {
+   "line": 3,
+   "value": 53
+  },
+  {
+   "line": 4,
+   "value": 30
+  }
+ ],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/MA-4a-1440w-49a2ba8a1d.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB59",
+   "reading": "ta",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-4a_1-59w-37d5223eb5.png"
+  },
+  {
+   "position": 2,
+   "sign": "A602",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-4a_2-242w-95e3c80655.png"
+  },
+  {
+   "position": 3,
+   "sign": "A603",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-4a_3-374w-d5330e003f.png"
+  },
+  {
+   "position": 4,
+   "sign": "A601",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-4a_4-267w-c3659690e5.png"
+  },
+  {
+   "position": 5,
+   "sign": "A600",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-4a_5-197w-83cf9e7015.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "ta-hide+b",
+   "signs": [
+    {
+     "text": "ta",
+     "kind": "sure"
+    },
+    {
+     "text": "hide+b",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 5,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

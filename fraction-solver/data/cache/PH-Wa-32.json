@@ -1,0 +1,131 @@
+{
+ "id": "PH Wa 32",
+ "url": "https://lineara.eu/documents/PH-Wa-32/",
+ "site": "Phaistos",
+ "support": "nodule",
+ "period": "MM III",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "su-ki-ra-ta"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB58",
+    "reading": "su"
+   },
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB53",
+    "reading": "ri"
+   },
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/PH-Wa-32-1440w-fc8af4502a.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB58",
+   "reading": "su",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PH-Wa-32_1-274w-4860057fb1.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PH-Wa-32_2-372w-1f583b41b3.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB60",
+   "reading": "ra",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PH-Wa-32_3-196w-c9907ef0bd.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB59",
+   "reading": "ta",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PH-Wa-32_4-241w-70a74f37ce.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "su-ki-ra-ta",
+   "signs": [
+    {
+     "text": "su",
+     "kind": "sure"
+    },
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "ra",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 4,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [
+  {
+   "field": "w",
+   "ours": "su-ki-ra-ta",
+   "ours_third_sign": "AB60 (ra)",
+   "theirs": "su-ki-ri-ta",
+   "theirs_third_sign": "AB53 (ri)",
+   "our_source": "SigLA, through our own import; the word string and the sign array of this record both read AB60",
+   "their_source": "Younger, section 10c, SU-KI-RI-TA (PH Wa 32; KN 9 occurrences), Internet Archive copy dated 2024-01-25, fetched 2026-09-18; lineara.xyz record PHWa32, transliteratedWords SU-KI-RI-TA, fetched 2026-09-18",
+   "note": "The whole dispute is one sign in third position: AB60 (ra) against AB53 (ri). Our own unicode_text on this record decodes to their reading: U+10632 AB058 su, U+10638 AB067 ki, U+1062D AB053 ri, U+10633 AB059 ta, so the glyph string reads su-ki-ri-ta while the word string reads su-ki-ra-ta. The record therefore contradicts itself. Recorded 2026-09-18 after the independent claims audit."
+  }
+ ],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

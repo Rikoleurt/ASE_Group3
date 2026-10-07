@@ -1,0 +1,88 @@
+{
+ "id": "PSI Za 1",
+ "url": "https://lineara.eu/documents/PSI-Za-1/",
+ "site": "Psykhro",
+ "support": "stone vessel",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [
+  "*188-du-se"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB188",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB51",
+    "reading": "du"
+   },
+   {
+    "kind": "sign",
+    "id": "AB09",
+    "reading": "se"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 1,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "*188-du-se",
+   "signs": [
+    {
+     "text": "*188",
+     "kind": "sure"
+    },
+    {
+     "text": "du",
+     "kind": "sure"
+    },
+    {
+     "text": "se",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": null,
+ "conflicts": [
+  {
+   "field": "s",
+   "ours": "Psykhro",
+   "theirs": "Pseira",
+   "our_source": "lineara.xyz, which also carries the alias PSEZb1",
+   "their_source": "RILA Supplement 1 PSE Zb 1, INSTAP Study Center for East Crete, ed. Floyd 1995",
+   "note": "Pseira and Psykhro are different sites. UNCERTAIN whether this record is Pseira Zb 1 mis-sited or a Psykhro document with a spurious alias. The key repair to PSI Za 1 does not answer it. It needs the RILA Supplement 1 plate."
+  }
+ ],
+ "rila": {
+  "siglum": "PSI Za 1",
+  "siglum_source": ""
+ },
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": "PS IZa1",
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

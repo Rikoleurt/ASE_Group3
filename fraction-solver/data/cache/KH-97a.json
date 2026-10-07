@@ -1,0 +1,151 @@
+{
+ "id": "KH 97a",
+ "url": "https://lineara.eu/documents/KH-97a/",
+ "site": "Khania",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "re",
+  "a-ja",
+  "na"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "sign",
+    "id": "AB08",
+    "reading": "a"
+   },
+   {
+    "kind": "sign",
+    "id": "AB57",
+    "reading": "ja"
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 5,
+ "tracing": "https://lineara.eu/img/tracings/KH-97a-1440w-5e93a8ba7c.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB27",
+   "reading": "re",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-97a_1-255w-30e33d5934.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB08",
+   "reading": "a",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-97a_2-388w-03c7367af5.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB57",
+   "reading": "ja",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-97a_3-289w-f64370a07b.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB06",
+   "reading": "na",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-97a_4-733w-fe49868e86.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "re",
+   "signs": [
+    {
+     "text": "re",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "a-ja",
+   "signs": [
+    {
+     "text": "a",
+     "kind": "sure"
+    },
+    {
+     "text": "ja",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "na",
+   "signs": [
+    {
+     "text": "na",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 4,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

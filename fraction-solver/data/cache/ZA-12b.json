@@ -1,0 +1,155 @@
+{
+ "id": "ZA 12b",
+ "url": "https://lineara.eu/documents/ZA-12b/",
+ "site": "Zakros",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB69",
+    "reading": "tu"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "number",
+    "value": 6
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB03",
+    "reading": "pa"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "number",
+    "value": 40
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB37",
+    "reading": "ti"
+   },
+   {
+    "kind": "number",
+    "value": 13
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB26",
+    "reading": "ru"
+   },
+   {
+    "kind": "number",
+    "value": 26
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 2,
+   "value": 6
+  },
+  {
+   "line": 3,
+   "value": 40
+  },
+  {
+   "line": 4,
+   "value": 13
+  },
+  {
+   "line": 5,
+   "value": 26
+  }
+ ],
+ "damaged_slots": 6,
+ "tracing": "https://lineara.eu/img/tracings/ZA-12b-1440w-bddf321899.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB69",
+   "reading": "tu",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/ZA-12b_1-336w-4ea191df62.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB03",
+   "reading": "pa",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/ZA-12b_2-359w-46cd9f0728.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB37",
+   "reading": "ti",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/ZA-12b_3-224w-2c66773e0e.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB26",
+   "reading": "ru",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/ZA-12b_4-281w-f54d8edb6c.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": {
+  "value": 4,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

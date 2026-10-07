@@ -1,0 +1,124 @@
+{
+ "id": "PK Za 15",
+ "url": "https://lineara.eu/documents/PK-Za-15/",
+ "site": "Palaikastro",
+ "support": "stone vessel",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [
+  "ja-di-ki-te-te-du-pu2-re"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB57",
+    "reading": "ja"
+   },
+   {
+    "kind": "sign",
+    "id": "AB07",
+    "reading": "di"
+   },
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB04",
+    "reading": "te"
+   },
+   {
+    "kind": "sign",
+    "id": "AB04",
+    "reading": "te"
+   },
+   {
+    "kind": "sign",
+    "id": "AB51",
+    "reading": "du"
+   },
+   {
+    "kind": "sign",
+    "id": "AB29",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 2,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "ja-di-ki-te-te-du-pu2-re",
+   "signs": [
+    {
+     "text": "ja",
+     "kind": "sure"
+    },
+    {
+     "text": "di",
+     "kind": "sure"
+    },
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "te",
+     "kind": "sure"
+    },
+    {
+     "text": "te",
+     "kind": "sure"
+    },
+    {
+     "text": "du",
+     "kind": "sure"
+    },
+    {
+     "text": "pu2",
+     "kind": "sure"
+    },
+    {
+     "text": "re",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

@@ -1,0 +1,212 @@
+{
+ "id": "KH 103",
+ "url": "https://lineara.eu/documents/KH-103/",
+ "site": "Khania",
+ "support": "tablet",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [
+  "ole-ja",
+  "ole-ta"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "A302",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 11
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A302",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB57",
+    "reading": "ja"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A302",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   },
+   {
+    "kind": "number",
+    "value": 8
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB30",
+    "reading": "ni_FIC"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A303",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 23
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB131a",
+    "reading": ""
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 11
+  },
+  {
+   "line": 2,
+   "value": 1
+  },
+  {
+   "line": 3,
+   "value": 8
+  },
+  {
+   "line": 5,
+   "value": 23
+  }
+ ],
+ "damaged_slots": 4,
+ "tracing": null,
+ "signs": [
+  {
+   "position": 1,
+   "sign": "",
+   "reading": "",
+   "role": "logogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/KH-103_1-157w-96de0ceff3.png"
+  },
+  {
+   "position": 2,
+   "sign": "A548",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-103_2-241w-558a206697.png"
+  },
+  {
+   "position": 3,
+   "sign": "A615",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-103_3-158w-a6385c96d9.png"
+  },
+  {
+   "position": 4,
+   "sign": "A303",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-103_4-179w-1a591106c5.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB131a",
+   "reading": "VIN",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-103_5-205w-87855812c9.png"
+  },
+  {
+   "position": 6,
+   "sign": "",
+   "reading": "",
+   "role": "logogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/KH-103_6-171w-1fde0d8962.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "ole-ja",
+   "signs": [
+    {
+     "text": "ole",
+     "kind": "sure"
+    },
+    {
+     "text": "ja",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ole-ta",
+   "signs": [
+    {
+     "text": "ole",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

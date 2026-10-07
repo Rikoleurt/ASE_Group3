@@ -1,0 +1,733 @@
+{
+ "id": "HT 88",
+ "url": "https://lineara.eu/documents/HT-88/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "HT Scribe 7",
+ "sources": [
+  "lineara",
+  "old_corpus",
+  "sigla"
+ ],
+ "words": [
+  "a-du",
+  "re-za",
+  "ki-ki-na",
+  "ki-ro",
+  "ku-*56-*56",
+  "ka-ju",
+  "ku-*56-nu",
+  "pa-ja-re",
+  "sa-ma-ro",
+  "da-ta-re",
+  "ku-ro"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB08",
+    "reading": "a"
+   },
+   {
+    "kind": "sign",
+    "id": "AB51",
+    "reading": "du"
+   },
+   {
+    "kind": "sign",
+    "id": "A568",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 20
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "sign",
+    "id": "AB17",
+    "reading": "za"
+   },
+   {
+    "kind": "number",
+    "value": 6
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB30",
+    "reading": "ni_FIC"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "number",
+    "value": 7
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB02",
+    "reading": "ro"
+   },
+   {
+    "kind": "divider"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB81",
+    "reading": "ku"
+   },
+   {
+    "kind": "sign",
+    "id": "AB56",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB56",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB77",
+    "reading": "ka"
+   },
+   {
+    "kind": "sign",
+    "id": "AB65",
+    "reading": "ju"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB81",
+    "reading": "ku"
+   },
+   {
+    "kind": "sign",
+    "id": "AB56",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB55",
+    "reading": "nu"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB03",
+    "reading": "pa"
+   },
+   {
+    "kind": "sign",
+    "id": "AB57",
+    "reading": "ja"
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB31",
+    "reading": "sa"
+   },
+   {
+    "kind": "sign",
+    "id": "AB80",
+    "reading": "ma"
+   },
+   {
+    "kind": "sign",
+    "id": "AB02",
+    "reading": "ro"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB01",
+    "reading": "da"
+   },
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB81",
+    "reading": "ku"
+   },
+   {
+    "kind": "sign",
+    "id": "AB02",
+    "reading": "ro"
+   },
+   {
+    "kind": "number",
+    "value": 6
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 20
+  },
+  {
+   "line": 2,
+   "value": 6
+  },
+  {
+   "line": 3,
+   "value": 7
+  },
+  {
+   "line": 5,
+   "value": 1
+  },
+  {
+   "line": 6,
+   "value": 1
+  },
+  {
+   "line": 7,
+   "value": 1
+  },
+  {
+   "line": 8,
+   "value": 1
+  },
+  {
+   "line": 9,
+   "value": 1
+  },
+  {
+   "line": 10,
+   "value": 1
+  },
+  {
+   "line": 11,
+   "value": 6
+  }
+ ],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/HT-88-1440w-054ae8bc0d.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB08",
+   "reading": "a",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_1-290w-1e0b742fd9.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB51",
+   "reading": "du",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_2-230w-30ca13a987.png"
+  },
+  {
+   "position": 3,
+   "sign": "A568",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_3-386w-a622b40615.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB27",
+   "reading": "re",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_4-187w-f0b50fd0b3.png"
+  },
+  {
+   "position": 5,
+   "sign": "",
+   "reading": "",
+   "role": "erasure",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_5-171w-7fb4e3d516.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB17",
+   "reading": "za",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_6-146w-cc58016502.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB31",
+   "reading": "sa",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_7-246w-351158a7e3.png"
+  },
+  {
+   "position": 8,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_8-158w-54e5ee60f1.png"
+  },
+  {
+   "position": 9,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_9-184w-3a55fe8d07.png"
+  },
+  {
+   "position": 10,
+   "sign": "AB06",
+   "reading": "na",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_10-177w-4c1079b244.png"
+  },
+  {
+   "position": 11,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_11-223w-b030cb56b5.png"
+  },
+  {
+   "position": 12,
+   "sign": "AB02",
+   "reading": "ro",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_12-98w-c6ef67b2fc.png"
+  },
+  {
+   "position": 13,
+   "sign": "AB81",
+   "reading": "ku",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_13-220w-445712e01f.png"
+  },
+  {
+   "position": 14,
+   "sign": "AB56",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_14-129w-417ff3f649.png"
+  },
+  {
+   "position": 15,
+   "sign": "AB56",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_15-137w-efc3bde5dd.png"
+  },
+  {
+   "position": 16,
+   "sign": "AB77",
+   "reading": "ka",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_16-186w-0f732fe9c8.png"
+  },
+  {
+   "position": 17,
+   "sign": "AB65",
+   "reading": "ju",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_17-183w-95e6124503.png"
+  },
+  {
+   "position": 18,
+   "sign": "AB81",
+   "reading": "ku",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_18-217w-928eb30be8.png"
+  },
+  {
+   "position": 19,
+   "sign": "AB56",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_19-149w-5161fc9594.png"
+  },
+  {
+   "position": 20,
+   "sign": "AB55",
+   "reading": "nu",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_20-157w-0120df2416.png"
+  },
+  {
+   "position": 21,
+   "sign": "AB03",
+   "reading": "pa",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_21-150w-dcadd69ac0.png"
+  },
+  {
+   "position": 22,
+   "sign": "AB57",
+   "reading": "ja",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_22-128w-5ad70c8183.png"
+  },
+  {
+   "position": 23,
+   "sign": "AB27",
+   "reading": "re",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_23-161w-e441d5cc41.png"
+  },
+  {
+   "position": 24,
+   "sign": "AB31",
+   "reading": "sa",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_24-141w-4231d403f4.png"
+  },
+  {
+   "position": 25,
+   "sign": "AB80",
+   "reading": "ma",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_25-220w-5c4cb89552.png"
+  },
+  {
+   "position": 26,
+   "sign": "AB02",
+   "reading": "ro",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_26-122w-2f5252c566.png"
+  },
+  {
+   "position": 27,
+   "sign": "AB01",
+   "reading": "da",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_27-85w-0c760d5039.png"
+  },
+  {
+   "position": 28,
+   "sign": "AB59",
+   "reading": "ta",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_28-183w-7c5c3f61a1.png"
+  },
+  {
+   "position": 29,
+   "sign": "AB27",
+   "reading": "re",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_29-185w-6da4ea981d.png"
+  },
+  {
+   "position": 30,
+   "sign": "AB81",
+   "reading": "ku",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_30-188w-1c7291010c.png"
+  },
+  {
+   "position": 31,
+   "sign": "AB02",
+   "reading": "ro",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-88_31-137w-e2c0dbcbe3.png"
+  }
+ ],
+ "arithmetic": {
+  "status": "balances",
+  "detail": "integers balance 6 = 6"
+ },
+ "word_signs": [
+  {
+   "word": "a-du",
+   "signs": [
+    {
+     "text": "a",
+     "kind": "sure"
+    },
+    {
+     "text": "du",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "re-za",
+   "signs": [
+    {
+     "text": "re",
+     "kind": "sure"
+    },
+    {
+     "text": "za",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ki-ki-na",
+   "signs": [
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "na",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ki-ro",
+   "signs": [
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "ro",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ku-*56-*56",
+   "signs": [
+    {
+     "text": "ku",
+     "kind": "sure"
+    },
+    {
+     "text": "*56",
+     "kind": "sure"
+    },
+    {
+     "text": "*56",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ka-ju",
+   "signs": [
+    {
+     "text": "ka",
+     "kind": "sure"
+    },
+    {
+     "text": "ju",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ku-*56-nu",
+   "signs": [
+    {
+     "text": "ku",
+     "kind": "sure"
+    },
+    {
+     "text": "*56",
+     "kind": "sure"
+    },
+    {
+     "text": "nu",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "pa-ja-re",
+   "signs": [
+    {
+     "text": "pa",
+     "kind": "sure"
+    },
+    {
+     "text": "ja",
+     "kind": "sure"
+    },
+    {
+     "text": "re",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "sa-ma-ro",
+   "signs": [
+    {
+     "text": "sa",
+     "kind": "sure"
+    },
+    {
+     "text": "ma",
+     "kind": "sure"
+    },
+    {
+     "text": "ro",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "da-ta-re",
+   "signs": [
+    {
+     "text": "da",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    },
+    {
+     "text": "re",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ku-ro",
+   "signs": [
+    {
+     "text": "ku",
+     "kind": "sure"
+    },
+    {
+     "text": "ro",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 31,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

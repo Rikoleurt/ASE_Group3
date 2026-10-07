@@ -1,0 +1,106 @@
+{
+ "id": "KH 25",
+ "url": "https://lineara.eu/documents/KH-25/",
+ "site": "Khania",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB100",
+    "reading": "VIR"
+   },
+   {
+    "kind": "number",
+    "value": 140
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB100",
+    "reading": "VIR"
+   },
+   {
+    "kind": "number",
+    "value": 10
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 140
+  },
+  {
+   "line": 2,
+   "value": 10
+  }
+ ],
+ "damaged_slots": 5,
+ "tracing": "https://lineara.eu/img/tracings/KH-25-578w-ebd2c455a4.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB100",
+   "reading": "VIR",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-25_1-130w-608f5d0d26.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB100",
+   "reading": "VIR",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-25_2-169w-ed98d1cd67.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": {
+  "value": 2,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

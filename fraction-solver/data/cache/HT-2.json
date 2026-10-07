@@ -1,0 +1,323 @@
+{
+ "id": "HT 2",
+ "url": "https://lineara.eu/documents/HT-2/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "old_corpus",
+  "sigla"
+ ],
+ "words": [
+  "a-ka-ru",
+  "ki-re-ta-na"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB08",
+    "reading": "a"
+   },
+   {
+    "kind": "sign",
+    "id": "AB77",
+    "reading": "ka"
+   },
+   {
+    "kind": "sign",
+    "id": "AB26",
+    "reading": "ru"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "A610",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 20
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A609",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 17
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A613",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 3
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "sign",
+    "id": "A610",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 54
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A609",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 47
+   }
+  ],
+  [
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 20
+  },
+  {
+   "line": 2,
+   "value": 17
+  },
+  {
+   "line": 3,
+   "value": 3
+  },
+  {
+   "line": 4,
+   "value": 54
+  },
+  {
+   "line": 5,
+   "value": 47
+  },
+  {
+   "line": 6,
+   "value": 1
+  }
+ ],
+ "damaged_slots": 6,
+ "tracing": "https://lineara.eu/img/tracings/HT-2-1440w-e12b241d01.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB08",
+   "reading": "a",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_1-178w-d29dd03ec7.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB77",
+   "reading": "ka",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_2-175w-aa9fd9e2b7.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB26",
+   "reading": "ru",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_3-160w-edbdbed7cb.png"
+  },
+  {
+   "position": 4,
+   "sign": "A610",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_4-237w-f6b9b121ad.png"
+  },
+  {
+   "position": 5,
+   "sign": "A609",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_5-165w-b27bc59d2b.png"
+  },
+  {
+   "position": 6,
+   "sign": "A613",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_6-201w-16a9639038.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_7-167w-5a52ccb0ed.png"
+  },
+  {
+   "position": 8,
+   "sign": "AB27",
+   "reading": "re",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_8-129w-6c403adf2d.png"
+  },
+  {
+   "position": 9,
+   "sign": "AB59",
+   "reading": "ta",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_9-139w-038b621048.png"
+  },
+  {
+   "position": 10,
+   "sign": "AB06",
+   "reading": "na",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_10-152w-342a3c097a.png"
+  },
+  {
+   "position": 11,
+   "sign": "A610",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_11-188w-55d5365e02.png"
+  },
+  {
+   "position": 12,
+   "sign": "A609",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-2_12-160w-568fdbf34c.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "a-ka-ru",
+   "signs": [
+    {
+     "text": "a",
+     "kind": "sure"
+    },
+    {
+     "text": "ka",
+     "kind": "sure"
+    },
+    {
+     "text": "ru",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ki-re-ta-na",
+   "signs": [
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "re",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    },
+    {
+     "text": "na",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 12,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

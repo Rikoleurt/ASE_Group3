@@ -1,0 +1,61 @@
+{
+ "id": "KH Wc 2004",
+ "url": "https://lineara.eu/documents/KH-Wc-2004/",
+ "site": "Khania",
+ "support": "roundel",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "old_corpus",
+  "sigla"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB100",
+    "reading": "VIR"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 1,
+ "tracing": "https://lineara.eu/img/tracings/KH-Wc-2004-1200w-4a15a6b5a9.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB100",
+   "reading": "VIR",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-Wc-2004_1-205w-3bba6c5bc0.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": {
+  "value": 1,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

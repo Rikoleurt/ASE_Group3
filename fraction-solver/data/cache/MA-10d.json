@@ -1,0 +1,75 @@
+{
+ "id": "MA 10d",
+ "url": "https://lineara.eu/documents/MA-10d/",
+ "site": "Mallia",
+ "support": "tablet",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A662",
+    "reading": ""
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A661",
+    "reading": ""
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 1,
+ "tracing": "https://lineara.eu/img/tracings/MA-10d-1440w-23a95ca4de.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A662",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-10d_1-270w-c903f97d1e.png"
+  },
+  {
+   "position": 2,
+   "sign": "A661",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-10d_2-330w-2fd4705b92.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": {
+  "value": 2,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

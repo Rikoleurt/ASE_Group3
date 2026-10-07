@@ -1,0 +1,51 @@
+{
+ "id": "KN Wc 42",
+ "url": "https://lineara.eu/documents/KN-Wc-42/",
+ "site": "Knossos",
+ "support": "roundel",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "sign",
+    "id": "AB61",
+    "reading": "o"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 1,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

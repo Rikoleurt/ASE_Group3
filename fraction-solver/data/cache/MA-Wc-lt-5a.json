@@ -1,0 +1,96 @@
+{
+ "id": "MA Wc <5a>",
+ "url": "https://lineara.eu/documents/MA-Wc-lt-5a/",
+ "site": "Mallia",
+ "support": "roundel",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "sigla"
+ ],
+ "words": [
+  "a-sa-da-ka"
+ ],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/MA-Wc--5a-1421w-da5c429934.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB08",
+   "reading": "a",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-Wc-5a-_1-279w-04582fecb3.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB31",
+   "reading": "sa",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-Wc-5a-_2-269w-622f36bbc9.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB01",
+   "reading": "da",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-Wc-5a-_3-205w-760f8d2237.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB77",
+   "reading": "ka",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/MA-Wc-5a-_4-256w-a81430cb02.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "a-sa-da-ka",
+   "signs": [
+    {
+     "text": "a",
+     "kind": "sure"
+    },
+    {
+     "text": "sa",
+     "kind": "sure"
+    },
+    {
+     "text": "da",
+     "kind": "sure"
+    },
+    {
+     "text": "ka",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 4,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": "The sign-by-sign text on this site comes from lineara.xyz, which holds no text under this id. SigLA's tracing of each sign is above. SigLA's word list is below. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

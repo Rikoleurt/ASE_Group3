@@ -1,0 +1,232 @@
+{
+ "id": "HT 146",
+ "url": "https://lineara.eu/documents/HT-146/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "qe",
+  "ri-*305",
+  "ri-ka-ta"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB78",
+    "reading": "qe"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "number",
+    "value": 30
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB53",
+    "reading": "ri"
+   },
+   {
+    "kind": "sign",
+    "id": "A305",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 30
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB80",
+    "reading": "ma"
+   },
+   {
+    "kind": "number",
+    "value": 30
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB53",
+    "reading": "ri"
+   },
+   {
+    "kind": "sign",
+    "id": "AB77",
+    "reading": "ka"
+   },
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   },
+   {
+    "kind": "number",
+    "value": 30
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 2,
+   "value": 30
+  },
+  {
+   "line": 3,
+   "value": 30
+  },
+  {
+   "line": 4,
+   "value": 30
+  },
+  {
+   "line": 5,
+   "value": 30
+  }
+ ],
+ "damaged_slots": 4,
+ "tracing": "https://lineara.eu/img/tracings/HT-146-1440w-6228959938.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB78",
+   "reading": "qe",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-146_1-320w-79922d23c3.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB53",
+   "reading": "ri",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-146_2-148w-283b6a0f3e.png"
+  },
+  {
+   "position": 3,
+   "sign": "A305",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-146_3-176w-4eaafd4a40.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB80",
+   "reading": "ma",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-146_4-237w-e66793cc8c.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB53",
+   "reading": "ri",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-146_5-127w-9880bd5d43.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB77",
+   "reading": "ka",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-146_6-188w-1b1bb3b652.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB59",
+   "reading": "ta",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-146_7-160w-ebd3a262fe.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "qe",
+   "signs": [
+    {
+     "text": "qe",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ri-*305",
+   "signs": [
+    {
+     "text": "ri",
+     "kind": "sure"
+    },
+    {
+     "text": "*305",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ri-ka-ta",
+   "signs": [
+    {
+     "text": "ri",
+     "kind": "sure"
+    },
+    {
+     "text": "ka",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 7,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

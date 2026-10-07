@@ -1,0 +1,298 @@
+{
+ "id": "PK Za 8",
+ "url": "https://lineara.eu/documents/PK-Za-8/",
+ "site": "Palaikastro",
+ "support": "stone vessel",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [
+  "pa3-e",
+  "ja-di-ki-te-te-*307-pu2-re",
+  "tu-me-i",
+  "ja-sa-u-na-ka-na-si",
+  "i-pi"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB55",
+    "reading": "nu"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "AB56",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB38",
+    "reading": "e"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "AB57",
+    "reading": "ja"
+   },
+   {
+    "kind": "sign",
+    "id": "AB07",
+    "reading": "di"
+   },
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB04",
+    "reading": "te"
+   },
+   {
+    "kind": "sign",
+    "id": "AB04",
+    "reading": "te"
+   },
+   {
+    "kind": "sign",
+    "id": "A307",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB29",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "AB69",
+    "reading": "tu"
+   },
+   {
+    "kind": "sign",
+    "id": "AB13",
+    "reading": "me"
+   },
+   {
+    "kind": "sign",
+    "id": "AB28",
+    "reading": "i"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB57",
+    "reading": "ja"
+   },
+   {
+    "kind": "sign",
+    "id": "AB31",
+    "reading": "sa"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB10",
+    "reading": "u"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "sign",
+    "id": "AB77",
+    "reading": "ka"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "sign",
+    "id": "AB41",
+    "reading": "si"
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB28",
+    "reading": "i"
+   },
+   {
+    "kind": "sign",
+    "id": "AB39",
+    "reading": "pi"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 4,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "pa3-e",
+   "signs": [
+    {
+     "text": "pa3",
+     "kind": "sure"
+    },
+    {
+     "text": "e",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ja-di-ki-te-te-*307-pu2-re",
+   "signs": [
+    {
+     "text": "ja",
+     "kind": "sure"
+    },
+    {
+     "text": "di",
+     "kind": "sure"
+    },
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "te",
+     "kind": "sure"
+    },
+    {
+     "text": "te",
+     "kind": "sure"
+    },
+    {
+     "text": "*307",
+     "kind": "sure"
+    },
+    {
+     "text": "pu2",
+     "kind": "sure"
+    },
+    {
+     "text": "re",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "tu-me-i",
+   "signs": [
+    {
+     "text": "tu",
+     "kind": "sure"
+    },
+    {
+     "text": "me",
+     "kind": "sure"
+    },
+    {
+     "text": "i",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ja-sa-u-na-ka-na-si",
+   "signs": [
+    {
+     "text": "ja",
+     "kind": "sure"
+    },
+    {
+     "text": "sa",
+     "kind": "sure"
+    },
+    {
+     "text": "u",
+     "kind": "sure"
+    },
+    {
+     "text": "na",
+     "kind": "sure"
+    },
+    {
+     "text": "ka",
+     "kind": "sure"
+    },
+    {
+     "text": "na",
+     "kind": "sure"
+    },
+    {
+     "text": "si",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "i-pi",
+   "signs": [
+    {
+     "text": "i",
+     "kind": "sure"
+    },
+    {
+     "text": "pi",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

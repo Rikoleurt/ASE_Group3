@@ -1,0 +1,172 @@
+{
+ "id": "PYR 1",
+ "url": "https://lineara.eu/documents/PYR-1/",
+ "site": "Pyrgos",
+ "support": "tablet",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "ti-ma-ru-wi-te"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB37",
+    "reading": "ti"
+   },
+   {
+    "kind": "sign",
+    "id": "AB80",
+    "reading": "ma"
+   },
+   {
+    "kind": "sign",
+    "id": "AB26",
+    "reading": "ru"
+   },
+   {
+    "kind": "sign",
+    "id": "AB40",
+    "reading": "wi"
+   },
+   {
+    "kind": "sign",
+    "id": "AB04",
+    "reading": "te"
+   },
+   {
+    "kind": "fraction",
+    "id": "A806",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB131a",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 90
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 90
+  }
+ ],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/PYR-1-1440w-11db55f22c.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB37",
+   "reading": "ti",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PYR-1_1-220w-1ff7e14aa3.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB80",
+   "reading": "ma",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PYR-1_2-305w-82467e9105.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB26",
+   "reading": "ru",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PYR-1_3-365w-b99b0f048d.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB40",
+   "reading": "wi",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PYR-1_4-197w-990137966e.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB04",
+   "reading": "te",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PYR-1_5-233w-a932cf4af2.png"
+  },
+  {
+   "position": 6,
+   "sign": "A639",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PYR-1_6-274w-cda04ec878.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB131a",
+   "reading": "VIN",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PYR-1_7-291w-b10cba6733.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "ti-ma-ru-wi-te",
+   "signs": [
+    {
+     "text": "ti",
+     "kind": "sure"
+    },
+    {
+     "text": "ma",
+     "kind": "sure"
+    },
+    {
+     "text": "ru",
+     "kind": "sure"
+    },
+    {
+     "text": "wi",
+     "kind": "sure"
+    },
+    {
+     "text": "te",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 7,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

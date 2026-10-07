@@ -1,0 +1,540 @@
+{
+ "id": "HT 8a",
+ "url": "https://lineara.eu/documents/HT-8a/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "HT Scribe 2",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "je-di",
+  "*56-ka-ra-ti",
+  "te-*301",
+  "qa-*310-i",
+  "si-ki-ra",
+  "ki-re-ta-na"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB46",
+    "reading": "je"
+   },
+   {
+    "kind": "sign",
+    "id": "AB07",
+    "reading": "di"
+   },
+   {
+    "kind": "sign",
+    "id": "A618",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 10
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB56",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB77",
+    "reading": "ka"
+   },
+   {
+    "kind": "sign",
+    "id": "AB60",
+    "reading": "ra"
+   },
+   {
+    "kind": "sign",
+    "id": "AB37",
+    "reading": "ti"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB03",
+    "reading": "pa"
+   },
+   {
+    "kind": "number",
+    "value": 3
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB04",
+    "reading": "te"
+   },
+   {
+    "kind": "sign",
+    "id": "A301",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 2
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB16",
+    "reading": "qa"
+   },
+   {
+    "kind": "sign",
+    "id": "A310",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB28",
+    "reading": "i"
+   },
+   {
+    "kind": "fraction",
+    "id": "A732",
+    "reading": ""
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB41",
+    "reading": "si"
+   },
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB60",
+    "reading": "ra"
+   },
+   {
+    "kind": "fraction",
+    "id": "A704",
+    "reading": "E"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB67",
+    "reading": "ki"
+   },
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   },
+   {
+    "kind": "sign",
+    "id": "AB06",
+    "reading": "na"
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 10
+  },
+  {
+   "line": 2,
+   "value": 1
+  },
+  {
+   "line": 3,
+   "value": 3
+  },
+  {
+   "line": 4,
+   "value": 2
+  }
+ ],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/HT-8a-1440w-66511cc74a.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB46",
+   "reading": "je",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_1-185w-2088c95ee1.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB07",
+   "reading": "di",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_2-193w-577ef277cd.png"
+  },
+  {
+   "position": 3,
+   "sign": "A618",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_3-315w-a6771daa6f.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB56",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_4-164w-9e0655687c.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB77",
+   "reading": "ka",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_5-235w-f50c5bd8c1.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB60",
+   "reading": "ra",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_6-261w-a6b45fb3f6.png"
+  },
+  {
+   "position": 7,
+   "sign": "AB37",
+   "reading": "ti",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_7-144w-bbd323f712.png"
+  },
+  {
+   "position": 8,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_8-125w-a4a90346b9.png"
+  },
+  {
+   "position": 9,
+   "sign": "AB03",
+   "reading": "pa",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_9-246w-6567140e25.png"
+  },
+  {
+   "position": 10,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_10-110w-e62c4d11c1.png"
+  },
+  {
+   "position": 11,
+   "sign": "AB04",
+   "reading": "te",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_11-221w-b341698fdf.png"
+  },
+  {
+   "position": 12,
+   "sign": "A301",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_12-186w-b0394c60eb.png"
+  },
+  {
+   "position": 13,
+   "sign": "AB16",
+   "reading": "qa",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_13-284w-2e5e8340f9.png"
+  },
+  {
+   "position": 14,
+   "sign": "A310",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_14-299w-14f17a82b0.png"
+  },
+  {
+   "position": 15,
+   "sign": "AB28",
+   "reading": "i",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_15-323w-dc08bc63ce.png"
+  },
+  {
+   "position": 16,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_16-185w-0025c0c932.png"
+  },
+  {
+   "position": 17,
+   "sign": "A704",
+   "reading": "E",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_17-170w-286675e213.png"
+  },
+  {
+   "position": 18,
+   "sign": "AB41",
+   "reading": "si",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_18-269w-be5c90426d.png"
+  },
+  {
+   "position": 19,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_19-283w-4a1cb0b723.png"
+  },
+  {
+   "position": 20,
+   "sign": "AB60",
+   "reading": "ra",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_20-309w-e7cfdb462e.png"
+  },
+  {
+   "position": 21,
+   "sign": "A704",
+   "reading": "E",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_21-118w-9ffc4e23a4.png"
+  },
+  {
+   "position": 22,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_22-350w-9dd185b1e4.png"
+  },
+  {
+   "position": 23,
+   "sign": "AB27",
+   "reading": "re",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_23-241w-7b9ac01844.png"
+  },
+  {
+   "position": 24,
+   "sign": "",
+   "reading": "",
+   "role": "erasure",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_24-140w-413d38c2e8.png"
+  },
+  {
+   "position": 25,
+   "sign": "AB59",
+   "reading": "ta",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_25-203w-69bff1756c.png"
+  },
+  {
+   "position": 26,
+   "sign": "AB06",
+   "reading": "na",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_26-200w-9500ecac97.png"
+  },
+  {
+   "position": 27,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-8a_27-173w-8d960badee.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "je-di",
+   "signs": [
+    {
+     "text": "je",
+     "kind": "sure"
+    },
+    {
+     "text": "di",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "*56-ka-ra-ti",
+   "signs": [
+    {
+     "text": "*56",
+     "kind": "sure"
+    },
+    {
+     "text": "ka",
+     "kind": "sure"
+    },
+    {
+     "text": "ra",
+     "kind": "sure"
+    },
+    {
+     "text": "ti",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "te-*301",
+   "signs": [
+    {
+     "text": "te",
+     "kind": "sure"
+    },
+    {
+     "text": "*301",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "qa-*310-i",
+   "signs": [
+    {
+     "text": "qa",
+     "kind": "sure"
+    },
+    {
+     "text": "*310",
+     "kind": "sure"
+    },
+    {
+     "text": "i",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "si-ki-ra",
+   "signs": [
+    {
+     "text": "si",
+     "kind": "sure"
+    },
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "ra",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ki-re-ta-na",
+   "signs": [
+    {
+     "text": "ki",
+     "kind": "sure"
+    },
+    {
+     "text": "re",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    },
+    {
+     "text": "na",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 27,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

@@ -1,0 +1,84 @@
+{
+ "id": "KN Wb 33b",
+ "url": "https://lineara.eu/documents/KN-Wb-33b/",
+ "site": "Knossos",
+ "support": "sealing",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "sigla"
+ ],
+ "words": [
+  "nu-se-[?]"
+ ],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/KN-Wb-33b-1004w-6c4dcbb879.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB55",
+   "reading": "nu",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KN-Wb-33b_1-159w-e3c1e3f5c1.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB09",
+   "reading": "se",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KN-Wb-33b_2-191w-e1254adcd1.png"
+  },
+  {
+   "position": 3,
+   "sign": "",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/KN-Wb-33b_3-151w-3acd6e3a4e.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "nu-se-[?]",
+   "signs": [
+    {
+     "text": "nu",
+     "kind": "sure"
+    },
+    {
+     "text": "se",
+     "kind": "sure"
+    },
+    {
+     "text": "",
+     "kind": "unknown"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 3,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": "The sign-by-sign text on this site comes from lineara.xyz, which holds no text under this id. SigLA's tracing of each sign is above. SigLA's word list is below. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

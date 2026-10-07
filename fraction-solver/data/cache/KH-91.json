@@ -1,0 +1,300 @@
+{
+ "id": "KH 91",
+ "url": "https://lineara.eu/documents/KH-91/",
+ "site": "Khania",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "KH Scribe 6",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "*79"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB120",
+    "reading": "GRA"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB131a",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A316",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 1
+   },
+   {
+    "kind": "fraction",
+    "id": "A707",
+    "reading": "J"
+   },
+   {
+    "kind": "fraction",
+    "id": "A7092",
+    "reading": ""
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB79",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "fraction",
+    "id": "A701",
+    "reading": "A"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB69",
+    "reading": "tu"
+   },
+   {
+    "kind": "fraction",
+    "id": "A708",
+    "reading": "K"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB30",
+    "reading": "ni_FIC"
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A651",
+    "reading": ""
+   },
+   {
+    "kind": "fraction",
+    "id": "A708",
+    "reading": "K"
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A652",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   }
+  ],
+  [
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 3,
+   "value": 1
+  },
+  {
+   "line": 5,
+   "value": 1
+  }
+ ],
+ "damaged_slots": 11,
+ "tracing": "https://lineara.eu/img/tracings/KH-91-1440w-eeed29125f.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB120",
+   "reading": "GRA",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_1-231w-c9ed1d468f.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB131a",
+   "reading": "VIN",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_2-433w-5eeebc1e7f.png"
+  },
+  {
+   "position": 3,
+   "sign": "A316",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_3-343w-323b24ff14.png"
+  },
+  {
+   "position": 4,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_4-234w-c1b36ad56e.png"
+  },
+  {
+   "position": 5,
+   "sign": "A7092",
+   "reading": "L",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_5-415w-fc9990a5c6.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB79",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_6-221w-8962979d41.png"
+  },
+  {
+   "position": 7,
+   "sign": "A701",
+   "reading": "A",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_7-336w-d9db95cb88.png"
+  },
+  {
+   "position": 8,
+   "sign": "AB69",
+   "reading": "tu",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_8-412w-0cd2db0093.png"
+  },
+  {
+   "position": 9,
+   "sign": "A708",
+   "reading": "K",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_9-384w-d2c3861d90.png"
+  },
+  {
+   "position": 10,
+   "sign": "AB30",
+   "reading": "ni FIC",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_10-347w-f8485c377d.png"
+  },
+  {
+   "position": 11,
+   "sign": "A651",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_11-425w-f9b2fe1049.png"
+  },
+  {
+   "position": 12,
+   "sign": "A708",
+   "reading": "K",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_12-343w-30f503ca6c.png"
+  },
+  {
+   "position": 13,
+   "sign": "A652",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-91_13-460w-c7a6b5c47b.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "*79",
+   "signs": [
+    {
+     "text": "*79",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 13,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

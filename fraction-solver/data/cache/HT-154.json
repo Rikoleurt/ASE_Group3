@@ -1,0 +1,86 @@
+{
+ "id": "HT 154",
+ "url": "https://lineara.eu/documents/HT-154/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "sigla"
+ ],
+ "words": [
+  "ti",
+  "ki"
+ ],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/HT-154-1437w-582598122b.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A516",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-154_1-186w-eb32c91ee4.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB37",
+   "reading": "ti",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-154_2-166w-7115cb7bf8.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB67",
+   "reading": "ki",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-154_3-162w-c775d50cec.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "ti",
+   "signs": [
+    {
+     "text": "ti",
+     "kind": "sure"
+    }
+   ]
+  },
+  {
+   "word": "ki",
+   "signs": [
+    {
+     "text": "ki",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 3,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": "The text is held under the records of its sides: HT 154a, HT 154b, HT 154c, HT 154e, HT 154g, HT 154k, HT 154l, HT 154m, HT 154n. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

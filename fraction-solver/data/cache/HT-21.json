@@ -1,0 +1,309 @@
+{
+ "id": "HT 21",
+ "url": "https://lineara.eu/documents/HT-21/",
+ "site": "Haghia Triada",
+ "support": "tablet",
+ "period": "LM IB",
+ "scribe": "HT Scribe 22",
+ "sources": [
+  "lineara",
+  "old_corpus",
+  "sigla"
+ ],
+ "words": [
+  "pi-ta-ka-se"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB39",
+    "reading": "pi"
+   },
+   {
+    "kind": "sign",
+    "id": "AB59",
+    "reading": "ta"
+   },
+   {
+    "kind": "sign",
+    "id": "AB77",
+    "reading": "ka"
+   },
+   {
+    "kind": "sign",
+    "id": "AB09",
+    "reading": "se"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "AB04",
+    "reading": "te"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "sign",
+    "id": "AB120",
+    "reading": "GRA"
+   },
+   {
+    "kind": "number",
+    "value": 161
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A610",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 11
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A613",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 3
+   },
+   {
+    "kind": "fraction",
+    "id": "A732",
+    "reading": ""
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "A304",
+    "reading": ""
+   },
+   {
+    "kind": "number",
+    "value": 7
+   },
+   {
+    "kind": "fraction",
+    "id": "A732",
+    "reading": ""
+   }
+  ],
+  [
+   {
+    "kind": "sign",
+    "id": "AB122",
+    "reading": "OLIV"
+   },
+   {
+    "kind": "number",
+    "value": 1
+   },
+   {
+    "kind": "fraction",
+    "id": "A704",
+    "reading": "E"
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 161
+  },
+  {
+   "line": 2,
+   "value": 11
+  },
+  {
+   "line": 3,
+   "value": 3
+  },
+  {
+   "line": 4,
+   "value": 7
+  },
+  {
+   "line": 5,
+   "value": 1
+  }
+ ],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/HT-21-1387w-8d392c8982.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "AB39",
+   "reading": "pi",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_1-183w-40103e649f.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB59",
+   "reading": "ta",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_2-130w-787c40c467.png"
+  },
+  {
+   "position": 3,
+   "sign": "AB77",
+   "reading": "ka",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_3-191w-bb67ea0e1a.png"
+  },
+  {
+   "position": 4,
+   "sign": "AB09",
+   "reading": "se",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_4-207w-f9163ad595.png"
+  },
+  {
+   "position": 5,
+   "sign": "AB04",
+   "reading": "te",
+   "role": "transaction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_5-180w-1f246fbfc0.png"
+  },
+  {
+   "position": 6,
+   "sign": "AB120",
+   "reading": "GRA",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_6-166w-94fa6d0ba0.png"
+  },
+  {
+   "position": 7,
+   "sign": "A610",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_7-236w-43eb9311b5.png"
+  },
+  {
+   "position": 8,
+   "sign": "A613",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_8-193w-ef70d3ae13.png"
+  },
+  {
+   "position": 9,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_9-135w-0a26ab0029.png"
+  },
+  {
+   "position": 10,
+   "sign": "A704",
+   "reading": "E",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_10-86w-c9d18606b7.png"
+  },
+  {
+   "position": 11,
+   "sign": "A304",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_11-118w-711c41ac4e.png"
+  },
+  {
+   "position": 12,
+   "sign": "A707",
+   "reading": "J",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_12-114w-4898d6a7d2.png"
+  },
+  {
+   "position": 13,
+   "sign": "A704",
+   "reading": "E",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_13-76w-eb277589d2.png"
+  },
+  {
+   "position": 14,
+   "sign": "AB122",
+   "reading": "OLIV",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_14-172w-690bdc9c41.png"
+  },
+  {
+   "position": 15,
+   "sign": "A704",
+   "reading": "E",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/HT-21_15-96w-e76ba3dcff.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "pi-ta-ka-se",
+   "signs": [
+    {
+     "text": "pi",
+     "kind": "sure"
+    },
+    {
+     "text": "ta",
+     "kind": "sure"
+    },
+    {
+     "text": "ka",
+     "kind": "sure"
+    },
+    {
+     "text": "se",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 15,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

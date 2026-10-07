@@ -1,0 +1,71 @@
+{
+ "id": "KH Wc 2057",
+ "url": "https://lineara.eu/documents/KH-Wc-2057/",
+ "site": "Khania",
+ "support": "roundel",
+ "period": "LM IB",
+ "scribe": "KH Wc Scribe 57",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "A645",
+    "reading": ""
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/KH-Wc-2057-1440w-99ec7840c1.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A645",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-Wc-2057_1-861w-eec84312f8.png"
+  },
+  {
+   "position": 2,
+   "sign": "A337",
+   "reading": "",
+   "role": "",
+   "certain": null,
+   "image": "https://lineara.eu/img/tracings/crops/KH-Wc-2057_2-766w-f140ba6cb6.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": {
+  "value": 2,
+  "counted_by": "SigLA",
+  "note": {
+   "was": 1,
+   "source": "SigLA live 2026-08-14",
+   "unlisted_positions": [
+    2
+   ]
+  }
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

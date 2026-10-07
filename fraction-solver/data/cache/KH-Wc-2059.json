@@ -1,0 +1,60 @@
+{
+ "id": "KH Wc 2059",
+ "url": "https://lineara.eu/documents/KH-Wc-2059/",
+ "site": "Khania",
+ "support": "roundel",
+ "period": "LM IB",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "A566",
+    "reading": ""
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/KH-Wc-2059-1440w-7248f040d6.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A566",
+   "reading": "",
+   "role": "logogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KH-Wc-2059_1-1313w-bf27deb1bf.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": {
+  "value": 1,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {
+  "joined_into": "KH Wc 2059[+]2091[+]2092",
+  "join_source": "RILA Supplement 1 Concordance museographique, Musee archeologique de La Canee row"
+ },
+ "join_of": [],
+ "joined_into": "KH Wc 2059[+]2091[+]2092",
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

@@ -1,11 +1,13 @@
-# Cached corpora. Both are CC BY-NC-SA 4.0 and must not be redistributed:
-# lineara.eu / SigLA for Linear A, DAMOS (Univ. of Oslo) for Linear B.
-# The manifests carry checksums so a rebuild is reproducible without shipping the data.
-data/cache/
-data/images/
+# The Linear A cache (data/cache/, data/images/, data/manifest.json) is committed so
+# the web app works without a crawl; it is CC BY-NC-SA 4.0 and must keep the SigLA
+# and lineara.eu credit. The Linear B corpus (DAMOS, Univ. of Oslo) is research-only
+# and stays local; its manifest carries checksums so a rebuild is reproducible.
 data/damos/
-data/manifest.json
 data/damos_manifest.json
+# Research crop sets named <sign>__<role>__<tablet>__<pos>.png. They duplicate
+# data/images/ and are rebuilt by scripts_fetch_all.py.
+data/cache/allcrops/
+data/cache/crops/
 
 __pycache__/
 *.pyc

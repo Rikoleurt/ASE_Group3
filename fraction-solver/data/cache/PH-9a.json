@@ -1,0 +1,108 @@
+{
+ "id": "PH 9a",
+ "url": "https://lineara.eu/documents/PH-9a/",
+ "site": "Phaistos",
+ "support": "tablet",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara",
+  "sigla"
+ ],
+ "words": [
+  "*317-qe-*353"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "A317",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "AB78",
+    "reading": "qe"
+   },
+   {
+    "kind": "sign",
+    "id": "A353",
+    "reading": ""
+   },
+   {
+    "kind": "fraction",
+    "id": "A712",
+    "reading": ""
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": "https://lineara.eu/img/tracings/PH-9a-1178w-2f751d3b94.png",
+ "signs": [
+  {
+   "position": 1,
+   "sign": "A317",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PH-9a_1-285w-3da6d86b2a.png"
+  },
+  {
+   "position": 2,
+   "sign": "AB78",
+   "reading": "qe",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PH-9a_2-184w-e2cb5ea37f.png"
+  },
+  {
+   "position": 3,
+   "sign": "A353",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/PH-9a_3-256w-5767cf7289.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "*317-qe-*353",
+   "signs": [
+    {
+     "text": "*317",
+     "kind": "sure"
+    },
+    {
+     "text": "qe",
+     "kind": "sure"
+    },
+    {
+     "text": "*353",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": {
+  "value": 3,
+  "counted_by": "SigLA",
+  "note": null
+ },
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

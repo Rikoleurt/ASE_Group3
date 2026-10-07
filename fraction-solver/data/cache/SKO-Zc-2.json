@@ -1,0 +1,53 @@
+{
+ "id": "SKO Zc 2",
+ "url": "https://lineara.eu/documents/SKO-Zc-2/",
+ "site": "Skoteino Cave",
+ "support": "clay vessel",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "rila_s1"
+ ],
+ "words": [],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": null,
+ "conflicts": [
+  {
+   "field": "id",
+   "ours": "SKO Zc 1 carries two lines, na-tu-*301-ne and qa-ki-ti",
+   "theirs": "RILA Supplement 1 splits the text across SKO Zc 1 and SKO Zc 2",
+   "our_source": "lineara.xyz",
+   "their_source": "RILA Supplement 1 facsimile lemma",
+   "note": "Our single SKO Zc 1 record may already hold what RILA Supplement 1 splits in two. That needs autopsy of the plates, which RILA Supplement 1 does not contain. Recorded, not resolved."
+  }
+ ],
+ "rila": {
+  "siglum": "SKO Zc 2",
+  "support": "painted inscription on a clay vessel, fragment of a chalice; the same object as SKO Zc 1",
+  "repository": "Knossos Stratigraphical Museum, inv. Sko 187",
+  "findspot": "Grotte de Skoteino",
+  "editio_princeps": "Perna, Kanta and Tyree 2005, in Studi in onore di Enrica Fiandra, Studi Egei e Vicinorientali 1, De Boccard, pages 321 to 333, figure 10a-b. The same article is the editio princeps of both SKO Zc 1 and SKO Zc 2.",
+  "source": "RILA Supplement 1 Concordance museographique and facsimile lemma",
+  "period_certainty": "uncertain",
+  "note": "Reading UNCERTAIN and not entered. The RILA Supplement 1 Index des signes shows a shape like ]...-67-37[ , that is ...-ki-ti, and the two candidates qa-ki-ti[ and de-ki-ti[ cannot be separated from the plain-text extraction. We do not hold the editio princeps."
+ },
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": true,
+ "also_cited_as": null,
+ "text_missing_reason": "No reading is entered for SKO Zc 2. RILA Supplement 1 (Del Freo and Zurbach 2024) lists the object, and this site holds no drawing or photograph to read it from. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

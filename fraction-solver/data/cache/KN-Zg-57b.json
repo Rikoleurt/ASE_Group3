@@ -1,0 +1,106 @@
+{
+ "id": "KN Zg 57b",
+ "url": "https://lineara.eu/documents/KN-Zg-57b/",
+ "site": "Knossos",
+ "support": "ivory object",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "A652",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "A652",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "A653",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "A651",
+    "reading": ""
+   },
+   {
+    "kind": "sign",
+    "id": "A664",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "AB30",
+    "reading": "ni_FIC"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "sign",
+    "id": "A410",
+    "reading": ""
+   },
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 10,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {
+  "unpublished_source": "RILA Supplement 1 section on texts awaiting publication",
+  "unpublished_note": "KN Zg 57a and KN Zg 57b hold identical placeholder-only glyph layers for one unpublished text."
+ },
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": true,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

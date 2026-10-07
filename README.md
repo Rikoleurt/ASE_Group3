@@ -153,5 +153,7 @@ Known limitation: lineara.eu has crops only for signs, so numerals (tally stroke
 and the occasional sign without a crop are left unboxed. A model trained on this
 data treats them as background and will not find numerals.
 
-The tracings are CC BY-NC-SA 4.0 (SigLA, lineara.eu). The images, the dataset and
-trained weights stay local and are ignored by Git; do not redistribute them.
+The tablet records and drawings in `fraction-solver/data/` are committed, so steps
+`fetch` and `images` are only needed to refresh them. They are CC BY-NC-SA 4.0
+(SigLA, lineara.eu): non-commercial use, and keep the credit line with them and
+with anything derived from them, such as trained weights.

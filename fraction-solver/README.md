@@ -69,6 +69,6 @@ out/            generated: census.json, sections.csv, solve.json, validate.json
 
 ## Data and licence
 
-Corpus data from [lineara.eu](https://lineara.eu) (M. Navarre), derived from [SigLA](https://sigla.phis.me) (E. Salgarella & S. Castellan), licensed **CC BY-NC-SA 4.0**. Used here non-commercially with attribution. The local cache is not redistributed, and `data/` is gitignored.
+Corpus data from [lineara.eu](https://lineara.eu) (M. Navarre), derived from [SigLA](https://sigla.phis.me) (E. Salgarella & S. Castellan), licensed **CC BY-NC-SA 4.0**. Used here non-commercially with attribution. The Linear A cache (`data/cache/`, `data/images/`) is committed so the project works without a crawl; the Linear B corpus (`data/damos/`) stays local.
 
 Code in this repository is available under the MIT licence.

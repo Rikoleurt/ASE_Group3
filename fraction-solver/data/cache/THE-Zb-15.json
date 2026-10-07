@@ -1,0 +1,82 @@
+{
+ "id": "THE Zb 15",
+ "url": "https://lineara.eu/documents/THE-Zb-15/",
+ "site": "Thera",
+ "support": "clay vessel",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [
+  "re-sa"
+ ],
+ "lines": [
+  [
+   {
+    "kind": "sign",
+    "id": "AB27",
+    "reading": "re"
+   },
+   {
+    "kind": "sign",
+    "id": "AB31",
+    "reading": "sa"
+   },
+   {
+    "kind": "number",
+    "value": 2
+   }
+  ]
+ ],
+ "numbers": [
+  {
+   "line": 1,
+   "value": 2
+  }
+ ],
+ "damaged_slots": 0,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [
+  {
+   "word": "re-sa",
+   "signs": [
+    {
+     "text": "re",
+     "kind": "sure"
+    },
+    {
+     "text": "sa",
+     "kind": "sure"
+    }
+   ]
+  }
+ ],
+ "sign_count": null,
+ "conflicts": [
+  {
+   "field": "w",
+   "ours": "re-sa (AB027 AB031, then AEGEAN NUMBER TWO)",
+   "theirs": "AB09-A332, then 2",
+   "our_source": "lineara.xyz",
+   "their_source": "editio princeps Tzachili and Karnava, Minos 39, 2016, pages 27 to 40, figures 4 and 5",
+   "note": "The two readings agree on the numeral 2 and on three elements. They disagree on both syllabograms. Karnava states that only the first sign is readily recognisable and that A332 is the only close candidate for the second. RILA Supplement 1 routes this object to the doubtful class as D 15, and THE Zb 14 is the same object under Del Freo's numbering."
+  }
+ ],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

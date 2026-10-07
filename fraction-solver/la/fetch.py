@@ -1,8 +1,8 @@
 """Polite, resumable, cached crawler for the lineara.eu document corpus.
 
 Data licence: lineara.eu per-document JSON is CC BY-NC-SA 4.0 (SigLA-derived).
-Non-commercial research use with attribution. The cache is local only and is
-never redistributed. Credit: SigLA (Salgarella & Castellan); lineara.eu (M. Navarre).
+Non-commercial academic use with attribution; the cache is committed with the
+project. Credit: SigLA (Salgarella & Castellan); lineara.eu (M. Navarre).
 """
 
 from __future__ import annotations

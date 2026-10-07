@@ -1,0 +1,74 @@
+{
+ "id": "KN 49",
+ "url": "https://lineara.eu/documents/KN-49/",
+ "site": "Knossos",
+ "support": "tablet",
+ "period": "Protopalatial",
+ "scribe": "",
+ "sources": [
+  "lineara"
+ ],
+ "words": [],
+ "lines": [
+  [
+   {
+    "kind": "damage"
+   },
+   {
+    "kind": "divider"
+   },
+   {
+    "kind": "fraction",
+    "id": "A709",
+    "reading": "L"
+   },
+   {
+    "kind": "damage"
+   }
+  ]
+ ],
+ "numbers": [],
+ "damaged_slots": 2,
+ "tracing": null,
+ "signs": [
+  {
+   "position": 1,
+   "sign": "",
+   "reading": "",
+   "role": "syllabogram",
+   "certain": false,
+   "image": "https://lineara.eu/img/tracings/crops/KN-49_1-729w-aa6ab2ebb5.png"
+  },
+  {
+   "position": 2,
+   "sign": "A7096",
+   "reading": "L",
+   "role": "fraction",
+   "certain": true,
+   "image": "https://lineara.eu/img/tracings/crops/KN-49_2-536w-aa68bc72f7.png"
+  }
+ ],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {
+  "period": "Protopalatial",
+  "period_certainty": "stated",
+  "period_source": "RILA Supplement 1 introduction, period paragraph",
+  "period_note": ""
+ },
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": null,
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

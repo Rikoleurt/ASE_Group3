@@ -1,0 +1,36 @@
+{
+ "id": "NO Za 1",
+ "url": "https://lineara.eu/documents/NO-Za-1/",
+ "site": "Nerokourou",
+ "support": "stone vessel",
+ "period": "LM",
+ "scribe": "",
+ "sources": [
+  "gorila_vol5_index",
+  "rila_2025"
+ ],
+ "words": [],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {},
+ "join_of": [],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": false,
+ "also_cited_as": null,
+ "text_missing_reason": "None of the sources of this record (the GORILA vol. 5 index and RILA (2025)) gives a sign-by-sign text for it. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

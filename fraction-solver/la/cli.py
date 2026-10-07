@@ -430,7 +430,7 @@ def cmd_dataset(args: argparse.Namespace) -> None:
     print(f"Tracings smaller than their crops: {shrunk}/{len(report['scales'])}")
     for name, n in sorted(report["classes"].items(), key=lambda kv: -kv[1]):
         print(f"  {name:12s} {n}")
-    print(f"\nWrote {out / 'data.yaml'} (licence notice in LICENCE.txt; do not redistribute)")
+    print(f"\nWrote {out / 'data.yaml'} (licence and credit in LICENCE.txt)")
 
 
 def cmd_lb_fetch(args: argparse.Namespace) -> None:

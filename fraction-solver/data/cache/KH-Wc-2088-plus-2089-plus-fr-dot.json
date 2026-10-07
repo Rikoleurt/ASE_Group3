@@ -1,0 +1,42 @@
+{
+ "id": "KH Wc 2088[+]2089[+]fr.",
+ "url": "https://lineara.eu/documents/KH-Wc-2088-plus-2089-plus-fr-dot/",
+ "site": "Khania",
+ "support": "roundel",
+ "period": "unknown",
+ "scribe": "",
+ "sources": [
+  "rila_s1"
+ ],
+ "words": [],
+ "lines": [],
+ "numbers": [],
+ "damaged_slots": 0,
+ "tracing": null,
+ "signs": [],
+ "arithmetic": null,
+ "word_signs": [],
+ "sign_count": null,
+ "conflicts": [],
+ "rila": {
+  "siglum": "KH Wc 2088[+]2089[+]fr.",
+  "join_source": "RILA Supplement 1 Concordance museographique, Musee archeologique de La Canee row",
+  "note": "RILA Supplement 1 records this join in the Khania roundel series. No reading and no glyph layer are entered: RILA Supplement 1 carries no plates and we hold no facsimile of the joined object. The component records stay, so this object appears under two id schemes, which is the join-variant duplicate-row problem that HT 123a and HT 123+124a already show."
+ },
+ "join_of": [
+  "KH Wc 2088",
+  "KH Wc 2089"
+ ],
+ "joined_into": null,
+ "unpublished": false,
+ "unread": true,
+ "also_cited_as": null,
+ "text_missing_reason": "No reading is entered for the joined object. RILA Supplement 1 lists the join, and each part has its own record: KH Wc 2088, KH Wc 2089. The gap is in our sources, not on the object.",
+ "licence": {
+  "licence": "CC BY-NC-SA 4.0",
+  "url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+  "notice": "This file carries transcription fields, signs and images derived from SigLA. It is released under CC BY-NC-SA 4.0, the licence of its source. See https://lineara.eu/about/#sources.",
+  "credit": "Sign drawings from SigLA: The Signs of Linear A, a palaeographical database, by Ester Salgarella and Simon Castellan (https://sigla.phis.me/), licensed under CC BY-NC-SA 4.0."
+ },
+ "generated": "2026-09-19"
+}

@@ -25,8 +25,8 @@ on tracing ink at the chosen position is rejected and reported, never placed at
 its best-but-wrong position.
 
 Data licence: the tracings and crops are SigLA-derived and CC BY-NC-SA 4.0, like
-the cached JSON. Images are cached locally and the dataset is written under
-`out/`, both ignored by Git; neither is redistributed.
+the cached JSON, and are used non-commercially with attribution. The image cache
+is committed with the project; the dataset under `out/` is rebuilt on demand.
 """
 
 from __future__ import annotations
@@ -79,7 +79,7 @@ Images and labels derived from lineara.eu / SigLA tracings.
 Licence: CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
 Credit: sign drawings from SigLA: The Signs of Linear A, a palaeographical database,
 by Ester Salgarella and Simon Castellan; lineara.eu by M. Navarre.
-Non-commercial research use only. Do not redistribute this dataset.
+Non-commercial use only; keep this credit with any copy of the dataset or models trained on it.
 """
 
 
