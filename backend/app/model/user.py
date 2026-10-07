@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
 class User(BaseModel):
@@ -17,9 +17,15 @@ class UserCreate(BaseModel):
 
 
 class UserLogin(BaseModel):
-    email: EmailStr = Field(max_length=255)
-    username: str | None = Field(default=None, min_length=1, max_length=255)
+    email: EmailStr | None = Field(default=None, max_length=255)
+    username: str | None = Field(default=None, min_length=1, max_length=255, pattern=r"\S")
     password: str = Field(min_length=1, max_length=1024, repr=False)
+
+    @model_validator(mode="after")
+    def require_identifier(self):
+        if self.email is None and self.username is None:
+            raise ValueError("An email or username is required.")
+        return self
 
 
 class UserPublic(BaseModel):

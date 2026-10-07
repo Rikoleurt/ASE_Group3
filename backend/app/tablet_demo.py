@@ -1,5 +1,7 @@
 """HT13 Sprint 1 baseline using generic pretrained YOLO, not a Linear A model."""
 
+from base64 import b64encode
+from math import ceil
 from pathlib import Path
 from ultralytics import YOLO
 import cv2
@@ -34,3 +36,34 @@ def annotate_ht13(image_path: Path = HT13_IMAGE) -> bytes:
     if not ok:
         raise RuntimeError("Could not encode the HT13 annotation.")
     return png.tobytes()
+
+
+def ht13_predictions() -> dict:
+    """Expose real detections with normalized boxes for the responsive demo UI."""
+    result = ht13_result()
+    height, width = result.orig_shape
+    predictions = []
+    for index, box in enumerate(result.boxes):
+        x1, y1, x2, y2 = box.xyxy[0].tolist()
+        crop = result.orig_img[
+            max(0, int(y1)):min(height, ceil(y2)),
+            max(0, int(x1)):min(width, ceil(x2)),
+        ]
+        image_url = ""
+        if crop.size:
+            ok, png = cv2.imencode(".png", crop)
+            if ok:
+                image_url = "data:image/png;base64," + b64encode(png.tobytes()).decode("ascii")
+        predictions.append({
+            "id": index + 1,
+            "label": result.names[int(box.cls.item())],
+            "confidence": float(box.conf.item()) * 100,
+            "imageUrl": image_url,
+            "box": {
+                "x": x1 / width,
+                "y": y1 / height,
+                "w": (x2 - x1) / width,
+                "h": (y2 - y1) / height,
+            },
+        })
+    return {"width": width, "height": height, "predictions": predictions}

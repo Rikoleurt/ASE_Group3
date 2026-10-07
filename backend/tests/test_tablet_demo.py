@@ -1,3 +1,4 @@
+from base64 import b64decode
 from io import BytesIO
 from unittest.mock import patch
 import numpy as np
@@ -43,3 +44,55 @@ def test_missing_pretrained_weights_fail_instead_of_falling_back(monkeypatch, tm
     monkeypatch.setattr("backend.app.tablet_demo.YOLO_WEIGHTS", tmp_path / "missing.pt")
     with pytest.raises(FileNotFoundError, match="Pretrained yolo26n.pt"):
         ht13_result()
+
+
+def test_predictions_endpoint_serializes_real_boxes_as_normalized_coordinates():
+    from ultralytics.engine.results import Results
+
+    result = Results(
+        np.zeros((200, 100, 3), dtype=np.uint8),
+        path=str(HT13_IMAGE),
+        names={0: "object"},
+        boxes=np.array([[10, 40, 40, 120, 0.75, 0]]),
+    )
+    with patch("backend.app.tablet_demo.ht13_result", return_value=result):
+        with TestClient(app) as client:
+            response = client.get("/tablet-demo/ht13/predictions")
+    assert response.status_code == 200
+    data = response.json()
+    image_url = data['predictions'][0].pop('imageUrl')
+    assert image_url.startswith('data:image/png;base64,')
+    with Image.open(BytesIO(b64decode(image_url.split(',', 1)[1]))) as crop:
+        assert crop.size == (30, 80)
+    assert data == {
+        "width": 100,
+        "height": 200,
+        "predictions": [{
+            "id": 1,
+            "label": "object",
+            "confidence": 75.0,
+            "box": {"x": 0.1, "y": 0.2, "w": 0.3, "h": 0.4},
+        }],
+    }
+
+
+def test_predictions_endpoint_preserves_empty_results():
+    from ultralytics.engine.results import Results
+
+    result = Results(
+        np.zeros((200, 100, 3), dtype=np.uint8),
+        path=str(HT13_IMAGE), names={0: "object"}, boxes=np.empty((0, 6)),
+    )
+    with patch("backend.app.tablet_demo.ht13_result", return_value=result):
+        with TestClient(app) as client:
+            response = client.get("/tablet-demo/ht13/predictions")
+    assert response.status_code == 200
+    assert response.json() == {"width": 100, "height": 200, "predictions": []}
+
+
+def test_predictions_endpoint_reports_unavailable_model():
+    with patch("backend.app.tablet_demo.ht13_result", side_effect=FileNotFoundError("weights")):
+        with TestClient(app) as client:
+            response = client.get("/tablet-demo/ht13/predictions")
+    assert response.status_code == 503
+    assert response.json() == {"detail": "HT13 predictions are unavailable."}

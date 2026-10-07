@@ -53,8 +53,8 @@ describe('Profile', () => {
     await render()
     expect(fetch).toHaveBeenCalledWith('/api/users/42/username')
     expect(fetch).toHaveBeenCalledWith('/api/users/42/email')
-    expect(wrapper.findAll('dt').map((item) => item.text())).toEqual(['Username', 'Email'])
-    expect(wrapper.findAll('dd').map((item) => item.text())).toEqual(['Developer', 'dev@ase3.com'])
+    expect(wrapper.findAll('dt').map((item) => item.text())).toEqual(['Username', 'Email', 'Symbols clustered'])
+    expect(wrapper.findAll('dd').map((item) => item.text())).toEqual(['Developer', 'dev@ase3.com', '—'])
     expect(wrapper.find('input').exists()).toBe(false)
   })
 

@@ -238,7 +238,7 @@ class UserDataController(DataController):
     #endregion
 
     #region other
-    def authenticate(self, email: str, username: str | None, password: str) -> User | None:
+    def authenticate(self, email: str | None, username: str | None, password: str) -> User | None:
         """
         Authenticates a user by email or username, password is mandatory.
         :param email:

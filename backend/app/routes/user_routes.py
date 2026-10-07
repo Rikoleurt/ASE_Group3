@@ -15,11 +15,7 @@ def get_user_data_controller() -> UserDataController:
 
 UserController = Annotated[UserDataController, Depends(get_user_data_controller)]
 
-@router.post(
-    "/register",
-    response_model=UserPublic,
-    status_code=status.HTTP_201_CREATED,
-)
+@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def register(payload: UserCreate, user_data_controller: UserController) -> UserPublic:
     user = user_data_controller.create_user(
         email=str(payload.email),
@@ -36,14 +32,10 @@ def register(payload: UserCreate, user_data_controller: UserController) -> UserP
     return UserPublic(id=user.id, email=user.email, username=user.username)
 
 
-@router.post(
-    "/login",
-    response_model=LoginResponse,
-    status_code=status.HTTP_200_OK,
-)
+@router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
 def login(payload: UserLogin, user_data_controller: UserController) -> LoginResponse:
     user = user_data_controller.authenticate(
-        email=str(payload.email),
+        email=str(payload.email) if payload.email is not None else None,
         username=payload.username,
         password=payload.password,
     )

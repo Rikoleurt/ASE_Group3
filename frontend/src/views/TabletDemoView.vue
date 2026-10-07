@@ -1,11 +1,7 @@
 <script setup>
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
-// Placeholder until backend points are implemented
-const tablet = ref({ imageUrl: '' })
-
-// But we already know the symbols for each tablet will likely be a list with individual attributes
-// with the bounding boxes from the YOLO detection with their coordinates relative to the OG image
+const tablet = ref({ imageUrl: '/api/tablet-demo/ht13?annotated=false' })
 const symbols = ref([
   { id: 1, label: 'ha', confidence: 72, imageUrl: '', box: { x: 0.12, y: 0.1, w: 0.14, h: 0.08 } },
   { id: 2, label: 'lo', confidence: 15, imageUrl: '', box: { x: 0.32, y: 0.1, w: 0.12, h: 0.1 } },
@@ -14,6 +10,32 @@ const symbols = ref([
   { id: 5, label: 'an', confidence: 93, imageUrl: '', box: { x: 0.4, y: 0.4, w: 0.12, h: 0.1 } },
   { id: 6, label: 'en', confidence: 56, imageUrl: '', box: { x: 0.65, y: 0.4, w: 0.14, h: 0.12 } },
 ])
+const predictions = ref([])
+const activeId = ref(null)
+const loading = ref(false)
+const error = ref('')
+const imageLoaded = ref(false)
+
+async function loadPredictions() {
+  if (loading.value) return
+  loading.value = true
+  error.value = ''
+  try {
+    const response = await fetch('/api/tablet-demo/ht13/predictions')
+    if (!response.ok) {
+      error.value = 'Predictions could not be loaded. Please try again.'
+      return
+    }
+    const data = await response.json()
+    predictions.value = data.predictions.map((symbol) => ({
+      ...symbol, confidence: Number(symbol.confidence.toFixed(1)),
+    }))
+  } catch {
+    error.value = 'Unable to reach the server. Check your connection and try again.'
+  } finally {
+    loading.value = false
+  }
+}
 
 function confidenceClass(confidence) {
   if (confidence >= 90) return 'text-confidence-high'
@@ -24,6 +46,8 @@ function confidenceClass(confidence) {
 function learnMore(symbol) {
   console.log('Placeholder for learn more operation', symbol.label)
 }
+
+onMounted(loadPredictions)
 </script>
 
 <template>
@@ -34,19 +58,24 @@ function learnMore(symbol) {
         <img
           v-if="tablet.imageUrl"
           :src="tablet.imageUrl"
+          alt="HT13 tablet"
+          @load="imageLoaded = true"
+          @error="tablet.imageUrl = ''; imageLoaded = false"
           class="block w-full"
         />
         <div
           v-else
+          role="alert"
           class="flex aspect-[3/4] w-full items-center justify-center rounded-lg bg-card p-4 text-center text-ink/70"
         >
           There was an issue loading the tablet image.
         </div>
 
-        <template v-if="tablet.imageUrl">
+        <template v-if="tablet.imageUrl && imageLoaded">
           <div
-            v-for="symbol in symbols"
+            v-for="symbol in predictions"
             :key="symbol.id"
+            data-testid="prediction-box"
             class="pointer-events-none absolute"
             :class="
               activeId === symbol.id
@@ -62,6 +91,12 @@ function learnMore(symbol) {
           />
         </template>
       </div>
+      <p v-if="loading" role="status">Loading predictions…</p>
+      <template v-else-if="error">
+        <p role="alert">{{ error }}</p>
+        <button type="button" @click="loadPredictions">Try again</button>
+      </template>
+      <p v-else-if="!predictions.length" role="status">No detections found on HT13.</p>
     </section>
 
     <div class="hidden w-0.5 bg-ink md:block" />

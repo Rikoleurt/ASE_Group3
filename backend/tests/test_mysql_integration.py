@@ -45,6 +45,11 @@ def test_mysql_registration_login_uniqueness_and_seed():
             logged_in = client.post("/users/login", json=login_payload)
             assert logged_in.status_code == 200
             assert logged_in.json()["user"] == registered.json()
+            username_login = client.post("/users/login", json={
+                "username": payload["username"], "password": payload["password"],
+            })
+            assert username_login.status_code == 200
+            assert username_login.json()["user"] == registered.json()
             assert client.post("/users/login", json={**payload, "password": "wrong"}).status_code == 401
     finally:
         # Delete only the account created by this test, even if an assertion fails.

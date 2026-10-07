@@ -29,9 +29,9 @@ async function render(path = '/login') {
 }
 
 async function submit() {
-  await wrapper.get('input[name="email"]').setValue('dev@ase3.com')
-  const username = wrapper.find('input[name="username"]')
-  if (username.exists()) await username.setValue('  Developer  ')
+  const email = wrapper.find('input[name="email"]')
+  if (email.exists()) await email.setValue('dev@ase3.com')
+  await wrapper.get('input[name="username"]').setValue('  Developer  ')
   await wrapper.get('input[name="password"]').setValue('dev')
   await wrapper.get('form').trigger('submit')
   await flushPromises()
@@ -45,12 +45,13 @@ describe('Authentication forms', () => {
     })
     vi.stubGlobal('fetch', fetch)
     const router = await render()
-    expect(wrapper.find('input[name="username"]').exists()).toBe(false)
+    expect(wrapper.find('input[name="email"]').exists()).toBe(false)
+    expect(wrapper.get('input[name="username"]').attributes('placeholder')).toBe('Username')
     await submit()
     expect(fetch).toHaveBeenCalledWith('/api/users/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'dev@ase3.com', password: 'dev' }),
+      body: JSON.stringify({ username: 'Developer', password: 'dev' }),
     })
     expect(router.currentRoute.value.path).toBe('/profile')
     expect(getCurrentUserId()).toBe(1)
@@ -58,16 +59,7 @@ describe('Authentication forms', () => {
     expect(wrapper.find('input[name="password"]').exists()).toBe(false)
   })
 
-  it('navigates to signup using the button below the login form', async () => {
-    const router = await render()
-    await wrapper.get('a[href="/signup"]').trigger('click')
-    await flushPromises()
-    expect(router.currentRoute.value.path).toBe('/signup')
-    expect(wrapper.get('h1').text()).toBe('Create an account')
-    expect(wrapper.get('a[href="/login"]').exists()).toBe(true)
-  })
-
-  it('registers through the API and offers a return to login', async () => {
+  it('registers through the API and returns to the existing login page', async () => {
     const fetch = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ id: 2, email: 'dev@ase3.com', username: 'Developer' }) })
     vi.stubGlobal('fetch', fetch)
     const router = await render('/signup')
@@ -75,18 +67,16 @@ describe('Authentication forms', () => {
     expect(wrapper.get('input[name="username"]').attributes('maxlength')).toBe('255')
     await submit()
     expect(fetch).toHaveBeenCalledWith('/api/users/register', expect.objectContaining({
-      body: JSON.stringify({ email: 'dev@ase3.com', password: 'dev', username: 'Developer' }),
+      body: JSON.stringify({ username: 'Developer', password: 'dev', email: 'dev@ase3.com' }),
     }))
-    expect(wrapper.get('[role="status"]').text()).toContain('Your account has been created')
-    await wrapper.get('a[href="/login"]').trigger('click')
-    await flushPromises()
+    expect(wrapper.get('h1').text()).toBe('LOGIN')
     expect(router.currentRoute.value.path).toBe('/login')
   })
 
   it.each([
-    ['/login', 401, 'Incorrect email or password.'],
+    ['/login', 401, 'Incorrect username or password.'],
     ['/signup', 409, 'An account with this email already exists'],
-    ['/signup', 422, 'Please check your email'],
+    ['/signup', 422, 'Please check your details'],
     ['/login', 503, 'The service is unavailable'],
   ])('handles %s returning %s', async (path, status, message) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status }))

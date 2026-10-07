@@ -1,4 +1,5 @@
 <script setup>
+const avatarUrl = ''
 const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},

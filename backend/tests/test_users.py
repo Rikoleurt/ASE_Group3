@@ -230,3 +230,22 @@ def test_profile_field_returns_not_found(client, connection, field):
 def test_profile_field_rejects_invalid_id(client, connection, field, user_id):
     assert client.get(f"/users/{user_id}/{field}").status_code == 422
     connection.cursor.assert_not_called()
+
+
+def test_login_accepts_username_from_existing_frontend(client, connection):
+    connection.cursor.return_value.fetchone.return_value = {
+        "id": 1, "email": "dev@ase3.com", "username": "dev", "password": hash_password("dev"),
+    }
+    response = client.post("/users/login", json={"username": "dev", "password": "dev"})
+    assert response.status_code == 200
+    assert response.json()["user"]["username"] == "dev"
+    sql, parameters = connection.cursor.return_value.execute.call_args.args
+    assert "WHERE username = %s" in sql
+    assert parameters == ("dev",)
+
+
+@pytest.mark.parametrize("username", [None, "", "   "])
+def test_login_requires_nonblank_identifier(client, connection, username):
+    response = client.post("/users/login", json={"username": username, "password": "dev"})
+    assert response.status_code == 422
+    connection.cursor.assert_not_called()
