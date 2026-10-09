@@ -420,11 +420,12 @@ def cmd_dataset(args: argparse.Namespace) -> None:
 
     out = Path(args.out) if args.out else signboxes.DATASET_DIR
     report = signboxes.build_dataset(load_cached(), out=out, labels=args.labels,
-                                     val_fraction=args.val_fraction, min_match=args.min_match,
-                                     workers=args.workers)
+                                     val_fraction=args.val_fraction, test_fraction=args.test_fraction,
+                                     min_match=args.min_match, workers=args.workers)
     tablets, boxes = report["tablets"], report["boxes"]
-    print(f"Tablets: train {tablets['train']}, val {tablets['val']} (held out: {', '.join(report['held_out'])})")
-    print(f"Boxes:   train {boxes['train']}, val {boxes['val']}")
+    print(f"Tablets: train {tablets['train']}, val {tablets['val']}, test {tablets['test']}"
+          f" (always test: {', '.join(report['forced_test'])})")
+    print(f"Boxes:   train {boxes['train']}, val {boxes['val']}, test {boxes['test']}")
     print(f"Crops rejected (ink did not line up): {len(report['rejected'])}")
     shrunk = sum(s < 1.0 for s in report["scales"].values())
     print(f"Tracings smaller than their crops: {shrunk}/{len(report['scales'])}")
@@ -651,7 +652,10 @@ def main() -> None:
     p_dataset = sub.add_parser("dataset", help="build a YOLO sign-detection dataset from the tracings")
     p_dataset.add_argument("--labels", choices=["sign", "role"], default="sign",
                            help="one 'sign' class (default), or one class per sign role")
-    p_dataset.add_argument("--val-fraction", type=float, default=0.15)
+    p_dataset.add_argument("--val-fraction", type=float, default=0.15,
+                           help="share of tablets used to pick the best epoch (default 0.15)")
+    p_dataset.add_argument("--test-fraction", type=float, default=0.15,
+                           help="share of tablets kept for the final score (default 0.15)")
     p_dataset.add_argument("--min-match", type=float, default=0.85,
                            help="fraction of a crop's ink that must land on tracing ink")
     p_dataset.add_argument("--out", help="output directory (default out/yolo_signs)")

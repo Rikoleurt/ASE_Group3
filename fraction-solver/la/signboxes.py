@@ -32,6 +32,7 @@ is committed with the project; the dataset under `out/` is rebuilt on demand.
 from __future__ import annotations
 
 import json
+import shutil
 import time
 import zlib
 from collections import Counter
@@ -50,9 +51,11 @@ from la.shapes import load_mask
 IMAGE_DIR = fetch.ROOT / "data" / "images"
 DATASET_DIR = fetch.ROOT / "out" / "yolo_signs"
 
-# The web demo shows HT 13. Training on it would make the demo report what the
-# model memorised, so it is never written to either split.
-DEMO_HOLDOUT = frozenset({"HT 13"})
+# The web demo shows HT 13. Training or tuning on it would make the demo report
+# what the model memorised, so it always goes to the test split.
+DEMO_TABLETS = frozenset({"HT 13"})
+
+SPLITS = ("train", "val", "test")
 
 # Fraction of a crop's ink that must land on tracing ink at the chosen position.
 # Unscaled cut-outs score 1.0 and rescaled ones 0.9-0.97 (resampling blurs the
@@ -268,9 +271,20 @@ def yolo_line(cls: int, box: SignBox, width: int, height: int) -> str:
     return f"{cls} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}"
 
 
-def split_for(doc_id: str, val_fraction: float) -> str:
-    """Deterministic per-tablet split, so a rebuild puts every tablet where it was."""
-    return "val" if zlib.crc32(doc_id.encode("utf-8")) % 1000 < val_fraction * 1000 else "train"
+def split_for(doc_id: str, val_fraction: float, test_fraction: float = 0.0) -> str:
+    """Deterministic per-tablet split, so a rebuild puts every tablet where it was.
+
+    Whole tablets are split, never individual signs: one scribe's marks on one
+    tablet are unusually alike, so a tablet in two splits would inflate scores.
+    `val` keeps the same hash range whatever `test_fraction` is, so adding a test
+    split moved tablets out of train only.
+    """
+    bucket = zlib.crc32(doc_id.encode("utf-8")) % 1000
+    if bucket < val_fraction * 1000:
+        return "val"
+    if bucket < (val_fraction + test_fraction) * 1000:
+        return "test"
+    return "train"
 
 
 def class_names(labels: str) -> tuple[str, ...]:
@@ -299,11 +313,17 @@ def build_dataset(
     out: Path = DATASET_DIR,
     labels: str = "sign",
     val_fraction: float = 0.15,
-    holdout: frozenset[str] = DEMO_HOLDOUT,
+    test_fraction: float = 0.15,
+    test_tablets: frozenset[str] = DEMO_TABLETS,
     min_match: float = MIN_MATCH,
     workers: int = 4,
 ) -> dict:
     """Write images, labels and data.yaml in the layout Ultralytics expects.
+
+    Three splits, by tablet: `train` to learn from, `val` for Ultralytics to pick
+    the best epoch, and `test`, untouched until the final score. `test_tablets`
+    (HT 13, the demo tablet) always go to test. Earlier output is cleared first,
+    so a tablet that changed split cannot linger in its old one.
 
     Images are re-rendered as black ink on white from the ink mask, so tracings
     stored with strokes in the alpha channel look the same as opaque ones; OpenCV,
@@ -314,23 +334,27 @@ def build_dataset(
     the default is a conservative 4 (about 10 minutes for the corpus).
     """
     names = class_names(labels)
-    for split in ("train", "val"):
-        (out / "images" / split).mkdir(parents=True, exist_ok=True)
-        (out / "labels" / split).mkdir(parents=True, exist_ok=True)
+    for kind in ("images", "labels"):
+        shutil.rmtree(out / kind, ignore_errors=True)
+        for split in SPLITS:
+            (out / kind / split).mkdir(parents=True, exist_ok=True)
+
+    def split_of(doc_id: str) -> str:
+        return "test" if doc_id in test_tablets else split_for(doc_id, val_fraction, test_fraction)
 
     report: dict = {"tablets": Counter(), "boxes": Counter(), "rejected": [], "skipped_no_boxes": [],
-                    "held_out": sorted(holdout), "classes": Counter(), "scales": {}}
-    jobs = [(doc, min_match, IMAGE_DIR) for doc in docs.values() if doc["id"] not in holdout and has_boxes(doc)]
+                    "forced_test": sorted(test_tablets), "classes": Counter(), "scales": {}, "splits": {}}
+    jobs = [(doc, min_match, IMAGE_DIR) for doc in docs.values() if has_boxes(doc)]
     with ExitStack() as stack:
         if workers == 1:
             tablets = map(_tablet_boxes_for, jobs)
         else:
             pool = stack.enter_context(ProcessPoolExecutor(max_workers=workers))
             tablets = pool.map(_tablet_boxes_for, jobs, chunksize=4)
-        _write_tablets(zip(jobs, tablets), len(jobs), out, labels, names, val_fraction, report)
+        _write_tablets(zip(jobs, tablets), len(jobs), out, labels, names, split_of, report)
 
     (out / "data.yaml").write_text(
-        f"path: {out.resolve().as_posix()}\ntrain: images/train\nval: images/val\n"
+        f"path: {out.resolve().as_posix()}\ntrain: images/train\nval: images/val\ntest: images/test\n"
         f"names:\n" + "".join(f"  {i}: {n}\n" for i, n in enumerate(names)),
         encoding="utf-8",
     )
@@ -340,10 +364,8 @@ def build_dataset(
 
 
 def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str, ...],
-                   val_fraction: float, report: dict) -> None:
+                   split_of, report: dict) -> None:
     for done, ((doc, _, _), tablet) in enumerate(results, 1):
-        if done % 50 == 0:
-            print(f"  {done}/{total} tablets matched")
         if done % 50 == 0:
             print(f"  {done}/{total} tablets matched")
         if tablet is None:
@@ -356,7 +378,8 @@ def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str
             report["skipped_no_boxes"].append(doc["id"])
             continue
 
-        split = split_for(doc["id"], val_fraction)
+        split = split_of(doc["id"])
+        report["splits"][doc["id"]] = split
         stem = slug(doc)
         Image.fromarray(np.where(tablet.tracing, 0, 255).astype(np.uint8)).save(out / "images" / split / f"{stem}.png")
         (out / "labels" / split / f"{stem}.txt").write_text(

@@ -128,21 +128,27 @@ whole tablet and a crop of each sign cut from the same drawing. `fraction-solver
 finds each crop on its tracing (estimating the scale where the tracing was shrunk),
 which gives the sign boxes, and writes them as a YOLO dataset
 ([la/signboxes.py](fraction-solver/la/signboxes.py)). On the current corpus this
-gives 4,704 boxes on 730 tablets. HT 13 is held out because the demo shows it.
+gives about 4,700 boxes on 731 tablets.
+
+The dataset is split by tablet (a tablet is never in two splits): about 70% train,
+15% val (used by training to pick the best epoch) and 15% test (untouched until
+the final score). HT 13, the demo tablet, is always in test.
+
+**Step-by-step training instructions are in [TRAINING.txt](TRAINING.txt).** In short:
 
 ```bash
 cd fraction-solver
-python -m la.cli fetch      # once: cache the lineara.eu documents (~15 min)
-python -m la.cli images     # tracings and sign crops (~40 min, resumable)
-python -m la.cli dataset    # writes out/yolo_signs/ and prints a summary
+python -m la.cli dataset --labels role    # writes out/yolo_signs/ with train/val/test
 cd ..
-uv run --project backend yolo detect train data=fraction-solver/out/yolo_signs/data.yaml model=yolo26n.pt imgsz=1024 epochs=100
+yolo detect train data=fraction-solver/out/yolo_signs/data.yaml model=yolo26n.pt imgsz=1024 epochs=100
+yolo detect val model=runs/detect/train/weights/best.pt data=fraction-solver/out/yolo_signs/data.yaml split=test imgsz=1024
 ```
 
-Training writes `runs/detect/train/weights/best.pt`. It needs a GPU (or Google
-Colab) to finish in reasonable time. Copy it to `models/linear_a_signs.pt` (or set
-`SIGN_DETECTOR_WEIGHTS`) and restart the backend: the demo then uses it instead of
-`yolo26n.pt`.
+Training needs a GPU (or Google Colab) to finish in reasonable time. Copy the best
+weights to `models/linear_a_signs.pt` (or set `SIGN_DETECTOR_WEIGHTS`) and restart
+the backend: the demo then uses them instead of `yolo26n.pt`. To refresh the
+committed data from lineara.eu, run `python -m la.cli fetch` and
+`python -m la.cli images` first.
 
 `python -m la.cli dataset --labels role` gives one class per sign role
 (syllabogram, logogram, fraction, transaction) instead of a single `sign` class.

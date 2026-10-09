@@ -41,6 +41,7 @@ wheels/
 *.egg
 
 .venv/
+.venv-train/
 venv/
 env/
 ENV/
