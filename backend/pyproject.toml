@@ -9,6 +9,7 @@ dependencies = [
     "email-validator>=2.2,<3.0",
     "mysql-connector-python>=9.0,<10.0",
     "ultralytics>=8.4,<9.0",
+    "python-multipart>=0.0.32",
 ]
 
 [dependency-groups]

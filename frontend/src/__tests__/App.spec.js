@@ -27,7 +27,7 @@ describe('App navigation', () => {
       routes: [
         { path: '/', component: { template: '<h1>Home</h1>' } },
         { path: '/tablet-demo', component: { template: '<h1>Demo</h1>' } },
-        { path: '/cluster', component: { template: '<h1>Cluster</h1>' } },
+        { path: '/analysis', component: { template: '<h1>Analysis</h1>' } },
         { path: '/signup', component: { template: '<h1>Signup</h1>' } },
         { path: '/login', component: LoginView },
         { path: '/profile', component: ProfileView },
