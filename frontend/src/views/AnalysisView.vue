@@ -7,6 +7,7 @@ const ERROR_MESSAGE = ref('')
 const FILENAME = ref('')
 const PREVIEW_URL = ref('')
 const ANALYSIS = ref(null)
+const IS_DRAGGING = ref(false)
 
 // ROUTE
 
@@ -52,6 +53,16 @@ function handleFile(file) {
     analyze(file)
 }
 
+function onDrop(event) {
+  IS_DRAGGING.value = false
+  handleFile(event.dataTransfer.files[0])
+}
+
+function onDragLeave(event) {
+  if (event.currentTarget.contains(event.relatedTarget)) return
+  IS_DRAGGING.value = false
+}
+
 function onInputChange(event) {
     handleFile(event.target.files[0])
     event.target.value = ''
@@ -78,7 +89,13 @@ onBeforeUnmount(revokePreview)
 <template>
 <main class="mx-auto max-w-5xl px-6 py-10">
     <section v-if="STATUS === 'idle'" class="mx-auto max-w-2xl">
-    <div class="flex flex-col items-center gap-4 rounded-3xl bg-card px-6 py-16 text-center">
+    <div
+    class="flex flex-col items-center gap-4 rounded-3xl border-2 border-dashed px-6 py-16 text-center transition-colors"
+    :class="IS_DRAGGING ? 'border-accent bg-accent/10' : 'border-ink/60 bg-card'"
+    @dragover.prevent="IS_DRAGGING = true"
+    @dragleave.prevent="onDragLeave"
+    @drop.prevent="onDrop"
+    >
         <svg
         class="h-16 w-16"
         viewBox="0 0 24 24"
@@ -92,6 +109,7 @@ onBeforeUnmount(revokePreview)
         </svg>
 
         <h1 class="text-2xl font-bold">Upload File</h1>
+        <p class="text-ink/70">Drag an image here, or</p>
 
         <label
         class="cursor-pointer rounded bg-bar px-8 py-1.5 font-medium hover:brightness-95 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent"
