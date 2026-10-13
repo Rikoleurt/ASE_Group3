@@ -57,6 +57,13 @@ htmlcov/
 
 .env
 .env.*
+!.env.example
 
 *.log
 .cache/
+
+# Ultralytics training output
+runs/
+
+# Trained sign-detector weights (derived from CC BY-NC-SA tracings; keep local)
+models/
