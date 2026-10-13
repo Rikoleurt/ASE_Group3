@@ -6,8 +6,11 @@ situation from scratch, so they need neither the network nor the image cache.
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pytest
+import yaml
 from PIL import Image
 
 from la import signboxes
@@ -128,7 +131,7 @@ def corpus(tmp_path, monkeypatch):
         tracing = tablet_with({(10, 20): a, (180, 240): b}, shape=(420, 320))
         base = f"https://lineara.eu/img/tracings/{sl}"
         doc = {"id": doc_id, "url": f"https://lineara.eu/documents/{sl}/", "tracing": f"{base}.png", "signs": [
-            {"position": 1, "sign": "AB01", "role": "syllabogram", "image": f"{base}_1.png"},
+            {"position": 1, "sign": "AB01", "reading": "da", "role": "syllabogram", "image": f"{base}_1.png"},
             {"position": 2, "sign": "A707", "role": "fraction", "image": f"{base}_2.png"},
             {"position": 3, "sign": "", "role": "erasure", "image": f"{base}_3.png"},
         ]}
@@ -166,7 +169,7 @@ def test_build_dataset_writes_ultralytics_layout_and_forces_demo_tablet_to_test(
     image = np.array(Image.open(out / "images" / "train" / "HT-1.png"))
     assert set(np.unique(image)) == {0, 255}
     yaml = (out / "data.yaml").read_text()
-    assert "train: images/train" in yaml and "test: images/test" in yaml and "2: fraction" in yaml
+    assert "train: images/train" in yaml and "test: images/test" in yaml and '2: "fraction"' in yaml
     assert "CC BY-NC-SA" in (out / "LICENCE.txt").read_text()
 
 
@@ -180,3 +183,71 @@ def test_rebuilding_clears_tablets_from_their_old_split(corpus, tmp_path):
     assert (out / "images" / "test" / "HT-2.png").exists()
     assert not (out / "images" / "train" / "HT-2.png").exists()
     assert not (out / "labels" / "train" / "HT-2.txt").exists()
+
+
+def test_identity_export_preserves_readings_and_links_boxes_to_sources(corpus, tmp_path):
+    # A707 has no reading: it must retain its ID rather than disappear.
+    out = tmp_path / "identity dataset"
+    report = signboxes.build_dataset(corpus, out=out, val_fraction=0, test_fraction=0,
+                                     test_tablets=frozenset({"HT 2"}), workers=1)
+    config = yaml.safe_load((out / "data.yaml").read_text())
+    catalogue = json.loads((out / "classes.json").read_text())
+    assert [c["name"] for c in catalogue] == ["A707", "AB01 (da)"]
+    assert catalogue[1]["reading"] == "da"
+    assert config["path"] == str(out.resolve())
+    annotations = json.loads((out / "annotations.json").read_text())
+    for tablet in annotations:
+        rows = (out / tablet["labels"]).read_text().splitlines()
+        assert len(rows) == len(tablet["signs"]) == 2
+        assert (out / tablet["image"]).exists()
+        for row, sign in zip(rows, tablet["signs"]):
+            fields = row.split()
+            assert int(fields[0]) == sign["class_id"]
+            assert config["names"][sign["class_id"]] == sign["name"]
+            assert all(0 <= float(v) <= 1 for v in fields[1:])
+            original = corpus[tablet["tablet"]]["signs"][sign["position"] - 1]
+            assert sign["crop"] == original["image"]
+            assert sign["reading"] == original.get("reading")
+    assert report["classes_by_split"]["train"] == {"A707": 1, "AB01 (da)": 1}
+    assert report["classes_without_train"] == []
+
+
+def test_distinct_signs_with_the_same_reading_stay_distinct(corpus):
+    for doc in corpus.values():
+        doc["signs"][1].update(sign="AB02", reading="da")
+    classes = signboxes.identity_classes(corpus)
+    assert [c["name"] for c in classes] == ["AB01 (da)", "AB02 (da)"]
+    assert classes == signboxes.identity_classes(dict(reversed(list(corpus.items()))))
+
+
+def test_unidentified_signs_are_boxed_and_rare_classes_reported(corpus, tmp_path):
+    corpus["HT 2"]["signs"][1]["sign"] = ""
+    report = signboxes.build_dataset(corpus, out=tmp_path / "ds", val_fraction=0, test_fraction=0,
+                                     test_tablets=frozenset({"HT 2"}), workers=1)
+    assert report["classes_by_split"]["test"]["unidentified"] == 1
+    assert report["classes_without_train"] == ["unidentified"]
+    assert len((tmp_path / "ds/labels/test/HT-2.txt").read_text().splitlines()) == 2
+
+
+def test_faces_and_joined_fragments_share_a_split(corpus, tmp_path):
+    corpus["HT 1"]["id"] = "HT 94a"
+    corpus["HT 2"]["id"] = "HT 94b"
+    report = signboxes.build_dataset(corpus, out=tmp_path / "ds", test_tablets=frozenset({"HT 94a"}), workers=1)
+    assert report["splits"] == {"HT 94a": "test", "HT 94b": "test"}
+    assert set(report["groups"].values()) == {"HT 94"}
+    docs = {"a": {"id": "KH 1", "joined_into": "KH 1+2"},
+            "b": {"id": "KH 2", "joined_into": "KH 1+2"},
+            "join": {"id": "KH 1+2", "join_of": ["KH 1", "KH 2"]}}
+    assert len(set(signboxes.tablet_groups(docs).values())) == 1
+
+
+@pytest.mark.parametrize("options", [{"val_fraction": -0.1}, {"val_fraction": 0.6, "test_fraction": 0.4},
+                                    {"workers": 0}, {"min_match": 1.1}])
+def test_invalid_options_do_not_clear_an_existing_dataset(corpus, tmp_path, options):
+    out = tmp_path / "ds"
+    marker = out / "images/train/keep.png"
+    marker.parent.mkdir(parents=True)
+    marker.write_bytes(b"keep")
+    with pytest.raises(ValueError):
+        signboxes.build_dataset(corpus, out=out, **options)
+    assert marker.read_bytes() == b"keep"

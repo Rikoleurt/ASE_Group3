@@ -429,6 +429,9 @@ def cmd_dataset(args: argparse.Namespace) -> None:
     print(f"Crops rejected (ink did not line up): {len(report['rejected'])}")
     shrunk = sum(s < 1.0 for s in report["scales"].values())
     print(f"Tracings smaller than their crops: {shrunk}/{len(report['scales'])}")
+    print(f"Missing images: {len(report['missing_tracings'])} tracings, {len(report['missing_crops'])} crops")
+    print(f"Classes without training examples: {len(report['classes_without_train'])}")
+    print(f"Classes with fewer than 5 training examples: {len(report['classes_with_fewer_than_5_train'])}")
     for name, n in sorted(report["classes"].items(), key=lambda kv: -kv[1]):
         print(f"  {name:12s} {n}")
     print(f"\nWrote {out / 'data.yaml'} (licence and credit in LICENCE.txt)")
@@ -650,8 +653,8 @@ def main() -> None:
     p_images.add_argument("--delay", type=float, default=0.4, help="seconds between requests")
 
     p_dataset = sub.add_parser("dataset", help="build a YOLO sign-detection dataset from the tracings")
-    p_dataset.add_argument("--labels", choices=["sign", "role"], default="sign",
-                           help="one 'sign' class (default), or one class per sign role")
+    p_dataset.add_argument("--labels", choices=["identity", "sign", "role"], default="identity",
+                           help="one class per sign ID with its proposed reading (default), one generic sign class, or roles")
     p_dataset.add_argument("--val-fraction", type=float, default=0.15,
                            help="share of tablets used to pick the best epoch (default 0.15)")
     p_dataset.add_argument("--test-fraction", type=float, default=0.15,

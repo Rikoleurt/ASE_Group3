@@ -16,7 +16,7 @@ python -m la.cli census     # phase 0: how much evidence exists
 python -m la.cli solve      # phase 2: build and analyse the linear system
 python -m la.cli validate   # phase 3: leave-one-out recovery of published values
 python -m la.cli images     # tablet tracings and sign crops for the sign detector (resumable)
-python -m la.cli dataset    # YOLO sign-detection dataset in out/yolo_signs/
+python -m la.cli dataset --labels identity    # YOLO character classes and boxes in out/yolo_signs/
 python -m pytest tests/ -q
 ```
 

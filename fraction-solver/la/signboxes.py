@@ -32,10 +32,11 @@ is committed with the project; the dataset under `out/` is rebuilt on demand.
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import time
 import zlib
-from collections import Counter
+from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import ExitStack
 from dataclasses import dataclass, field
@@ -76,6 +77,7 @@ MIN_SIGN_PX = 16
 # Erasures are marks, not signs: a detector should not learn to box them.
 EXCLUDED_ROLES = frozenset({"erasure"})
 ROLE_CLASSES = ("syllabogram", "logogram", "fraction", "transaction")
+UNKNOWN_SIGN = "unidentified"
 
 LICENCE_NOTICE = """\
 Images and labels derived from lineara.eu / SigLA tracings.
@@ -287,7 +289,62 @@ def split_for(doc_id: str, val_fraction: float, test_fraction: float = 0.0) -> s
     return "train"
 
 
-def class_names(labels: str) -> tuple[str, ...]:
+def identity_classes(docs: dict[str, dict]) -> list[dict]:
+    """Join crop metadata by sign ID; readings are names, never the identity key.
+
+    Two distinct signs can have the same proposed reading. Missing readings keep
+    their sign ID, and unidentified marks get an explicit class rather than being
+    silently treated as background. Keep all reading variants in the catalogue.
+    """
+    readings: dict[str, set[str]] = defaultdict(set)
+    roles: dict[str, set[str]] = defaultdict(set)
+    for doc in docs.values():
+        if not has_boxes(doc):
+            continue
+        for sign in doc.get("signs") or []:
+            if not sign.get("image") or sign.get("role") in EXCLUDED_ROLES:
+                continue
+            key = sign.get("sign") or UNKNOWN_SIGN
+            roles[key].add(sign.get("role") or "unknown")
+            if sign.get("reading"):
+                readings[key].add(sign["reading"])
+    classes = []
+    for i, key in enumerate(sorted(roles)):
+        variants = sorted(readings[key])
+        reading = variants[0] if len(variants) == 1 else None
+        classes.append({"class_id": i, "sign": None if key == UNKNOWN_SIGN else key,
+                        "reading": reading, "readings": variants, "roles": sorted(roles[key]),
+                        "name": f"{key} ({reading})" if reading else key})
+    return classes
+
+
+def tablet_groups(docs: dict[str, dict]) -> dict[str, str]:
+    """Keep numbered faces (e.g. HT 94a/b) and explicitly joined fragments together."""
+    def base(doc_id: str) -> str:
+        return re.sub(r"(?<=\d)[a-zα-ω]+$", "", doc_id)
+
+    parents: dict[str, str] = {}
+
+    def root(key: str) -> str:
+        parents.setdefault(key, key)
+        while parents[key] != key:
+            key = parents[key]
+        return key
+
+    for doc in docs.values():
+        key = base(doc["id"])
+        linked = list(doc.get("join_of") or [])
+        if doc.get("joined_into"):
+            linked.append(doc["joined_into"])
+        for other in linked:
+            a, b = root(key), root(base(other))
+            parents[max(a, b)] = min(a, b)
+    return {doc["id"]: root(base(doc["id"])) for doc in docs.values()}
+
+
+def class_names(labels: str, catalogue: list[dict] | None = None) -> tuple[str, ...]:
+    if labels == "identity":
+        return tuple(c["name"] for c in catalogue or [])
     if labels == "sign":
         return ("sign",)
     if labels == "role":
@@ -295,7 +352,9 @@ def class_names(labels: str) -> tuple[str, ...]:
     raise ValueError(f"unknown label mode {labels!r}")
 
 
-def class_of(box: SignBox, labels: str) -> int | None:
+def class_of(box: SignBox, labels: str, identities: dict[str, int] | None = None) -> int | None:
+    if labels == "identity":
+        return identities[box.sign or UNKNOWN_SIGN]
     if labels == "sign":
         return 0
     return ROLE_CLASSES.index(box.role) if box.role in ROLE_CLASSES else None
@@ -311,7 +370,7 @@ def _tablet_boxes_for(args: tuple[dict, float, Path]) -> TabletBoxes | None:
 def build_dataset(
     docs: dict[str, dict],
     out: Path = DATASET_DIR,
-    labels: str = "sign",
+    labels: str = "identity",
     val_fraction: float = 0.15,
     test_fraction: float = 0.15,
     test_tablets: frozenset[str] = DEMO_TABLETS,
@@ -333,46 +392,74 @@ def build_dataset(
     a full-size tracing and its FFT, and 12 workers exhausted a 16 GB machine, so
     the default is a conservative 4 (about 10 minutes for the corpus).
     """
-    names = class_names(labels)
+    if not (0 <= val_fraction < 1 and 0 <= test_fraction < 1 and val_fraction + test_fraction < 1):
+        raise ValueError("val_fraction and test_fraction must be nonnegative and sum to less than 1")
+    if workers < 1:
+        raise ValueError("workers must be at least 1")
+    if not 0 <= min_match <= 1:
+        raise ValueError("min_match must be between 0 and 1")
+    catalogue = identity_classes(docs) if labels == "identity" else []
+    names = class_names(labels, catalogue)
+    if not names:
+        raise ValueError("No classes found in the source documents")
+    identities = {c["sign"] or UNKNOWN_SIGN: c["class_id"] for c in catalogue}
+    groups = tablet_groups(docs)
+    forced_groups = {groups.get(doc_id, doc_id) for doc_id in test_tablets}
     for kind in ("images", "labels"):
         shutil.rmtree(out / kind, ignore_errors=True)
         for split in SPLITS:
             (out / kind / split).mkdir(parents=True, exist_ok=True)
 
     def split_of(doc_id: str) -> str:
-        return "test" if doc_id in test_tablets else split_for(doc_id, val_fraction, test_fraction)
+        group = groups[doc_id]
+        return "test" if group in forced_groups else split_for(group, val_fraction, test_fraction)
 
     report: dict = {"tablets": Counter(), "boxes": Counter(), "rejected": [], "skipped_no_boxes": [],
-                    "forced_test": sorted(test_tablets), "classes": Counter(), "scales": {}, "splits": {}}
-    jobs = [(doc, min_match, IMAGE_DIR) for doc in docs.values() if has_boxes(doc)]
+                    "forced_test": sorted(test_tablets), "classes": Counter(), "scales": {}, "splits": {},
+                    "label_mode": labels, "groups": {}, "missing_tracings": [], "missing_crops": [],
+                    "classes_by_split": {s: Counter() for s in SPLITS}}
+    jobs = [(doc, min_match, IMAGE_DIR) for doc in sorted(docs.values(), key=lambda d: d["id"]) if has_boxes(doc)]
+    annotations = []
     with ExitStack() as stack:
         if workers == 1:
             tablets = map(_tablet_boxes_for, jobs)
         else:
             pool = stack.enter_context(ProcessPoolExecutor(max_workers=workers))
             tablets = pool.map(_tablet_boxes_for, jobs, chunksize=4)
-        _write_tablets(zip(jobs, tablets), len(jobs), out, labels, names, split_of, report)
+        _write_tablets(zip(jobs, tablets), len(jobs), out, labels, names, split_of, report,
+                       identities, groups, annotations)
 
     (out / "data.yaml").write_text(
-        f"path: {out.resolve().as_posix()}\ntrain: images/train\nval: images/val\ntest: images/test\n"
-        f"names:\n" + "".join(f"  {i}: {n}\n" for i, n in enumerate(names)),
+        f"path: {json.dumps(out.resolve().as_posix())}\ntrain: images/train\nval: images/val\ntest: images/test\n"
+        f"names:\n" + "".join(f"  {i}: {json.dumps(n, ensure_ascii=False)}\n" for i, n in enumerate(names)),
         encoding="utf-8",
     )
     (out / "LICENCE.txt").write_text(LICENCE_NOTICE, encoding="utf-8")
+    report["classes_without_train"] = [n for n in names if not report["classes_by_split"]["train"][n]]
+    report["classes_with_fewer_than_5_train"] = [n for n in names if report["classes_by_split"]["train"][n] < 5]
+    (out / "classes.json").write_text(json.dumps(catalogue or [
+        {"class_id": i, "name": n} for i, n in enumerate(names)
+    ], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (out / "annotations.json").write_text(json.dumps(annotations, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (out / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     return report
 
 
 def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str, ...],
-                   split_of, report: dict) -> None:
+                   split_of, report: dict, identities: dict[str, int], groups: dict[str, str],
+                   annotations: list[dict]) -> None:
     for done, ((doc, _, _), tablet) in enumerate(results, 1):
         if done % 50 == 0:
-            print(f"  {done}/{total} tablets matched")
+            print(f"  {done}/{total} tablets matched", flush=True)
+        for sign in doc.get("signs") or []:
+            if sign.get("image") and sign.get("role") not in EXCLUDED_ROLES and not image_path(doc, sign["image"]).exists():
+                report["missing_crops"].append({"tablet": doc["id"], "position": sign["position"], "image": sign["image"]})
         if tablet is None:
+            report["missing_tracings"].append(doc["id"])
             continue
         report["scales"][doc["id"]] = tablet.scale
         report["rejected"] += [(doc["id"], pos, sign, round(m, 3)) for pos, sign, m in tablet.rejected]
-        rows = [(class_of(b, labels), b) for b in tablet.boxes]
+        rows = [(class_of(b, labels, identities), b) for b in tablet.boxes]
         rows = [(c, b) for c, b in rows if c is not None]
         if not rows:
             report["skipped_no_boxes"].append(doc["id"])
@@ -380,6 +467,7 @@ def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str
 
         split = split_of(doc["id"])
         report["splits"][doc["id"]] = split
+        report["groups"][doc["id"]] = groups[doc["id"]]
         stem = slug(doc)
         Image.fromarray(np.where(tablet.tracing, 0, 255).astype(np.uint8)).save(out / "images" / split / f"{stem}.png")
         (out / "labels" / split / f"{stem}.txt").write_text(
@@ -387,3 +475,16 @@ def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str
         report["tablets"][split] += 1
         report["boxes"][split] += len(rows)
         report["classes"].update(names[c] for c, _ in rows)
+        report["classes_by_split"][split].update(names[c] for c, _ in rows)
+        source_signs = {s["position"]: s for s in doc["signs"]}
+        annotations.append({
+            "tablet": doc["id"], "group": groups[doc["id"]], "split": split,
+            "image": f"images/{split}/{stem}.png", "labels": f"labels/{split}/{stem}.txt",
+            "source_json": f"data/cache/{stem}.json", "source_url": doc["url"],
+            "tracing": doc["tracing"], "width": tablet.width, "height": tablet.height,
+            "signs": [{"position": b.position, "class_id": c, "name": names[c],
+                       "sign": b.sign or None, "reading": source_signs[b.position].get("reading") or None,
+                       "role": b.role, "certain": source_signs[b.position].get("certain"),
+                       "crop": source_signs[b.position]["image"], "match": round(b.match, 6),
+                       "xyxy": [b.x0, b.y0, b.x1, b.y1]} for c, b in rows],
+        })

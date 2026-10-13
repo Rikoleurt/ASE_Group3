@@ -1,0 +1,7 @@
+# Dataset generation and its tests; no GPU or YOLO installation is needed.
+numpy>=1.26,<3
+scipy>=1.11,<2
+Pillow>=10,<13
+sympy>=1.12,<2
+PyYAML>=6,<7
+pytest>=8,<10

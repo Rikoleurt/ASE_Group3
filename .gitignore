@@ -42,6 +42,7 @@ wheels/
 
 .venv/
 .venv-train/
+.venv-data/
 venv/
 env/
 ENV/
