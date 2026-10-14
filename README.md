@@ -74,9 +74,29 @@ Stop the application with `Ctrl+C`. Stop the Docker database with:
 docker compose stop mysql
 ```
 
-The demo loads `models/linear_a_signs.pt` when available, or the path set through
+The trained Linear A model is installed at `models/linear_a_signs.pt` (the
+`best.pt` checkpoint from the `linear_a_signs` training run, with 361 classes).
+The demo loads this file, or the path set through
 `SIGN_DETECTOR_WEIGHTS` in `.env`. Otherwise, it uses the generic `yolo26n.pt`,
 which has not been trained on Linear A characters.
+
+HT13 inference runs on CPU at image size 1024; a GPU and the training dataset
+are not needed to serve predictions. The model is loaded on the first request
+and reused. Restart the backend after changing its configuration.
+
+- `GET /tablet-demo/ht13/predictions`: JSON containing image dimensions,
+  `trained` (true for the Linear A detector) and detections. Each detection has
+  a `label` from the model (sign ID and proposed reading when available),
+  `confidence` in percent, a PNG crop in `imageUrl`, and a normalized
+  `box` (`x`, `y`, `w`, `h`; top-left origin, values from 0 to 1).
+- `GET /tablet-demo/ht13`: PNG with predicted boxes and labels.
+- `GET /tablet-demo/ht13?annotated=false`: original image.
+
+Both prediction routes accept `?confidence=0.10` to lower the default threshold
+of 0.25 (allowed range: greater than 0, up to 1). Lower thresholds retain more
+uncertain detections. Confidence is a model score, not a verified pronunciation
+or a measure of overall accuracy. The frontend demo uses these predictions
+automatically. These routes do not require MySQL.
 
 ## 3. Prepare the data
 

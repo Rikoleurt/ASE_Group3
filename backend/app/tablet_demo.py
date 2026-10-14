@@ -3,19 +3,27 @@ Sprint 1 baseline using generic pretrained YOLO, which is not a Linear A model."
 
 import os
 from base64 import b64encode
+from functools import lru_cache
 from math import ceil
 from pathlib import Path
+from threading import Lock
 from ultralytics import YOLO
 import cv2
 
 HT13_IMAGE = Path(__file__).resolve().parent / "static" / "ht13.webp"
 YOLO_WEIGHTS = Path(__file__).resolve().parents[2] / "yolo26n.pt"
-# Trained on the lineara.eu dataset; see "Training data for a sign detector" in the README.
 SIGN_WEIGHTS = Path(os.getenv(
     "SIGN_DETECTOR_WEIGHTS", Path(__file__).resolve().parents[2] / "models" / "linear_a_signs.pt"
 ))
-# Must match the imgsz the sign detector was trained with (the README command uses 1024).
+
 SIGN_IMGSZ = 1024
+INFERENCE_LOCK = Lock()
+
+
+@lru_cache(maxsize=1)
+def _load_model(weights: str, modified_ns: int) -> YOLO:
+    """Reuse the model; the timestamp invalidates the cache after weight updates."""
+    return YOLO(weights)
 
 
 def active_weights() -> tuple[Path, int, bool]:
@@ -27,7 +35,7 @@ def active_weights() -> tuple[Path, int, bool]:
     return YOLO_WEIGHTS, 640, False
 
 
-def ht13_result(image_path: Path = HT13_IMAGE):
+def ht13_result(image_path: Path = HT13_IMAGE, confidence: float = 0.25):
     """
     Run the active model, including legitimate empty results
     """
@@ -36,25 +44,28 @@ def ht13_result(image_path: Path = HT13_IMAGE):
         raise FileNotFoundError(f"Cannot read HT13 image: {image_path}")
 
 
-    model = YOLO(str(weights))
-    return model.predict(
-        source=str(image_path), imgsz=imgsz, conf=0.25, device="cpu", save=False, verbose=False
-    )[0]
+    # YOLO's predictor is mutable: serialize calls sharing the cached model.
+    with INFERENCE_LOCK:
+        model = _load_model(str(weights.resolve()), weights.stat().st_mtime_ns)
+        return model.predict(
+            source=str(image_path), imgsz=imgsz, conf=confidence,
+            device="cpu", save=False, verbose=False
+        )[0]
 
 
-def annotate_ht13(image_path: Path = HT13_IMAGE) -> bytes:
+def annotate_ht13(image_path: Path = HT13_IMAGE, confidence: float = 0.25) -> bytes:
     """
     Render with Ultralytics and return a PNG in memory; no output files or DB
     """
 
-    annotated = ht13_result(image_path).plot(labels=True, conf=True, line_width=3)
+    annotated = ht13_result(image_path, confidence=confidence).plot(labels=True, conf=True, line_width=3)
     ok, png = cv2.imencode(".png", annotated)
     if not ok:
         raise RuntimeError("Could not encode the HT13 annotation.")
     return png.tobytes()
 
 
-def ht13_predictions() -> dict:
+def ht13_predictions(confidence: float = 0.25) -> dict:
     """Expose real detections with normalized boxes for the responsive demo UI.
 
     With the trained detector, boxes it labels "fraction" (train with
@@ -62,7 +73,7 @@ def ht13_predictions() -> dict:
     fraction sign they are. Nothing else is shape-matched: the method was only
     measured to work on fraction signs.
     """
-    result = ht13_result()
+    result = ht13_result(confidence=confidence)
     _weights, _imgsz, trained = active_weights()
     height, width = result.orig_shape
     predictions = []

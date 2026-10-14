@@ -1,5 +1,6 @@
 from base64 import b64decode
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import patch
 import numpy as np
 import pytest
@@ -133,3 +134,53 @@ def test_predictions_endpoint_reports_unavailable_model():
             response = client.get("/tablet-demo/ht13/predictions")
     assert response.status_code == 503
     assert response.json() == {"detail": "HT13 predictions are unavailable."}
+
+
+@pytest.mark.parametrize("endpoint", ["/tablet-demo/ht13", "/tablet-demo/ht13/predictions"])
+def test_prediction_routes_forward_confidence_and_handle_missing_weights(endpoint):
+    with patch("backend.app.tablet_demo.ht13_result", side_effect=FileNotFoundError("weights")) as predict:
+        with TestClient(app) as client:
+            response = client.get(endpoint, params={"confidence": 0.1})
+    assert response.status_code == 503
+    assert predict.call_args.kwargs["confidence"] == 0.1
+
+
+@pytest.mark.parametrize("endpoint", ["/tablet-demo/ht13", "/tablet-demo/ht13/predictions"])
+@pytest.mark.parametrize("confidence", [0, -0.1, 1.1, "nan", "invalid"])
+def test_prediction_routes_reject_invalid_confidence(endpoint, confidence):
+    with patch("backend.app.tablet_demo.ht13_result") as predict:
+        with TestClient(app) as client:
+            response = client.get(endpoint, params={"confidence": confidence})
+    assert response.status_code == 422
+    predict.assert_not_called()
+
+
+def test_ht13_trained_model_predicts_and_reuses_weights_without_database(monkeypatch):
+    from backend.app import tablet_demo
+
+    weights = Path(__file__).resolve().parents[2] / "models" / "linear_a_signs.pt"
+    monkeypatch.setattr(tablet_demo, "SIGN_WEIGHTS", weights)
+    tablet_demo._load_model.cache_clear()
+    with patch("mysql.connector.connect", side_effect=AssertionError("No DB for inference")), \
+         patch.object(tablet_demo, "YOLO", wraps=tablet_demo.YOLO) as load:
+        with TestClient(app) as client:
+            response = client.get("/tablet-demo/ht13/predictions")
+            annotated = client.get("/tablet-demo/ht13")
+        load.assert_called_once_with(str(weights.resolve()))
+
+    assert response.status_code == annotated.status_code == 200
+    data = response.json()
+    assert data["trained"] is True
+    assert (data["width"], data["height"]) == (1367, 2253)
+    assert data["predictions"]  # Smoke test of the shipped checkpoint on HT13.
+    for prediction in data["predictions"]:
+        assert prediction["label"].startswith(("AB", "A", "unidentified"))
+        assert 25 <= prediction["confidence"] <= 100
+        box = prediction["box"]
+        assert 0 <= box["x"] < box["x"] + box["w"] <= 1.000001
+        assert 0 <= box["y"] < box["y"] + box["h"] <= 1.000001
+        with Image.open(BytesIO(b64decode(prediction["imageUrl"].split(",", 1)[1]))) as crop:
+            assert crop.width > 0 and crop.height > 0
+    assert annotated.headers["content-type"] == "image/png"
+    with Image.open(BytesIO(annotated.content)) as image:
+        assert image.size == (1367, 2253)
