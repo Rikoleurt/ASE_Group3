@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
+from ultralytics.engine.results import Results
+import cv2
 from backend.app.main import app
 from backend.app.tablet_demo import HT13_IMAGE, SIGN_IMGSZ, active_weights, annotate_ht13, ht13_result
 
@@ -14,6 +16,7 @@ from backend.app.tablet_demo import HT13_IMAGE, SIGN_IMGSZ, active_weights, anno
 def no_trained_detector(monkeypatch, tmp_path):
     # Tests describe the baseline unless they opt in, even where trained weights exist locally.
     monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", tmp_path / "missing-signs.pt")
+    monkeypatch.setattr("backend.app.tablet_demo.CLASSIFIER_WEIGHTS", tmp_path / "missing-classifier.pt")
 
 
 def test_ht13_endpoint_runs_pretrained_inference_without_database():
@@ -155,18 +158,24 @@ def test_prediction_routes_reject_invalid_confidence(endpoint, confidence):
     predict.assert_not_called()
 
 
+MODELS = Path(__file__).resolve().parents[2] / "models"
+
+
+@pytest.mark.skipif(not (MODELS / "linear_a_signs.pt").is_file(), reason="trained weights are not installed")
 def test_ht13_trained_model_predicts_and_reuses_weights_without_database(monkeypatch):
     from backend.app import tablet_demo
 
-    weights = Path(__file__).resolve().parents[2] / "models" / "linear_a_signs.pt"
+    weights = MODELS / "linear_a_signs.pt"
+    classifier = MODELS / "linear_a_classifier.pt"
     monkeypatch.setattr(tablet_demo, "SIGN_WEIGHTS", weights)
+    monkeypatch.setattr(tablet_demo, "CLASSIFIER_WEIGHTS", classifier)
     tablet_demo._load_model.cache_clear()
-    with patch("mysql.connector.connect", side_effect=AssertionError("No DB for inference")), \
-         patch.object(tablet_demo, "YOLO", wraps=tablet_demo.YOLO) as load:
+    with patch("mysql.connector.connect", side_effect=AssertionError("No DB for inference")),          patch.object(tablet_demo, "YOLO", wraps=tablet_demo.YOLO) as load:
         with TestClient(app) as client:
             response = client.get("/tablet-demo/ht13/predictions")
             annotated = client.get("/tablet-demo/ht13")
-        load.assert_called_once_with(str(weights.resolve()))
+        loaded = sorted(call.args[0] for call in load.call_args_list)
+        assert loaded == sorted(str(w.resolve()) for w in (weights, classifier) if w.is_file())
 
     assert response.status_code == annotated.status_code == 200
     data = response.json()
@@ -175,7 +184,7 @@ def test_ht13_trained_model_predicts_and_reuses_weights_without_database(monkeyp
     assert data["predictions"]  # Smoke test of the shipped checkpoint on HT13.
     for prediction in data["predictions"]:
         assert prediction["label"].startswith(("AB", "A", "unidentified"))
-        assert 25 <= prediction["confidence"] <= 100
+        assert 0 < prediction["confidence"] <= 100
         box = prediction["box"]
         assert 0 <= box["x"] < box["x"] + box["w"] <= 1.000001
         assert 0 <= box["y"] < box["y"] + box["h"] <= 1.000001
@@ -184,3 +193,60 @@ def test_ht13_trained_model_predicts_and_reuses_weights_without_database(monkeyp
     assert annotated.headers["content-type"] == "image/png"
     with Image.open(BytesIO(annotated.content)) as image:
         assert image.size == (1367, 2253)
+
+
+@pytest.fixture
+def two_stage(monkeypatch, tmp_path):
+    """A trained one-class detector and a classifier, with the classifier's model mocked."""
+    import json
+
+    detector, classifier = tmp_path / "linear_a_signs.pt", tmp_path / "linear_a_classifier.pt"
+    detector.write_bytes(b"weights")
+    classifier.write_bytes(b"weights")
+    classifier.with_suffix(".json").write_text(json.dumps({
+        "A707": {"name": "A707", "roles": ["fraction"]},
+        "AB01": {"name": "AB01 (da)", "roles": ["syllabogram"]},
+    }), encoding="utf-8")
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", detector)
+    monkeypatch.setattr("backend.app.tablet_demo.CLASSIFIER_WEIGHTS", classifier)
+    monkeypatch.setattr("backend.app.tablet_demo._model", lambda weights: object())
+    image = np.full((200, 100, 3), 255, dtype=np.uint8)
+    image[50:90, 20:30] = 0
+    return Results(image, path=str(HT13_IMAGE), names={0: "sign"},
+                   boxes=np.array([[10, 40, 40, 120, 0.9, 0], [50, 40, 90, 120, 0.5, 0]]))
+
+
+def test_the_classifier_names_each_detected_sign_and_lists_candidates(two_stage):
+    named = [[("A707", 0.8), ("AB01", 0.15), ("AB99", 0.05)], [("AB01", 0.6), ("A707", 0.4), ("AB99", 0.0)]]
+    guesses = [{"sign": "A707", "label": "J", "distance": 4.0}]
+    with patch("backend.app.tablet_demo.ht13_result", return_value=two_stage),          patch("la.reader.name_boxes", return_value=named) as name_boxes,          patch("backend.app.reading.identify_mask", return_value=guesses) as identify:
+        with TestClient(app) as client:
+            data = client.get("/tablet-demo/ht13/predictions").json()
+    assert data["trained"] is True
+    first, second = data["predictions"]
+    assert first["label"] == "A707" and second["label"] == "AB01 (da)"
+    assert first["confidence"] == pytest.approx(72.0) and first["detectionConfidence"] == pytest.approx(90.0)
+    assert [c["sign"] for c in first["candidates"]] == ["A707", "AB01", "AB99"]
+    assert first["candidates"][2]["label"] == "AB99"  # unknown to the catalogue: shown by ID
+    assert first["shapeGuesses"] == guesses and "shapeGuesses" not in second
+    identify.assert_called_once()
+    boxes = name_boxes.call_args.args[2]
+    assert boxes == [(10, 40, 40, 120), (50, 40, 90, 120)]
+
+
+def test_the_annotated_image_shows_the_classifier_names(two_stage):
+    with patch("backend.app.tablet_demo.ht13_result", return_value=two_stage),          patch("la.reader.name_boxes", return_value=[[("A707", 0.8)], [("AB01", 0.6)]]),          patch.object(Results, "plot", autospec=True, side_effect=lambda self, **kw: self.orig_img) as plot:
+        png = annotate_ht13()
+    drawn = plot.call_args.args[0]
+    assert drawn.names == {0: "A707", 1: "AB01 (da)"}
+    assert drawn.boxes.conf.tolist() == pytest.approx([0.72, 0.3])
+    assert cv2.imdecode(np.frombuffer(png, dtype=np.uint8), cv2.IMREAD_COLOR).shape == (200, 100, 3)
+
+
+def test_the_classifier_is_ignored_without_a_trained_detector(monkeypatch, tmp_path):
+    from backend.app import tablet_demo
+
+    classifier = tmp_path / "linear_a_classifier.pt"
+    classifier.write_bytes(b"weights")
+    monkeypatch.setattr(tablet_demo, "CLASSIFIER_WEIGHTS", classifier)
+    assert tablet_demo.active_classifier() is None

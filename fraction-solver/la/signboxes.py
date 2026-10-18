@@ -31,6 +31,7 @@ is committed with the project; the dataset under `out/` is rebuilt on demand.
 
 from __future__ import annotations
 
+import csv
 import json
 import re
 import shutil
@@ -51,6 +52,14 @@ from la.shapes import load_mask
 
 IMAGE_DIR = fetch.ROOT / "data" / "images"
 DATASET_DIR = fetch.ROOT / "out" / "yolo_signs"
+# Boxes the crop matcher missed, added by review (`la.pseudo`). Committed: unlike
+# `out/`, they are human work and cannot be regenerated. Only the `sign` label
+# mode uses them, because a box found by the detector has no known identity.
+EXTRA_LABELS = fetch.ROOT / "data" / "labels" / "extra_boxes.csv"
+EXTRA_COLUMNS = ("tablet", "x0", "y0", "x1", "y1", "source", "confidence")
+# `reviewed` boxes were checked by a person and may go to any split; `pseudo`
+# boxes were accepted automatically and must never change val or test.
+EXTRA_SOURCES = ("reviewed", "pseudo")
 
 # The web demo shows HT 13. Training or tuning on it would make the demo report
 # what the model memorised, so it always goes to the test split.
@@ -376,6 +385,7 @@ def build_dataset(
     test_tablets: frozenset[str] = DEMO_TABLETS,
     min_match: float = MIN_MATCH,
     workers: int = 4,
+    extra_labels: Path | None = None,
 ) -> dict:
     """Write images, labels and data.yaml in the layout Ultralytics expects.
 
@@ -391,6 +401,10 @@ def build_dataset(
     Tablets are matched in parallel; `workers=1` runs in-process. Each worker holds
     a full-size tracing and its FFT, and 12 workers exhausted a 16 GB machine, so
     the default is a conservative 4 (about 10 minutes for the corpus).
+
+    `extra_labels` (the CLI passes `EXTRA_LABELS`) adds boxes from review in `sign` mode.
+    Synthetic tablets and `train.txt` from `la.synth` are removed, since they were
+    composed from the previous build.
     """
     if not (0 <= val_fraction < 1 and 0 <= test_fraction < 1 and val_fraction + test_fraction < 1):
         raise ValueError("val_fraction and test_fraction must be nonnegative and sum to less than 1")
@@ -403,12 +417,15 @@ def build_dataset(
     if not names:
         raise ValueError("No classes found in the source documents")
     identities = {c["sign"] or UNKNOWN_SIGN: c["class_id"] for c in catalogue}
+    extra = read_extra_labels(extra_labels)
     groups = tablet_groups(docs)
     forced_groups = {groups.get(doc_id, doc_id) for doc_id in test_tablets}
     for kind in ("images", "labels"):
         shutil.rmtree(out / kind, ignore_errors=True)
         for split in SPLITS:
             (out / kind / split).mkdir(parents=True, exist_ok=True)
+    for stale in ("train.txt", "synth_report.json"):
+        (out / stale).unlink(missing_ok=True)
 
     def split_of(doc_id: str) -> str:
         group = groups[doc_id]
@@ -417,8 +434,12 @@ def build_dataset(
     report: dict = {"tablets": Counter(), "boxes": Counter(), "rejected": [], "skipped_no_boxes": [],
                     "forced_test": sorted(test_tablets), "classes": Counter(), "scales": {}, "splits": {},
                     "label_mode": labels, "groups": {}, "missing_tracings": [], "missing_crops": [],
-                    "classes_by_split": {s: Counter() for s in SPLITS}}
-    jobs = [(doc, min_match, IMAGE_DIR) for doc in sorted(docs.values(), key=lambda d: d["id"]) if has_boxes(doc)]
+                    "classes_by_split": {s: Counter() for s in SPLITS},
+                    "extra_boxes": Counter(), "extra_skipped": []}
+    if extra and labels != "sign":
+        report["extra_skipped"] = [{"tablet": t, "reason": f"label mode {labels}"} for t in sorted(extra)]
+        extra = {}
+    jobs =[(doc, min_match, IMAGE_DIR) for doc in sorted(docs.values(), key=lambda d: d["id"]) if has_boxes(doc)]
     annotations = []
     with ExitStack() as stack:
         if workers == 1:
@@ -427,7 +448,7 @@ def build_dataset(
             pool = stack.enter_context(ProcessPoolExecutor(max_workers=workers))
             tablets = pool.map(_tablet_boxes_for, jobs, chunksize=4)
         _write_tablets(zip(jobs, tablets), len(jobs), out, labels, names, split_of, report,
-                       identities, groups, annotations)
+                       identities, groups, annotations, extra)
 
     (out / "data.yaml").write_text(
         f"path: {json.dumps(out.resolve().as_posix())}\ntrain: images/train\nval: images/val\ntest: images/test\n"
@@ -447,7 +468,8 @@ def build_dataset(
 
 def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str, ...],
                    split_of, report: dict, identities: dict[str, int], groups: dict[str, str],
-                   annotations: list[dict]) -> None:
+                   annotations: list[dict], extra: dict[str, list[dict]] | None = None) -> None:
+    extra = extra or {}
     for done, ((doc, _, _), tablet) in enumerate(results, 1):
         if done % 50 == 0:
             print(f"  {done}/{total} tablets matched", flush=True)
@@ -468,10 +490,19 @@ def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str
         split = split_of(doc["id"])
         report["splits"][doc["id"]] = split
         report["groups"][doc["id"]] = groups[doc["id"]]
+        added = []
+        for row in extra.get(doc["id"], []):
+            if row["source"] == "pseudo" and split != "train":
+                report["extra_skipped"].append({"tablet": doc["id"], "reason": f"unreviewed box in {split}"})
+                continue
+            added.append((0, SignBox("", "", 0, row["x0"], row["y0"], row["x1"], row["y1"], 1.0), row["source"]))
+        if added:
+            report["extra_boxes"][split] += len(added)
         stem = slug(doc)
         Image.fromarray(np.where(tablet.tracing, 0, 255).astype(np.uint8)).save(out / "images" / split / f"{stem}.png")
         (out / "labels" / split / f"{stem}.txt").write_text(
-            "\n".join(yolo_line(c, b, tablet.width, tablet.height) for c, b in rows) + "\n", encoding="utf-8")
+            "\n".join(yolo_line(c, b, tablet.width, tablet.height) for c, b in rows + [a[:2] for a in added]) + "\n",
+            encoding="utf-8")
         report["tablets"][split] += 1
         report["boxes"][split] += len(rows)
         report["classes"].update(names[c] for c, _ in rows)
@@ -486,5 +517,24 @@ def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str
                        "sign": b.sign or None, "reading": source_signs[b.position].get("reading") or None,
                        "role": b.role, "certain": source_signs[b.position].get("certain"),
                        "crop": source_signs[b.position]["image"], "match": round(b.match, 6),
-                       "xyxy": [b.x0, b.y0, b.x1, b.y1]} for c, b in rows],
+                       "xyxy": [b.x0, b.y0, b.x1, b.y1], "source": "matched"} for c, b in rows]
+                     + [{"position": None, "class_id": c, "name": names[c], "sign": None, "reading": None,
+                         "role": None, "certain": None, "crop": None, "match": None,
+                         "xyxy": [b.x0, b.y0, b.x1, b.y1], "source": source} for c, b, source in added],
         })
+
+
+def read_extra_labels(path: Path | None) -> dict[str, list[dict]]:
+    """Reviewed extra boxes by tablet ID, in tracing pixels. A missing file means none."""
+    if path is None or not path.exists():
+        return {}
+    out: dict[str, list[dict]] = defaultdict(list)
+    with path.open(encoding="utf-8", newline="") as f:
+        for line, row in enumerate(csv.DictReader(f), 2):
+            if row.get("source") not in EXTRA_SOURCES:
+                raise ValueError(f"{path}:{line}: source must be one of {EXTRA_SOURCES}")
+            x0, y0, x1, y1 = (int(round(float(row[k]))) for k in ("x0", "y0", "x1", "y1"))
+            if not (0 <= x0 < x1 and 0 <= y0 < y1):
+                raise ValueError(f"{path}:{line}: box must have x0 < x1 and y0 < y1")
+            out[row["tablet"]].append({"x0": x0, "y0": y0, "x1": x1, "y1": y1, "source": row["source"]})
+    return dict(out)
