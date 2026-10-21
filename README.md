@@ -123,14 +123,23 @@ Activate it with the command for your system:
 | macOS / Linux | `source .venv-train/bin/activate` |
 | Windows PowerShell | `.\.venv-train\Scripts\Activate.ps1` |
 
-With this environment active, generate the dataset:
+With this environment active, generate the data for the two models that read a
+tablet: a **detector** that finds signs and a **classifier** that names each one.
 
 ```bash
 python -m pip install -r fraction-solver/requirements-data.txt
 cd fraction-solver
-python -m la.cli dataset --labels identity --workers 2
+python -m la.cli dataset --labels sign --workers 2   # boxes, one class: "sign"
+python -m la.cli crops                               # one image per sign, for the classifier
+python -m la.cli synth --count 1000                  # optional: synthetic training tablets
 cd ..
 ```
+
+Why two models: one detector with 361 sign classes has to find and name signs at
+once, while 169 of those classes have a single example. A one-class detector
+learns from all 4,700 boxes at once, and a classifier trained on small crops can
+be retrained in minutes and rebalanced cheaply. `--labels identity` still builds
+the one-stage dataset, for comparison.
 
 The output is `fraction-solver/out/yolo_signs/`:
 
@@ -167,6 +176,40 @@ Review automatic boxes before training. Some signs and numerical marks remain
 unannotated. The source images are drawings; performance on photographs must be
 evaluated separately.
 
+**Classifier crops** (`out/sign_crops/`) are cut from the detection boxes and keep
+the same split. Folders are sign IDs (`AB77/`); `classes.json` gives each ID's
+reading and roles. Rare signs are **resampled** in `train` only: a sign with `n`
+real crops gets `sqrt(n x 100)` (1 becomes 10, 25 become 50), the extra copies
+slightly tilted, stretched, thickened or thinned, or chipped at an edge, but never
+mirrored. Val and test hold one crop per real sign. Signs whose ID never occurs
+in train cannot be learnt; `report.json` counts them (33 of 657 test signs).
+
+**Synthetic tablets** (`la.cli synth`) are real train tracings with further train
+signs pasted into their blank space, at that tablet's sign size. Unlabelled
+numerals and ruling stay in place, so the detector still learns to ignore them.
+Nothing from val or test is used. The tablets are written to `images/synth/`, and
+`train.txt` lists them together with the real training images. Rebuilding the
+dataset deletes them.
+
+**Missing boxes and self-training.** A sign gets a box only if its lineara.eu
+crop matches the tracing, so some signs on the drawings have none. Training
+then treats them as background, and testing counts a correct detection of one as
+a false positive. A trained detector can point them out:
+
+```bash
+cd fraction-solver
+python -m la.cli pseudo propose --weights ../runs/detect/sign_detector/weights/best.pt --split train
+# review out/yolo_signs/pseudo/train/sheet_*.png; candidates.csv: accept=1 keeps a box
+python -m la.cli pseudo accept out/yolo_signs/pseudo/train/candidates.csv
+python -m la.cli dataset --labels sign --workers 2    # merges data/labels/extra_boxes.csv
+```
+
+In `train`, detections at confidence 0.8 or above are pre-ticked. For `val` and
+`test`, nothing is pre-ticked. Accept with `--source reviewed` only after a person
+has checked each box. Unreviewed boxes never reach val or test. Numerals have no
+class, so reject candidates drawn on tally strokes. `data/labels/extra_boxes.csv`
+is committed, because it is review work that cannot be regenerated.
+
 **Moving to another computer:** the generated dataset and virtual environments
 are ignored by Git. Recreate the environment and either regenerate the dataset
 or copy `out/yolo_signs/`. If you copy it, update the absolute `path` in `data.yaml`
@@ -195,62 +238,78 @@ python -c "import torch; print('CUDA available:', torch.cuda.is_available())"
 This should print `True` for CUDA training. If it prints `False`, check your
 PyTorch installation and GPU driver before starting a long run.
 
-Start training from the repository root:
+Train the two models from the repository root. Each run takes about 1 to 1.5
+hours for the detector and 15 to 45 minutes for the classifier on a 6 GB laptop GPU:
 
 ```bash
-python train.py
+python train.py detect   --name sign_detector    # finds signs (data: --labels sign)
+python train.py classify --name sign_classifier  # names them (data: la.cli crops)
 ```
 
-[train.py](train.py) loads the pretrained weights, then adapts them to the
-annotated character dataset. Its explicit settings are:
+[train.py](train.py) sets what matters for signs and leaves the rest at
+Ultralytics defaults:
 
-| Parameter | Value | Meaning |
-|---|---|---|
-| Model | `yolo26n.pt` | Pretrained YOLO26 nano model |
-| `data` | `fraction-solver/out/yolo_signs/data.yaml` | Images, splits and class names |
-| `epochs` | `100` | Maximum number of passes over the training set |
-| `batch` | `8` | Images processed together in a batch |
-| `imgsz` | `1024` | Target input size, in pixels |
-| `patience` | `20` | Stop after 20 epochs without validation improvement |
-| `project` | `runs/detect` | Parent folder for training outputs |
-| `name` | `linear_a_signs` | Training run name |
+| Setting | Detector | Classifier | Why |
+|---|---|---|---|
+| Model | `yolo26n.pt` | `yolo26n-cls.pt` | Pretrained nano models |
+| `imgsz` | `1024` | `128` | The demo predicts at 1024; a sign crop needs little more than 128 |
+| `epochs` / `patience` | `150` / `30` | `100` / `25` | Stops early once validation stops improving |
+| `fliplr` | `0` | `0` | Never mirror: orientation is part of a sign's identity |
+| `degrees` | `3` | - | Scribes tilt slightly |
+| `scale` / `auto_augment` | default | `0.1` / none | Random crops keep 90-100% of the sign; variation comes from `la.augment` |
+| `workers` | `2` | `2` | Use `--workers 0` if RAM runs out (each worker loads its own PyTorch) |
 
-Edit these values in `train.py` to change the run. Reduce `batch` if GPU memory
-is insufficient. The script leaves the device, optimizer, learning rate and
-augmentations at Ultralytics defaults. With no explicit device, it uses an
-available CUDA GPU or falls back to CPU; Apple Silicon users can add
-`device="mps"` to `model.train(...)`.
+On a 16 GB machine, run one training at a time. Two at once ran out of memory.
+Add `--epochs`, `--batch`, `--seed` or `--model` to change a run. Outputs are under
+`runs/detect/<name>/` and `runs/classify/<name>/`: `weights/best.pt` (best on
+validation), `weights/last.pt` (resume with `yolo train resume model=.../last.pt`),
+`results.csv` and plots.
 
-For each batch, YOLO predicts boxes and classes, compares them with the label
-files, and uses the resulting errors to update its weights. Validation measures
-progress on `val` and selects the best checkpoint. The `test` set is reserved for
-final evaluation. The predicted reading is the label associated with a learned
-sign class, not a newly inferred pronunciation.
-
-Outputs are saved under `runs/detect/linear_a_signs/`, with a numbered suffix
-if that run folder already exists:
-
-- `weights/best.pt`: the checkpoint selected using validation performance.
-- `weights/last.pt`: the last checkpoint, usable to resume an interrupted run.
-- `results.csv` and plots: training losses and validation metrics.
-
-To resume a run, adjust the path if your run has a numbered suffix:
+### Evaluate
 
 ```bash
-yolo detect train resume model=runs/detect/linear_a_signs/weights/last.pt
+python evaluate.py --detector runs/detect/sign_detector/weights/best.pt     --classifier runs/classify/sign_classifier/weights/best.pt --name two_stage
 ```
 
-Evaluate the selected model on the test set:
+This scores what the demo does, on the 99 `test` tablets: a labelled sign counts
+as **read** when a predicted box overlaps it (IoU at least 0.5) and names its sign
+ID. Without `--classifier`, a 361-class detector names signs itself, so both
+designs are scored the same way. Every rate has a 95% confidence interval from
+resampling whole tablets (`runs/eval/<name>.json` also has per-tablet counts).
 
-```bash
-yolo detect val model=runs/detect/linear_a_signs/weights/best.pt data=fraction-solver/out/yolo_signs/data.yaml split=test imgsz=1024 batch=8
-```
+Results on the test split, at the demo's confidence threshold of 0.25:
 
-Report precision, recall, mAP50 and mAP50-95, including per-class results and
-class coverage. A prediction confidence score is not the same as measured
-accuracy or certainty about a historical pronunciation.
+| Reader | Found (recall) | Precision | Read correctly (top-1) | In top 3 |
+|---|---|---|---|---|
+| Detector + classifier | 89.0% (85.0-92.2) | 87.6% (83.0-91.2) | **62.1%** (54.8-68.4) | 70.2% (62.8-76.5) |
+| 361-class detector, stopped at epoch 44 of 100* | 3.7% (2.2-5.2) | 77.4% (60.7-89.3) | 0.5% (0.0-1.0) | 0.5% |
 
-To use the trained model in the application, copy `best.pt` to
-`models/linear_a_signs.pt` (create `models/` if needed), or set an absolute
-`SIGN_DETECTOR_WEIGHTS` path in `.env`, then restart the backend. Its inference
-image size is currently 1024, matching the training script.
+\*On a 6 GB GPU, the 361-class run needed `batch=4` and still ran out of GPU
+memory at epoch 45. It was far from converged (validation mAP50 0.007), so it is
+not a fair verdict on a fully trained 361-class model. Score that model with the
+same command to compare.
+
+Of the 657 test signs, 33 have sign IDs never seen in training, so no model
+trained on this split can name them: 62.1% read correctly is 65.4% of the signs
+that can be learnt. When the detector finds a sign, the classifier names it
+correctly 69.7% of the time. On HT 13, the demo tablet, 26 of its 27 signs are
+found and 24 are read correctly. The test labels miss some signs (see
+self-training above), so some correct detections still count as false positives.
+
+### Use the models in the application
+
+Copy three files into `models/` (create it if needed) and restart the backend:
+
+| File | From |
+|---|---|
+| `models/linear_a_signs.pt` | `runs/detect/sign_detector/weights/best.pt` |
+| `models/linear_a_classifier.pt` | `runs/classify/sign_classifier/weights/best.pt` |
+| `models/linear_a_classifier.json` | `fraction-solver/out/sign_crops/classes.json` (sign names and readings) |
+
+`SIGN_DETECTOR_WEIGHTS` and `SIGN_CLASSIFIER_WEIGHTS` in `.env` can point
+elsewhere; the JSON must sit beside the classifier, with the same name. Without a
+classifier, the demo uses the detector's own labels, so a 361-class detector
+still works on its own. With one, each prediction lists `candidates` (the top 3
+signs). Its `confidence` is the detector's confidence that a sign is there, times
+the classifier's probability for that sign. `detectionConfidence` gives the
+detector's part alone.
