@@ -66,3 +66,8 @@ htmlcov/
 
 # Ultralytics training output
 runs/
+# Trained weights ship as GitHub Release assets, not in git
+models/
+# Downloaded by Ultralytics: the classifier's base weights and its AMP-check copy
+yolo26n-cls.pt
+weights/

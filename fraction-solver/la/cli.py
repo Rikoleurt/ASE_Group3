@@ -421,7 +421,8 @@ def cmd_dataset(args: argparse.Namespace) -> None:
     out = Path(args.out) if args.out else signboxes.DATASET_DIR
     report = signboxes.build_dataset(load_cached(), out=out, labels=args.labels,
                                      val_fraction=args.val_fraction, test_fraction=args.test_fraction,
-                                     min_match=args.min_match, workers=args.workers)
+                                     min_match=args.min_match, workers=args.workers,
+                                     extra_labels=None if args.no_extra_labels else signboxes.EXTRA_LABELS)
     tablets, boxes = report["tablets"], report["boxes"]
     print(f"Tablets: train {tablets['train']}, val {tablets['val']}, test {tablets['test']}"
           f" (always test: {', '.join(report['forced_test'])})")
@@ -430,11 +431,59 @@ def cmd_dataset(args: argparse.Namespace) -> None:
     shrunk = sum(s < 1.0 for s in report["scales"].values())
     print(f"Tracings smaller than their crops: {shrunk}/{len(report['scales'])}")
     print(f"Missing images: {len(report['missing_tracings'])} tracings, {len(report['missing_crops'])} crops")
+    extra = report["extra_boxes"]
+    if extra or report["extra_skipped"]:
+        print(f"Reviewed extra boxes: train {extra['train']}, val {extra['val']}, test {extra['test']}"
+              f" (skipped {len(report['extra_skipped'])})")
     print(f"Classes without training examples: {len(report['classes_without_train'])}")
     print(f"Classes with fewer than 5 training examples: {len(report['classes_with_fewer_than_5_train'])}")
     for name, n in sorted(report["classes"].items(), key=lambda kv: -kv[1]):
         print(f"  {name:12s} {n}")
     print(f"\nWrote {out / 'data.yaml'} (licence and credit in LICENCE.txt)")
+
+
+def cmd_crops(args: argparse.Namespace) -> None:
+    """Sign crops for the classifier, from the detection dataset's boxes."""
+    from la import signboxes, signcrops
+
+    dataset = Path(args.dataset) if args.dataset else signboxes.DATASET_DIR
+    out = Path(args.out) if args.out else signcrops.CROP_DIR
+    report = signcrops.build_crops(dataset, out, target=args.target, seed=args.seed)
+    real, written = report["real"], report["written"]
+    print(f"Classes with training crops: {report['classes']}"
+          f" ({len(report['classes_without_train'])} sign IDs only outside train)")
+    print(f"Real crops:    train {real['train']}, val {real['val']}, test {real['test']}")
+    print(f"Written:       train {written['train']} (rare classes resampled to sqrt(n * {args.target})),"
+          f" val {written['val']}, test {written['test']}")
+    print(f"Unlearnable (sign ID not in train): val {report['unseen_in_train']['val']},"
+          f" test {report['unseen_in_train']['test']}")
+    print(f"\nWrote {out}")
+
+
+def cmd_synth(args: argparse.Namespace) -> None:
+    """Synthetic training tablets: train signs pasted into blank space on train tracings."""
+    from la import signboxes, synth
+
+    dataset = Path(args.dataset) if args.dataset else signboxes.DATASET_DIR
+    report = synth.build_synth(dataset, count=args.count, seed=args.seed, blank_ratio=args.blank_ratio)
+    print(f"Synthetic tablets: {report['count']} from {len(report['hosts'])} train tablets")
+    print(f"Boxes: {report['boxes']}, of which pasted {report['pasted_boxes']}"
+          f" ({report['pasted_sign_ids']} distinct sign IDs)")
+    print(f"\nWrote {dataset / 'images' / 'synth'} and {dataset / 'train.txt'}; data.yaml now trains on both")
+
+
+def cmd_pseudo(args: argparse.Namespace) -> None:
+    """Propose boxes the labels miss, or accept reviewed ones."""
+    from la import pseudo, signboxes
+
+    if args.action == "propose":
+        dataset = Path(args.dataset) if args.dataset else signboxes.DATASET_DIR
+        path = pseudo.propose(Path(args.weights), dataset, split=args.split, conf=args.conf, device=args.device)
+        print(f"Wrote {path} and its contact sheets. Set accept=1 on real signs, then run"
+              f" `pseudo accept {path}`" + ("" if args.split == "train" else " --source reviewed"))
+    else:
+        added = pseudo.accept(Path(args.candidates), source=args.source)
+        print(f"Added {added} boxes to {signboxes.EXTRA_LABELS}; rebuild with `la.cli dataset --labels sign`")
 
 
 def cmd_lb_fetch(args: argparse.Namespace) -> None:
@@ -663,6 +712,35 @@ def main() -> None:
                            help="fraction of a crop's ink that must land on tracing ink")
     p_dataset.add_argument("--out", help="output directory (default out/yolo_signs)")
     p_dataset.add_argument("--workers", type=int, default=4, help="parallel processes (default 4)")
+    p_dataset.add_argument("--no-extra-labels", action="store_true",
+                           help="ignore reviewed boxes in data/labels/extra_boxes.csv (sign mode)")
+
+    p_crops = sub.add_parser("crops", help="sign crops for the classifier, from a built detection dataset")
+    p_crops.add_argument("--dataset", help="detection dataset (default out/yolo_signs)")
+    p_crops.add_argument("--out", help="output directory (default out/sign_crops)")
+    p_crops.add_argument("--target", type=int, default=100,
+                         help="rare classes are resampled to sqrt(n * target) training crops (default 100)")
+    p_crops.add_argument("--seed", type=int, default=0)
+
+    p_synth = sub.add_parser("synth", help="synthetic training tablets for the detector")
+    p_synth.add_argument("--dataset", help="detection dataset (default out/yolo_signs)")
+    p_synth.add_argument("--count", type=int, default=1000, help="tablets to compose (default 1000)")
+    p_synth.add_argument("--seed", type=int, default=0)
+    p_synth.add_argument("--blank-ratio", type=float, default=0.1,
+                         help="share of tablets started from a blank page instead of the host's signs")
+
+    p_pseudo = sub.add_parser("pseudo", help="find signs the labels miss (self-training)")
+    pseudo_sub = p_pseudo.add_subparsers(dest="action", required=True)
+    p_propose = pseudo_sub.add_parser("propose", help="list unlabelled detections for review")
+    p_propose.add_argument("--weights", required=True, help="trained detector weights")
+    p_propose.add_argument("--split", choices=["train", "val", "test"], default="train")
+    p_propose.add_argument("--conf", type=float, default=0.4, help="minimum detection confidence")
+    p_propose.add_argument("--dataset", help="detection dataset (default out/yolo_signs)")
+    p_propose.add_argument("--device", help="e.g. 0 for the first GPU, cpu")
+    p_accept = pseudo_sub.add_parser("accept", help="add accepted candidates to data/labels/extra_boxes.csv")
+    p_accept.add_argument("candidates", help="candidates.csv with accept=1 on the boxes to keep")
+    p_accept.add_argument("--source", choices=["pseudo", "reviewed"], default="pseudo",
+                          help="reviewed: checked by a person (required for val and test)")
 
     sub.add_parser("lb-fetch", help="crawl and cache the DAMOS Linear B corpus (resumable)")
 
@@ -701,6 +779,12 @@ def main() -> None:
         cmd_images(args)
     elif args.command == "dataset":
         cmd_dataset(args)
+    elif args.command == "crops":
+        cmd_crops(args)
+    elif args.command == "synth":
+        cmd_synth(args)
+    elif args.command == "pseudo":
+        cmd_pseudo(args)
     elif args.command == "lb-fetch":
         cmd_lb_fetch(args)
     elif args.command == "lb-audit":
