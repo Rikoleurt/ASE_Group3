@@ -12,3 +12,4 @@ data/cache/crops/
 __pycache__/
 *.pyc
 out/
+data/
