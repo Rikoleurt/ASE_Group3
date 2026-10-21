@@ -71,3 +71,5 @@ models/
 # Downloaded by Ultralytics: the classifier's base weights and its AMP-check copy
 yolo26n-cls.pt
 weights/
+
+fraction-solver/data
