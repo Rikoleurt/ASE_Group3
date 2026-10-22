@@ -1,0 +1,227 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A new push to a pull request cancels its previous run; runs on main finish.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+# Upload steps check env.ACT, which act sets locally and GitHub does not: act's
+# artifact server does not support upload-artifact v7.
+jobs:
+  # Decides which areas a pull request touches. Pushes to main and manual runs
+  # test everything. Jobs are skipped with `if:` rather than a workflow-level
+  # `paths:` filter: a skipped job still reports a result, so required checks
+  # do not block the merge.
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+      research: ${{ steps.filter.outputs.research }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - id: filter
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if [ "$EVENT" != pull_request ]; then
+            printf 'frontend=true\nbackend=true\nresearch=true\n' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          files=$(git diff --name-only "$BASE...$HEAD")
+          printf 'Changed files:\n%s\n' "$files"
+          # Changes to CI itself run every job.
+          everything='^(\.github/workflows/|pytest\.ini$|scripts/ci_summary\.py$)'
+          check() {
+            if printf '%s\n' "$files" | grep -Eq "$everything|$2"; then
+              echo "$1=true" >> "$GITHUB_OUTPUT"
+            else
+              echo "$1=false" >> "$GITHUB_OUTPUT"
+            fi
+          }
+          # contract/ is checked by both the backend and the frontend tests. The
+          # backend imports fraction-solver's la package and tests fetch_models.py.
+          check frontend '^(frontend/|package(-lock)?\.json$|contract/)'
+          check backend '^(backend/|contract/|fraction-solver/la/|scripts/fetch_models\.py$|yolo26n\.pt$|docker-compose\.yml$|\.env\.example$)'
+          check research '^fraction-solver/'
+          cat "$GITHUB_OUTPUT"
+
+  frontend:
+    needs: changes
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+
+      # vite.config.js imports @tailwindcss/vite, which the root package declares.
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Install frontend dependencies
+        run: npm --prefix frontend ci
+
+      - name: Lint
+        run: npm --prefix frontend run lint:check
+
+      # Includes ApiContract.spec.js, which checks the frontend against contract/.
+      - name: Unit and contract tests
+        run: >-
+          npm --prefix frontend run test:unit -- --run
+          --reporter=default --reporter=junit
+          --outputFile.junit=../reports/frontend-junit.xml
+
+      - name: Build
+        run: npm --prefix frontend run build
+
+      - name: Summary
+        if: ${{ !cancelled() }}
+        run: python3 scripts/ci_summary.py reports/frontend-junit.xml >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test report
+        if: ${{ !cancelled() && !env.ACT }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: frontend-junit
+          path: reports/
+          if-no-files-found: warn
+
+      - name: Upload build
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 7
+
+  backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    env:
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: ase3
+      MYSQL_USER: ase
+      MYSQL_PASSWORD: ase
+      MYSQL_ROOT_PASSWORD: root
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      # OpenCV (via ultralytics) loads libGL.so.1 at import time. Minimal images
+      # lack it; skip the install where the runner already has it.
+      - name: Install OpenCV system library
+        run: |
+          if ! ldconfig -p | grep -q 'libGL\.so\.1'; then
+            sudo apt-get update
+            sudo apt-get install -y --no-install-recommends libgl1 libglib2.0-0t64
+          fi
+
+      # The database starts in the background while dependencies install.
+      - name: Start MySQL
+        run: docker compose up -d mysql
+
+      # --extra cpu installs CPU-only PyTorch instead of the CUDA build.
+      - name: Install dependencies
+        run: uv sync --project backend --locked --dev --extra cpu
+
+      # Includes the YOLO CPU inference test and the API contract snapshot.
+      - name: Unit and API tests
+        run: >-
+          uv run --project backend --no-sync python -m pytest backend/tests
+          -m "not mysql" -ra --junitxml=reports/backend-junit.xml
+
+      - name: Wait for MySQL
+        run: docker compose up -d --wait mysql
+
+      - name: MySQL integration tests
+        env:
+          RUN_MYSQL_TESTS: "1"
+        run: >-
+          uv run --project backend --no-sync python -m pytest backend/tests
+          -m mysql -ra --junitxml=reports/mysql-junit.xml
+
+      - name: MySQL logs
+        if: ${{ failure() }}
+        run: docker compose logs mysql
+
+      - name: Summary
+        if: ${{ !cancelled() }}
+        run: >-
+          python3 scripts/ci_summary.py reports/backend-junit.xml reports/mysql-junit.xml
+          >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test reports
+        if: ${{ !cancelled() && !env.ACT }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: backend-junit
+          path: reports/
+          if-no-files-found: warn
+
+  research:
+    needs: changes
+    if: ${{ needs.changes.outputs.research == 'true' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@07a047e608db84b3d8c06cd9a7c7dcc9c355c18e # v10.3.2
+        with:
+          python-version: "3.12"
+          enable-cache: true
+          cache-dependency-glob: fraction-solver/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --project fraction-solver --locked --dev
+
+      # Corpus-backed tests in test_parse.py skip on a clean checkout because the
+      # corpus cannot be redistributed; -ra lists them in the log.
+      - name: Tests
+        run: >-
+          uv run --project fraction-solver --no-sync python -m pytest
+          fraction-solver/tests -ra --junitxml=reports/research-junit.xml
+
+      - name: Summary
+        if: ${{ !cancelled() }}
+        run: python3 scripts/ci_summary.py reports/research-junit.xml >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload test report
+        if: ${{ !cancelled() && !env.ACT }}
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: research-junit
+          path: reports/
+          if-no-files-found: warn

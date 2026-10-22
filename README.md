@@ -24,16 +24,14 @@ The pretrained starting weights are `yolo26n.pt` at the repository root.
 
 ## 2. Install and run the application
 
-Install the frontend, backend and the data libraries imported by the backend:
+Install the frontend and the backend. `uv sync` also installs SciPy, which the
+backend needs for the `fraction-solver` code it imports:
 
 ```bash
 npm install
 npm --prefix frontend install
 uv sync --project backend
-uv pip install --python backend/.venv -r fraction-solver/requirements-data.txt
 ```
-
-Repeat the last command if a later `uv sync` removes these additional libraries.
 
 Create `.env` by copying [.env.example](.env.example). `npm run dev` also creates
 it automatically if it is missing. The defaults are for local development.
@@ -343,3 +341,17 @@ still works on its own. With one, each prediction lists `candidates` (the top 3
 signs). Its `confidence` is the detector's confidence that a sign is there, times
 the classifier's probability for that sign. `detectionConfidence` gives the
 detector's part alone.
+
+## 5. Tests and continuous integration
+
+Every pull request to `main`, and every push to `main`, runs
+[.github/workflows/ci.yml](.github/workflows/ci.yml):
+
+| Check | What it runs |
+| --- | --- |
+| `frontend` | ESLint and Oxlint, Vitest component and API contract tests, production build |
+| `backend` | API and controller tests, the CPU YOLO demo test, the API contract snapshot, then the MySQL integration tests against a fresh Compose database |
+| `research` | `fraction-solver` tests |
+
+[CONTRIBUTING.md](CONTRIBUTING.md) lists the test tiers, the commands to
+reproduce each check locally, and how known bugs and API changes are handled.
