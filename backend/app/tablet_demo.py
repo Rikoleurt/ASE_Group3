@@ -67,22 +67,28 @@ def sign_catalogue(weights: Path) -> dict:
     return _sign_catalogue(str(path), path.stat().st_mtime_ns) if path.is_file() else {}
 
 
-def ht13_result(image_path: Path = HT13_IMAGE, confidence: float = 0.25):
+def read_image(source: Path | np.ndarray, confidence: float = 0.25):
     """
-    Run the active model, including legitimate empty results
+    Run the active model on an image file or a BGR array, including legitimate empty results
     """
     weights, imgsz, _trained = active_weights()
-    if not image_path.is_file():
-        raise FileNotFoundError(f"Cannot read HT13 image: {image_path}")
-
-
     # YOLO's predictor is mutable: serialize calls sharing the cached model.
     with INFERENCE_LOCK:
         model = _model(weights)
         return model.predict(
-            source=str(image_path), imgsz=imgsz, conf=confidence,
-            device="cpu", save=False, verbose=False
+            source=source if isinstance(source, np.ndarray) else str(source), imgsz=imgsz,
+            conf=confidence, device="cpu", save=False, verbose=False
         )[0]
+
+
+def ht13_result(image_path: Path = HT13_IMAGE, confidence: float = 0.25):
+    """
+    Run the active model on the HT13 demo image
+    """
+    active_weights()
+    if not image_path.is_file():
+        raise FileNotFoundError(f"Cannot read HT13 image: {image_path}")
+    return read_image(image_path, confidence=confidence)
 
 
 def name_signs(result) -> list[list[dict]] | None:
@@ -125,7 +131,12 @@ def annotate_ht13(image_path: Path = HT13_IMAGE, confidence: float = 0.25) -> by
 
 
 def ht13_predictions(confidence: float = 0.25) -> dict:
-    """Expose real detections with normalized boxes for the responsive demo UI.
+    """Expose real detections on HT13 with normalized boxes for the responsive demo UI."""
+    return predictions_for(ht13_result(confidence=confidence), tablet="HT 13")
+
+
+def predictions_for(result, tablet: str = "") -> dict:
+    """Serialize one model result: normalized boxes, crops and, with a classifier, sign names.
 
     With a classifier, each box is labelled with its most likely sign and lists
     the top candidates; `confidence` is then the detector's confidence that a
@@ -134,9 +145,9 @@ def ht13_predictions(confidence: float = 0.25) -> dict:
     Boxes labelled "fraction" by a role-trained detector, or whose most likely
     sign is a fraction, also get shape-matched guesses for which fraction sign
     they are. Nothing else is shape-matched: the method was only measured to
-    work on fraction signs.
+    work on fraction signs. `tablet` keeps that tablet's own drawings out of
+    the shape references; "" excludes nothing.
     """
-    result = ht13_result(confidence=confidence)
     _weights, _imgsz, trained = active_weights()
     candidates = name_signs(result) if len(result.boxes) else None
     height, width = result.orig_shape
@@ -175,6 +186,6 @@ def ht13_predictions(confidence: float = 0.25) -> dict:
         if trained and fraction and crop.size:
             from backend.app.reading import identify_mask
 
-            prediction["shapeGuesses"] = identify_mask(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) < 128, tablet="HT 13")
+            prediction["shapeGuesses"] = identify_mask(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) < 128, tablet=tablet)
         predictions.append(prediction)
     return {"width": width, "height": height, "trained": trained, "predictions": predictions}
