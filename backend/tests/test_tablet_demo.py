@@ -1,12 +1,22 @@
 from base64 import b64decode
 from io import BytesIO
+from pathlib import Path
 from unittest.mock import patch
 import numpy as np
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
+from ultralytics.engine.results import Results
+import cv2
 from backend.app.main import app
-from backend.app.tablet_demo import HT13_IMAGE, annotate_ht13, ht13_result
+from backend.app.tablet_demo import HT13_IMAGE, SIGN_IMGSZ, active_weights, annotate_ht13, ht13_result
+
+
+@pytest.fixture(autouse=True)
+def no_trained_detector(monkeypatch, tmp_path):
+    # Tests describe the baseline unless they opt in, even where trained weights exist locally.
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", tmp_path / "missing-signs.pt")
+    monkeypatch.setattr("backend.app.tablet_demo.CLASSIFIER_WEIGHTS", tmp_path / "missing-classifier.pt")
 
 
 def test_ht13_endpoint_runs_pretrained_inference_without_database():
@@ -67,6 +77,7 @@ def test_predictions_endpoint_serializes_real_boxes_as_normalized_coordinates():
     assert data == {
         "width": 100,
         "height": 200,
+        "trained": False,
         "predictions": [{
             "id": 1,
             "label": "object",
@@ -87,7 +98,37 @@ def test_predictions_endpoint_preserves_empty_results():
         with TestClient(app) as client:
             response = client.get("/tablet-demo/ht13/predictions")
     assert response.status_code == 200
-    assert response.json() == {"width": 100, "height": 200, "predictions": []}
+    assert response.json() == {"width": 100, "height": 200, "trained": False, "predictions": []}
+
+
+def test_trained_sign_weights_are_preferred_when_present(monkeypatch, tmp_path):
+    trained = tmp_path / "linear_a_signs.pt"
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", trained)
+    assert active_weights()[2] is False
+    trained.write_bytes(b"weights")
+    assert active_weights() == (trained, SIGN_IMGSZ, True)
+
+
+def test_only_fraction_boxes_from_the_trained_detector_get_shape_guesses(monkeypatch, tmp_path):
+    from ultralytics.engine.results import Results
+
+    trained = tmp_path / "linear_a_signs.pt"
+    trained.write_bytes(b"weights")
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", trained)
+    image = np.full((200, 100, 3), 255, dtype=np.uint8)
+    image[50:90, 20:30] = 0
+    result = Results(image, path=str(HT13_IMAGE), names={0: "syllabogram", 2: "fraction"},
+                     boxes=np.array([[10, 40, 40, 120, 0.9, 2], [50, 40, 90, 120, 0.8, 0]]))
+    guesses = [{"sign": "A707", "label": "J", "distance": 4.0}]
+    with patch("backend.app.tablet_demo.ht13_result", return_value=result), \
+         patch("backend.app.reading.identify_mask", return_value=guesses) as identify:
+        with TestClient(app) as client:
+            data = client.get("/tablet-demo/ht13/predictions").json()
+    assert data["trained"] is True
+    fraction, syllabogram = data["predictions"]
+    assert fraction["shapeGuesses"] == guesses
+    assert "shapeGuesses" not in syllabogram
+    identify.assert_called_once()
 
 
 def test_predictions_endpoint_reports_unavailable_model():
@@ -96,3 +137,116 @@ def test_predictions_endpoint_reports_unavailable_model():
             response = client.get("/tablet-demo/ht13/predictions")
     assert response.status_code == 503
     assert response.json() == {"detail": "HT13 predictions are unavailable."}
+
+
+@pytest.mark.parametrize("endpoint", ["/tablet-demo/ht13", "/tablet-demo/ht13/predictions"])
+def test_prediction_routes_forward_confidence_and_handle_missing_weights(endpoint):
+    with patch("backend.app.tablet_demo.ht13_result", side_effect=FileNotFoundError("weights")) as predict:
+        with TestClient(app) as client:
+            response = client.get(endpoint, params={"confidence": 0.1})
+    assert response.status_code == 503
+    assert predict.call_args.kwargs["confidence"] == 0.1
+
+
+@pytest.mark.parametrize("endpoint", ["/tablet-demo/ht13", "/tablet-demo/ht13/predictions"])
+@pytest.mark.parametrize("confidence", [0, -0.1, 1.1, "nan", "invalid"])
+def test_prediction_routes_reject_invalid_confidence(endpoint, confidence):
+    with patch("backend.app.tablet_demo.ht13_result") as predict:
+        with TestClient(app) as client:
+            response = client.get(endpoint, params={"confidence": confidence})
+    assert response.status_code == 422
+    predict.assert_not_called()
+
+
+MODELS = Path(__file__).resolve().parents[2] / "models"
+
+
+@pytest.mark.skipif(not (MODELS / "linear_a_signs.pt").is_file(), reason="trained weights are not installed")
+def test_ht13_trained_model_predicts_and_reuses_weights_without_database(monkeypatch):
+    from backend.app import tablet_demo
+
+    weights = MODELS / "linear_a_signs.pt"
+    classifier = MODELS / "linear_a_classifier.pt"
+    monkeypatch.setattr(tablet_demo, "SIGN_WEIGHTS", weights)
+    monkeypatch.setattr(tablet_demo, "CLASSIFIER_WEIGHTS", classifier)
+    tablet_demo._load_model.cache_clear()
+    with patch("mysql.connector.connect", side_effect=AssertionError("No DB for inference")),          patch.object(tablet_demo, "YOLO", wraps=tablet_demo.YOLO) as load:
+        with TestClient(app) as client:
+            response = client.get("/tablet-demo/ht13/predictions")
+            annotated = client.get("/tablet-demo/ht13")
+        loaded = sorted(call.args[0] for call in load.call_args_list)
+        assert loaded == sorted(str(w.resolve()) for w in (weights, classifier) if w.is_file())
+
+    assert response.status_code == annotated.status_code == 200
+    data = response.json()
+    assert data["trained"] is True
+    assert (data["width"], data["height"]) == (1367, 2253)
+    assert data["predictions"]  # Smoke test of the shipped checkpoint on HT13.
+    for prediction in data["predictions"]:
+        assert prediction["label"].startswith(("AB", "A", "unidentified"))
+        assert 0 < prediction["confidence"] <= 100
+        box = prediction["box"]
+        assert 0 <= box["x"] < box["x"] + box["w"] <= 1.000001
+        assert 0 <= box["y"] < box["y"] + box["h"] <= 1.000001
+        with Image.open(BytesIO(b64decode(prediction["imageUrl"].split(",", 1)[1]))) as crop:
+            assert crop.width > 0 and crop.height > 0
+    assert annotated.headers["content-type"] == "image/png"
+    with Image.open(BytesIO(annotated.content)) as image:
+        assert image.size == (1367, 2253)
+
+
+@pytest.fixture
+def two_stage(monkeypatch, tmp_path):
+    """A trained one-class detector and a classifier, with the classifier's model mocked."""
+    import json
+
+    detector, classifier = tmp_path / "linear_a_signs.pt", tmp_path / "linear_a_classifier.pt"
+    detector.write_bytes(b"weights")
+    classifier.write_bytes(b"weights")
+    classifier.with_suffix(".json").write_text(json.dumps({
+        "A707": {"name": "A707", "roles": ["fraction"]},
+        "AB01": {"name": "AB01 (da)", "roles": ["syllabogram"]},
+    }), encoding="utf-8")
+    monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", detector)
+    monkeypatch.setattr("backend.app.tablet_demo.CLASSIFIER_WEIGHTS", classifier)
+    monkeypatch.setattr("backend.app.tablet_demo._model", lambda weights: object())
+    image = np.full((200, 100, 3), 255, dtype=np.uint8)
+    image[50:90, 20:30] = 0
+    return Results(image, path=str(HT13_IMAGE), names={0: "sign"},
+                   boxes=np.array([[10, 40, 40, 120, 0.9, 0], [50, 40, 90, 120, 0.5, 0]]))
+
+
+def test_the_classifier_names_each_detected_sign_and_lists_candidates(two_stage):
+    named = [[("A707", 0.8), ("AB01", 0.15), ("AB99", 0.05)], [("AB01", 0.6), ("A707", 0.4), ("AB99", 0.0)]]
+    guesses = [{"sign": "A707", "label": "J", "distance": 4.0}]
+    with patch("backend.app.tablet_demo.ht13_result", return_value=two_stage),          patch("la.reader.name_boxes", return_value=named) as name_boxes,          patch("backend.app.reading.identify_mask", return_value=guesses) as identify:
+        with TestClient(app) as client:
+            data = client.get("/tablet-demo/ht13/predictions").json()
+    assert data["trained"] is True
+    first, second = data["predictions"]
+    assert first["label"] == "A707" and second["label"] == "AB01 (da)"
+    assert first["confidence"] == pytest.approx(72.0) and first["detectionConfidence"] == pytest.approx(90.0)
+    assert [c["sign"] for c in first["candidates"]] == ["A707", "AB01", "AB99"]
+    assert first["candidates"][2]["label"] == "AB99"  # unknown to the catalogue: shown by ID
+    assert first["shapeGuesses"] == guesses and "shapeGuesses" not in second
+    identify.assert_called_once()
+    boxes = name_boxes.call_args.args[2]
+    assert boxes == [(10, 40, 40, 120), (50, 40, 90, 120)]
+
+
+def test_the_annotated_image_shows_the_classifier_names(two_stage):
+    with patch("backend.app.tablet_demo.ht13_result", return_value=two_stage),          patch("la.reader.name_boxes", return_value=[[("A707", 0.8)], [("AB01", 0.6)]]),          patch.object(Results, "plot", autospec=True, side_effect=lambda self, **kw: self.orig_img) as plot:
+        png = annotate_ht13()
+    drawn = plot.call_args.args[0]
+    assert drawn.names == {0: "A707", 1: "AB01 (da)"}
+    assert drawn.boxes.conf.tolist() == pytest.approx([0.72, 0.3])
+    assert cv2.imdecode(np.frombuffer(png, dtype=np.uint8), cv2.IMREAD_COLOR).shape == (200, 100, 3)
+
+
+def test_the_classifier_is_ignored_without_a_trained_detector(monkeypatch, tmp_path):
+    from backend.app import tablet_demo
+
+    classifier = tmp_path / "linear_a_classifier.pt"
+    classifier.write_bytes(b"weights")
+    monkeypatch.setattr(tablet_demo, "CLASSIFIER_WEIGHTS", classifier)
+    assert tablet_demo.active_classifier() is None

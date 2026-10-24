@@ -25,16 +25,19 @@ on tracing ink at the chosen position is rejected and reported, never placed at
 its best-but-wrong position.
 
 Data licence: the tracings and crops are SigLA-derived and CC BY-NC-SA 4.0, like
-the cached JSON. Images are cached locally and the dataset is written under
-`out/`, both ignored by Git; neither is redistributed.
+the cached JSON, and are used non-commercially with attribution. The image cache
+is committed with the project; the dataset under `out/` is rebuilt on demand.
 """
 
 from __future__ import annotations
 
+import csv
 import json
+import re
+import shutil
 import time
 import zlib
-from collections import Counter
+from collections import Counter, defaultdict
 from concurrent.futures import ProcessPoolExecutor
 from contextlib import ExitStack
 from dataclasses import dataclass, field
@@ -49,10 +52,20 @@ from la.shapes import load_mask
 
 IMAGE_DIR = fetch.ROOT / "data" / "images"
 DATASET_DIR = fetch.ROOT / "out" / "yolo_signs"
+# Boxes the crop matcher missed, added by review (`la.pseudo`). Committed: unlike
+# `out/`, they are human work and cannot be regenerated. Only the `sign` label
+# mode uses them, because a box found by the detector has no known identity.
+EXTRA_LABELS = fetch.ROOT / "data" / "labels" / "extra_boxes.csv"
+EXTRA_COLUMNS = ("tablet", "x0", "y0", "x1", "y1", "source", "confidence")
+# `reviewed` boxes were checked by a person and may go to any split; `pseudo`
+# boxes were accepted automatically and must never change val or test.
+EXTRA_SOURCES = ("reviewed", "pseudo")
 
-# The web demo shows HT 13. Training on it would make the demo report what the
-# model memorised, so it is never written to either split.
-DEMO_HOLDOUT = frozenset({"HT 13"})
+# The web demo shows HT 13. Training or tuning on it would make the demo report
+# what the model memorised, so it always goes to the test split.
+DEMO_TABLETS = frozenset({"HT 13"})
+
+SPLITS = ("train", "val", "test")
 
 # Fraction of a crop's ink that must land on tracing ink at the chosen position.
 # Unscaled cut-outs score 1.0 and rescaled ones 0.9-0.97 (resampling blurs the
@@ -73,13 +86,14 @@ MIN_SIGN_PX = 16
 # Erasures are marks, not signs: a detector should not learn to box them.
 EXCLUDED_ROLES = frozenset({"erasure"})
 ROLE_CLASSES = ("syllabogram", "logogram", "fraction", "transaction")
+UNKNOWN_SIGN = "unidentified"
 
 LICENCE_NOTICE = """\
 Images and labels derived from lineara.eu / SigLA tracings.
 Licence: CC BY-NC-SA 4.0 (https://creativecommons.org/licenses/by-nc-sa/4.0/).
 Credit: sign drawings from SigLA: The Signs of Linear A, a palaeographical database,
 by Ester Salgarella and Simon Castellan; lineara.eu by M. Navarre.
-Non-commercial research use only. Do not redistribute this dataset.
+Non-commercial use only; keep this credit with any copy of the dataset or models trained on it.
 """
 
 
@@ -268,12 +282,78 @@ def yolo_line(cls: int, box: SignBox, width: int, height: int) -> str:
     return f"{cls} {cx:.6f} {cy:.6f} {w:.6f} {h:.6f}"
 
 
-def split_for(doc_id: str, val_fraction: float) -> str:
-    """Deterministic per-tablet split, so a rebuild puts every tablet where it was."""
-    return "val" if zlib.crc32(doc_id.encode("utf-8")) % 1000 < val_fraction * 1000 else "train"
+def split_for(doc_id: str, val_fraction: float, test_fraction: float = 0.0) -> str:
+    """Deterministic per-tablet split, so a rebuild puts every tablet where it was.
+
+    Whole tablets are split, never individual signs: one scribe's marks on one
+    tablet are unusually alike, so a tablet in two splits would inflate scores.
+    `val` keeps the same hash range whatever `test_fraction` is, so adding a test
+    split moved tablets out of train only.
+    """
+    bucket = zlib.crc32(doc_id.encode("utf-8")) % 1000
+    if bucket < val_fraction * 1000:
+        return "val"
+    if bucket < (val_fraction + test_fraction) * 1000:
+        return "test"
+    return "train"
 
 
-def class_names(labels: str) -> tuple[str, ...]:
+def identity_classes(docs: dict[str, dict]) -> list[dict]:
+    """Join crop metadata by sign ID; readings are names, never the identity key.
+
+    Two distinct signs can have the same proposed reading. Missing readings keep
+    their sign ID, and unidentified marks get an explicit class rather than being
+    silently treated as background. Keep all reading variants in the catalogue.
+    """
+    readings: dict[str, set[str]] = defaultdict(set)
+    roles: dict[str, set[str]] = defaultdict(set)
+    for doc in docs.values():
+        if not has_boxes(doc):
+            continue
+        for sign in doc.get("signs") or []:
+            if not sign.get("image") or sign.get("role") in EXCLUDED_ROLES:
+                continue
+            key = sign.get("sign") or UNKNOWN_SIGN
+            roles[key].add(sign.get("role") or "unknown")
+            if sign.get("reading"):
+                readings[key].add(sign["reading"])
+    classes = []
+    for i, key in enumerate(sorted(roles)):
+        variants = sorted(readings[key])
+        reading = variants[0] if len(variants) == 1 else None
+        classes.append({"class_id": i, "sign": None if key == UNKNOWN_SIGN else key,
+                        "reading": reading, "readings": variants, "roles": sorted(roles[key]),
+                        "name": f"{key} ({reading})" if reading else key})
+    return classes
+
+
+def tablet_groups(docs: dict[str, dict]) -> dict[str, str]:
+    """Keep numbered faces (e.g. HT 94a/b) and explicitly joined fragments together."""
+    def base(doc_id: str) -> str:
+        return re.sub(r"(?<=\d)[a-zα-ω]+$", "", doc_id)
+
+    parents: dict[str, str] = {}
+
+    def root(key: str) -> str:
+        parents.setdefault(key, key)
+        while parents[key] != key:
+            key = parents[key]
+        return key
+
+    for doc in docs.values():
+        key = base(doc["id"])
+        linked = list(doc.get("join_of") or [])
+        if doc.get("joined_into"):
+            linked.append(doc["joined_into"])
+        for other in linked:
+            a, b = root(key), root(base(other))
+            parents[max(a, b)] = min(a, b)
+    return {doc["id"]: root(base(doc["id"])) for doc in docs.values()}
+
+
+def class_names(labels: str, catalogue: list[dict] | None = None) -> tuple[str, ...]:
+    if labels == "identity":
+        return tuple(c["name"] for c in catalogue or [])
     if labels == "sign":
         return ("sign",)
     if labels == "role":
@@ -281,7 +361,9 @@ def class_names(labels: str) -> tuple[str, ...]:
     raise ValueError(f"unknown label mode {labels!r}")
 
 
-def class_of(box: SignBox, labels: str) -> int | None:
+def class_of(box: SignBox, labels: str, identities: dict[str, int] | None = None) -> int | None:
+    if labels == "identity":
+        return identities[box.sign or UNKNOWN_SIGN]
     if labels == "sign":
         return 0
     return ROLE_CLASSES.index(box.role) if box.role in ROLE_CLASSES else None
@@ -297,13 +379,20 @@ def _tablet_boxes_for(args: tuple[dict, float, Path]) -> TabletBoxes | None:
 def build_dataset(
     docs: dict[str, dict],
     out: Path = DATASET_DIR,
-    labels: str = "sign",
+    labels: str = "identity",
     val_fraction: float = 0.15,
-    holdout: frozenset[str] = DEMO_HOLDOUT,
+    test_fraction: float = 0.15,
+    test_tablets: frozenset[str] = DEMO_TABLETS,
     min_match: float = MIN_MATCH,
     workers: int = 4,
+    extra_labels: Path | None = None,
 ) -> dict:
     """Write images, labels and data.yaml in the layout Ultralytics expects.
+
+    Three splits, by tablet: `train` to learn from, `val` for Ultralytics to pick
+    the best epoch, and `test`, untouched until the final score. `test_tablets`
+    (HT 13, the demo tablet) always go to test. Earlier output is cleared first,
+    so a tablet that changed split cannot linger in its old one.
 
     Images are re-rendered as black ink on white from the ink mask, so tracings
     stored with strokes in the alpha channel look the same as opaque ones; OpenCV,
@@ -312,55 +401,140 @@ def build_dataset(
     Tablets are matched in parallel; `workers=1` runs in-process. Each worker holds
     a full-size tracing and its FFT, and 12 workers exhausted a 16 GB machine, so
     the default is a conservative 4 (about 10 minutes for the corpus).
+
+    `extra_labels` (the CLI passes `EXTRA_LABELS`) adds boxes from review in `sign` mode.
+    Synthetic tablets and `train.txt` from `la.synth` are removed, since they were
+    composed from the previous build.
     """
-    names = class_names(labels)
-    for split in ("train", "val"):
-        (out / "images" / split).mkdir(parents=True, exist_ok=True)
-        (out / "labels" / split).mkdir(parents=True, exist_ok=True)
+    if not (0 <= val_fraction < 1 and 0 <= test_fraction < 1 and val_fraction + test_fraction < 1):
+        raise ValueError("val_fraction and test_fraction must be nonnegative and sum to less than 1")
+    if workers < 1:
+        raise ValueError("workers must be at least 1")
+    if not 0 <= min_match <= 1:
+        raise ValueError("min_match must be between 0 and 1")
+    catalogue = identity_classes(docs) if labels == "identity" else []
+    names = class_names(labels, catalogue)
+    if not names:
+        raise ValueError("No classes found in the source documents")
+    identities = {c["sign"] or UNKNOWN_SIGN: c["class_id"] for c in catalogue}
+    extra = read_extra_labels(extra_labels)
+    groups = tablet_groups(docs)
+    forced_groups = {groups.get(doc_id, doc_id) for doc_id in test_tablets}
+    for kind in ("images", "labels"):
+        shutil.rmtree(out / kind, ignore_errors=True)
+        for split in SPLITS:
+            (out / kind / split).mkdir(parents=True, exist_ok=True)
+    for stale in ("train.txt", "synth_report.json"):
+        (out / stale).unlink(missing_ok=True)
+
+    def split_of(doc_id: str) -> str:
+        group = groups[doc_id]
+        return "test" if group in forced_groups else split_for(group, val_fraction, test_fraction)
 
     report: dict = {"tablets": Counter(), "boxes": Counter(), "rejected": [], "skipped_no_boxes": [],
-                    "held_out": sorted(holdout), "classes": Counter(), "scales": {}}
-    jobs = [(doc, min_match, IMAGE_DIR) for doc in docs.values() if doc["id"] not in holdout and has_boxes(doc)]
+                    "forced_test": sorted(test_tablets), "classes": Counter(), "scales": {}, "splits": {},
+                    "label_mode": labels, "groups": {}, "missing_tracings": [], "missing_crops": [],
+                    "classes_by_split": {s: Counter() for s in SPLITS},
+                    "extra_boxes": Counter(), "extra_skipped": []}
+    if extra and labels != "sign":
+        report["extra_skipped"] = [{"tablet": t, "reason": f"label mode {labels}"} for t in sorted(extra)]
+        extra = {}
+    jobs =[(doc, min_match, IMAGE_DIR) for doc in sorted(docs.values(), key=lambda d: d["id"]) if has_boxes(doc)]
+    annotations = []
     with ExitStack() as stack:
         if workers == 1:
             tablets = map(_tablet_boxes_for, jobs)
         else:
             pool = stack.enter_context(ProcessPoolExecutor(max_workers=workers))
             tablets = pool.map(_tablet_boxes_for, jobs, chunksize=4)
-        _write_tablets(zip(jobs, tablets), len(jobs), out, labels, names, val_fraction, report)
+        _write_tablets(zip(jobs, tablets), len(jobs), out, labels, names, split_of, report,
+                       identities, groups, annotations, extra)
 
     (out / "data.yaml").write_text(
-        f"path: {out.resolve().as_posix()}\ntrain: images/train\nval: images/val\n"
-        f"names:\n" + "".join(f"  {i}: {n}\n" for i, n in enumerate(names)),
+        f"path: {json.dumps(out.resolve().as_posix())}\ntrain: images/train\nval: images/val\ntest: images/test\n"
+        f"names:\n" + "".join(f"  {i}: {json.dumps(n, ensure_ascii=False)}\n" for i, n in enumerate(names)),
         encoding="utf-8",
     )
     (out / "LICENCE.txt").write_text(LICENCE_NOTICE, encoding="utf-8")
+    report["classes_without_train"] = [n for n in names if not report["classes_by_split"]["train"][n]]
+    report["classes_with_fewer_than_5_train"] = [n for n in names if report["classes_by_split"]["train"][n] < 5]
+    (out / "classes.json").write_text(json.dumps(catalogue or [
+        {"class_id": i, "name": n} for i, n in enumerate(names)
+    ], indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    (out / "annotations.json").write_text(json.dumps(annotations, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     (out / "report.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
     return report
 
 
 def _write_tablets(results, total: int, out: Path, labels: str, names: tuple[str, ...],
-                   val_fraction: float, report: dict) -> None:
+                   split_of, report: dict, identities: dict[str, int], groups: dict[str, str],
+                   annotations: list[dict], extra: dict[str, list[dict]] | None = None) -> None:
+    extra = extra or {}
     for done, ((doc, _, _), tablet) in enumerate(results, 1):
         if done % 50 == 0:
-            print(f"  {done}/{total} tablets matched")
-        if done % 50 == 0:
-            print(f"  {done}/{total} tablets matched")
+            print(f"  {done}/{total} tablets matched", flush=True)
+        for sign in doc.get("signs") or []:
+            if sign.get("image") and sign.get("role") not in EXCLUDED_ROLES and not image_path(doc, sign["image"]).exists():
+                report["missing_crops"].append({"tablet": doc["id"], "position": sign["position"], "image": sign["image"]})
         if tablet is None:
+            report["missing_tracings"].append(doc["id"])
             continue
         report["scales"][doc["id"]] = tablet.scale
         report["rejected"] += [(doc["id"], pos, sign, round(m, 3)) for pos, sign, m in tablet.rejected]
-        rows = [(class_of(b, labels), b) for b in tablet.boxes]
+        rows = [(class_of(b, labels, identities), b) for b in tablet.boxes]
         rows = [(c, b) for c, b in rows if c is not None]
         if not rows:
             report["skipped_no_boxes"].append(doc["id"])
             continue
 
-        split = split_for(doc["id"], val_fraction)
+        split = split_of(doc["id"])
+        report["splits"][doc["id"]] = split
+        report["groups"][doc["id"]] = groups[doc["id"]]
+        added = []
+        for row in extra.get(doc["id"], []):
+            if row["source"] == "pseudo" and split != "train":
+                report["extra_skipped"].append({"tablet": doc["id"], "reason": f"unreviewed box in {split}"})
+                continue
+            added.append((0, SignBox("", "", 0, row["x0"], row["y0"], row["x1"], row["y1"], 1.0), row["source"]))
+        if added:
+            report["extra_boxes"][split] += len(added)
         stem = slug(doc)
         Image.fromarray(np.where(tablet.tracing, 0, 255).astype(np.uint8)).save(out / "images" / split / f"{stem}.png")
         (out / "labels" / split / f"{stem}.txt").write_text(
-            "\n".join(yolo_line(c, b, tablet.width, tablet.height) for c, b in rows) + "\n", encoding="utf-8")
+            "\n".join(yolo_line(c, b, tablet.width, tablet.height) for c, b in rows + [a[:2] for a in added]) + "\n",
+            encoding="utf-8")
         report["tablets"][split] += 1
         report["boxes"][split] += len(rows)
         report["classes"].update(names[c] for c, _ in rows)
+        report["classes_by_split"][split].update(names[c] for c, _ in rows)
+        source_signs = {s["position"]: s for s in doc["signs"]}
+        annotations.append({
+            "tablet": doc["id"], "group": groups[doc["id"]], "split": split,
+            "image": f"images/{split}/{stem}.png", "labels": f"labels/{split}/{stem}.txt",
+            "source_json": f"data/cache/{stem}.json", "source_url": doc["url"],
+            "tracing": doc["tracing"], "width": tablet.width, "height": tablet.height,
+            "signs": [{"position": b.position, "class_id": c, "name": names[c],
+                       "sign": b.sign or None, "reading": source_signs[b.position].get("reading") or None,
+                       "role": b.role, "certain": source_signs[b.position].get("certain"),
+                       "crop": source_signs[b.position]["image"], "match": round(b.match, 6),
+                       "xyxy": [b.x0, b.y0, b.x1, b.y1], "source": "matched"} for c, b in rows]
+                     + [{"position": None, "class_id": c, "name": names[c], "sign": None, "reading": None,
+                         "role": None, "certain": None, "crop": None, "match": None,
+                         "xyxy": [b.x0, b.y0, b.x1, b.y1], "source": source} for c, b, source in added],
+        })
+
+
+def read_extra_labels(path: Path | None) -> dict[str, list[dict]]:
+    """Reviewed extra boxes by tablet ID, in tracing pixels. A missing file means none."""
+    if path is None or not path.exists():
+        return {}
+    out: dict[str, list[dict]] = defaultdict(list)
+    with path.open(encoding="utf-8", newline="") as f:
+        for line, row in enumerate(csv.DictReader(f), 2):
+            if row.get("source") not in EXTRA_SOURCES:
+                raise ValueError(f"{path}:{line}: source must be one of {EXTRA_SOURCES}")
+            x0, y0, x1, y1 = (int(round(float(row[k]))) for k in ("x0", "y0", "x1", "y1"))
+            if not (0 <= x0 < x1 and 0 <= y0 < y1):
+                raise ValueError(f"{path}:{line}: box must have x0 < x1 and y0 < y1")
+            out[row["tablet"]].append({"x0": x0, "y0": y0, "x1": x1, "y1": y1, "source": row["source"]})
+    return dict(out)

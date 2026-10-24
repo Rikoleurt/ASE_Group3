@@ -489,4 +489,4 @@ python -m pytest tests/ -q
 
 Sources and their verification levels: `docs/sources.md`.
 
-**Data and licences.** Linear A from lineara.eu (M. Navarre), derived from SigLA (E. Salgarella & S. Castellan), CC BY-NC-SA 4.0. Linear B from DAMOS (F. Aurora, University of Oslo), content CC BY-NC-SA 4.0. Both used non-commercially with attribution; both caches are local and neither is redistributed.
+**Data and licences.** Linear A from lineara.eu (M. Navarre), derived from SigLA (E. Salgarella & S. Castellan), CC BY-NC-SA 4.0. Linear B from DAMOS (F. Aurora, University of Oslo), content CC BY-NC-SA 4.0. Both used non-commercially with attribution. The Linear A cache is committed with the project; the Linear B cache stays local.

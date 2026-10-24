@@ -41,6 +41,8 @@ wheels/
 *.egg
 
 .venv/
+.venv-train/
+.venv-data/
 venv/
 env/
 ENV/
@@ -64,6 +66,10 @@ htmlcov/
 
 # Ultralytics training output
 runs/
-
-# Trained sign-detector weights (derived from CC BY-NC-SA tracings; keep local)
+# Trained weights ship as GitHub Release assets, not in git
 models/
+# Downloaded by Ultralytics: the classifier's base weights and its AMP-check copy
+yolo26n-cls.pt
+weights/
+
+fraction-solver/data
