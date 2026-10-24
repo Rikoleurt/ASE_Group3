@@ -19,6 +19,7 @@ from ultralytics import YOLO
 from ultralytics.engine.results import Results
 import cv2
 import numpy as np
+import torch
 
 ROOT = Path(__file__).resolve().parents[2]
 HT13_IMAGE = Path(__file__).resolve().parent / "static" / "ht13.webp"
@@ -30,6 +31,11 @@ CLASSIFIER_WEIGHTS = Path(os.getenv("SIGN_CLASSIFIER_WEIGHTS", ROOT / "models" /
 SIGN_IMGSZ = 1024
 CANDIDATES = 3
 INFERENCE_LOCK = Lock()
+# Calls are serialized by INFERENCE_LOCK, so more threads only contend: on a
+# 16-CPU Windows laptop torch's default (8) made one HT13 reading take ~21 s
+# instead of ~0.7 s with 2. Set in each inference call, not once: the thread
+# count is per OS thread, and FastAPI runs routes in worker threads.
+INFERENCE_THREADS = int(os.getenv("INFERENCE_THREADS", "2"))
 
 
 @lru_cache(maxsize=2)
@@ -74,6 +80,7 @@ def read_image(source: Path | np.ndarray, confidence: float = 0.25):
     weights, imgsz, _trained = active_weights()
     # YOLO's predictor is mutable: serialize calls sharing the cached model.
     with INFERENCE_LOCK:
+        torch.set_num_threads(INFERENCE_THREADS)
         model = _model(weights)
         return model.predict(
             source=source if isinstance(source, np.ndarray) else str(source), imgsz=imgsz,
@@ -104,6 +111,7 @@ def name_signs(result) -> list[list[dict]] | None:
     boxes = [tuple(b) for b in result.boxes.xyxy.tolist()]
     catalogue = sign_catalogue(weights)
     with INFERENCE_LOCK:
+        torch.set_num_threads(INFERENCE_THREADS)
         named = reader.name_boxes(_model(weights), reader.ink_of(result.orig_img), boxes,
                                   top=CANDIDATES, device="cpu")
     return [[{"sign": sign, "label": catalogue.get(sign, {}).get("name", sign),

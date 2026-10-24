@@ -250,3 +250,14 @@ def test_the_classifier_is_ignored_without_a_trained_detector(monkeypatch, tmp_p
     classifier.write_bytes(b"weights")
     monkeypatch.setattr(tablet_demo, "CLASSIFIER_WEIGHTS", classifier)
     assert tablet_demo.active_classifier() is None
+
+
+def test_inference_sets_its_thread_count_in_the_calling_thread():
+    # The count is per OS thread and routes run in worker threads, so read_image sets it on every call.
+    from backend.app import tablet_demo
+
+    model = type("Model", (), {"predict": lambda self, **kwargs: ["result"]})()
+    with patch.object(tablet_demo, "_model", return_value=model), \
+         patch.object(tablet_demo.torch, "set_num_threads") as set_threads:
+        assert tablet_demo.read_image(np.zeros((4, 4, 3), dtype=np.uint8)) == "result"
+    set_threads.assert_called_once_with(tablet_demo.INFERENCE_THREADS)
