@@ -17,11 +17,6 @@ const routes = [
     component: () => import('../views/TabletReadingView.vue'),
   },
   {
-    path: '/cluster',
-    name: 'cluster',
-    component: () => import('../views/ClusterView.vue'),
-  },
-  {
     path: '/login',
     name: 'login',
     component: () => import('../views/LoginView.vue'),
