@@ -74,11 +74,18 @@ Stop the application with `Ctrl+C`. Stop the Docker database with:
 docker compose stop mysql
 ```
 
-The trained Linear A model is installed at `models/linear_a_signs.pt` (the
-`best.pt` checkpoint from the `linear_a_signs` training run, with 361 classes).
-The demo loads this file, or the path set through
-`SIGN_DETECTOR_WEIGHTS` in `.env`. Otherwise, it uses the generic `yolo26n.pt`,
-which has not been trained on Linear A characters.
+The trained Linear A sign reader (a sign detector and a classifier) ships as
+assets of the `signs-v1` GitHub release, not in git. Download it into `models/`:
+
+```bash
+python scripts/fetch_models.py
+```
+
+The repository is private: the script uses `GITHUB_TOKEN` (or `GH_TOKEN`) if set,
+otherwise the GitHub login git has saved. Files already present are kept; pass
+`--force` to replace them, or `--tag` for another release. Without these files
+the app still runs, using the generic `yolo26n.pt`, which has not been trained
+on Linear A characters (responses then say `"trained": false`).
 
 HT13 inference runs on CPU at image size 1024; a GPU and the training dataset
 are not needed to serve predictions. The model is loaded on the first request
@@ -298,7 +305,9 @@ self-training above), so some correct detections still count as false positives.
 
 ### Use the models in the application
 
-Copy three files into `models/` (create it if needed) and restart the backend:
+`python scripts/fetch_models.py` installs the released models. To use models you
+trained yourself, copy three files into `models/` (create it if needed) and
+restart the backend:
 
 | File | From |
 |---|---|
