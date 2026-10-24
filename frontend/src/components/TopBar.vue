@@ -3,9 +3,9 @@ const avatarUrl = ''
 const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},
-    {to: '/tablet-reading', label: 'Tablet Reading', icon: 'lines'},
-    {to: '/cluster', label: 'Cluster', icon: 'chart'},
+    {to: '/tablet-reading', label: 'Tablet Reading', icon: 'chart'},
 ]
+
 const userLinks = [
     {to: '/login', label: 'Login'},
     {to: '/signup', label: 'Signup'}
