@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import FractionEquation from '../components/analysis/FractionEquation.vue'
-import { pretty } from '../components/analysis/definitions.js'
+import { DEFINITIONS, pretty } from '../components/analysis/definitions.js'
 import { analysis, mismatch } from './analysisFixture.js'
 
 let wrapper
@@ -25,10 +25,22 @@ function equation(formula, markerGlyphs = '\u{10642}\u{10601}') {
 describe('Fraction check', () => {
   it('shows the colour key with how many signs have each colour', () => {
     render()
-    const key = wrapper.get('[aria-label="Box colours"]').findAll('li').filter((item) => item.isVisible())
-    expect(key.map((item) => item.text())).toEqual([
-      'Syllable (2)', 'Logogram (1)', 'Fraction (3)', 'KU-RO (total) (2)', 'Fraction formula',
+    const key = wrapper.get('[aria-label="Box colours"]')
+    expect(key.findAll('[tabindex="0"]').map((label) => label.text())).toEqual([
+      'Syllable', 'Logogram', 'Fraction', 'KU-RO (total)', 'Fraction formula', // no "Other": none on this tablet
     ])
+    expect(key.findAll('[data-testid="key-count"]').map((count) => count.text())).toEqual(['(2)', '(1)', '(3)', '(2)'])
+  })
+
+  it('explains each colour-key label when it is hovered or focused', () => {
+    render()
+    const tips = wrapper.findAll('[role="tooltip"]')
+    expect(tips.map((tip) => tip.text())).toEqual([
+      DEFINITIONS.syllabogram, DEFINITIONS.logogram, DEFINITIONS.fraction, DEFINITIONS.total, DEFINITIONS.formula,
+    ])
+    const label = wrapper.get('[aria-describedby]')
+    expect(label.attributes('tabindex')).toBe('0') // reachable by keyboard
+    expect(wrapper.get(`#${label.attributes('aria-describedby')}`).text()).toBe(DEFINITIONS.syllabogram)
   })
 
   it('writes the tablet out in Linear A, line by line, with readings', () => {

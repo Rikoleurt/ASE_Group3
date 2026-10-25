@@ -1,11 +1,12 @@
 <script setup>
-// Below the analysis: the colour key for the boxes, the tablet's text in Linear
-// A, then each fraction formula as an equation of glyphs and values, ending in
-// its verdict.
+// Below the analysis: the colour key for the boxes (hover a label for its
+// definition), the tablet's text in Linear A, then each fraction formula as an
+// equation of glyphs and values, ending in its verdict.
 import { computed } from 'vue'
 import { ROLES, VERDICTS, formulaColor, prefersStill, roleKey } from './colors.js'
-import { pretty } from './definitions.js'
+import { DEFINITIONS, pretty } from './definitions.js'
 import FractionEquation from './FractionEquation.vue'
+import HoverTip from './HoverTip.vue'
 import TabletText from './TabletText.vue'
 
 const props = defineProps({
@@ -27,6 +28,8 @@ const COUNTS = computed(() => {
   }
   return counts
 })
+// Only the colours that appear on this tablet.
+const KEY = computed(() => Object.entries(ROLES).filter(([key]) => COUNTS.value[key]))
 
 function title(formula) {
   if (formula.kind === 'group') return `Fractions on line ${formula.lines[0] + 1}`
@@ -58,13 +61,14 @@ function verdictStyle(formula) {
     <h2 class="text-2xl font-bold">Fraction check</h2>
 
     <ul class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Box colours">
-      <li v-for="(role, key) in ROLES" v-show="COUNTS[key]" :key="key" class="flex items-center gap-2">
+      <li v-for="[key, role] in KEY" :key="key" class="flex items-center gap-2">
         <span class="inline-block h-3.5 w-3.5 rounded-sm border-2" :style="{ borderColor: role.color }" />
-        {{ role.label }} <span class="text-ink/60">({{ COUNTS[key] ?? 0 }})</span>
+        <HoverTip :tip="DEFINITIONS[key]">{{ role.label }}</HoverTip>
+        <span class="text-ink/60" data-testid="key-count">({{ COUNTS[key] }})</span>
       </li>
       <li v-if="FORMULAS.length" class="flex items-center gap-2">
         <span class="inline-block h-3.5 w-5 rounded-sm border-2 border-dashed border-ink/60" />
-        Fraction formula
+        <HoverTip :tip="DEFINITIONS.formula">Fraction formula</HoverTip>
       </li>
     </ul>
 
