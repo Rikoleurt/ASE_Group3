@@ -30,6 +30,19 @@ def token(sign) -> str:
     return sign.reading or sign.sign or "?"
 
 
+def meaning(sign) -> str | None:
+    """What one sign means, where that is agreed: a fraction's value or a logogram's
+    commodity. Syllables have a sound, not a meaning, so they get None."""
+    if sign.role == "fraction":
+        value, tentative = value_of(sign.sign)
+        if value is None:
+            return "a fraction with no agreed value"
+        return f"{fmt(value)} (tentative)" if tentative else fmt(value)
+    if sign.role == "logogram":
+        return GLOSSES.get(token(sign))
+    return None
+
+
 def line_text(line: Sequence) -> tuple[str, str]:
     """(transliteration, gloss) of one line: syllables joined by hyphens into words."""
     words: list[tuple[str, str, object]] = []  # (word, role, its first sign)

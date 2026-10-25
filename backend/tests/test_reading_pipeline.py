@@ -9,7 +9,7 @@ import pytest
 from backend.app.reading_pipeline.formula import find_formulas, fmt, value_of
 from backend.app.reading_pipeline.glyphs import glyph
 from backend.app.reading_pipeline.lines import group_lines
-from backend.app.reading_pipeline.transliterate import line_text
+from backend.app.reading_pipeline.transliterate import line_text, meaning
 
 READINGS = {"AB81": "ku", "AB02": "ro", "AB11": "po", "AB05": "to", "AB59": "ta", "AB01": "da",
             "AB131a": "VIN", "A707": "J", "A704": "E", "A732": "JE", "A710": "W", "A706": "H"}
@@ -168,6 +168,18 @@ def test_a_mixed_reading_is_written_by_its_role():
     assert line_text([sign]) == ("FIC", "figs")
     sign.role = "syllabogram"
     assert line_text([sign])[0] == "ni"
+
+
+@pytest.mark.parametrize(("sign", "reading", "role", "meant"), [
+    ("A707", "J", "fraction", "1/2"),
+    ("A706", "H", "fraction", "1/16 (tentative)"),
+    ("A710", "W", "fraction", "a fraction with no agreed value"),
+    ("AB131a", "VIN", "logogram", "wine"),
+    ("A301", None, "logogram", None),  # no agreed meaning
+    ("AB81", "ku", "syllabogram", None),  # a sound, not a meaning
+])
+def test_each_sign_says_what_it_means_where_that_is_agreed(sign, reading, role, meant):
+    assert meaning(SimpleNamespace(sign=sign, reading=reading, role=role)) == meant
 
 
 @pytest.mark.parametrize(("sign", "codepoint"), [
