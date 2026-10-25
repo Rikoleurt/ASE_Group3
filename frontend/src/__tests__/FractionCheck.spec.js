@@ -20,7 +20,7 @@ describe('Fraction check', () => {
     render()
     const key = wrapper.get('[aria-label="Box colours"]').findAll('li').filter((item) => item.isVisible())
     expect(key.map((item) => item.text())).toEqual([
-      'Syllable (1)', 'Logogram (1)', 'Fraction (3)', 'KU-RO (total) (2)', 'Fraction formula',
+      'Syllable (2)', 'Logogram (1)', 'Fraction (3)', 'KU-RO (total) (2)', 'Fraction formula',
     ])
   })
 

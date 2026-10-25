@@ -16,22 +16,23 @@ function render(props = { signs, formulas: [mismatch] }) {
   return wrapper
 }
 
+const boxes = () => wrapper.findAll('[data-testid="sign-box"]')
+
 describe('Tablet overlay', () => {
   it('keeps the image and draws one box per sign, coloured by role', () => {
     render()
     expect(wrapper.get('img').attributes('src')).toBe('tablet.png')
-    const boxes = wrapper.findAll('[data-testid="sign-box"]')
-    expect(boxes).toHaveLength(7)
-    expect(boxes[0].attributes()).toMatchObject({ x: '10', y: '10', width: '10', height: '8', stroke: ROLES.syllabogram.color })
-    expect(boxes[1].attributes('stroke')).toBe(ROLES.fraction.color)
-    expect(boxes[2].attributes('stroke')).toBe(ROLES.logogram.color)
-    expect(boxes[0].get('title').text()).toBe('ta (90%)')
+    expect(boxes()).toHaveLength(signs.length)
+    expect(boxes()[0].attributes()).toMatchObject({ x: '10', y: '10', width: '10', height: '8', stroke: ROLES.syllabogram.color })
+    expect(boxes()[1].attributes('stroke')).toBe(ROLES.fraction.color)
+    expect(boxes()[2].attributes('stroke')).toBe(ROLES.logogram.color)
   })
 
   it('gives the KU-RO signs their own colour', () => {
     render()
-    const roles = wrapper.findAll('[data-testid="sign-box"]').map((box) => box.attributes('data-role'))
-    expect(roles).toEqual(['syllabogram', 'fraction', 'logogram', 'fraction', 'total', 'total', 'fraction'])
+    expect(boxes().map((box) => box.attributes('data-role'))).toEqual([
+      'syllabogram', 'fraction', 'logogram', 'fraction', 'total', 'total', 'fraction', 'syllabogram',
+    ])
   })
 
   it('draws a dashed box around the formula in its verdict colour, after the signs', () => {
@@ -39,7 +40,40 @@ describe('Tablet overlay', () => {
     const formula = wrapper.get('[data-testid="formula-box"]')
     expect(formula.attributes('stroke')).toBe('var(--color-confidence-low)')
     expect(formula.attributes()).toMatchObject({ x: '9', y: '9', width: '32', height: '50' })
-    expect(formula.attributes('style')).toContain('animation-delay: 820ms')
+    expect(formula.attributes('style')).toContain(`animation-delay: ${signs.length * 60 + 400}ms`)
+  })
+
+  it('shows a sign card while a box is hovered', async () => {
+    render()
+    expect(wrapper.find('[data-testid="sign-card"]').exists()).toBe(false)
+    await boxes()[4].trigger('mouseenter')
+    const card = wrapper.get('[data-testid="sign-card"]')
+    expect(card.get('[data-testid="sign-glyph"]').text()).toBe('\u{10642}')
+    expect(card.text()).toContain('ku')
+    expect(card.get('[data-testid="sign-meaning"]').text()).toBe('total (KU-RO)')
+    expect(boxes()[4].classes()).toContain('active')
+    await boxes()[4].trigger('mouseleave')
+    expect(wrapper.find('[data-testid="sign-card"]').exists()).toBe(false)
+  })
+
+  it('shows the card for keyboard focus too, and describes each box for screen readers', async () => {
+    render()
+    expect(boxes()[2].attributes('tabindex')).toBe('0')
+    expect(boxes()[2].attributes('aria-label')).toBe('VIN (AB131a), Logogram, means wine, 90% confident')
+    await boxes()[2].trigger('focus')
+    expect(wrapper.get('[data-testid="sign-meaning"]').text()).toBe('wine')
+    await boxes()[2].trigger('blur')
+    expect(wrapper.find('[data-testid="sign-card"]').exists()).toBe(false)
+  })
+
+  it('places the card beside the box, on the side with more room', async () => {
+    render()
+    await boxes()[0].trigger('mouseenter') // left half: card to its right
+    expect(wrapper.get('[data-testid="sign-card"]').attributes('style')).toContain('left: 21%')
+    await boxes()[7].trigger('mouseenter') // right half and low: card to its left, anchored at the bottom
+    const style = wrapper.get('[data-testid="sign-card"]').attributes('style')
+    expect(style).toContain('right: 31%')
+    expect(style).toContain('bottom: 22')
   })
 
   it('turns the boxes off and on again', async () => {
