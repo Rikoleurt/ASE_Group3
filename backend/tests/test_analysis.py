@@ -123,6 +123,7 @@ def test_two_stage_reading_names_each_sign(monkeypatch, tmp_path):
         "candidates": candidates[0],
         "shape_guesses": None,
         "glyph": chr(0x10642),
+        "meaning": None,  # a syllable has a sound, not a meaning
         "line": 0,
         "order": 0,
     }
@@ -164,4 +165,7 @@ def test_trained_reader_reads_an_uploaded_tablet(monkeypatch):
     totals = [formula for formula in data["formulas"] if formula["kind"] == "total"]
     assert [(f["verdict"], f["difference"]) for f in totals] == [("mismatch", "1/2")]
     assert data["lines"][-1]["text"] == "ku-ro J"
+    ku_ro = [sign for sign in data["signs"] if sign["id"] in totals[0]["marker_ids"]]
+    assert {sign["meaning"] for sign in ku_ro} == {"total (KU-RO)"}
+    assert all(term["glyph"] == chr(0x10746) for term in totals[0]["total"])  # J
     assert "off by 1/2" in data["summary"]

@@ -12,7 +12,7 @@ from backend.app.model.analysis import Formula as FormulaModel
 from backend.app.reading_pipeline.formula import Formula, Term, find_formulas, fmt
 from backend.app.reading_pipeline.glyphs import glyph
 from backend.app.reading_pipeline.lines import group_lines
-from backend.app.reading_pipeline.transliterate import line_text
+from backend.app.reading_pipeline.transliterate import line_text, meaning
 
 if str(tablet_demo.ROOT / "fraction-solver") not in sys.path:
     sys.path.insert(0, str(tablet_demo.ROOT / "fraction-solver"))  # as backend.app.reading does
@@ -47,6 +47,13 @@ class AnalysisDataController:
         lines = [_line(number, line) for number, line in enumerate(grouped)] if trained else []
         formulas = find_formulas(grouped) if trained else []
         by_id = {sign.id: sign for sign in signs}
+        if trained:
+            for sign in signs:
+                sign.meaning = meaning(sign)
+            for formula in formulas:
+                word = "grand total (PO-TO-KU-RO)" if formula.kind == "grand_total" else "total (KU-RO)"
+                for sign_id in formula.marker_ids:
+                    by_id[sign_id].meaning = word
         return AnalysisResult(
             symbol_interpretation=" / ".join(line.text for line in lines) or _fallback(signs),
             confidence=round(sum(sign.confidence for sign in signs) / len(signs)) if signs else 0,
@@ -95,8 +102,8 @@ def _formula(formula: Formula, by_id: dict[int, DetectedSign]) -> FormulaModel:
 
 
 def _term(term: Term) -> FractionTerm:
-    return FractionTerm(id=term.id, sign=term.sign, label=term.label, value=fmt(term.value),
-                        tentative=term.tentative, line=term.line)
+    return FractionTerm(id=term.id, sign=term.sign, label=term.label, glyph=glyph(term.sign),
+                        value=fmt(term.value), tentative=term.tentative, line=term.line)
 
 
 def _summary(signs: list[DetectedSign], trained: bool, formulas: list[Formula]) -> str:
