@@ -1,8 +1,10 @@
 <script setup>
-// Below the analysis: the colour key for the boxes, then each fraction formula's
-// working revealed step by step, ending in its verdict.
+// Below the analysis: the colour key for the boxes, the tablet's text in Linear
+// A, then each fraction formula's working revealed step by step, ending in its
+// verdict.
 import { computed } from 'vue'
 import { ROLES, VERDICTS, formulaColor, prefersStill, roleKey } from './colors.js'
+import TabletText from './TabletText.vue'
 
 const props = defineProps({
   analysis: { type: Object, required: true },
@@ -62,6 +64,9 @@ function verdictStyle(formula) {
         Fraction formula
       </li>
     </ul>
+
+    <h3 class="mt-6 font-bold">The tablet in Linear A</h3>
+    <TabletText :analysis="analysis" />
 
     <p v-if="!FORMULAS.length" class="mt-4 text-ink/70" data-testid="no-formula">
       No fraction signs or KU-RO total were found on this tablet.

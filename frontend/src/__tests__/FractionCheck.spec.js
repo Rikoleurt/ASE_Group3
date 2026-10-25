@@ -24,6 +24,17 @@ describe('Fraction check', () => {
     ])
   })
 
+  it('writes the tablet out in Linear A, line by line, with readings', () => {
+    render()
+    const lines = wrapper.get('[data-testid="tablet-text"]').findAll(':scope > li')
+    expect(lines).toHaveLength(4)
+    const cells = lines[2].findAll('[data-testid="glyph-cell"]')
+    expect(cells.map((cell) => cell.text())).toEqual(['\u{10642}ku', '\u{10601}ro', '\u{10746}J'])
+    expect(lines[2].text()).toContain('ku-ro J — total 1/2')
+    expect(lines[3].text()).toContain('□') // N800 has no Unicode character
+    expect(lines[3].text()).not.toContain('—') // nothing glossed
+  })
+
   it('reveals the working step by step, then the verdict', () => {
     render()
     const formula = wrapper.get('[data-testid="formula"]')
