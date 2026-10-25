@@ -1,0 +1,14 @@
+/* Linear A glyphs (U+10600–U+1077F). Few systems have a font for them, so the
+   app ships the Linear A part of Noto Sans Linear A (SIL OFL 1.1, see
+   assets/fonts/OFL.txt). */
+@font-face {
+  font-family: 'Noto Sans Linear A';
+  src: url('../../assets/fonts/NotoSansLinearA.woff2') format('woff2');
+  font-display: swap;
+  unicode-range: U+10107-10133, U+10600-1077F;
+}
+
+.linear-a {
+  font-family: 'Noto Sans Linear A', 'Segoe UI Historic', sans-serif;
+  line-height: 1;
+}

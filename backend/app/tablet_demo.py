@@ -19,6 +19,7 @@ from ultralytics import YOLO
 from ultralytics.engine.results import Results
 import cv2
 import numpy as np
+import torch
 
 ROOT = Path(__file__).resolve().parents[2]
 HT13_IMAGE = Path(__file__).resolve().parent / "static" / "ht13.webp"
@@ -30,6 +31,11 @@ CLASSIFIER_WEIGHTS = Path(os.getenv("SIGN_CLASSIFIER_WEIGHTS", ROOT / "models" /
 SIGN_IMGSZ = 1024
 CANDIDATES = 3
 INFERENCE_LOCK = Lock()
+# Calls are serialized by INFERENCE_LOCK, so more threads only contend: on a
+# 16-CPU Windows laptop torch's default (8) made one HT13 reading take ~21 s
+# instead of ~0.7 s with 2. Set in each inference call, not once: the thread
+# count is per OS thread, and FastAPI runs routes in worker threads.
+INFERENCE_THREADS = int(os.getenv("INFERENCE_THREADS", "2"))
 
 
 @lru_cache(maxsize=2)
@@ -67,22 +73,29 @@ def sign_catalogue(weights: Path) -> dict:
     return _sign_catalogue(str(path), path.stat().st_mtime_ns) if path.is_file() else {}
 
 
-def ht13_result(image_path: Path = HT13_IMAGE, confidence: float = 0.25):
+def read_image(source: Path | np.ndarray, confidence: float = 0.25):
     """
-    Run the active model, including legitimate empty results
+    Run the active model on an image file or a BGR array, including legitimate empty results
     """
     weights, imgsz, _trained = active_weights()
-    if not image_path.is_file():
-        raise FileNotFoundError(f"Cannot read HT13 image: {image_path}")
-
-
     # YOLO's predictor is mutable: serialize calls sharing the cached model.
     with INFERENCE_LOCK:
+        torch.set_num_threads(INFERENCE_THREADS)
         model = _model(weights)
         return model.predict(
-            source=str(image_path), imgsz=imgsz, conf=confidence,
-            device="cpu", save=False, verbose=False
+            source=source if isinstance(source, np.ndarray) else str(source), imgsz=imgsz,
+            conf=confidence, device="cpu", save=False, verbose=False
         )[0]
+
+
+def ht13_result(image_path: Path = HT13_IMAGE, confidence: float = 0.25):
+    """
+    Run the active model on the HT13 demo image
+    """
+    active_weights()
+    if not image_path.is_file():
+        raise FileNotFoundError(f"Cannot read HT13 image: {image_path}")
+    return read_image(image_path, confidence=confidence)
 
 
 def name_signs(result) -> list[list[dict]] | None:
@@ -98,6 +111,7 @@ def name_signs(result) -> list[list[dict]] | None:
     boxes = [tuple(b) for b in result.boxes.xyxy.tolist()]
     catalogue = sign_catalogue(weights)
     with INFERENCE_LOCK:
+        torch.set_num_threads(INFERENCE_THREADS)
         named = reader.name_boxes(_model(weights), reader.ink_of(result.orig_img), boxes,
                                   top=CANDIDATES, device="cpu")
     return [[{"sign": sign, "label": catalogue.get(sign, {}).get("name", sign),
@@ -124,8 +138,21 @@ def annotate_ht13(image_path: Path = HT13_IMAGE, confidence: float = 0.25) -> by
     return png.tobytes()
 
 
+def warm_up() -> None:
+    """Load every model once by reading HT13, so the first real request is fast."""
+    try:
+        ht13_predictions()
+    except Exception as error:  # noqa: BLE001 - a failed warm-up only means a slower first request
+        print(f"Model warm-up skipped: {error}", file=sys.stderr)
+
+
 def ht13_predictions(confidence: float = 0.25) -> dict:
-    """Expose real detections with normalized boxes for the responsive demo UI.
+    """Expose real detections on HT13 with normalized boxes for the responsive demo UI."""
+    return predictions_for(ht13_result(confidence=confidence), tablet="HT 13")
+
+
+def predictions_for(result, tablet: str = "") -> dict:
+    """Serialize one model result: normalized boxes, crops and, with a classifier, sign names.
 
     With a classifier, each box is labelled with its most likely sign and lists
     the top candidates; `confidence` is then the detector's confidence that a
@@ -134,9 +161,9 @@ def ht13_predictions(confidence: float = 0.25) -> dict:
     Boxes labelled "fraction" by a role-trained detector, or whose most likely
     sign is a fraction, also get shape-matched guesses for which fraction sign
     they are. Nothing else is shape-matched: the method was only measured to
-    work on fraction signs.
+    work on fraction signs. `tablet` keeps that tablet's own drawings out of
+    the shape references; "" excludes nothing.
     """
-    result = ht13_result(confidence=confidence)
     _weights, _imgsz, trained = active_weights()
     candidates = name_signs(result) if len(result.boxes) else None
     height, width = result.orig_shape
@@ -175,6 +202,6 @@ def ht13_predictions(confidence: float = 0.25) -> dict:
         if trained and fraction and crop.size:
             from backend.app.reading import identify_mask
 
-            prediction["shapeGuesses"] = identify_mask(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) < 128, tablet="HT 13")
+            prediction["shapeGuesses"] = identify_mask(cv2.cvtColor(crop, cv2.COLOR_BGR2GRAY) < 128, tablet=tablet)
         predictions.append(prediction)
     return {"width": width, "height": height, "trained": trained, "predictions": predictions}

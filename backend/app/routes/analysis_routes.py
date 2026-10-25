@@ -23,11 +23,17 @@ def analyze(file: UploadFile, analysis_data_controller: AnalysisController) -> A
             detail="The image is larger than 10 MB.",
         )
  
-    result = analysis_data_controller.analyze(
-        image_bytes=image_bytes,
-        filename=file.filename,
-    )
- 
+    try:
+        result = analysis_data_controller.analyze(
+            image_bytes=image_bytes,
+            filename=file.filename,
+        )
+    except (FileNotFoundError, RuntimeError) as error:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="The sign reader is unavailable.",
+        ) from error
+
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

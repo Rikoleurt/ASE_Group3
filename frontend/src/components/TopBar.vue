@@ -3,8 +3,8 @@ const avatarUrl = ''
 const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},
-    {to: '/tablet-reading', label: 'Tablet Reading', icon: 'lines'},
-    {to: '/analysis', label: 'Analysis', icon: 'chart'}
+    {to: '/tablet-reading', label: 'Tablet Reading', icon: 'chart'},
+    {to: '/analysis', label: 'Analysis', icon: 'chart'},
 ]
 
 const userLinks = [
@@ -25,7 +25,7 @@ const activeClass = 'font-bold underline'
                 :to="link.to"
                 :class="linkClass"
                 :exact-active-class="activeClass">
-            
+
             <svg v-if="link.icon === 'home'" class="h-6 w-6" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M12 3 1.5 12.5H5V21h5.5v-6h3v6H19v-8.5h3.5z" />
             </svg>
@@ -73,7 +73,7 @@ const activeClass = 'font-bold underline'
                 :exact-active-class="activeClass">
                 {{ link.label }}
             </RouterLink>
- 
+
             <RouterLink
                 to="/profile"
                 aria-label="Profile"

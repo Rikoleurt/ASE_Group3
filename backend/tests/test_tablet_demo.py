@@ -250,3 +250,31 @@ def test_the_classifier_is_ignored_without_a_trained_detector(monkeypatch, tmp_p
     classifier.write_bytes(b"weights")
     monkeypatch.setattr(tablet_demo, "CLASSIFIER_WEIGHTS", classifier)
     assert tablet_demo.active_classifier() is None
+
+
+def test_inference_sets_its_thread_count_in_the_calling_thread():
+    # The count is per OS thread and routes run in worker threads, so read_image sets it on every call.
+    from backend.app import tablet_demo
+
+    model = type("Model", (), {"predict": lambda self, **kwargs: ["result"]})()
+    with patch.object(tablet_demo, "_model", return_value=model), \
+         patch.object(tablet_demo.torch, "set_num_threads") as set_threads:
+        assert tablet_demo.read_image(np.zeros((4, 4, 3), dtype=np.uint8)) == "result"
+    set_threads.assert_called_once_with(tablet_demo.INFERENCE_THREADS)
+
+
+@pytest.mark.parametrize(("setting", "warmed"), [("1", True), ("0", False)])
+def test_models_are_warmed_at_startup_unless_turned_off(monkeypatch, setting, warmed):
+    monkeypatch.setenv("PRELOAD_MODELS", setting)
+    with patch("backend.app.tablet_demo.warm_up") as warm_up:
+        with TestClient(app):
+            pass
+    assert warm_up.called is warmed
+
+
+def test_a_failed_warm_up_does_not_stop_the_app(capsys):
+    from backend.app import tablet_demo
+
+    with patch.object(tablet_demo, "ht13_predictions", side_effect=FileNotFoundError("weights")):
+        tablet_demo.warm_up()
+    assert "warm-up skipped" in capsys.readouterr().err
