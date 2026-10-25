@@ -1,0 +1,139 @@
+<script setup>
+// Below the analysis: the colour key for the boxes, then each fraction formula's
+// working revealed step by step, ending in its verdict.
+import { computed } from 'vue'
+import { ROLES, VERDICTS, formulaColor, prefersStill, roleKey } from './colors.js'
+
+const props = defineProps({
+  analysis: { type: Object, required: true },
+})
+
+const STEP_MS = 600
+const STILL = prefersStill()
+const MARKERS = computed(() => new Set((props.analysis.formulas ?? []).flatMap((formula) => formula.marker_ids)))
+// KU-RO totals first, then fractions found outside any total.
+const FORMULAS = computed(() =>
+  [...(props.analysis.formulas ?? [])].sort((a, b) => (a.kind === 'group') - (b.kind === 'group')),
+)
+const COUNTS = computed(() => {
+  const counts = {}
+  for (const sign of props.analysis.signs ?? []) {
+    const key = roleKey(sign, MARKERS.value)
+    counts[key] = (counts[key] ?? 0) + 1
+  }
+  return counts
+})
+
+function title(formula) {
+  if (formula.kind === 'group') return `Fractions on line ${formula.lines[0] + 1}`
+  const marker = formula.kind === 'grand_total' ? 'PO-TO-KU-RO' : 'KU-RO'
+  const first = formula.lines[0] + 1
+  const last = formula.lines[formula.lines.length - 1] + 1
+  return `${marker} total, lines ${first}–${last}`
+}
+
+function verdictText(formula) {
+  if (formula.verdict === 'mismatch') return `${VERDICTS.mismatch.label}: off by ${formula.difference}`
+  return VERDICTS[formula.verdict].label
+}
+
+function delay(index) {
+  return { animationDelay: `${index * STEP_MS}ms` }
+}
+
+// The badge rises after the last step, then pulses once it has arrived.
+function verdictStyle(formula) {
+  const start = formula.steps.length * STEP_MS
+  return { backgroundColor: formulaColor(formula), animationDelay: `${start}ms, ${start + 450}ms` }
+}
+</script>
+
+<template>
+  <section v-if="analysis.signs?.length" class="rounded-3xl bg-card p-6" :class="{ still: STILL }">
+    <h2 class="text-2xl font-bold">Fraction check</h2>
+
+    <ul class="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm" aria-label="Box colours">
+      <li v-for="(role, key) in ROLES" v-show="COUNTS[key]" :key="key" class="flex items-center gap-2">
+        <span class="inline-block h-3.5 w-3.5 rounded-sm border-2" :style="{ borderColor: role.color }" />
+        {{ role.label }} <span class="text-ink/60">({{ COUNTS[key] ?? 0 }})</span>
+      </li>
+      <li v-if="FORMULAS.length" class="flex items-center gap-2">
+        <span class="inline-block h-3.5 w-5 rounded-sm border-2 border-dashed border-ink/60" />
+        Fraction formula
+      </li>
+    </ul>
+
+    <p v-if="!FORMULAS.length" class="mt-4 text-ink/70" data-testid="no-formula">
+      No fraction signs or KU-RO total were found on this tablet.
+    </p>
+
+    <article
+      v-for="(formula, index) in FORMULAS"
+      :key="index"
+      class="mt-5 rounded-2xl border-l-4 bg-page/60 p-4"
+      :style="{ borderColor: formulaColor(formula) }"
+      data-testid="formula"
+    >
+      <h3 class="font-bold">{{ title(formula) }}</h3>
+      <ol class="mt-2 space-y-1 font-mono text-[0.95rem]">
+        <li v-for="(step, number) in formula.steps" :key="number" class="step" :style="delay(number)">
+          {{ step }}
+        </li>
+      </ol>
+      <p
+        v-if="formula.verdict"
+        class="verdict mt-3 inline-block rounded-full px-4 py-1 font-bold text-white"
+        :style="verdictStyle(formula)"
+        data-testid="verdict"
+      >
+        {{ verdictText(formula) }}
+      </p>
+      <p v-if="formula.kind !== 'group'" class="mt-2 text-sm text-ink/70">{{ formula.note }}</p>
+    </article>
+  </section>
+</template>
+
+<style scoped>
+.step,
+.verdict {
+  opacity: 0;
+  animation: rise 0.45s ease-out forwards;
+}
+
+.verdict {
+  animation:
+    rise 0.45s ease-out forwards,
+    pulse 0.9s ease-in-out 2;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    transform: scale(1.06);
+  }
+}
+
+.still .step,
+.still .verdict {
+  animation: none;
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step,
+  .verdict {
+    animation: none;
+    opacity: 1;
+  }
+}
+</style>
