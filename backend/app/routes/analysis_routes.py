@@ -17,6 +17,11 @@ AnalysisController = Annotated[AnalysisDataController, Depends(get_analysis_data
 @router.post("", response_model=AnalysisResult, status_code=status.HTTP_200_OK)
 def analyze(file: UploadFile, analysis_data_controller: AnalysisController) -> AnalysisResult:
     image_bytes = file.file.read(MAX_FILESIZE + 1)
+    if len(image_bytes) > MAX_FILESIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
+            detail="The image is larger than 10 MB.",
+        )
  
     result = analysis_data_controller.analyze(
         image_bytes=image_bytes,
