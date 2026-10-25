@@ -104,8 +104,11 @@ def test_two_stage_reading_names_each_sign(monkeypatch, tmp_path):
     assert response.status_code == 200
     data = response.json()
     assert data["trained"] is True
-    assert (data["symbol_interpretation"], data["confidence"]) == ("AB81 (ku)", 40)
+    # The page's fields: the transliteration (no catalogue here, so the sign ID) and mean confidence.
+    assert (data["symbol_interpretation"], data["confidence"]) == ("AB81", 40)
     assert data["summary"] == "1 sign found: 1 syllabogram."
+    assert data["lines"] == [{"index": 0, "sign_ids": [1], "text": "AB81", "gloss": "AB81"}]
+    assert data["formulas"] == []
     (sign,) = data["signs"]
     assert sign.pop("crop").startswith("data:image/png;base64,")
     assert sign == {
@@ -119,6 +122,10 @@ def test_two_stage_reading_names_each_sign(monkeypatch, tmp_path):
         "box": {"x": 0.1, "y": 0.2, "w": 0.3, "h": 0.4},
         "candidates": candidates[0],
         "shape_guesses": None,
+        "glyph": chr(0x10642),
+        "meaning": None,  # a syllable has a sound, not a meaning
+        "line": 0,
+        "order": 0,
     }
 
 
@@ -126,6 +133,7 @@ def test_two_stage_reading_names_each_sign(monkeypatch, tmp_path):
     ("AB81", "ku", ["logogram", "syllabogram"], "syllabogram"),  # catalogue lists logogram first
     ("AB131a", "VIN", ["logogram", "syllabogram"], "logogram"),
     ("AB21", "qi OVIS", ["logogram"], "logogram"),
+    ("AB30", "ni FIC", ["logogram", "syllabogram"], "syllabogram"),  # mixed: a syllable where allowed
     ("A707", "J", ["fraction"], "fraction"),
     ("A717", "DD", ["syllabogram"], "fraction"),  # a combination fraction, catalogued oddly
     ("A710", "W", ["fraction"], "fraction"),  # open: no agreed value, still a fraction
@@ -153,3 +161,11 @@ def test_trained_reader_reads_an_uploaded_tablet(monkeypatch):
     assert (data["width"], data["height"]) == (1367, 2253)
     assert len(data["signs"]) >= 20  # HT 13 has 27 signs; the reader finds 26 of them
     assert {sign["role"] for sign in data["signs"]} >= {"syllabogram", "fraction"}
+    # The KU-RO section is found, and its fractions show the scribe's known 1/2 error.
+    totals = [formula for formula in data["formulas"] if formula["kind"] == "total"]
+    assert [(f["verdict"], f["difference"]) for f in totals] == [("mismatch", "1/2")]
+    assert data["lines"][-1]["text"] == "ku-ro J"
+    ku_ro = [sign for sign in data["signs"] if sign["id"] in totals[0]["marker_ids"]]
+    assert {sign["meaning"] for sign in ku_ro} == {"total (KU-RO)"}
+    assert all(term["glyph"] == chr(0x10746) for term in totals[0]["total"])  # J
+    assert "off by 1/2" in data["summary"]

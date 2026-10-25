@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onBeforeUnmount } from 'vue'
+import FractionCheck from '../components/analysis/FractionCheck.vue'
+import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -137,7 +139,9 @@ onBeforeUnmount(revokePreview)
  
     <section v-else-if="STATUS === 'result'" class="flex flex-col gap-8 md:flex-row">
         <div class="md:w-1/2">
-            <img :src="PREVIEW_URL" :alt="FILENAME" class="w-full rounded-lg bg-white" />
+            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas">
+                <img :src="PREVIEW_URL" :alt="FILENAME" class="w-full rounded-lg bg-white" />
+            </TabletOverlay>
         </div>
 
         <div class="rounded-3xl bg-card p-6 md:flex-1">
@@ -170,5 +174,7 @@ onBeforeUnmount(revokePreview)
             </button>
         </div>
     </section>
+
+    <FractionCheck v-if="STATUS === 'result'" :analysis="ANALYSIS" class="mt-8" />
 </main>
 </template>

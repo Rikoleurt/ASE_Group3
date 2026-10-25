@@ -261,3 +261,20 @@ def test_inference_sets_its_thread_count_in_the_calling_thread():
          patch.object(tablet_demo.torch, "set_num_threads") as set_threads:
         assert tablet_demo.read_image(np.zeros((4, 4, 3), dtype=np.uint8)) == "result"
     set_threads.assert_called_once_with(tablet_demo.INFERENCE_THREADS)
+
+
+@pytest.mark.parametrize(("setting", "warmed"), [("1", True), ("0", False)])
+def test_models_are_warmed_at_startup_unless_turned_off(monkeypatch, setting, warmed):
+    monkeypatch.setenv("PRELOAD_MODELS", setting)
+    with patch("backend.app.tablet_demo.warm_up") as warm_up:
+        with TestClient(app):
+            pass
+    assert warm_up.called is warmed
+
+
+def test_a_failed_warm_up_does_not_stop_the_app(capsys):
+    from backend.app import tablet_demo
+
+    with patch.object(tablet_demo, "ht13_predictions", side_effect=FileNotFoundError("weights")):
+        tablet_demo.warm_up()
+    assert "warm-up skipped" in capsys.readouterr().err

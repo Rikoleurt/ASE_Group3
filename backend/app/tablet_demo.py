@@ -138,6 +138,14 @@ def annotate_ht13(image_path: Path = HT13_IMAGE, confidence: float = 0.25) -> by
     return png.tobytes()
 
 
+def warm_up() -> None:
+    """Load every model once by reading HT13, so the first real request is fast."""
+    try:
+        ht13_predictions()
+    except Exception as error:  # noqa: BLE001 - a failed warm-up only means a slower first request
+        print(f"Model warm-up skipped: {error}", file=sys.stderr)
+
+
 def ht13_predictions(confidence: float = 0.25) -> dict:
     """Expose real detections on HT13 with normalized boxes for the responsive demo UI."""
     return predictions_for(ht13_result(confidence=confidence), tablet="HT 13")
