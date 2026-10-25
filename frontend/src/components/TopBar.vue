@@ -3,7 +3,8 @@ const avatarUrl = ''
 const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},
-    {to: '/tablet-reading', label: 'Tablet Reading', icon: 'chart'},
+    {to: '/tablet-reading', label: 'Tablet Reading', icon: 'lines'},
+    {to: '/analysis', label: 'Analysis', icon: 'chart'}
 ]
 
 const userLinks = [
