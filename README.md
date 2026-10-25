@@ -1,135 +1,315 @@
-# ASE Group 3 — Exploring Linear A
+# ASE Group 3 — Linear A Character Detection
 
-This project explores the analysis of Linear A tablets. The web application combines
-a **Vue** frontend, a **FastAPI** backend, and a **MySQL** database for user
-accounts. It provides registration, login, a user profile, and an initial image
-analysis demonstration using the HT13 tablet.
+The project combines a Vue frontend, a FastAPI backend and a MySQL database.
+Its goal is to train YOLO26 to locate Linear A characters and display their
+associated readings, such as `AB77 (ka)`, with bounding boxes and confidence scores.
 
-## 1. Installation and configuration
+Run commands from the repository root unless a step says otherwise.
 
-Requirements: **Node.js `^22.18.0` or `>=24.12.0`**, **Python 3.12+**, **uv**, and
-**Docker with Docker Compose** to run MySQL. You can also use a local MySQL server.
+## 1. Requirements
 
-Run the commands from the repository root:
+| Requirement | Used for |
+|---|---|
+| Python 3.12+ | Backend, data preparation and training |
+| Node.js `^22.18.0` or `>=24.12.0`, with npm | Frontend and application startup |
+| uv | Backend dependency management |
+| Docker with Docker Compose, or a local MySQL server | User accounts |
+| PyTorch and Ultralytics `>=8.4,<9.0` | Model training |
+| Compatible GPU and drivers | Faster training; CPU training is supported but slower |
+
+Data preparation and training do not require Node.js, MySQL or a running web app.
+Python dependencies are listed in [backend/pyproject.toml](backend/pyproject.toml)
+and [fraction-solver/requirements-data.txt](fraction-solver/requirements-data.txt).
+The pretrained starting weights are `yolo26n.pt` at the repository root.
+
+## 2. Install and run the application
+
+Install the frontend, backend and the data libraries imported by the backend:
 
 ```bash
 npm install
 npm --prefix frontend install
 uv sync --project backend
+uv pip install --python backend/.venv -r fraction-solver/requirements-data.txt
 ```
 
-Settings live in a `.env` file at the repository root. `npm run dev` creates it from
-[.env.example](.env.example) the first time, or you can copy it yourself:
+Repeat the last command if a later `uv sync` removes these additional libraries.
 
-```bash
-cp .env.example .env
-```
+Create `.env` by copying [.env.example](.env.example). `npm run dev` also creates
+it automatically if it is missing. The defaults are for local development.
+Keep `MYSQL_DATABASE=ase3`, as the initialization script uses that name.
 
-These credentials are intended for local development. The `.env` file is ignored
-by Git and loaded automatically when the application starts.
-Keep `MYSQL_DATABASE=ase3`: the initialization script uses this name.
-
-### MySQL with Docker
-
-Start Docker, then start the database:
+Start Docker, then run:
 
 ```bash
 docker compose up -d --wait mysql
-```
-
-On the first run, Docker creates the database and MySQL user, then executes
-[init.sql](backend/app/database/init.sql) to create the users table and the demo
-account: **`dev@ase3.com` / `dev`**.
-Data is persisted in a volume; initialization does not run again on an existing
-volume. If port 3306 is already in use, set `MYSQL_PORT=3307` in `.env` before
-starting Docker Compose.
-
-### Alternative: MySQL without Docker
-
-On a local MySQL server, run the script with an administrator account:
-
-```bash
-mysql -u root -p < backend/app/database/init.sql
-```
-
-Then create a dedicated user and grant access to the database from a MySQL
-administrator session:
-
-```sql
-CREATE USER IF NOT EXISTS 'ase'@'localhost' IDENTIFIED BY 'ase';
-GRANT ALL PRIVILEGES ON ase3.* TO 'ase'@'localhost';
-```
-
-Update `.env` to match this server's credentials and port.
-`MYSQL_ROOT_PASSWORD` is only used for initialization with Docker.
-
-## 2. Run the application
-
-Once MySQL is running:
-
-```bash
 npm run dev
 ```
 
-This command starts the frontend and backend together:
+Docker creates the database and runs
+[init.sql](backend/app/database/init.sql) the first time the database volume is
+created. It includes the demo account **`dev@ase3.com` / `dev`**. Database data
+persists between restarts; initialization is not repeated for an existing volume.
+If port 3306 is already occupied, set `MYSQL_PORT=3307` in `.env` before startup.
 
-- Application: http://localhost:5173
-- Interactive API documentation: http://127.0.0.1:8000/docs
-- HT13 demo: http://localhost:5173/tablet-demo
+To use an existing MySQL server instead, run `init.sql` as an administrator,
+create a database user with access to `ase3`, and set `MYSQL_HOST`, `MYSQL_PORT`,
+`MYSQL_USER` and `MYSQL_PASSWORD` in `.env`. `MYSQL_ROOT_PASSWORD` is only used
+by Docker during initialization.
 
-The demo requires the `yolo26n.pt` file at the repository root. It uses a generic
-YOLO model that has not yet been trained to recognize Linear A signs.
+| Address | Purpose |
+|---|---|
+| http://localhost:5173 | Web application |
+| http://localhost:5173/tablet-demo | HT13 detection demo |
+| http://127.0.0.1:8000/docs | API documentation |
+| http://127.0.0.1:8000/health | Backend health check |
 
-Stop the application with `Ctrl+C`. To stop MySQL when running it with Docker:
+To run the services separately, use `npm run dev:backend` and
+`npm run dev:frontend` in two terminals at the repository root.
+`npm --prefix frontend run build` builds the frontend into `frontend/dist/`.
+
+Stop the application with `Ctrl+C`. Stop the Docker database with:
 
 ```bash
 docker compose stop mysql
 ```
 
-## 3. The role of `fraction-solver`
+The trained Linear A model is installed at `models/linear_a_signs.pt` (the
+`best.pt` checkpoint from the `linear_a_signs` training run, with 361 classes).
+The demo loads this file, or the path set through
+`SIGN_DETECTOR_WEIGHTS` in `.env`. Otherwise, it uses the generic `yolo26n.pt`,
+which has not been trained on Linear A characters.
 
-The [fraction-solver](fraction-solver/README.md) directory contains an independent
-Python research tool. Using tablet transcriptions, it turns quantities and totals
-into equations to investigate the values of fraction signs, with exact rational
-arithmetic.
+HT13 inference runs on CPU at image size 1024; a GPU and the training dataset
+are not needed to serve predictions. The model is loaded on the first request
+and reused. Restart the backend after changing its configuration.
 
-It complements visual analysis by exploring the numerical consistency of
-transcriptions and the limits of what can be inferred. The
-[study findings](fraction-solver/FINDINGS.md) indicate that the available
-arithmetic evidence is insufficient to determine all unknown values.
+- `GET /tablet-demo/ht13/predictions`: JSON containing image dimensions,
+  `trained` (true for the Linear A detector) and detections. Each detection has
+  a `label` from the model (sign ID and proposed reading when available),
+  `confidence` in percent, a PNG crop in `imageUrl`, and a normalized
+  `box` (`x`, `y`, `w`, `h`; top-left origin, values from 0 to 1).
+- `GET /tablet-demo/ht13`: PNG with predicted boxes and labels.
+- `GET /tablet-demo/ht13?annotated=false`: original image.
 
-This tool is not required for `npm run dev`. Its setup and commands are documented
-in its [README](fraction-solver/README.md); run those commands from the
-`fraction-solver/` directory. It also builds the training data for a Linear A sign
-detector, described next.
+Both prediction routes accept `?confidence=0.10` to lower the default threshold
+of 0.25 (allowed range: greater than 0, up to 1). Lower thresholds retain more
+uncertain detections. Confidence is a model score, not a verified pronunciation
+or a measure of overall accuracy. The frontend demo uses these predictions
+automatically. These routes do not require MySQL.
 
-## 4. Training data for a sign detector
+## 3. Prepare the data
 
-No hand labelling is needed. lineara.eu publishes, for each tablet, a tracing of the
-whole tablet and a crop of each sign cut from the same drawing. `fraction-solver`
-finds each crop on its tracing (estimating the scale where the tracing was shrunk),
-which gives the sign boxes, and writes them as a YOLO dataset
-([la/signboxes.py](fraction-solver/la/signboxes.py)). On the current corpus this
-gives 4,704 boxes on 730 tablets. HT 13 is held out because the demo shows it.
+The source files are already in `fraction-solver/data/`:
+
+- `cache/`: JSON records containing sign IDs, readings and image references.
+- `images/`: full tablet drawings and individual character crops.
+
+The generator locates each crop within its full tablet drawing and associates
+its bounding box with the sign information from the JSON. It does not use the
+arithmetic solver to prepare the dataset.
+
+Create a separate environment for data preparation and training. Use Python
+3.12+ (`python3` or `py -3.12` instead of `python` below if needed):
+
+```bash
+python -m venv .venv-train
+```
+
+Activate it with the command for your system:
+
+| System | Command |
+|---|---|
+| macOS / Linux | `source .venv-train/bin/activate` |
+| Windows PowerShell | `.\.venv-train\Scripts\Activate.ps1` |
+
+With this environment active, generate the data for the two models that read a
+tablet: a **detector** that finds signs and a **classifier** that names each one.
+
+```bash
+python -m pip install -r fraction-solver/requirements-data.txt
+cd fraction-solver
+python -m la.cli dataset --labels sign --workers 2   # boxes, one class: "sign"
+python -m la.cli crops                               # one image per sign, for the classifier
+python -m la.cli synth --count 1000                  # optional: synthetic training tablets
+cd ..
+```
+
+Why two models: one detector with 361 sign classes has to find and name signs at
+once, while 169 of those classes have a single example. A one-class detector
+learns from all 4,700 boxes at once, and a classifier trained on small crops can
+be retrained in minutes and rebalanced cheaply. `--labels identity` still builds
+the one-stage dataset, for comparison.
+
+The output is `fraction-solver/out/yolo_signs/`:
+
+```text
+images/train/    labels/train/
+images/val/      labels/val/
+images/test/     labels/test/
+data.yaml
+classes.json
+annotations.json
+report.json
+LICENCE.txt
+```
+
+An image and its annotation file share the same name. Each line in a label file
+contains `class_id center_x center_y width height`, with coordinates normalized
+to the image dimensions. `data.yaml` tells YOLO where the images are and how to
+interpret the class numbers.
+
+The `identity` mode creates one class per sign ID, including its reading when
+available: `AB77 (ka)`, for example. Signs without readings keep their IDs; signs
+without IDs use `unidentified`. The corpus also contains logogram and fraction
+notations, so not every label is a pronunciation.
+
+The split targets approximately 70% training, 15% validation and 15% testing.
+Faces of the same tablet and explicitly joined fragments stay together.
+HT13 is reserved for testing. Check `report.json` for actual counts, rejected
+matches and class coverage. In the current generated dataset, there are
+501 training images, 131 validation images and 99 test images; 82 of the 361
+classes have no training examples. These classes cannot be learned from this
+split, so review coverage before training a model intended to recognize all signs.
+
+Review automatic boxes before training. Some signs and numerical marks remain
+unannotated. The source images are drawings; performance on photographs must be
+evaluated separately.
+
+**Classifier crops** (`out/sign_crops/`) are cut from the detection boxes and keep
+the same split. Folders are sign IDs (`AB77/`); `classes.json` gives each ID's
+reading and roles. Rare signs are **resampled** in `train` only: a sign with `n`
+real crops gets `sqrt(n x 100)` (1 becomes 10, 25 become 50), the extra copies
+slightly tilted, stretched, thickened or thinned, or chipped at an edge, but never
+mirrored. Val and test hold one crop per real sign. Signs whose ID never occurs
+in train cannot be learnt; `report.json` counts them (33 of 657 test signs).
+
+**Synthetic tablets** (`la.cli synth`) are real train tracings with further train
+signs pasted into their blank space, at that tablet's sign size. Unlabelled
+numerals and ruling stay in place, so the detector still learns to ignore them.
+Nothing from val or test is used. The tablets are written to `images/synth/`, and
+`train.txt` lists them together with the real training images. Rebuilding the
+dataset deletes them.
+
+**Missing boxes and self-training.** A sign gets a box only if its lineara.eu
+crop matches the tracing, so some signs on the drawings have none. Training
+then treats them as background, and testing counts a correct detection of one as
+a false positive. A trained detector can point them out:
 
 ```bash
 cd fraction-solver
-python -m la.cli fetch      # once: cache the lineara.eu documents (~15 min)
-python -m la.cli images     # tracings and sign crops (~40 min, resumable)
-python -m la.cli dataset    # writes out/yolo_signs/ and prints a summary
-cd ..
-uv run --project backend yolo detect train data=fraction-solver/out/yolo_signs/data.yaml model=yolo26n.pt imgsz=1024 epochs=100
+python -m la.cli pseudo propose --weights ../runs/detect/sign_detector/weights/best.pt --split train
+# review out/yolo_signs/pseudo/train/sheet_*.png; candidates.csv: accept=1 keeps a box
+python -m la.cli pseudo accept out/yolo_signs/pseudo/train/candidates.csv
+python -m la.cli dataset --labels sign --workers 2    # merges data/labels/extra_boxes.csv
 ```
 
-Training writes `runs/detect/train/weights/best.pt`. It needs a GPU (or Google
-Colab) to finish in reasonable time. The demo does not use trained weights yet: it
-still loads `yolo26n.pt`, so pointing the backend at the trained model is a next step.
-`python -m la.cli dataset --labels role` gives one class per sign role
-(syllabogram, logogram, fraction, transaction) instead of a single `sign` class.
+In `train`, detections at confidence 0.8 or above are pre-ticked. For `val` and
+`test`, nothing is pre-ticked. Accept with `--source reviewed` only after a person
+has checked each box. Unreviewed boxes never reach val or test. Numerals have no
+class, so reject candidates drawn on tally strokes. `data/labels/extra_boxes.csv`
+is committed, because it is review work that cannot be regenerated.
 
-Known limitation: lineara.eu has crops only for signs, so numerals (tally strokes)
-and the occasional sign without a crop are left unboxed. A model trained on this
-data treats them as background and will not find numerals.
+**Moving to another computer:** the generated dataset and virtual environments
+are ignored by Git. Recreate the environment and either regenerate the dataset
+or copy `out/yolo_signs/`. If you copy it, update the absolute `path` in `data.yaml`
+to its new location. Keep `classes.json` and `data.yaml` with the trained model.
 
-The tracings are CC BY-NC-SA 4.0 (SigLA, lineara.eu). The images, the dataset and
-trained weights stay local and are ignored by Git; do not redistribute them.
+The source data comes from SigLA via lineara.eu under **CC BY-NC-SA 4.0**.
+Keep the attribution and licence with the dataset and derived models.
+
+## 4. Train and evaluate the model
+
+Keep `.venv-train` active. On the training computer, install PyTorch using the
+[official installation selector](https://pytorch.org/get-started/locally/),
+choosing the build for your operating system and GPU. Run its installation
+command inside this environment, then install Ultralytics:
+
+```bash
+python -m pip install "ultralytics>=8.4,<9.0"
+```
+
+For an NVIDIA GPU, check that PyTorch can use CUDA:
+
+```bash
+python -c "import torch; print('CUDA available:', torch.cuda.is_available())"
+```
+
+This should print `True` for CUDA training. If it prints `False`, check your
+PyTorch installation and GPU driver before starting a long run.
+
+Train the two models from the repository root. Each run takes about 1 to 1.5
+hours for the detector and 15 to 45 minutes for the classifier on a 6 GB laptop GPU:
+
+```bash
+python train.py detect   --name sign_detector    # finds signs (data: --labels sign)
+python train.py classify --name sign_classifier  # names them (data: la.cli crops)
+```
+
+[train.py](train.py) sets what matters for signs and leaves the rest at
+Ultralytics defaults:
+
+| Setting | Detector | Classifier | Why |
+|---|---|---|---|
+| Model | `yolo26n.pt` | `yolo26n-cls.pt` | Pretrained nano models |
+| `imgsz` | `1024` | `128` | The demo predicts at 1024; a sign crop needs little more than 128 |
+| `epochs` / `patience` | `150` / `30` | `100` / `25` | Stops early once validation stops improving |
+| `fliplr` | `0` | `0` | Never mirror: orientation is part of a sign's identity |
+| `degrees` | `3` | - | Scribes tilt slightly |
+| `scale` / `auto_augment` | default | `0.1` / none | Random crops keep 90-100% of the sign; variation comes from `la.augment` |
+| `workers` | `2` | `2` | Use `--workers 0` if RAM runs out (each worker loads its own PyTorch) |
+
+On a 16 GB machine, run one training at a time. Two at once ran out of memory.
+Add `--epochs`, `--batch`, `--seed` or `--model` to change a run. Outputs are under
+`runs/detect/<name>/` and `runs/classify/<name>/`: `weights/best.pt` (best on
+validation), `weights/last.pt` (resume with `yolo train resume model=.../last.pt`),
+`results.csv` and plots.
+
+### Evaluate
+
+```bash
+python evaluate.py --detector runs/detect/sign_detector/weights/best.pt     --classifier runs/classify/sign_classifier/weights/best.pt --name two_stage
+```
+
+This scores what the demo does, on the 99 `test` tablets: a labelled sign counts
+as **read** when a predicted box overlaps it (IoU at least 0.5) and names its sign
+ID. Without `--classifier`, a 361-class detector names signs itself, so both
+designs are scored the same way. Every rate has a 95% confidence interval from
+resampling whole tablets (`runs/eval/<name>.json` also has per-tablet counts).
+
+Results on the test split, at the demo's confidence threshold of 0.25:
+
+| Reader | Found (recall) | Precision | Read correctly (top-1) | In top 3 |
+|---|---|---|---|---|
+| Detector + classifier | 89.0% (85.0-92.2) | 87.6% (83.0-91.2) | **62.1%** (54.8-68.4) | 70.2% (62.8-76.5) |
+| 361-class detector, stopped at epoch 44 of 100* | 3.7% (2.2-5.2) | 77.4% (60.7-89.3) | 0.5% (0.0-1.0) | 0.5% |
+
+\*On a 6 GB GPU, the 361-class run needed `batch=4` and still ran out of GPU
+memory at epoch 45. It was far from converged (validation mAP50 0.007), so it is
+not a fair verdict on a fully trained 361-class model. Score that model with the
+same command to compare.
+
+Of the 657 test signs, 33 have sign IDs never seen in training, so no model
+trained on this split can name them: 62.1% read correctly is 65.4% of the signs
+that can be learnt. When the detector finds a sign, the classifier names it
+correctly 69.7% of the time. On HT 13, the demo tablet, 26 of its 27 signs are
+found and 24 are read correctly. The test labels miss some signs (see
+self-training above), so some correct detections still count as false positives.
+
+### Use the models in the application
+
+Copy three files into `models/` (create it if needed) and restart the backend:
+
+| File | From |
+|---|---|
+| `models/linear_a_signs.pt` | `runs/detect/sign_detector/weights/best.pt` |
+| `models/linear_a_classifier.pt` | `runs/classify/sign_classifier/weights/best.pt` |
+| `models/linear_a_classifier.json` | `fraction-solver/out/sign_crops/classes.json` (sign names and readings) |
+
+`SIGN_DETECTOR_WEIGHTS` and `SIGN_CLASSIFIER_WEIGHTS` in `.env` can point
+elsewhere; the JSON must sit beside the classifier, with the same name. Without a
+classifier, the demo uses the detector's own labels, so a 361-class detector
+still works on its own. With one, each prediction lists `candidates` (the top 3
+signs). Its `confidence` is the detector's confidence that a sign is there, times
+the classifier's probability for that sign. `detectionConfidence` gives the
+detector's part alone.

@@ -1,8 +1,10 @@
+<script setup>
+</script>
 <template>
   <main class="mx-auto flex max-w-3xl flex-col items-center gap-16 px-6 py-16 text-center">
 
     <section class="flex flex-col items-center gap-6">
-      <h1 class="text-5xl font-light sm:text-7xl">Lorem Ipsum</h1>
+      <h1 class="text-5xl font-light sm:text-7xl">Software Engineering Project Group 3</h1>
       <p class="max-w-2xl text-base leading-relaxed sm:text-lg">
         Welcome to our project website! The objective is to create a pattern recognition model for the
         Linear A language.
@@ -16,12 +18,20 @@
     </section>
 
     <section class="flex flex-col items-center gap-3">
-      <h2 class="text-xl font-bold">How does it work?</h2>
+      <h2 class="text-xl font-bold">Information</h2>
       <p class="max-w-2xl leading-relaxed">
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-        incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud
-        exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+        We will be soon implementing some features to allow users to upload their own data, make predictions
+        with our model and their own tablets, analyze their tablets and translate them into the known
+        interpretation of the Linear A language.
       </p>
     </section>
+
+    <section class="flex flex-col items-center gap-3">
+      <h2 class="text-xl font-bold">How does it work?</h2>
+      <p class="max-w-2xl leading-relaxed">
+        A trained model will be soon predicting your tablets!
+      </p>
+    </section>
+
   </main>
 </template>

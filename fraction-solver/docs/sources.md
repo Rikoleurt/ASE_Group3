@@ -25,7 +25,7 @@ Every external fact this project relies on, with how well it was checked.
 - Corpus size per `/ajaxgetfilter`: **5,932 documents over 29 collections** — Knossos 4,224, Pylos 1,004, Thebes 363, Mycenae 87, Tiryns 27, Khania 8, plus a long tail including inscribed vases. 281 writer values and 86 stylus values are exposed as facets.
 - Each record's `meta` block carries Site, Series, Subseries, Set, **Hand**, Stylus, Seal, Chronology and Preserved. An unattributed hand is written `-`, which must be read as absent rather than as a label.
 
-**Use.** Non-commercial research, held locally, not redistributed. `data/cache/` (Linear A) and `data/damos/` (Linear B) are both gitignored, and both manifests carry per-file checksums so a rebuild is reproducible without shipping the data. Any published output must carry the SigLA credit line for Linear A and the DAMOS credit line for Linear B. Derived measurements computed from the tracings are adaptations and inherit the non-commercial share-alike terms.
+**Use.** Non-commercial academic research. The Linear A cache (`data/cache/`, with the tracings and sign drawings in `data/images/`) is committed to the project repository with attribution so the web app works without a crawl; `data/damos/` (Linear B) is held locally and gitignored. Both manifests carry per-file checksums so a rebuild is reproducible. Any published output must carry the SigLA credit line for Linear A and the DAMOS credit line for Linear B. Derived measurements computed from the tracings are adaptations and inherit the non-commercial share-alike terms.
 
 **Not used:** `lineara.xyz` carries no licence at all; GORILA plate scans and the INSCRIBE 3D models are not openly licensed.
 
