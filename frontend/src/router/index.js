@@ -17,6 +17,11 @@ const routes = [
     component: () => import('../views/TabletReadingView.vue'),
   },
   {
+    path: '/analysis',
+    name: 'analysis',
+    component: () => import('../views/AnalysisView.vue'),
+  },
+  {
     path: '/login',
     name: 'login',
     component: () => import('../views/LoginView.vue'),
