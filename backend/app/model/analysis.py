@@ -29,6 +29,7 @@ class DetectedSign(BaseModel):
     crop: str  # PNG data URL of the box
     shape_guesses: list[dict] | None = None  # fraction signs only
     glyph: str | None = None  # the Unicode Linear A character, when there is one
+    meaning: str | None = None  # where agreed: "1/2", "wine", "total (KU-RO)"
     line: int = 0  # reading order: line, then position in the line
     order: int = 0
 
@@ -44,6 +45,7 @@ class FractionTerm(BaseModel):
     id: int  # the detected sign
     sign: str
     label: str  # J, E, ...
+    glyph: str | None  # its Unicode Linear A character
     value: str  # "1/2"; "?" for a sign without an agreed value
     tentative: bool
     line: int

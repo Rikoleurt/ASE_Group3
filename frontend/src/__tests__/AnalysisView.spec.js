@@ -44,7 +44,7 @@ describe('Analysis page', () => {
     expect(wrapper.get('img').attributes('src')).toBe('blob:preview')
     expect(wrapper.findAll('[data-testid="sign-box"]')).toHaveLength(analysis.signs.length)
     expect(wrapper.find('[data-testid="formula-box"]').exists()).toBe(true)
-    expect(wrapper.get('[data-testid="verdict"]').text()).toBe('The fractions do not balance: off by 1/2')
+    expect(wrapper.get('[data-testid="verdict"]').text()).toBe('The fractions do not balance: off by ½')
   })
 
   it('goes back to the upload box from the result', async () => {

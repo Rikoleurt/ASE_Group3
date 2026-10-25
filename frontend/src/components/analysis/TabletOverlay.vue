@@ -2,9 +2,10 @@
 // Draws the reader's boxes over whatever image is put in the slot: one box per
 // sign, coloured by role and settling on in reading order, then a dashed box
 // around each fraction formula, coloured by its verdict. Box coordinates are
-// fractions of the image size.
+// fractions of the image size. Hovering or focusing a box shows its SignCard.
 import { computed, ref } from 'vue'
 import { ROLES, formulaColor, prefersStill, roleKey } from './colors.js'
+import SignCard from './SignCard.vue'
 
 const props = defineProps({
   signs: { type: Array, default: () => [] },
@@ -17,8 +18,29 @@ const MARKERS = computed(() => new Set(props.formulas.flatMap((formula) => formu
 // Formula boxes appear once every sign's box is on.
 const FORMULA_DELAY = computed(() => props.signs.length * 60 + 400)
 
+const ACTIVE = ref(null)
+const ACTIVE_SIGN = computed(() => props.signs.find((sign) => sign.id === ACTIVE.value) ?? null)
+
 function percent(value) {
   return value * 100
+}
+
+function cssPercent(value) {
+  return `${Math.round(percent(value) * 10) / 10}%`
+}
+
+// Beside the box, on whichever side has more room; anchored at the bottom for low boxes.
+const CARD_STYLE = computed(() => {
+  const box = ACTIVE_SIGN.value?.box
+  if (!box) return {}
+  const horizontal = box.x + box.w / 2 < 0.5 ? { left: cssPercent(box.x + box.w + 0.01) } : { right: cssPercent(1 - box.x + 0.01) }
+  const vertical = box.y > 0.6 ? { bottom: cssPercent(1 - box.y - box.h) } : { top: cssPercent(box.y) }
+  return { ...horizontal, ...vertical }
+})
+
+function describe(sign) {
+  const meaning = sign.meaning ? `, means ${sign.meaning}` : ''
+  return `${sign.reading ?? sign.label} (${sign.sign ?? 'unidentified'}), ${ROLES[roleKey(sign, MARKERS.value)].label}${meaning}, ${Math.round(sign.confidence)}% confident`
 }
 </script>
 
@@ -58,12 +80,25 @@ function percent(value) {
         :width="percent(sign.box.w)"
         :height="percent(sign.box.h)"
         :stroke="ROLES[roleKey(sign, MARKERS)].color"
+        :class="{ active: ACTIVE === sign.id }"
         :style="{ animationDelay: `${index * 60}ms` }"
+        :aria-label="describe(sign)"
+        tabindex="0"
         fill="none"
-      >
-        <title>{{ sign.label }} ({{ Math.round(sign.confidence) }}%)</title>
-      </rect>
+        pointer-events="all"
+        @mouseenter="ACTIVE = sign.id"
+        @mouseleave="ACTIVE = null"
+        @focus="ACTIVE = sign.id"
+        @blur="ACTIVE = null"
+      />
     </svg>
+    <SignCard
+      v-if="SHOWN && ACTIVE_SIGN"
+      :sign="ACTIVE_SIGN"
+      :role-key="roleKey(ACTIVE_SIGN, MARKERS)"
+      class="pointer-events-none absolute z-30"
+      :style="CARD_STYLE"
+    />
     <button
       v-if="signs.length"
       type="button"
@@ -91,7 +126,13 @@ rect {
 .sign {
   stroke-width: 2.5;
   opacity: 0;
+  cursor: help;
+  outline: none;
   animation: settle 0.45s ease-out forwards;
+}
+
+.sign.active {
+  stroke-width: 5;
 }
 
 /* The formula box fades in, dashed, after the signs. */
