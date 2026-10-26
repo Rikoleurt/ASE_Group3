@@ -23,11 +23,19 @@ export function useAuth(mode) {
         body: JSON.stringify(payload),
       })
       if (!response.ok) {
+        const body = typeof response.json === 'function' ? await response.json().catch(() => null) : null
+        const duplicateField = body?.detail?.field
         error.value = {
           401: 'Incorrect username or password.',
-          409: 'An account with this email already exists. Please log in.',
           422: 'Please check your details.',
         }[response.status] || 'The service is unavailable. Please try again later.'
+        if (response.status === 409) {
+          error.value = duplicateField === 'email'
+            ? 'This email is already registered. Please log in or use another email.'
+            : duplicateField === 'username'
+              ? 'This username is already taken. Please choose another username.'
+              : 'This email or username is already in use. Please log in or choose different details.'
+        }
         return
       }
       const data = await response.json()
