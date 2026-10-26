@@ -52,14 +52,26 @@ created. It includes the demo account **`dev@ase3.com` / `dev`**. Database data
 persists between restarts; initialization is not repeated for an existing volume.
 If port 3306 is already occupied, set `MYSQL_PORT=3307` in `.env` before startup.
 
-For a database created before username uniqueness was added, review
-[fix_29.sql](backend/app/database/fix-29/fix_29.sql).
-Run its duplicate query in `ase3` and resolve any collisions by choosing distinct
-usernames for the affected accounts, then apply its `ALTER TABLE` once. The
-`utf8mb4_unicode_ci` collation also treats case variants as duplicates while
-preserving the spelling for display. Restarting Docker or rerunning `init.sql`
-does not update an existing table; the migration is required for registration
-to reject an already used username with HTTP 409.
+For a development database created before username uniqueness was added, stop
+the application, back up the database, then run
+[fix_29.sql](backend/app/database/fix-29/fix_29.sql) once. It lists duplicate
+usernames, **keeps the account with the smallest ID for each username**, deletes
+the other accounts, reports the number deleted, and adds the UNIQUE constraint.
+For example, `jason` with IDs 4, 14 and 20 keeps only ID 4, with its original
+email and password. The `utf8mb4_unicode_ci` collation also treats case variants
+as duplicates. If the accounts must all be kept, rename the duplicates manually
+instead of running the deletion statement. Run the complete file in your SQL
+client or from the repository root:
+
+```bash
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/fix-29/fix_29.sql
+```
+
+Adjust the host, port and user to your local configuration. MySQL DDL commits
+implicitly: a failure when adding the constraint does not undo the deletions.
+Restarting Docker or rerunning `init.sql` does not update an existing table;
+the migration is required for registration to reject an already used username
+with HTTP 409.
 
 To use an existing MySQL server instead, run `init.sql` as an administrator,
 create a database user with access to `ase3`, and set `MYSQL_HOST`, `MYSQL_PORT`,

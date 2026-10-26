@@ -3,7 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 
 from backend.app.data_controller.user_data_controller import DuplicateUserError, UserDataController
-from backend.app.model.user import LoginResponse, UserCreate, UserEmail, UserLogin, UserPublic, UserUsername
+from backend.app.model.user import (
+    LoginResponse, RegistrationConflict, UserCreate, UserEmail, UserLogin, UserPublic, UserUsername,
+)
 
 
 router = APIRouter(prefix="/users", tags=["users"])
@@ -13,7 +15,31 @@ def get_user_data_controller() -> UserDataController:
 
 UserController = Annotated[UserDataController, Depends(get_user_data_controller)]
 
-@router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register",
+    response_model=UserPublic,
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        status.HTTP_409_CONFLICT: {
+            "model": RegistrationConflict,
+            "description": "An account with this email or username already exists.",
+            "content": {
+                "application/json": {
+                    "examples": {
+                        "duplicate_username": {
+                            "summary": "Username already taken",
+                            "value": {"detail": {"code": "duplicate_user", "field": "username"}},
+                        },
+                        "duplicate_email": {
+                            "summary": "Email already registered",
+                            "value": {"detail": {"code": "duplicate_user", "field": "email"}},
+                        },
+                    },
+                },
+            },
+        },
+    },
+)
 def register(payload: UserCreate, user_data_controller: UserController) -> UserPublic:
     try:
         user = user_data_controller.create_user(
