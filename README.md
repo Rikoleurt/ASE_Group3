@@ -52,6 +52,15 @@ created. It includes the demo account **`dev@ase3.com` / `dev`**. Database data
 persists between restarts; initialization is not repeated for an existing volume.
 If port 3306 is already occupied, set `MYSQL_PORT=3307` in `.env` before startup.
 
+For a database created before username uniqueness was added, review
+[fix_29.sql](backend/app/database/fix-29/fix_29.sql).
+Run its duplicate query in `ase3` and resolve any collisions by choosing distinct
+usernames for the affected accounts, then apply its `ALTER TABLE` once. The
+`utf8mb4_unicode_ci` collation also treats case variants as duplicates while
+preserving the spelling for display. Restarting Docker or rerunning `init.sql`
+does not update an existing table; the migration is required for registration
+to reject an already used username with HTTP 409.
+
 To use an existing MySQL server instead, run `init.sql` as an administrator,
 create a database user with access to `ase3`, and set `MYSQL_HOST`, `MYSQL_PORT`,
 `MYSQL_USER` and `MYSQL_PASSWORD` in `.env`. `MYSQL_ROOT_PASSWORD` is only used

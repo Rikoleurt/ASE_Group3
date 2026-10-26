@@ -76,10 +76,11 @@ def test_mysql_configuration_uses_environment(monkeypatch):
     }
 
 
-def test_registration_stores_hash_and_returns_public_user(client, connection):
+@pytest.mark.parametrize("username", ["Student", "  Student\t"])
+def test_registration_stores_hash_and_returns_public_user(client, connection, username):
     cursor = connection.cursor.return_value
     cursor.lastrowid = 42
-    response = client.post("/users/register", json={"email": "Student@ASE3.com", "username": "Student", "password": "secret"})
+    response = client.post("/users/register", json={"email": "Student@ASE3.com", "username": username, "password": "secret"})
     assert response.status_code == 201
     assert response.json() == {"id": 42, "email": "student@ase3.com", "username": "Student"}
     sql, parameters = cursor.execute.call_args.args
@@ -94,10 +95,17 @@ def test_registration_stores_hash_and_returns_public_user(client, connection):
     connection.close.assert_called_once()
 
 
-def test_duplicate_email_rolls_back_and_returns_conflict(client, connection):
-    connection.cursor.return_value.execute.side_effect = IntegrityError(errno=ER_DUP_ENTRY)
+@pytest.mark.parametrize("message,field", [
+    ("Duplicate entry 'dev@ase3.com' for key 'user.uq_user_email'", "email"),
+    ("Duplicate entry 'dev' for key 'user.uq_user_username'", "username"),
+    ("Duplicate entry 'uq_user_email' for key 'uq_user_username'", "username"),
+    ("Duplicate entry 'dev' for key 'legacy_index'", None),
+])
+def test_duplicate_user_rolls_back_and_returns_conflict(client, connection, message, field):
+    connection.cursor.return_value.execute.side_effect = IntegrityError(msg=message, errno=ER_DUP_ENTRY)
     response = client.post("/users/register", json={"email": "dev@ase3.com", "username": "dev", "password": "dev"})
     assert response.status_code == 409
+    assert response.json() == {"detail": {"code": "duplicate_user", "field": field}}
     connection.rollback.assert_called_once()
     connection.commit.assert_not_called()
     connection.cursor.return_value.close.assert_called_once()
@@ -232,11 +240,12 @@ def test_profile_field_rejects_invalid_id(client, connection, field, user_id):
     connection.cursor.assert_not_called()
 
 
-def test_login_accepts_username_from_existing_frontend(client, connection):
+@pytest.mark.parametrize("username", ["dev", "  dev\t"])
+def test_login_accepts_username_from_existing_frontend(client, connection, username):
     connection.cursor.return_value.fetchone.return_value = {
         "id": 1, "email": "dev@ase3.com", "username": "dev", "password": hash_password("dev"),
     }
-    response = client.post("/users/login", json={"username": "dev", "password": "dev"})
+    response = client.post("/users/login", json={"username": username, "password": "dev"})
     assert response.status_code == 200
     assert response.json()["user"]["username"] == "dev"
     sql, parameters = connection.cursor.return_value.execute.call_args.args

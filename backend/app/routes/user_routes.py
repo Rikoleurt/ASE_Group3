@@ -2,13 +2,11 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, status
 
-from backend.app.data_controller.user_data_controller import UserDataController
+from backend.app.data_controller.user_data_controller import DuplicateUserError, UserDataController
 from backend.app.model.user import LoginResponse, UserCreate, UserEmail, UserLogin, UserPublic, UserUsername
 
 
 router = APIRouter(prefix="/users", tags=["users"])
-
-
 
 def get_user_data_controller() -> UserDataController:
     return UserDataController()
@@ -17,17 +15,17 @@ UserController = Annotated[UserDataController, Depends(get_user_data_controller)
 
 @router.post("/register", response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 def register(payload: UserCreate, user_data_controller: UserController) -> UserPublic:
-    user = user_data_controller.create_user(
-        email=str(payload.email),
-        username=str(payload.username),
-        password=payload.password,
-    )
-
-    if user is None:
+    try:
+        user = user_data_controller.create_user(
+            email=str(payload.email),
+            username=str(payload.username),
+            password=payload.password,
+        )
+    except DuplicateUserError as error:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="An account with this email already exists.",
-        )
+            detail={"code": "duplicate_user", "field": error.field},
+        ) from error
 
     return UserPublic(id=user.id, email=user.email, username=user.username)
 

@@ -10,7 +10,8 @@ CREATE TABLE IF NOT EXISTS `user` (
     username VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
     PRIMARY KEY (id),
-    UNIQUE KEY uq_user_email (email)
+    CONSTRAINT uq_user_email UNIQUE (email),
+    CONSTRAINT uq_user_username UNIQUE (username)
 ) ENGINE=InnoDB
   DEFAULT CHARSET=utf8mb4
   COLLATE=utf8mb4_unicode_ci;

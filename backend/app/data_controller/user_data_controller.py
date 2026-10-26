@@ -13,6 +13,14 @@ _PASSWORD_SCHEME = "pbkdf2_sha256"
 _PASSWORD_ITERATIONS = 600_000
 
 
+class DuplicateUserError(Exception):
+    """Raised when an email or username is already registered."""
+
+    def __init__(self, field: str | None = None):
+        self.field = field
+        super().__init__(field or "email or username")
+
+
 def _normalize_email(email: str) -> str:
     """
     Normalizes an email address to lower case.
@@ -23,11 +31,11 @@ def _normalize_email(email: str) -> str:
 
 def _normalize_username(username: str) -> str:
     """
-    Normalizes a username to lower case.
+    Trims surrounding whitespace; MySQL's configured collation compares case-insensitively.
     :param username:
-    :return: Lower case username
+    :return: Username without surrounding whitespace
     """
-    return username.strip().lower()
+    return username.strip()
 
 def hash_password(password: str) -> str:
     """
@@ -120,6 +128,7 @@ class UserDataController(DataController):
         :param username:
         :return:
         """
+        normalized_username = _normalize_username(username)
         with self.connection() as connection:
             cursor = connection.cursor(dictionary=True)
             try:
@@ -130,7 +139,7 @@ class UserDataController(DataController):
                     WHERE username = %s
                     LIMIT 1
                     """,
-                    (username,),
+                    (normalized_username,),
                 )
                 row = cursor.fetchone()
             finally:
@@ -199,7 +208,7 @@ class UserDataController(DataController):
     #endregion
 
     #region setter
-    def create_user(self, email: str, username: str, password: str) -> User | None:
+    def create_user(self, email: str, username: str, password: str) -> User:
         """
         Creates a new user using email, username, and password.
         :param email:
@@ -208,6 +217,7 @@ class UserDataController(DataController):
         :return:
         """
         normalized_email = _normalize_email(email)
+        normalized_username = _normalize_username(username)
         password_hash = hash_password(password)
 
         try:
@@ -219,20 +229,23 @@ class UserDataController(DataController):
                         INSERT INTO `user` (email, username, password)
                         VALUES (%s, %s, %s)
                         """,
-                        (normalized_email, username, password_hash),
+                        (normalized_email, normalized_username, password_hash),
                     )
                     user_id = cursor.lastrowid
                 finally:
                     cursor.close()
         except IntegrityError as error:
             if error.errno == ER_DUP_ENTRY:
-                return None
+                # Inspect the key, not the duplicate value (which is user input).
+                key = error.msg.rsplit(" for key ", 1)[-1].strip("'").rsplit(".", 1)[-1]
+                field = {"uq_user_email": "email", "uq_user_username": "username"}.get(key)
+                raise DuplicateUserError(field) from error
             raise
 
         return User(
             id=user_id,
             email=normalized_email,
-            username=username,
+            username=normalized_username,
             password=password_hash,
         )
     #endregion
