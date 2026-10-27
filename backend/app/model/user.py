@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 
@@ -32,6 +34,17 @@ class UserPublic(BaseModel):
     id: int
     username: str
     email: EmailStr
+
+
+class DuplicateUserDetail(BaseModel):
+    code: Literal["duplicate_user"]
+    field: Literal["email", "username"] | None = Field(
+        description="The conflicting field, or null if the database constraint is not recognized.",
+    )
+
+
+class RegistrationConflict(BaseModel):
+    detail: DuplicateUserDetail
 
 
 class LoginResponse(BaseModel):

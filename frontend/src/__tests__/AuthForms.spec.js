@@ -75,7 +75,7 @@ describe('Authentication forms', () => {
 
   it.each([
     ['/login', 401, 'Incorrect username or password.'],
-    ['/signup', 409, 'An account with this email already exists'],
+    ['/signup', 409, 'This email or username is already in use'],
     ['/signup', 422, 'Please check your details'],
     ['/login', 503, 'The service is unavailable'],
   ])('handles %s returning %s', async (path, status, message) => {
@@ -92,6 +92,34 @@ describe('Authentication forms', () => {
     await render()
     await submit()
     expect(wrapper.get('[role="alert"]').text()).toContain('Unable to reach the server')
+  })
+
+  it.each([
+    ['email', 'This email is already registered'],
+    ['username', 'This username is already taken'],
+    [null, 'This email or username is already in use'],
+  ])('explains a registration conflict on %s', async (field, message) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ detail: { code: 'duplicate_user', field } }),
+    }))
+    const router = await render('/signup')
+    await submit()
+    expect(wrapper.get('[role="alert"]').text()).toContain(message)
+    expect(router.currentRoute.value.path).toBe('/signup')
+    expect(wrapper.get('button[type="submit"]').element.disabled).toBe(false)
+  })
+
+  it('keeps a useful conflict message when the error body is not JSON', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => { throw new SyntaxError('Invalid JSON') },
+    }))
+    await render('/signup')
+    await submit()
+    expect(wrapper.get('[role="alert"]').text()).toContain('This email or username is already in use')
   })
 
   it('requires a non-blank username for registration', async () => {
