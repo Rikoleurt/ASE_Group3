@@ -10,9 +10,9 @@ language into modern prose.
 
 ## Demo
 
-[![Watch the Linear A tablet analysis demo](docs/media/demo-preview.jpg)](docs/media/DemoClip.mp4)
+https://github.com/user-attachments/assets/a9dcaa56-567a-4865-9641-fb5758889c16
 
-**[Watch DemoClip.mp4](docs/media/DemoClip.mp4)** (31 seconds).
+
 The recording demonstrates the image-analysis workflow. Click the preview to
 open the video.
 
