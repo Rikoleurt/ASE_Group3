@@ -1,8 +1,98 @@
-# ASE Group 3 — Linear A Character Detection
+# ASE Group 3 - Linear A Tablet Reader
 
-The project combines a Vue frontend, a FastAPI backend and a MySQL database.
-Its goal is to train YOLO26 to locate Linear A characters and display their
-associated readings, such as `AB77 (ka)`, with bounding boxes and confidence scores.
+An Advanced Software Engineering project that helps users inspect Linear A
+tablet images. Upload a drawing to locate signs, see proposed sign readings,
+and check whether detected quantities and fractions balance against a total.
+
+Linear A remains undeciphered. The application recognizes signs and displays
+proposed readings and arithmetic interpretations; it does not translate the
+language into modern prose.
+
+## Demo
+
+[![Watch the Linear A tablet analysis demo](docs/media/demo-preview.jpg)](docs/media/DemoClip.mp4)
+
+**[Watch DemoClip.mp4](docs/media/DemoClip.mp4)** (31 seconds).
+The recording demonstrates the image-analysis workflow. Click the preview to
+open the video.
+
+<!-- For a playable inline GitHub player, upload DemoClip.mp4 in GitHub's
+README editor and replace the preview above with the generated
+https://github.com/user-attachments/assets/... URL on its own line.
+Repository-relative MP4 links do not produce an inline README player. -->
+
+## Start here for peer review
+
+1. Watch the demo above for a quick view of the application.
+2. Follow [Install and run](#2-install-and-run-the-application), including the
+   **released model download**. A GPU and model training are not required to
+   review the application.
+3. Open [Analysis](http://localhost:5173/analysis) and upload a PNG or JPEG
+   tablet drawing. Inspect the sign boxes and proposed readings, hover over
+   detected signs, and examine the fraction equation and balance result.
+4. Open [Tablet Demo](http://localhost:5173/tablet-demo) for the built-in HT13
+   example, then [Tablet Reading](http://localhost:5173/tablet-reading) for the
+   corpus-based transcription and arithmetic view. The reading view may need
+   access to lineara.eu when its corpus data is not cached.
+5. Try signup/login and the profile page. The seeded demo account is
+   **`dev@ase3.com` / `dev`**; MySQL is required for account features.
+6. Use the [code map and checks](#code-map-and-checks) below to inspect the
+   implementation. [Data preparation](#3-prepare-the-data) and
+   [training/evaluation](#4-train-and-evaluate-the-model) document reproducibility
+   and are optional for running the demo.
+
+### What to assess
+
+- **Image analysis:** uploads produce sign boxes, confidence scores, candidate
+  readings, and a visual explanation of detected fractions and totals.
+- **Arithmetic:** the balance check explains whether the interpreted entries
+  match a detected total. Recognition mistakes can change that result.
+- **Usability and errors:** inspect hover details, empty results, unsupported
+  files, and unavailable services alongside the successful demo.
+- **Recognition limits:** the models were evaluated on tablet drawings, not
+  photographs. The two-stage reader reads 62.1% of labelled test signs correctly
+  at top-1; see [Evaluate](#evaluate) for the split, confidence intervals, and
+  annotation limitations. Confidence scores are not verified readings.
+
+## How the project fits together
+
+| Part | Responsibility |
+| --- | --- |
+| Vue frontend | Uploads, sign overlays, hover details, fraction display, and account screens |
+| FastAPI backend | Validates requests, runs inference, groups signs into lines, and returns analysis results |
+| Sign detector + classifier | Locates signs, then proposes their identities and readings |
+| Fraction and reading code | Interprets quantities and compares entries with totals |
+| MySQL | Stores user accounts; image analysis does not require the database |
+
+The upload flow is: **image → FastAPI → detector → classifier → line/formula
+analysis → Vue result view**. The corpus-based Tablet Reading view also uses
+transcriptions from lineara.eu.
+
+### Code map and checks
+
+| Location | Review focus |
+| --- | --- |
+| [frontend/src/views](frontend/src/views/) | Main user flows and result screens |
+| [frontend/src/components/analysis](frontend/src/components/analysis/) | Tablet overlay and fraction-check UI |
+| [backend/app/routes](backend/app/routes/) | API endpoints and request handling |
+| [backend/app/tablet_demo.py](backend/app/tablet_demo.py) | Model selection, CPU inference, and prediction serialization |
+| [backend/app/reading_pipeline](backend/app/reading_pipeline/) | Line grouping, glyphs, transliteration, and formulas |
+| [fraction-solver/la](fraction-solver/la/) | Corpus processing, sign data, and arithmetic research tools |
+| [backend/tests](backend/tests/) and [frontend/src/__tests__](frontend/src/__tests__/) | Backend and frontend regression tests |
+| [fraction-solver/tests](fraction-solver/tests/) | Solver and data-processing tests |
+
+After installing the dependencies below, run these from the repository root:
+
+```bash
+uv run --project backend --no-sync python -m pytest backend/tests -m "not mysql"
+npm --prefix frontend run test:unit -- --run
+npm --prefix frontend run build
+```
+
+MySQL integration tests additionally require the running, initialized database
+and `RUN_MYSQL_TESTS=1`. Tests needing trained weights or cached corpus files may
+skip when those assets are absent. See [fraction-solver/README.md](fraction-solver/README.md)
+for the research workflow.
 
 Run commands from the repository root unless a step says otherwise.
 
@@ -78,11 +168,11 @@ The trained Linear A sign reader (a sign detector and a classifier) ships as
 assets of the `signs-v1` GitHub release, not in git. Download it into `models/`:
 
 ```bash
-python scripts/fetch_models.py
+uv run --project backend --no-sync python scripts/fetch_models.py
 ```
 
-The repository is private: the script uses `GITHUB_TOKEN` (or `GH_TOKEN`) if set,
-otherwise the GitHub login git has saved. Files already present are kept; pass
+For restricted release access, the script uses `GITHUB_TOKEN` (or `GH_TOKEN`)
+if set, otherwise the GitHub login git has saved. Files already present are kept; pass
 `--force` to replace them, or `--tag` for another release. Without these files
 the app still runs, using the generic `yolo26n.pt`, which has not been trained
 on Linear A characters (responses then say `"trained": false`).
@@ -107,7 +197,9 @@ automatically. These routes do not require MySQL.
 
 ## 3. Prepare the data
 
-The source files are already in `fraction-solver/data/`:
+Data preparation uses the following local files under `fraction-solver/data/`
+(this directory is ignored by Git and is not included in a fresh checkout).
+See [fraction-solver/README.md](fraction-solver/README.md) for fetching the corpus:
 
 - `cache/`: JSON records containing sign IDs, readings and image references.
 - `images/`: full tablet drawings and individual character crops.
