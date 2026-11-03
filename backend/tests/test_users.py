@@ -258,3 +258,36 @@ def test_login_requires_nonblank_identifier(client, connection, username):
     response = client.post("/users/login", json={"username": username, "password": "dev"})
     assert response.status_code == 422
     connection.cursor.assert_not_called()
+
+
+def test_login_prefers_email_when_both_identifiers_are_given(client, connection):
+    connection.cursor.return_value.fetchone.return_value = {
+        "id": 1, "email": "dev@ase3.com", "username": "dev", "password": hash_password("dev"),
+    }
+    response = client.post("/users/login", json={"email": "dev@ase3.com", "username": "other", "password": "dev"})
+    assert response.status_code == 200
+    sql, parameters = connection.cursor.return_value.execute.call_args.args
+    assert "WHERE email = %s" in sql
+    assert parameters == ("dev@ase3.com",)
+
+
+def test_registration_accepts_maximum_lengths(client, connection):
+    connection.cursor.return_value.lastrowid = 5
+    username, password = "u" * 255, "p" * 1024
+    response = client.post("/users/register", json={"email": "dev@ase3.com", "username": username, "password": password})
+    assert response.status_code == 201
+    assert response.json()["username"] == username
+
+
+def test_unicode_password_round_trips():
+    stored = hash_password("pässwörd-🔑")
+    assert verify_password("pässwörd-🔑", stored)
+    assert not verify_password("passwort-🔑", stored)
+
+
+def test_login_does_not_reveal_password_hash(client, connection):
+    connection.cursor.return_value.fetchone.return_value = {
+        "id": 1, "email": "dev@ase3.com", "username": "dev", "password": hash_password("dev"),
+    }
+    body = client.post("/users/login", json={"email": "dev@ase3.com", "password": "dev"}).text
+    assert "pbkdf2" not in body
