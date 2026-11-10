@@ -2,7 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
 
-from backend.app.data_controller.analysis_data_controller import AnalysisDataController
+from backend.app.data_controller.analysis_data_controller import AnalysisDataController, ImageTooLargeError
 from backend.app.model.analysis import AnalysisResult
 
 
@@ -28,6 +28,11 @@ def analyze(file: UploadFile, analysis_data_controller: AnalysisController) -> A
             image_bytes=image_bytes,
             filename=file.filename,
         )
+    except ImageTooLargeError as error:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="The image dimensions are too large.",
+        ) from error
     except (FileNotFoundError, RuntimeError) as error:
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
@@ -36,7 +41,7 @@ def analyze(file: UploadFile, analysis_data_controller: AnalysisController) -> A
 
     if result is None:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Something went wrong with the image analysis",
         )
  
