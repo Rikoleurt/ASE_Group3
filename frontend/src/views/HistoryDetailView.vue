@@ -4,6 +4,9 @@ import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import { sessionFetch } from '../state/session'
 import AnalysisComment from "@/components/AnalysisComment.vue";
+import ShareAnalysis from '../components/ShareAnalysis.vue'
+import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import { sessionUser } from '../state/session'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,7 +52,11 @@ watch(() => route.params.id, load, { immediate: true })
         <section class="mt-6 rounded-3xl bg-card p-6">
           <h2 class="break-all text-xl font-bold">{{ detail.filename }}</h2>
           <p class="mt-2 text-ink/70"><time :datetime="detail.created_at">{{ new Date(detail.created_at).toLocaleString() }}</time> · {{ detail.format }} · {{ (detail.size_bytes / 1024).toFixed(1) }} KiB</p>
-          <p class="mt-4 text-sm text-ink/70">The original image is not retained. These are the results saved at the time of analysis.</p>
+          <TabletOverlay v-if="detail.image_url" class="mt-6" :signs="detail.result.signs" :formulas="detail.result.formulas">
+            <img :src="detail.image_url" :alt="detail.filename" class="w-full rounded-lg bg-white" />
+          </TabletOverlay>
+          <p v-else class="mt-4 text-sm text-ink/70">This older analysis has no saved image. Upload and analyze the tablet again to share it.</p>
+          <ShareAnalysis v-if="detail.image_url" :analysis-id="detail.id" :filename="detail.filename" :discussion-id="detail.discussion_id" />
           <p class="mt-6">{{ detail.result.summary }}</p>
           <dl class="mt-4 divide-y divide-ink/10">
             <div class="flex justify-between gap-4 py-3"><dt>Interpretation</dt><dd>{{ detail.result.symbol_interpretation }}</dd></div>
@@ -68,7 +75,8 @@ watch(() => route.params.id, load, { immediate: true })
         </section>
         <FractionCheck :analysis="detail.result" class="mt-6" />
 
-        <AnalysisComment :analysis-id="detail.id" />
+        <p class="mt-6 text-sm text-ink/70">History comments below are private and are not included when sharing.</p>
+        <AnalysisComment :analysis-id="detail.id" :current-user-id="sessionUser?.id ?? null" />
       </template>
     </div>
   </main>

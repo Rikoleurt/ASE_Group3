@@ -28,7 +28,8 @@ const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},
     {to: '/tablet-reading', label: 'Tablet Reading', icon: 'chart'},
-    {to: '/analysis', label: 'Analysis', icon: 'search'}
+    {to: '/analysis', label: 'Analysis', icon: 'search'},
+    {to: '/community', label: 'Community', icon: 'lines'}
 ]
 
 const userLinks = [
@@ -42,8 +43,8 @@ const activeClass = 'font-bold underline'
 </script>
 
 <template>
-    <header class="flex h-[60px] items-center justify-between bg-bar px-5 text-ink">
-        <nav class="flex items-center gap-6">
+    <header class="flex min-h-[60px] flex-wrap items-center justify-between gap-4 bg-bar px-5 py-2 text-ink">
+        <nav class="flex flex-wrap items-center gap-4">
             <RouterLink v-for="link in pageLinks"
                 :key="link.to"
                 :to="link.to"

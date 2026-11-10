@@ -10,6 +10,7 @@ from PIL import Image, UnidentifiedImageError
 
 from backend.app import tablet_demo
 from backend.app.data_controller.data_controller import DataController
+from backend.app.image_storage import store_image, remove_image
 from backend.app.model.analysis import (AnalysisResult, AnalysisMetadata, AnalysisHistoryDetail,
                                         Box, DetectedSign, FractionTerm, Line)
 from backend.app.model.analysis import Formula as FormulaModel, AnalysisComment
@@ -25,21 +26,30 @@ from la import values  # noqa: E402
 
 class AnalysisDataController(DataController):
     def save_analysis(self, user_id: int, filename: str, format: str, size_bytes: int,
-                      result: AnalysisResult) -> AnalysisMetadata:
-        """Store an immutable result snapshot, excluding uploaded pixel data."""
+                      result: AnalysisResult, *, image_bytes: bytes | None = None) -> AnalysisMetadata:
+        """Save the snapshot and private image reference in one SQL transaction."""
         created_at = datetime.now(timezone.utc)
         snapshot = result.model_dump(mode="json", exclude={"signs": {"__all__": {"crop"}}})
-        with self.connection() as connection:
-            cursor = connection.cursor()
-            try:
-                cursor.execute(
-                    "INSERT INTO analysis (user_id, created_at, filename, format, size_bytes, result_json) "
-                    "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (user_id, created_at.replace(tzinfo=None), filename, format, size_bytes, json.dumps(snapshot)),
-                )
-                analysis_id = cursor.lastrowid
-            finally:
-                cursor.close()
+        key = store_image(image_bytes, format) if image_bytes is not None else None
+        try:
+            with self.connection() as connection:
+                cursor = connection.cursor()
+                try:
+                    cursor.execute(
+                        "INSERT INTO analysis (user_id, created_at, filename, format, size_bytes, result_json) "
+                        "VALUES (%s, %s, %s, %s, %s, %s)",
+                        (user_id, created_at.replace(tzinfo=None), filename, format, size_bytes, json.dumps(snapshot)),
+                    )
+                    analysis_id = cursor.lastrowid
+                    if key:
+                        cursor.execute("INSERT INTO analysis_image (analysis_id, storage_key) VALUES (%s, %s)",
+                                       (analysis_id, key))
+                finally:
+                    cursor.close()
+        except Exception:
+            if key:
+                remove_image(key)
+            raise
         return AnalysisMetadata(id=analysis_id, created_at=created_at, filename=filename,
                                 format=format, size_bytes=size_bytes)
 
@@ -75,12 +85,31 @@ class AnalysisDataController(DataController):
                     "FROM analysis WHERE user_id = %s AND id = %s", (user_id, analysis_id),
                 )
                 row = cursor.fetchone()
+                if row is not None:
+                    cursor.execute("SELECT i.storage_key, d.id AS discussion_id FROM analysis a "
+                                   "LEFT JOIN analysis_image i ON i.analysis_id = a.id "
+                                   "LEFT JOIN community_discussion d ON d.analysis_id = a.id WHERE a.id = %s",
+                                   (analysis_id,))
+                    shared = cursor.fetchone()
+                    row["image_url"] = f"/api/analysis/{analysis_id}/image" if shared["storage_key"] else None
+                    row["discussion_id"] = shared["discussion_id"]
             finally:
                 cursor.close()
         if row is None:
             return None
         result = json.loads(row.pop("result_json"))
         return AnalysisHistoryDetail(**{**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc)}, result=result)
+
+    def get_image(self, user_id: int, analysis_id: int) -> tuple[str, str] | None:
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("SELECT i.storage_key, a.format FROM analysis a "
+                               "JOIN analysis_image i ON i.analysis_id = a.id WHERE a.id = %s AND a.user_id = %s",
+                               (analysis_id, user_id))
+                return cursor.fetchone()
+            finally:
+                cursor.close()
 
     def analyze(self, image_bytes: bytes, filename: str | None = None) -> AnalysisResult | None:
         """Read the signs on an uploaded image; None if it is not an image.

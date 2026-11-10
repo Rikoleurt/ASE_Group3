@@ -5,6 +5,7 @@ import { sessionFetch } from '../state/session'
 const router = useRouter()
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import ShareAnalysis from '../components/ShareAnalysis.vue'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -176,6 +177,7 @@ onBeforeUnmount(revokePreview)
             </dl>
 
             <RouterLink v-if="ANALYSIS.analysis_id" :to="`/profile/history/${ANALYSIS.analysis_id}`" class="mt-6 inline-block underline">Saved in your history →</RouterLink>
+            <ShareAnalysis v-if="ANALYSIS.analysis_id" :analysis-id="ANALYSIS.analysis_id" :filename="FILENAME" />
             <button
             type="button"
             class="mx-auto mt-8 block cursor-pointer rounded bg-bar px-6 py-1.5 hover:brightness-95"

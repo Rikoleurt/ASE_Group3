@@ -77,3 +77,6 @@ fraction-solver/data
 
 # Local working notes
 /docs/history-api.md
+
+# Private uploaded tablets; persist this directory separately from deployments.
+/storage/

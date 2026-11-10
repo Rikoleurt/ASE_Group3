@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { loadSession } from '../state/session'
 
 const routes = [
+  { path: '/community', name: 'community', component: () => import('../views/CommunityView.vue') },
+  { path: '/community/:id', name: 'discussion', component: () => import('../views/DiscussionView.vue') },
   {
     path: '/',
     name: 'home',

@@ -104,6 +104,8 @@ class AnalysisMetadata(BaseModel):
 
 class AnalysisHistoryDetail(AnalysisMetadata):
     result: AnalysisResult
+    image_url: str | None = None
+    discussion_id: int | None = None
 
 
 class AnalysisHistoryPage(BaseModel):
