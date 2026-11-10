@@ -1,4 +1,28 @@
 <script setup>
+import { onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+import { loadSession, logoutSession, sessionUser } from '../state/session'
+
+const router = useRouter()
+const loggingOut = ref(false)
+const logoutError = ref('')
+
+onMounted(() => loadSession().catch(() => {}))
+
+async function logout() {
+    if (loggingOut.value) return
+    loggingOut.value = true
+    logoutError.value = ''
+    try {
+        await logoutSession()
+        await router.push('/login')
+    } catch {
+        logoutError.value = 'Unable to log out. Please try again.'
+    } finally {
+        loggingOut.value = false
+    }
+}
+
 const avatarUrl = ''
 const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
@@ -65,6 +89,16 @@ const activeClass = 'font-bold underline'
         </nav>
 
         <div class="flex items-center gap-6">
+            <p v-if="logoutError" role="alert">{{ logoutError }}</p>
+            <button
+                v-if="sessionUser"
+                type="button"
+                :class="[linkClass, 'cursor-pointer disabled:cursor-wait']"
+                :disabled="loggingOut"
+                @click="logout">
+                {{ loggingOut ? 'Logging out…' : 'Log out' }}
+            </button>
+            <template v-else>
             <RouterLink
                 v-for="link in userLinks"
                 :key="link.to"
@@ -73,6 +107,7 @@ const activeClass = 'font-bold underline'
                 :exact-active-class="activeClass">
                 {{ link.label }}
             </RouterLink>
+            </template>
 
             <RouterLink
                 to="/profile"

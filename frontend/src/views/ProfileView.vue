@@ -1,10 +1,10 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { clearCurrentUserId, getCurrentUserId } from '../state/currentUser'
+import { loadSession, logoutSession } from '../state/session'
 
 const router = useRouter()
-const userId = ref(getCurrentUserId())
+const userId = ref(null)
 const profile = ref(null)
 const loading = ref(false)
 const error = ref('')
@@ -14,40 +14,33 @@ const user = computed(() => ({
   details: [
     { label: 'Username', value: profile.value?.username ?? '—' },
     { label: 'Email', value: profile.value?.email ?? '—' },
-    // The backend does not expose clustering statistics yet.
     { label: 'Symbols clustered', value: '—' },
   ],
 }))
 
 async function loadProfile() {
-  if (!userId.value || loading.value) return
+  if (loading.value) return
   loading.value = true
   error.value = ''
   profile.value = null
   try {
-    const responses = await Promise.all([
-      fetch(`/api/users/${userId.value}/username`),
-      fetch(`/api/users/${userId.value}/email`),
-    ])
-    if (responses.some((response) => response.status === 404)) {
-      clearCurrentUserId()
-      userId.value = null
-      error.value = 'Your account could not be found. Please log in again.'
-    } else if (responses.some((response) => !response.ok)) {
-      error.value = 'Your profile could not be loaded. Please try again.'
-    } else {
-      const [username, email] = await Promise.all(responses.map((response) => response.json()))
-      profile.value = { username: username.username, email: email.email }
-    }
-  } catch {
-    error.value = 'Unable to reach the server. Check your connection and try again.'
+    profile.value = await loadSession()
+    userId.value = profile.value.id
+  } catch (failure) {
+    error.value = failure.status === 401 ? failure.message : 'Your profile could not be loaded. Please try again.'
+    userId.value = null
   } finally {
     loading.value = false
   }
 }
 
 async function logout() {
-  clearCurrentUserId()
+  try {
+    await logoutSession()
+  } catch {
+    error.value = 'Unable to log out. Please try again.'
+    return
+  }
   profile.value = null
   await router.push('/login')
 }
@@ -57,6 +50,10 @@ onMounted(loadProfile)
 
 <template>
   <main class="px-4 pt-10 pb-10">
+    <nav aria-label="Profile" class="mx-auto mb-8 flex max-w-4xl gap-4">
+      <RouterLink to="/profile" aria-current="page" class="rounded bg-bar px-4 py-2 font-bold">Profile</RouterLink>
+      <RouterLink to="/profile/history" class="rounded px-4 py-2 hover:bg-bar focus-visible:outline-2">History</RouterLink>
+    </nav>
     <section
       class="mx-auto flex max-w-4xl flex-col items-center gap-8 rounded-3xl bg-card p-8 sm:flex-row sm:items-start sm:gap-12 sm:p-10"
     >
@@ -76,11 +73,11 @@ onMounted(loadProfile)
 
         <p v-if="loading" role="status">Loading your profile…</p>
         <p v-if="error" role="alert">{{ error }}</p>
-        <template v-if="!userId">
+        <template v-if="!userId && !loading">
           <p v-if="!error">Log in to view your profile.</p>
           <RouterLink to="/login">Log in</RouterLink>
         </template>
-        <button v-else-if="error" type="button" @click="loadProfile">Try again</button>
+        <button v-if="error" type="button" @click="loadProfile">Try again</button>
 
         <dl v-if="profile" class="mt-6 divide-y divide-ink/10 text-left">
           <div

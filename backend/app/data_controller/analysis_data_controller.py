@@ -1,5 +1,7 @@
 import time
 import sys
+import json
+from datetime import datetime, timezone
 from collections import Counter
 from io import BytesIO
 
@@ -7,7 +9,9 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 
 from backend.app import tablet_demo
-from backend.app.model.analysis import AnalysisResult, Box, DetectedSign, FractionTerm, Line
+from backend.app.data_controller.data_controller import DataController
+from backend.app.model.analysis import (AnalysisResult, AnalysisMetadata, AnalysisHistoryDetail,
+                                        Box, DetectedSign, FractionTerm, Line)
 from backend.app.model.analysis import Formula as FormulaModel
 from backend.app.reading_pipeline.formula import Formula, Term, find_formulas, fmt
 from backend.app.reading_pipeline.glyphs import glyph
@@ -19,7 +23,65 @@ if str(tablet_demo.ROOT / "fraction-solver") not in sys.path:
 from la import values  # noqa: E402
 
 
-class AnalysisDataController:
+class AnalysisDataController(DataController):
+    def save_analysis(self, user_id: int, filename: str, format: str, size_bytes: int,
+                      result: AnalysisResult) -> AnalysisMetadata:
+        """Store an immutable result snapshot, excluding uploaded pixel data."""
+        created_at = datetime.now(timezone.utc)
+        snapshot = result.model_dump(mode="json", exclude={"signs": {"__all__": {"crop"}}})
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(
+                    "INSERT INTO analysis (user_id, created_at, filename, format, size_bytes, result_json) "
+                    "VALUES (%s, %s, %s, %s, %s, %s)",
+                    (user_id, created_at.replace(tzinfo=None), filename, format, size_bytes, json.dumps(snapshot)),
+                )
+                analysis_id = cursor.lastrowid
+            finally:
+                cursor.close()
+        return AnalysisMetadata(id=analysis_id, created_at=created_at, filename=filename,
+                                format=format, size_bytes=size_bytes)
+
+    def list_analyses(self, user_id: int, limit: int,
+                      before: tuple[datetime, int] | None = None) -> list[AnalysisMetadata]:
+        """Read one extra row to determine whether another page exists."""
+        clause = ""
+        params = [user_id]
+        if before:
+            clause = " AND (created_at < %s OR (created_at = %s AND id < %s))"
+            params.extend([before[0], before[0], before[1]])
+        params.append(limit + 1)
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version "
+                    "FROM analysis WHERE user_id = %s" + clause +
+                    " ORDER BY created_at DESC, id DESC LIMIT %s", tuple(params),
+                )
+                rows = cursor.fetchall()
+            finally:
+                cursor.close()
+        return [AnalysisMetadata(**{**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc)}) for row in rows]
+
+    def get_analysis(self, user_id: int, analysis_id: int) -> AnalysisHistoryDetail | None:
+        """A foreign record is indistinguishable from a missing record."""
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version, result_json "
+                    "FROM analysis WHERE user_id = %s AND id = %s", (user_id, analysis_id),
+                )
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
+        if row is None:
+            return None
+        result = json.loads(row.pop("result_json"))
+        return AnalysisHistoryDetail(**{**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc)}, result=result)
+
     def analyze(self, image_bytes: bytes, filename: str | None = None) -> AnalysisResult | None:
         """Read the signs on an uploaded image; None if it is not an image.
 

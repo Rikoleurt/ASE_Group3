@@ -50,7 +50,7 @@ describe('Authentication forms', () => {
     await submit()
     expect(fetch).toHaveBeenCalledWith('/api/users/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'ASE' },
       body: JSON.stringify({ username: 'Developer', password: 'dev' }),
     })
     expect(router.currentRoute.value.path).toBe('/profile')

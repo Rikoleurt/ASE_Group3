@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { loadSession } from '../state/session'
 
 const routes = [
   {
@@ -21,6 +22,8 @@ const routes = [
     name: 'analysis',
     component: () => import('../views/AnalysisView.vue'),
   },
+  { path: '/profile/history', name: 'history', component: () => import('../views/HistoryView.vue') },
+  { path: '/profile/history/:id', name: 'history-detail', component: () => import('../views/HistoryDetailView.vue') },
   {
     path: '/login',
     name: 'login',
@@ -42,6 +45,17 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: routes,
+})
+
+router.beforeEach(async (to) => {
+  if (to.path === '/analysis' || to.path.startsWith('/profile')) {
+    try {
+      await loadSession()
+    } catch (error) {
+      if (error.status === 401) return { path: '/login', query: { redirect: to.fullPath } }
+      // Let the page display a retryable error if the server is unavailable.
+    }
+  }
 })
 
 export default router

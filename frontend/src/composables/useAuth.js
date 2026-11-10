@@ -1,9 +1,10 @@
 import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import { rememberUserId } from '../state/currentUser'
+import { useRoute, useRouter } from 'vue-router'
+import { acceptSession, loginDestination } from '../state/session'
 
 export function useAuth(mode) {
   const router = useRouter()
+  const route = useRoute()
   const username = ref('')
   const email = ref('')
   const password = ref('')
@@ -19,7 +20,7 @@ export function useAuth(mode) {
       if (mode === 'register') payload.email = email.value.trim()
       const response = await fetch(`/api/users/${mode}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'ASE' },
         body: JSON.stringify(payload),
       })
       if (!response.ok) {
@@ -42,8 +43,8 @@ export function useAuth(mode) {
       if (mode === 'register') {
         await router.push('/login')
       } else if (data.authenticated && Number.isSafeInteger(data.user?.id) && data.user.id > 0) {
-        rememberUserId(data.user.id)
-        await router.push('/profile')
+        acceptSession(data)
+        await router.push(loginDestination(route))
       } else {
         error.value = 'Your login could not be confirmed. Please try again.'
       }

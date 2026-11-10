@@ -1,5 +1,8 @@
 <script setup>
 import { ref, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
+import { sessionFetch } from '../state/session'
+const router = useRouter()
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 
@@ -19,8 +22,12 @@ async function analyze(file) {
         const formData = new FormData()
         formData.append('file', file)
 
-        const response = await fetch('/api/analysis', { method: 'POST', body: formData })
+        const response = await sessionFetch('/api/analysis', { method: 'POST', body: formData })
 
+        if (response.status === 401) {
+            await router.push({ path: '/login', query: { redirect: '/analysis' } })
+            return
+        }
         if (!response.ok) {
             const body = await response.json().catch(() => null)
             throw new Error(
@@ -31,6 +38,9 @@ async function analyze(file) {
         ANALYSIS.value = await response.json()
         STATUS.value = 'result'
     } catch (error) {
+        if (error.status === 401) {
+            await router.push({ path: '/login', query: { redirect: '/analysis' } })
+        }
         STATUS.value = 'idle'
         ERROR_MESSAGE.value =
         error instanceof TypeError ? 'Couldnt reach the server' : error.message
@@ -165,6 +175,7 @@ onBeforeUnmount(revokePreview)
                 </div>
             </dl>
 
+            <RouterLink v-if="ANALYSIS.analysis_id" :to="`/profile/history/${ANALYSIS.analysis_id}`" class="mt-6 inline-block underline">Saved in your history →</RouterLink>
             <button
             type="button"
             class="mx-auto mt-8 block cursor-pointer rounded bg-bar px-6 py-1.5 hover:brightness-95"

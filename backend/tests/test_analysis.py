@@ -1,6 +1,10 @@
 from io import BytesIO
 from pathlib import Path
 from unittest.mock import patch
+from datetime import datetime, timezone
+from backend.app.auth import require_csrf
+from backend.app.model.user import UserPublic
+from backend.app.model.analysis import AnalysisMetadata
 
 import numpy as np
 import pytest
@@ -30,9 +34,16 @@ def _png(size=(8, 8), colour="white") -> bytes:
 
 
 def _post(content: bytes):
-    with patch("mysql.connector.connect", side_effect=AssertionError("No DB for analysis")):
-        with TestClient(app) as client:
-            return client.post("/analysis", files={"file": ("sign.png", content, "image/png")})
+    app.dependency_overrides[require_csrf] = lambda: UserPublic(id=1, email="dev@ase3.com", username="dev")
+    try:
+        with patch("mysql.connector.connect", side_effect=AssertionError("No DB in reader tests")), patch(
+            "backend.app.data_controller.analysis_data_controller.AnalysisDataController.save_analysis",
+            return_value=AnalysisMetadata(id=1, created_at=datetime.now(timezone.utc), filename="sign.png", format="PNG", size_bytes=len(content)),
+        ):
+            with TestClient(app) as client:
+                return client.post("/analysis", files={"file": ("sign.png", content, "image/png")})
+    finally:
+        app.dependency_overrides.pop(require_csrf, None)
 
 
 def test_valid_image_is_analysed_by_the_generic_model_without_weights():

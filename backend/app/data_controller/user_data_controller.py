@@ -1,17 +1,17 @@
 import hashlib
 import hmac
 import secrets
+from datetime import datetime
 
 from mysql.connector.errors import IntegrityError
 from mysql.connector.errorcode import ER_DUP_ENTRY
 
 from backend.app.data_controller.data_controller import DataController
-from backend.app.model.user import User
+from backend.app.model.user import User, UserPublic
 
 
 _PASSWORD_SCHEME = "pbkdf2_sha256"
 _PASSWORD_ITERATIONS = 600_000
-
 
 class DuplicateUserError(Exception):
     """Raised when an email or username is already registered."""
@@ -268,3 +268,38 @@ class UserDataController(DataController):
             return None
         return user
     #endregion
+
+    def create_session(self, user_id: int, token_hash: str, expires_at: datetime) -> None:
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("DELETE FROM user_session WHERE expires_at <= UTC_TIMESTAMP(6)")
+                cursor.execute(
+                    "INSERT INTO user_session (user_id, token_hash, expires_at) VALUES (%s, %s, %s)",
+                    (user_id, token_hash, expires_at),
+                )
+            finally:
+                cursor.close()
+
+    def get_session_user(self, token_hash: str) -> UserPublic | None:
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    "SELECT u.id, u.email, u.username FROM user_session s "
+                    "JOIN `user` u ON u.id = s.user_id "
+                    "WHERE s.token_hash = %s AND s.expires_at > UTC_TIMESTAMP(6)",
+                    (token_hash,),
+                )
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
+        return UserPublic(**row) if row else None
+
+    def delete_session(self, token_hash: str) -> None:
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("DELETE FROM user_session WHERE token_hash = %s", (token_hash,))
+            finally:
+                cursor.close()

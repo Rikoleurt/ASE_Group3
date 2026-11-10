@@ -31,7 +31,7 @@ def connection(monkeypatch):
 @pytest.fixture
 def client(connection):
     # Exercise routes, controllers, hashing and SQL; replace only the DB driver.
-    with TestClient(app) as client:
+    with TestClient(app, headers={"X-Requested-With": "ASE"}) as client:
         yield client
 
 
@@ -135,11 +135,13 @@ def test_login_returns_public_user(client, connection):
     }
     response = client.post("/users/login", json={"email": "DEV@ase3.com", "password": "dev"})
     assert response.status_code == 200
-    assert response.json() == {"authenticated": True, "user": {"id": 1, "email": "dev@ase3.com", "username": "dev"}}
-    sql, parameters = connection.cursor.return_value.execute.call_args.args
+    assert response.json().pop("csrf_token")
+    assert {k: v for k, v in response.json().items() if k != "csrf_token"} == {"authenticated": True, "user": {"id": 1, "email": "dev@ase3.com", "username": "dev"}}
+    sql, parameters = connection.cursor.return_value.execute.call_args_list[0].args
     assert "WHERE email = %s" in sql
     assert parameters == ("dev@ase3.com",)
-    connection.close.assert_called_once()
+    assert "HttpOnly" in response.headers["set-cookie"]
+    assert connection.close.call_count == 2
 
 
 @pytest.mark.parametrize("exists", [True, False])
@@ -193,15 +195,16 @@ def test_routes_support_controller_injection():
     controller.authenticate.return_value = User(id=7, email="dev@ase3.com", username="dev", password="private-hash")
     app.dependency_overrides[get_user_data_controller] = lambda: controller
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"X-Requested-With": "ASE"}) as client:
             response = client.post("/users/login", json={"email": "dev@ase3.com", "password": "dev"})
-        assert response.json() == {"authenticated": True, "user": {"id": 7, "email": "dev@ase3.com", "username": "dev"}}
+        assert response.json().pop("csrf_token")
+        assert {k: v for k, v in response.json().items() if k != "csrf_token"} == {"authenticated": True, "user": {"id": 7, "email": "dev@ase3.com", "username": "dev"}}
     finally:
         app.dependency_overrides.clear()
 
 
 def test_health_and_openapi_import_without_mysql():
-    with TestClient(app) as client:
+    with TestClient(app, headers={"X-Requested-With": "ASE"}) as client:
         assert client.get("/health").json() == {"status": "ok"}
         paths = client.get("/openapi.json").json()["paths"]
     assert "post" in paths["/users/register"]
@@ -248,7 +251,7 @@ def test_login_accepts_username_from_existing_frontend(client, connection, usern
     response = client.post("/users/login", json={"username": username, "password": "dev"})
     assert response.status_code == 200
     assert response.json()["user"]["username"] == "dev"
-    sql, parameters = connection.cursor.return_value.execute.call_args.args
+    sql, parameters = connection.cursor.return_value.execute.call_args_list[0].args
     assert "WHERE username = %s" in sql
     assert parameters == ("dev",)
 

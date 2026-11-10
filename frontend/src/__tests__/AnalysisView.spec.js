@@ -16,7 +16,9 @@ afterEach(() => {
 })
 
 async function upload(response) {
-  const fetch = vi.fn().mockResolvedValue(response)
+  const fetch = vi.fn((url) => Promise.resolve(url === '/api/users/me'
+    ? { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }
+    : response))
   vi.stubGlobal('fetch', fetch)
   wrapper = mount(AnalysisView)
   const input = wrapper.get('input[type="file"]')

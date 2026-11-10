@@ -47,9 +47,13 @@ class RegistrationConflict(BaseModel):
     detail: DuplicateUserDetail
 
 
-class LoginResponse(BaseModel):
-    authenticated: bool
+class SessionUser(BaseModel):
     user: UserPublic
+    csrf_token: str
+
+
+class LoginResponse(SessionUser):
+    authenticated: bool
 
 
 class UserEmail(BaseModel):

@@ -1,6 +1,15 @@
 from typing import Annotated
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response, Query, status
+from datetime import datetime, timedelta, timezone
+import secrets
+from mysql.connector import Error as DatabaseError
+from backend.app.auth import (CurrentUser, AuthenticatedWrite, COOKIE_NAME, SESSION_SECONDS,
+                              cookie_secure, csrf_token, token_hash, require_ajax)
+from backend.app.model.user import SessionUser
+from backend.app.model.analysis import AnalysisHistoryDetail, AnalysisHistoryPage, ApiError
+from backend.app.data_controller.analysis_data_controller import AnalysisDataController
 
 from backend.app.data_controller.user_data_controller import DuplicateUserError, UserDataController
 from backend.app.model.user import (
@@ -56,8 +65,8 @@ def register(payload: UserCreate, user_data_controller: UserController) -> UserP
     return UserPublic(id=user.id, email=user.email, username=user.username)
 
 
-@router.post("/login", response_model=LoginResponse, status_code=status.HTTP_200_OK)
-def login(payload: UserLogin, user_data_controller: UserController) -> LoginResponse:
+@router.post("/login", response_model=LoginResponse, dependencies=[Depends(require_ajax)], responses={401: {"model": ApiError}, 403: {"model": ApiError}, 503: {"model": ApiError}})
+def login(payload: UserLogin, user_data_controller: UserController, request: Request, response: Response) -> LoginResponse:
     user = user_data_controller.authenticate(
         email=str(payload.email) if payload.email is not None else None,
         username=payload.username,
@@ -70,10 +79,83 @@ def login(payload: UserLogin, user_data_controller: UserController) -> LoginResp
             detail="Invalid email or password.",
         )
 
+    token = secrets.token_urlsafe(32)
+    try:
+        if old_token := request.cookies.get(COOKIE_NAME):
+            user_data_controller.delete_session(token_hash(old_token))
+        user_data_controller.create_session(user.id, token_hash(token),
+                                            datetime.now(timezone.utc).replace(tzinfo=None) + timedelta(seconds=SESSION_SECONDS))
+    except DatabaseError as error:
+        raise HTTPException(503, "Session storage is unavailable.") from error
+    response.set_cookie(COOKIE_NAME, token, max_age=SESSION_SECONDS, httponly=True,
+                        secure=cookie_secure(), samesite="lax", path="/")
+    response.headers["Cache-Control"] = "no-store"
     return LoginResponse(
+        csrf_token=csrf_token(token),
         authenticated=True,
         user=UserPublic(id=user.id, email=user.email, username=user.username),
     )
+
+
+@router.get("/me", response_model=SessionUser, responses={401: {"model": ApiError}, 503: {"model": ApiError}})
+def me(request: Request, user: CurrentUser):
+    return SessionUser(user=user, csrf_token=csrf_token(request.cookies[COOKIE_NAME]))
+
+
+@router.post("/logout", status_code=204, responses={401: {"model": ApiError}, 403: {"model": ApiError}, 503: {"model": ApiError}})
+def logout(request: Request, response: Response, user: AuthenticatedWrite, controller: UserController):
+    try:
+        controller.delete_session(token_hash(request.cookies[COOKIE_NAME]))
+    except DatabaseError as error:
+        raise HTTPException(503, "Session storage is unavailable.") from error
+    response.delete_cookie(COOKIE_NAME, path="/", secure=cookie_secure(), httponly=True, samesite="lax")
+
+
+def history_controller():
+    return AnalysisDataController()
+
+
+HistoryController = Annotated[AnalysisDataController, Depends(history_controller)]
+
+
+@router.get("/me/analyses", response_model=AnalysisHistoryPage,
+            responses={401: {"model": ApiError}, 422: {"description": "Invalid cursor or limit"}, 503: {"model": ApiError}})
+def history(user: CurrentUser, controller: HistoryController,
+            limit: Annotated[int, Query(ge=1, le=100)] = 20,
+            cursor: Annotated[str | None, Query(max_length=100)] = None):
+    before = None
+    if cursor:
+        try:
+            date, identifier = urlsafe_b64decode(cursor.encode()).decode().split("|", 1)
+            stamp = datetime.fromisoformat(date)
+            identifier = int(identifier)
+            if stamp.tzinfo is not None or stamp.year < 1000 or not 1 <= identifier <= 2**64 - 1:
+                raise ValueError()
+            before = (stamp, identifier)
+        except (ValueError, UnicodeError) as error:
+            raise HTTPException(422, "Invalid history cursor.") from error
+    try:
+        rows = controller.list_analyses(user.id, limit, before)
+    except DatabaseError as error:
+        raise HTTPException(503, "History storage is unavailable.") from error
+    next_cursor = None
+    if len(rows) > limit:
+        last = rows[limit - 1]
+        next_cursor = urlsafe_b64encode(f"{last.created_at.replace(tzinfo=None).isoformat()}|{last.id}".encode()).decode()
+    return AnalysisHistoryPage(items=rows[:limit], next_cursor=next_cursor)
+
+
+@router.get("/me/analyses/{analysis_id}", response_model=AnalysisHistoryDetail,
+            response_model_exclude_none=True,
+            responses={401: {"model": ApiError}, 404: {"model": ApiError}, 503: {"model": ApiError}})
+def history_detail(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: CurrentUser, controller: HistoryController):
+    try:
+        result = controller.get_analysis(user.id, analysis_id)
+    except DatabaseError as error:
+        raise HTTPException(503, "History storage is unavailable.") from error
+    if result is None:
+        raise HTTPException(404, "Analysis not found.")
+    return result
 
 
 @router.get("/{user_id}/email", response_model=UserEmail)
