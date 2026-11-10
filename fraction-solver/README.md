@@ -8,7 +8,9 @@ Twelve of the seventeen fraction signs have published values (Corazza et al. 202
 
 ## Install and run
 
-Requires Python 3.11+, `requests`, `sympy`, `pytest`.
+Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/). Dependencies are
+declared in [pyproject.toml](pyproject.toml) and locked in `uv.lock`; install them
+once with `uv sync --dev`, then prefix the commands below with `uv run`.
 
 ```bash
 python -m la.cli fetch      # crawl and cache lineara.eu (resumable, polite, ~15 min)

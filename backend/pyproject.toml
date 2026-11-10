@@ -10,7 +10,17 @@ dependencies = [
     "mysql-connector-python>=9.0,<10.0",
     "ultralytics>=8.4,<9.0",
     "python-multipart>=0.0.32",
+    # The sign reader imports fraction-solver's `la` package, which needs SciPy.
+    "scipy>=1.11,<2",
 ]
+
+[project.optional-dependencies]
+# CPU-only PyTorch for CI and machines without a GPU: `uv sync --extra cpu`.
+# Without it, Linux installs PyPI's torch, which bundles CUDA (several GB) and
+# is what GPU training needs. `gpu` selects that default build; it exists so the
+# two can be declared as conflicting, which lets uv lock both variants.
+cpu = ["torch", "torchvision"]
+gpu = ["torch", "torchvision"]
 
 [dependency-groups]
 dev = [
@@ -20,3 +30,13 @@ dev = [
 
 [tool.uv]
 package = false
+conflicts = [[{ extra = "cpu" }, { extra = "gpu" }]]
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", extra = "cpu", marker = "sys_platform == 'linux'" }]
+torchvision = [{ index = "pytorch-cpu", extra = "cpu", marker = "sys_platform == 'linux'" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
