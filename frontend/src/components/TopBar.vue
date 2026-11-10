@@ -28,7 +28,7 @@ const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},
     {to: '/tablet-reading', label: 'Tablet Reading', icon: 'chart'},
-    {to: '/analysis', label: 'Analysis', icon: 'chart'},
+    {to: '/analysis', label: 'Analysis', icon: 'search'}
 ]
 
 const userLinks = [
@@ -50,40 +50,65 @@ const activeClass = 'font-bold underline'
                 :class="linkClass"
                 :exact-active-class="activeClass">
 
-            <svg v-if="link.icon === 'home'" class="h-6 w-6" viewBox="0 0 24 24">
-                <path fill="currentColor" d="M12 3 1.5 12.5H5V21h5.5v-6h3v6H19v-8.5h3.5z" />
-            </svg>
+                <svg v-if="link.icon === 'home'" class="h-6 w-6" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M12 3 1.5 12.5H5V21h5.5v-6h3v6H19v-8.5h3.5z" />
+                </svg>
 
-            <svg v-else-if="link.icon === 'book'" class="h-6 w-6" viewBox="0 0 24 24">
-                <path
-                    fill="currentColor"
-                    fill-rule="evenodd"
-                    d="M6 2h13a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 4v2.5h7V6Z"
-                />
-            </svg>
+                <svg v-else-if="link.icon === 'book'" class="h-6 w-6" viewBox="0 0 24 24">
+                    <path
+                        fill="currentColor"
+                        fill-rule="evenodd"
+                        d="M6 2h13a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 4v2.5h7V6Z"
+                    />
+                </svg>
 
-            <svg v-else-if="link.icon === 'lines'" class="h-6 w-6" viewBox="0 0 24 24">
-                <path
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    d="M4 6h16M4 12h10M4 18h13"
-                />
-            </svg>
+                <svg v-else-if="link.icon === 'lines'" class="h-6 w-6" viewBox="0 0 24 24">
+                    <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        d="M4 6h16M4 12h10M4 18h13"
+                    />
+                </svg>
 
-            <svg v-else class="h-6 w-6" viewBox="0 0 24 24">
-                <path
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M3 3v18h18M7 15l4-5 3 3 5-7"
-                />
-            </svg>
+                <svg v-else-if="link.icon === 'search'" class="h-6 w-6" viewBox="0 0 24 24">
+                    <circle
+                        cx="10.8"
+                        cy="10.8"
+                        r="7"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                    />
+                    <path
+                        d="m16 16 5 5"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    />
+                </svg>
 
-            <span>{{ link.label }}</span>
+                <svg v-else class="h-6 w-6" viewBox="0 0 24 24">
+                    <path
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M3 3v18h18M7 15l4-5 3 3 5-7"
+                    />
+                </svg>
+
+                <span class="grid">
+                    <span class="invisible col-start-1 row-start-1 font-bold">
+                        {{ link.label }}
+                    </span>
+                    <span class="col-start-1 row-start-1">
+                        {{ link.label }}
+                    </span>
+                </span>
             </RouterLink>
 
         </nav>
