@@ -12,6 +12,9 @@ dependencies = [
     "python-multipart>=0.0.32",
     # The sign reader imports fraction-solver's `la` package, which needs SciPy.
     "scipy>=1.11,<2",
+    # Ultralytics patches Image.open to load pi-heif on any decode error and tries to
+    # pip-install it at request time when missing, turning a bad upload into a 500.
+    "pi-heif>=1.4,<2",
 ]
 
 [project.optional-dependencies]

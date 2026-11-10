@@ -84,7 +84,7 @@ green. When a change fixes the bug, the test passes, and CI **fails** with
 signal to remove the marker in the same pull request as the fix, so the test
 then guards against the bug coming back.
 
-Current known bug: #27 (decompression-bomb uploads).
+Current known bugs: none.
 
 ## When the API changes
 

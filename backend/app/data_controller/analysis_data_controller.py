@@ -19,16 +19,27 @@ if str(tablet_demo.ROOT / "fraction-solver") not in sys.path:
 from la import values  # noqa: E402
 
 
+class ImageTooLargeError(ValueError):
+    """The image declares more pixels than it is safe to decode."""
+
+
 class AnalysisDataController:
     def analyze(self, image_bytes: bytes, filename: str | None = None) -> AnalysisResult | None:
         """Read the signs on an uploaded image; None if it is not an image.
 
-        Raises FileNotFoundError or RuntimeError when no model can run.
+        Raises ImageTooLargeError when the image declares more than
+        Image.MAX_IMAGE_PIXELS pixels, and FileNotFoundError or RuntimeError
+        when no model can run.
         """
         try:
             image = Image.open(BytesIO(image_bytes))
+            # Pillow only warns between 1x and 2x MAX_IMAGE_PIXELS, so check before decoding.
+            if image.width * image.height > Image.MAX_IMAGE_PIXELS:
+                raise ImageTooLargeError
             image.load()
             image = image.convert("RGB")
+        except Image.DecompressionBombError as error:
+            raise ImageTooLargeError from error
         except (UnidentifiedImageError, OSError):
             return None
 
