@@ -12,7 +12,7 @@ from backend.app import tablet_demo
 from backend.app.data_controller.data_controller import DataController
 from backend.app.model.analysis import (AnalysisResult, AnalysisMetadata, AnalysisHistoryDetail,
                                         Box, DetectedSign, FractionTerm, Line)
-from backend.app.model.analysis import Formula as FormulaModel
+from backend.app.model.analysis import Formula as FormulaModel, AnalysisComment
 from backend.app.reading_pipeline.formula import Formula, Term, find_formulas, fmt
 from backend.app.reading_pipeline.glyphs import glyph
 from backend.app.reading_pipeline.lines import group_lines
@@ -128,6 +128,54 @@ class AnalysisDataController(DataController):
             lines=lines,
             formulas=[_formula(formula, by_id) for formula in formulas],
         )
+    
+    def _owns_analysis(self, cursor, user_id: int, analysis_id: int) -> bool:
+        cursor.execute("SELECT 1 FROM analysis WHERE id = %s AND user_id = %s", (analysis_id, user_id))
+        return cursor.fetchone() is not None
+
+    def list_comments(self, user_id: int, analysis_id: int) -> list[AnalysisComment] | None:
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                if not self._owns_analysis(cursor, user_id, analysis_id):
+                    return None
+                cursor.execute(
+                    "SELECT id, analysis_id, author_id, created_at, body FROM analysis_comment "
+                    "WHERE analysis_id = %s ORDER BY created_at, id LIMIT 500", (analysis_id,),
+                )
+                rows = cursor.fetchall()
+            finally:
+                cursor.close()
+        return [AnalysisComment(**{**r, "created_at": r["created_at"].replace(tzinfo=timezone.utc)}) for r in rows]
+
+    def add_comment(self, user_id: int, analysis_id: int, body: str) -> AnalysisComment | None:
+        created_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                if not self._owns_analysis(cursor, user_id, analysis_id):
+                    return None
+                cursor.execute(
+                    "INSERT INTO analysis_comment (analysis_id, author_id, created_at, body) VALUES (%s, %s, %s, %s)",
+                    (analysis_id, user_id, created_at, body),
+                )
+                comment_id = cursor.lastrowid
+                connection.commit()
+            finally:
+                cursor.close()
+        return AnalysisComment(id=comment_id, analysis_id=analysis_id, author_id=user_id,
+                            created_at=created_at.replace(tzinfo=timezone.utc), body=body)
+
+    def delete_comment(self, user_id: int, comment_id: int) -> bool:
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("DELETE FROM analysis_comment WHERE id = %s AND author_id = %s", (comment_id, user_id))
+                deleted = cursor.rowcount > 0
+                connection.commit()
+            finally:
+                cursor.close()
+        return deleted
 
 
 def _fallback(signs: list[DetectedSign]) -> str:
