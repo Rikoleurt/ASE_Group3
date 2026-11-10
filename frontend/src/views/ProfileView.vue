@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { forgetSession, loadSession, sessionFetch } from '../state/session'
+import { loadSession, logoutSession } from '../state/session'
 
 const router = useRouter()
 const userId = ref(null)
@@ -36,15 +36,11 @@ async function loadProfile() {
 
 async function logout() {
   try {
-    const response = await sessionFetch('/api/users/logout', { method: 'POST' })
-    if (!response.ok && response.status !== 401) throw new Error('Logout failed')
-  } catch (failure) {
-    if (failure.status !== 401) {
-      error.value = 'Unable to log out. Please try again.'
-      return
-    }
+    await logoutSession()
+  } catch {
+    error.value = 'Unable to log out. Please try again.'
+    return
   }
-  forgetSession()
   profile.value = null
   await router.push('/login')
 }

@@ -1,15 +1,19 @@
+import { ref } from 'vue'
 import { clearCurrentUserId, rememberUserId } from './currentUser'
 
 let csrfToken = null
+export const sessionUser = ref(null)
 
 export function acceptSession(data) {
   csrfToken = data.csrf_token
   rememberUserId(data.user.id)
+  sessionUser.value = data.user
   return data.user
 }
 
 export function forgetSession() {
   csrfToken = null
+  sessionUser.value = null
   clearCurrentUserId()
 }
 
@@ -40,4 +44,14 @@ export async function sessionFetch(url, options = {}) {
 export function loginDestination(route) {
   const next = route.query.redirect
   return typeof next === 'string' && /^\/(?!\/)/.test(next) && !next.includes('\\') ? next : '/profile'
+}
+
+export async function logoutSession() {
+  try {
+    const response = await sessionFetch('/api/users/logout', { method: 'POST' })
+    if (!response.ok && response.status !== 401) throw new Error('Logout failed')
+  } catch (failure) {
+    if (failure.status !== 401) throw failure
+  }
+  forgetSession()
 }
