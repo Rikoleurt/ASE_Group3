@@ -22,7 +22,7 @@ def test_mysql_registration_login_uniqueness_and_seed():
     controller = UserDataController()
     email = f"test-{uuid4().hex}@ase3.com"
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"X-Requested-With": "ASE"}) as client:
             seed = client.post("/users/login", json={"email": "dev@ase3.com", "password": "dev"})
             assert seed.status_code == 200
             assert "password" not in seed.json()["user"]
@@ -76,7 +76,7 @@ def test_mysql_duplicate_username_is_rejected(variant):
         "whitespace": f"  {username}\t",
     }[variant]
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"X-Requested-With": "ASE"}) as client:
             first = client.post("/users/register", json={
                 "email": emails[0], "username": username, "password": "first-secret",
             })
@@ -110,7 +110,7 @@ def test_mysql_concurrent_registrations_cannot_share_username():
     emails = [f"race-a-{token}@ase3.com", f"race-b-{token}@ase3.com"]
     start = Barrier(2)
     try:
-        with TestClient(app) as client:
+        with TestClient(app, headers={"X-Requested-With": "ASE"}) as client:
             def register(email):
                 start.wait(timeout=10)
                 return client.post("/users/register", json={

@@ -73,6 +73,14 @@ Restarting Docker or rerunning `init.sql` does not update an existing table;
 the migration is required for registration to reject an already used username
 with HTTP 409.
 
+Uploads now require a logged-in account and are saved under **Profile → History**.
+For an existing database, apply
+[017_history.sql](backend/app/database/migration-17/017_history.sql), and add
+`SESSION_COOKIE_SECURE=0` to your existing `.env` for local HTTP development.
+Use `SESSION_COOKIE_SECURE=1` in production over HTTPS. See the
+[history API and setup guide](docs/history-api.md) for the migration command,
+session behavior and request specifications. Images and sign crops are not stored.
+
 To use an existing MySQL server instead, run `init.sql` as an administrator,
 create a database user with access to `ase3`, and set `MYSQL_HOST`, `MYSQL_PORT`,
 `MYSQL_USER` and `MYSQL_PASSWORD` in `.env`. `MYSQL_ROOT_PASSWORD` is only used

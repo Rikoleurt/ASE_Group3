@@ -16,11 +16,9 @@ afterEach(() => {
 
 describe('App navigation', () => {
   it('connects login, profile loading and logout without changing navigation', async () => {
-    vi.stubGlobal('fetch', vi.fn(async (url) => ({
+    vi.stubGlobal('fetch', vi.fn(async () => ({
       ok: true,
-      json: async () => url.endsWith('/login')
-        ? { authenticated: true, user: { id: 7, email: 'dev@ase3.com' } }
-        : url.endsWith('/username') ? { username: 'Developer' } : { email: 'dev@ase3.com' },
+      json: async () => ({ authenticated: true, user: { id: 7, username: 'Developer', email: 'dev@ase3.com' }, csrf_token: 'csrf' }),
     })))
     const router = createRouter({
       history: createMemoryHistory(),
@@ -31,6 +29,8 @@ describe('App navigation', () => {
         { path: '/signup', component: { template: '<h1>Signup</h1>' } },
         { path: '/login', component: LoginView },
         { path: '/profile', component: ProfileView },
+        { path: '/profile/history', component: { template: '<p>History</p>' } },
+        { path: '/tablet-reading', component: { template: '<p>Reading</p>' } },
       ],
     })
     await router.push('/login')

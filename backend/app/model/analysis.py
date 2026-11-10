@@ -1,3 +1,6 @@
+from datetime import datetime
+from typing import Literal
+
 from pydantic import BaseModel
 
 
@@ -26,7 +29,7 @@ class DetectedSign(BaseModel):
     detection_confidence: float  # percent: the detector's part alone
     box: Box
     candidates: list[Candidate]  # the classifier's top signs, best first
-    crop: str  # PNG data URL of the box
+    crop: str | None = None  # PNG data URL; absent in saved history
     shape_guesses: list[dict] | None = None  # fraction signs only
     glyph: str | None = None  # the Unicode Linear A character, when there is one
     meaning: str | None = None  # where agreed: "1/2", "wine", "total (KU-RO)"
@@ -82,3 +85,30 @@ class AnalysisResult(BaseModel):
     signs: list[DetectedSign]  # in reading order
     lines: list[Line] = []
     formulas: list[Formula] = []
+
+
+class SavedAnalysisResult(AnalysisResult):
+    analysis_id: int
+    created_at: datetime
+
+
+class AnalysisMetadata(BaseModel):
+    id: int
+    created_at: datetime
+    filename: str
+    format: Literal["PNG", "JPEG"]
+    size_bytes: int
+    result_schema_version: int = 1
+
+
+class AnalysisHistoryDetail(AnalysisMetadata):
+    result: AnalysisResult
+
+
+class AnalysisHistoryPage(BaseModel):
+    items: list[AnalysisMetadata]
+    next_cursor: str | None = None
+
+
+class ApiError(BaseModel):
+    detail: str
