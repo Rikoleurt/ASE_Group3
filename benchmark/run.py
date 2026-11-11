@@ -106,6 +106,75 @@ def train_seconds(run_dirs) -> float | None:
     return total
 
 
+def score(summary: dict, all_records: dict[str, list[M.TabletRecord]]) -> None:
+    """Fill every scored model's metrics, intervals and comparison with the reference, in place."""
+    results, ref_name = summary["models"], summary["reference"]
+    draws = M.resample_indices(summary["tablets"], summary["resamples"])
+    for name, records in all_records.items():
+        stages = results[name]["stages"]
+
+        def metric(rs, st=stages):
+            return M.all_metrics(rs, st["detection"], st["identification"])
+        results[name].update({
+            "metrics": metric(records), "ci95": M.bootstrap(records, metric, draws),
+            "counts": M.counts(records),
+            "sweep": M.sweep(records) if stages["detection"] else [],
+            "coverage_curve": M.coverage_curve(records) if stages["identification"] else [],
+        })
+    reference = all_records.get(ref_name)
+    for name, records in all_records.items():
+        if reference is None or name == ref_name:
+            continue
+        a, b = results[name]["stages"], results[ref_name]["stages"]
+
+        def shared(rs, a=a, b=b):
+            return M.all_metrics(rs, a["detection"] and b["detection"], a["identification"] and b["identification"])
+        results[name]["vs_reference"] = M.paired_difference(records, reference, shared, draws)
+
+
+def write(out: Path, summary: dict, all_records: dict[str, list[M.TabletRecord]]) -> None:
+    results = summary["models"]
+    (out / "results.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    with (out / "records.json").open("w", encoding="utf-8") as f:
+        json.dump({n: [asdict(r) for r in rs] for n, rs in all_records.items()}, f)
+    with (out / "results.csv").open("w", newline="", encoding="utf-8") as f:
+        w = csv.writer(f)
+        w.writerow(["model", "metric", "value", "ci_lo", "ci_hi", "diff_vs_reference", "diff_lo", "diff_hi", "verdict"])
+        for name, r in results.items():
+            for key, value in r.get("metrics", {}).items():
+                lo, hi = r["ci95"].get(key, (None, None))
+                d = r.get("vs_reference", {}).get(key, {})
+                w.writerow([name, key, value, lo, hi, d.get("diff"), d.get("lo"), d.get("hi"), d.get("verdict")])
+    for name, r in results.items():
+        if "metrics" not in r:
+            continue
+        m = r["metrics"]
+        parts = [f"{k} {m[k]:.3f}" for k in ("read_top1", "recall", "ap50", "id_top1", "id_macro_top1") if k in m]
+        print(f"  {name:<22} " + "  ".join(parts))
+    print(f"Written to {out}")
+
+
+def load_records(out: Path) -> dict[str, list[M.TabletRecord]]:
+    raw = json.loads((out / "records.json").read_text(encoding="utf-8"))
+    return {n: [M.TabletRecord(r["tablet"], r["truth_signs"], r["truth_learnable"],
+                               [M.Detection(**d) for d in r["detections"]],
+                               [M.Identification(**i) for i in r["identifications"]]) for r in rs]
+            for n, rs in raw.items()}
+
+
+def rescore(out: Path, reference: str | None = None) -> Path:
+    """Recompute every metric of a finished run from its saved predictions, without the models."""
+    summary = json.loads((out / "results.json").read_text(encoding="utf-8"))
+    if reference:
+        summary["reference"] = reference
+    records = load_records(out)
+    for r in summary["models"].values():
+        r.pop("vs_reference", None)
+    score(summary, records)
+    write(out, summary, records)
+    return out
+
+
 def main(argv: list[str] | None = None) -> Path:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--models", type=Path, default=MODELS_FILE)
@@ -119,7 +188,11 @@ def main(argv: list[str] | None = None) -> Path:
     parser.add_argument("--threads", type=int, default=2)
     parser.add_argument("--limit", type=int, help="first N tablets only (smoke tests)")
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--rescore", type=Path, metavar="RUN_DIR",
+                        help="recompute the metrics of a finished run from its saved predictions")
     args = parser.parse_args(argv)
+    if args.rescore:
+        return rescore(args.rescore, args.reference if args.reference != "signs-v1" else None)
     if args.split == "test" and not args.final:
         parser.error("the test split is for final candidates only: add --final (each run is logged)")
 
@@ -137,7 +210,6 @@ def main(argv: list[str] | None = None) -> Path:
     annotations = json.loads((args.dataset / "annotations.json").read_text(encoding="utf-8"))
     seen = train_counts(annotations)
     tablets = [t for t in annotations if t["split"] == args.split][: args.limit]
-    draws = M.resample_indices(len(tablets), args.resamples)
     stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
     out = args.out or OUT_DIR / f"{stamp}-{args.split}"
     out.mkdir(parents=True, exist_ok=True)
@@ -160,17 +232,10 @@ def main(argv: list[str] | None = None) -> Path:
         seconds = time.time() - started
         latency = sorted(model.time_app(args.dataset / t["image"]) for t in tablets[: args.latency_tablets])
 
-        def metric(rs, m=model):
-            return M.all_metrics(rs, m.detects, m.identifies)
-
         files = [p if p.is_absolute() else ROOT / p for p in weights]
         results[name] = {
             "kind": entry["kind"], "description": entry.get("description", ""),
             "stages": {"detection": model.detects, "identification": model.identifies},
-            "metrics": metric(records), "ci95": M.bootstrap(records, metric, draws),
-            "counts": M.counts(records),
-            "sweep": M.sweep(records) if model.detects else [],
-            "coverage_curve": M.coverage_curve(records) if model.identifies else [],
             "latency_s_median": latency[len(latency) // 2] if latency else None,
             "weights_mb": round(sum(f.stat().st_size for f in files) / 1e6, 2),
             "weights_sha256": {str(w): sha(f) for w, f in zip(weights, files)},
@@ -179,31 +244,11 @@ def main(argv: list[str] | None = None) -> Path:
         }
         all_records[name] = records
 
-    reference = all_records.get(args.reference)
-    for name, records in all_records.items():
-        if reference is None or name == args.reference:
-            continue
-        model_kind = results[name]["stages"]
-        ref_kind = results[args.reference]["stages"]
-
-        def shared(rs, a=model_kind, b=ref_kind):
-            return M.all_metrics(rs, a["detection"] and b["detection"], a["identification"] and b["identification"])
-        results[name]["vs_reference"] = M.paired_difference(records, reference, shared, draws)
-
     summary = {"split": args.split, "tablets": len(tablets), "dataset": str(args.dataset),
                "reference": args.reference, "resamples": args.resamples, "threads": args.threads,
                "stamp": stamp, "operating_conf": M.OPERATING_CONF, "models": results}
-    (out / "results.json").write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
-    with (out / "records.json").open("w", encoding="utf-8") as f:
-        json.dump({n: [asdict(r) for r in rs] for n, rs in all_records.items()}, f)
-    with (out / "results.csv").open("w", newline="", encoding="utf-8") as f:
-        w = csv.writer(f)
-        w.writerow(["model", "metric", "value", "ci_lo", "ci_hi", "diff_vs_reference", "diff_lo", "diff_hi", "verdict"])
-        for name, r in results.items():
-            for key, value in r.get("metrics", {}).items():
-                lo, hi = r["ci95"].get(key, (None, None))
-                d = r.get("vs_reference", {}).get(key, {})
-                w.writerow([name, key, value, lo, hi, d.get("diff"), d.get("lo"), d.get("hi"), d.get("verdict")])
+    score(summary, all_records)
+    write(out, summary, all_records)
     if args.split == "test":
         log = OUT_DIR / "test_runs.csv"
         new = not log.exists()
@@ -213,13 +258,6 @@ def main(argv: list[str] | None = None) -> Path:
                 w.writerow(["stamp", "models", "out"])
             w.writerow([stamp, " ".join(all_records), str(out)])
 
-    for name, r in results.items():
-        if "metrics" not in r:
-            continue
-        m = r["metrics"]
-        parts = [f"{k} {m[k]:.3f}" for k in ("read_top1", "recall", "ap50", "id_top1", "id_macro_top1") if k in m]
-        print(f"  {name:<22} " + "  ".join(parts))
-    print(f"Written to {out}")
     return out
 
 

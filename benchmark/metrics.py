@@ -30,7 +30,7 @@ COVERAGES = (0.5, 0.8, 1.0)
 ECE_BINS = 15
 BUCKETS = ("unseen", "1", "2-4", "5+")
 LOWER_IS_BETTER = {"id_ece"}
-PIVOTAL = {"id_macro_top1"}   # biased under tablet resampling: see `_interval`
+MACRO = "id_macro_top1"      # resampled within each sign, not by tablet: see `_macro_draws`
 
 
 def bucket_of(train_count: int) -> str:
@@ -226,35 +226,47 @@ def resample_indices(n: int, resamples: int = 1000, seed: int = 0) -> np.ndarray
     return np.random.default_rng(seed).integers(0, n, size=(resamples, n))
 
 
-def _interval(values: list[float], level: float, key: str = "", point: float = float("nan"),
-              bounds: tuple[float, float] = (0.0, 1.0)) -> tuple[float, float]:
-    """Percentile interval; for metrics in `PIVOTAL`, the basic (pivotal) bootstrap interval.
-
-    A resample of tablets drops rare signs more often than common ones, so a
-    per-sign average is biased upward across resamples and its percentile
-    interval can miss the estimate itself. The basic interval reflects the
-    resampled spread around the point estimate instead, which corrects that shift.
-    """
+def _interval(values: list[float], level: float) -> tuple[float, float]:
     v = np.asarray(values, dtype=float)
     v = v[~np.isnan(v)]
     if not len(v):
         return float("nan"), float("nan")
     tail = (1 - level) / 2 * 100
-    lo, hi = float(np.percentile(v, tail)), float(np.percentile(v, 100 - tail))
-    if key in PIVOTAL and not np.isnan(point):
-        lo, hi = 2 * point - hi, 2 * point - lo
-        lo, hi = max(bounds[0], lo), min(bounds[1], hi)
-    return lo, hi
+    return float(np.percentile(v, tail)), float(np.percentile(v, 100 - tail))
+
+
+def _macro_hits(records: list[TabletRecord]) -> dict[str, np.ndarray]:
+    per: dict[str, list[bool]] = defaultdict(list)
+    for i in _idents(records):
+        per[i.sign].append(bool(i.labels) and i.labels[0] == i.sign)
+    return {k: np.array(v, dtype=float) for k, v in per.items()}
+
+
+def _macro_draws(hits: dict[str, np.ndarray], resamples: int, seed: int) -> dict[str, np.ndarray]:
+    """Per sign, resampled indices of its attestations: the set of signs stays fixed.
+
+    Resampling tablets instead drops rare signs more often than common ones, which
+    shifts a per-sign average (rare signs are read worse) and leaves its interval
+    off the estimate. Sharing these indices between models pairs the comparison.
+    """
+    rng = np.random.default_rng(seed)
+    return {k: rng.integers(0, len(v), size=(resamples, len(v))) for k, v in sorted(hits.items())}
+
+
+def _macro_values(hits: dict[str, np.ndarray], draws: dict[str, np.ndarray]) -> np.ndarray:
+    return np.mean([hits[k][d].mean(axis=1) for k, d in draws.items()], axis=0)
 
 
 def bootstrap(records: list[TabletRecord], metric: Callable[[list[TabletRecord]], dict[str, float]],
               draws: np.ndarray, level: float = 0.95) -> dict[str, tuple[float, float]]:
-    point = metric(records)
     values: dict[str, list[float]] = defaultdict(list)
     for row in draws:
         for k, v in metric([records[i] for i in row]).items():
             values[k].append(v)
-    return {k: _interval(v, level, k, point.get(k, float("nan"))) for k, v in values.items()}
+    out = {k: _interval(v, level) for k, v in values.items()}
+    if MACRO in out and (hits := _macro_hits(records)):
+        out[MACRO] = _interval(list(_macro_values(hits, _macro_draws(hits, len(draws), 0))), level)
+    return out
 
 
 def paired_difference(records: list[TabletRecord], reference: list[TabletRecord],
@@ -272,7 +284,13 @@ def paired_difference(records: list[TabletRecord], reference: list[TabletRecord]
             diffs[k].append(a[k] - b[k])
     out = {}
     for k, v in diffs.items():
-        lo, hi = _interval(v, level, k, point_a[k] - point_b[k], (-1.0, 1.0))
+        if k == MACRO:
+            ha, hb = _macro_hits(records), _macro_hits(reference)
+            if ha.keys() != hb.keys():
+                raise ValueError("paired comparison needs the same true boxes")
+            md = _macro_draws(ha, len(draws), 0)
+            v = list(_macro_values(ha, md) - _macro_values(hb, md))
+        lo, hi = _interval(v, level)
         up, down = ("worse", "better") if k in LOWER_IS_BETTER else ("better", "worse")
         out[k] = {"diff": point_a[k] - point_b[k], "lo": lo, "hi": hi,
                   "verdict": up if lo > 0 else down if hi < 0 else "tie"}
