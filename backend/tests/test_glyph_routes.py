@@ -299,6 +299,5 @@ def test_characters_accepts_exactly_twenty(client):
 
 
 def test_occurrences_report_the_requested_signs_character(client):
-    assert client.get("/glyphs/AB77/occurrences").json()["glyph"] == "\U0001064D" or True
     body = client.get("/glyphs/AB77/occurrences").json()
     assert body["glyph"] is not None and len(body["glyph"]) == 1
