@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import ColumnBars from '../components/benchmarks/ColumnBars.vue'
 import CoverageChart from '../components/benchmarks/CoverageChart.vue'
 import GlyphGrid from '../components/benchmarks/GlyphGrid.vue'
@@ -163,18 +163,41 @@ function stop() {
   if (restore) select(restore)
 }
 
+// Side by side, the tablet grid starts at the same height as the glyph grid, whose
+// legend and sort controls sit above it: measure the difference and pad by it.
+const gridsRow = ref(null)
+const tabletPad = ref(0)
+let resizer = null
+function alignGrids() {
+  const row = gridsRow.value
+  const glyphs = row?.querySelector('[data-testid="glyph-grid"]')
+  const tablets = row?.querySelector('[data-testid="tablet-grid"]')
+  if (!glyphs || !tablets) return
+  const sideBySide = glyphs.getBoundingClientRect().left < tablets.getBoundingClientRect().left - 1
+  const diff = glyphs.getBoundingClientRect().top - (tablets.getBoundingClientRect().top - tabletPad.value)
+  tabletPad.value = sideBySide ? Math.max(0, Math.round(diff)) : 0
+}
+
+// The row appears once a version has loaded; observe it from then on, and re-align on every version.
+watch(gridsRow, (el, old) => {
+  if (old) resizer?.unobserve(old)
+  if (el) resizer?.observe(el)
+})
+
 onMounted(() => {
   if (typeof window !== 'undefined' && window.matchMedia) {
     motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
     reduceMotion.value = motionQuery.matches
     motionQuery.addEventListener?.('change', onMotionChange)
   }
+  if (typeof ResizeObserver !== 'undefined') resizer = new ResizeObserver(() => alignGrids())
   loadIndex()
 })
 onBeforeUnmount(() => {
   playToken++
   clearTimer()
   motionQuery?.removeEventListener?.('change', onMotionChange)
+  resizer?.disconnect()
 })
 
 const scoreText = (entry) => {
@@ -186,6 +209,7 @@ const optionText = (entry) => `${entry.version} — ${scoreText(entry)}${headlin
 const grids = computed(() => gridMode(data.value))
 const tiers = computed(() => rankVersions(versions.value))
 const current = computed(() => (data.value && data.value.version === selected.value ? data.value : null))
+watch(() => current.value, () => nextTick(alignGrids))
 const playing = computed(() => mode.value !== 'idle')
 const showProgress = computed(() => playing.value || finished.value)
 const progressEntry = computed(() => (step.value >= 0 ? order.value[step.value] : null))
@@ -281,7 +305,7 @@ const cost = computed(() => {
       <template v-if="current">
         <div class="mt-2"><MetricTiles :version="current" /></div>
 
-        <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div ref="gridsRow" class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <section aria-labelledby="glyphs-h" class="min-w-0">
             <h2 id="glyphs-h" class="text-sm font-bold">Every sign</h2>
             <p v-if="!grids" class="mt-1 rounded-2xl bg-card p-3 text-sm" data-testid="grid-note">Not measured: this version finds signs but does not name them, so there is no per-sign result.</p>
@@ -299,7 +323,7 @@ const cost = computed(() => {
           <section v-if="grids" aria-labelledby="tablets-h" class="min-w-0">
             <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
             <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
-            <div class="mt-1"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+            <div class="mt-1" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
           </section>
         </div>
 
