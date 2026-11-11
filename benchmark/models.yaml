@@ -46,17 +46,28 @@ models:
     prior: 0.25
 
   # Sign comparer (issue #66): train with scripts/train_comparer.py, tune weight/k/zero_shot with
-  # python -m benchmark.tune_hybrid --comparer <comparer.pt>, then set the tuned values here. Skipped until the weights exist.
+  # python -m benchmark.tune_hybrid --comparer <comparer.pt> (val, 11 Nov: k 3, zero-shot on, w 0.5, T 0.05). Skipped until the weights exist.
   - name: signs-v1-comparer
     kind: two_stage
     description: signs-v1 + sign comparer (metric-learning embedding vs reference drawings and font renders)
     detector: models/linear_a_signs.pt
     classifier: models/linear_a_classifier.pt
     train_run: [runs/detect/sign_detector, runs/classify/sign_classifier]
-    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.35, temperature: 0.05, k: 1, zero_shot: false}
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
 
   # Jason's model: put its weights under models/ and uncomment.
   # - name: jason
   #   kind: two_stage
   #   detector: models/jason_detector.pt
   #   classifier: models/jason_classifier.pt
+
+  - name: signs-v1-tta-knn-comparer
+    kind: two_stage
+    description: signs-v1-tta-knn plus the sign comparer at its classifier-only tuned blend (combination not tuned jointly)
+    detector: models/linear_a_signs.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/sign_detector, runs/classify/sign_classifier]
+    tta: true
+    knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
+    prior: 0.25
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
