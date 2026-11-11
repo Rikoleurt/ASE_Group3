@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "versions": [
+    {
+      "version": "identity-baseline",
+      "description": "361-class detector that finds and names signs at once (stopped at epoch 44, out of GPU memory)",
+      "kind": "one_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": false
+      },
+      "scored": "20261111T112430Z",
+      "read_top1": 0.006,
+      "id_top1": null
+    },
+    {
+      "version": "shape-knn",
+      "description": "Classical baseline, no training - nearest train crop by mask overlap (FINDINGS.md section 4)",
+      "kind": "shape_knn",
+      "split": "val",
+      "stages": {
+        "detection": false,
+        "identification": true
+      },
+      "scored": "20261111T112430Z",
+      "read_top1": null,
+      "id_top1": 0.266
+    },
+    {
+      "version": "signs-v1-tta-knn",
+      "description": "signs-v1 + TTA + nearest train crops (classifier features, weight 0.35, T 0.02) + frequency prior 0.25",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261111T114921Z",
+      "read_top1": 0.619,
+      "id_top1": 0.691
+    },
+    {
+      "version": "signs-v1-tta",
+      "description": "signs-v1 with test-time augmentation (classifier averaged over 7 shifted/rescaled boxes)",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261111T114921Z",
+      "read_top1": 0.612,
+      "id_top1": 0.688
+    },
+    {
+      "version": "signs-v1",
+      "description": "Released reader (GitHub release signs-v1) - one-class detector + 279-class classifier",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261111T112430Z",
+      "read_top1": 0.608,
+      "id_top1": 0.679
+    },
+    {
+      "version": "yolo26n-generic",
+      "description": "Stock pretrained yolo26n.pt, never trained on Linear A (detection only)",
+      "kind": "generic",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": false
+      },
+      "scored": "20261111T112430Z",
+      "read_top1": 0.0,
+      "id_top1": null
+    }
+  ]
+}
