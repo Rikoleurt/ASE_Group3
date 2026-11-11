@@ -6,6 +6,9 @@
 # Runs: det_synth  one-class detector on real + 1000 synthetic tablets (data: la.cli synth on a copy)
 #       det_s      larger yolo26s detector (batch 4 to fit 6 GB)
 #       cls_s      larger yolo26s-cls classifier at 160 px
+#       comparer   sign comparer (la/comparer.py, issue #66): ArcFace embedding, font renders in training;
+#                  ~1.7k samples/epoch (80 s on CPU), 1 GB RSS on CPU; VRAM 2000 is an estimate (resnet18, fp16, batch 64);
+#                  not in the default list, queue it with: bash scripts/train_experiments.sh comparer
 # Each matches signs-v1's recipe except for the one change, including 100 detector
 # epochs, so the benchmark compares like with like. workers=0: dataloader workers
 # have crashed this 16 GB laptop (Windows error 1455). Without RESQ, runs start directly.
@@ -36,6 +39,9 @@ for run in "${runs[@]}"; do
     cls_s)
       queue cls_s 3500 3500 -- "$PY" "$ROOT/train.py" classify --model yolo26s-cls.pt --imgsz 160 \
         --workers 0 --name cls_s ;;
+    comparer)
+      queue comparer 2000 2500 -- "$PY" "$ROOT/scripts/train_comparer.py" --name comparer --font \
+        --epochs 60 --batch 64 --device cuda ;;
     *) echo "unknown run $run" >&2; exit 2 ;;
   esac
 done
