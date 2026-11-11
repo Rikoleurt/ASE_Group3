@@ -79,7 +79,7 @@ const tileStyle = (s) => {
           @blur="active = null"
         >
           <span v-if="s.glyph" class="linear-a text-xl" aria-hidden="true">{{ s.glyph }}</span>
-          <span v-else class="text-[0.55rem] font-semibold" aria-hidden="true">{{ s.sign === 'unidentified' ? '?' : s.sign }}</span>
+          <span v-else :class="s.sign === 'unidentified' ? 'text-base font-bold' : 'text-[0.55rem] font-semibold'" aria-hidden="true">{{ s.sign === 'unidentified' ? '?' : s.sign }}</span>
         </button>
       </li>
     </ul>
