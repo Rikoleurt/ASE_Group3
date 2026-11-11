@@ -1,5 +1,6 @@
 # Readers compared by `python -m benchmark.run`. Weight paths are relative to the repo root.
 # kind: generic | one_stage | two_stage | shape_knn  (see benchmark/readers.py)
+# two_stage options: tta, knn {backbone, weight, temperature}, prior (see TwoStage)
 # A model whose weights are missing is listed as skipped, not an error.
 # train_run (optional): Ultralytics run folder(s), summed for training time.
 models:
@@ -24,6 +25,24 @@ models:
   - name: shape-knn
     kind: shape_knn
     description: Classical baseline, no training - nearest train crop by mask overlap (FINDINGS.md section 4)
+
+  - name: signs-v1-tta
+    kind: two_stage
+    description: signs-v1 with test-time augmentation (classifier averaged over 7 shifted/rescaled boxes)
+    detector: models/linear_a_signs.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/sign_detector, runs/classify/sign_classifier]
+    tta: true
+
+  - name: signs-v1-tta-knn
+    kind: two_stage
+    description: signs-v1 + TTA + nearest train crops (classifier features, weight 0.35, T 0.02) + frequency prior 0.25
+    detector: models/linear_a_signs.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/sign_detector, runs/classify/sign_classifier]
+    tta: true
+    knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
+    prior: 0.25
 
   # Jason's model: put its weights under models/ and uncomment.
   # - name: jason

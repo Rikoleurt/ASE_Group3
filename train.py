@@ -27,7 +27,7 @@ def detect(args: argparse.Namespace) -> None:
         epochs=args.epochs or 150,
         patience=30,
         batch=args.batch or 8,
-        imgsz=1024,  # the web demo predicts at this size
+        imgsz=args.imgsz or 1024,  # the web demo predicts at this size
         fliplr=0.0,
         degrees=3.0,
         seed=args.seed,
@@ -44,7 +44,7 @@ def classify(args: argparse.Namespace) -> None:
         epochs=args.epochs or 100,
         patience=25,
         batch=args.batch or 64,
-        imgsz=128,
+        imgsz=args.imgsz or 128,
         fliplr=0.0,
         scale=0.1,          # random crops keep 90-100% of the sign
         auto_augment=None,  # varied copies come from la.augment instead
@@ -64,6 +64,7 @@ def main() -> None:
     parser.add_argument("--model", help="starting weights (default yolo26n.pt / yolo26n-cls.pt)")
     parser.add_argument("--epochs", type=int)
     parser.add_argument("--batch", type=int)
+    parser.add_argument("--imgsz", type=int, help="image size (default 1024 detect / 128 classify)")
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--workers", type=int, default=2, help="dataloader processes (each holds images in RAM)")
     parser.add_argument("--name", help="run name under runs/<task>/")

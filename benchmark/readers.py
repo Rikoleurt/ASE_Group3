@@ -103,13 +103,24 @@ class OneStage(_Detector):
 
 
 class TwoStage(_Detector):
-    """The app's reader: a one-class detector, then a classifier on each crop."""
+    """The app's reader: a one-class detector, then a classifier on each crop.
+
+    Options (see `la.reader`): `tta: true` averages the classifier over shifted
+    and rescaled boxes; `knn: {backbone, weight, temperature}` blends in a vote
+    from the nearest real training crops of the dataset's train split;
+    `prior: alpha` restores some of the true sign frequencies (`reader.prior_correction`).
+    """
     identifies = True
 
-    def __init__(self, name: str, detector: str, classifier: str, **kw):
+    def __init__(self, name: str, detector: str, classifier: str, tta: bool = False,
+                 knn: dict | None = None, prior: float = 0.0, dataset: Path | None = None, **kw):
         super().__init__(name, detector, **kw)
         self.classifier_path = Path(classifier)
         self.classifier = _yolo(classifier)
+        self.tta = tta
+        self.bank = _train_bank(Path(dataset), self.classifier, **knn) if knn else None
+        self.prior = prior
+        self.real_counts = _real_counts(Path(dataset)) if prior else {}
 
     def weights(self):
         return [self.detector_path, self.classifier_path]
@@ -123,7 +134,31 @@ class TwoStage(_Detector):
                 for i, (b, c) in enumerate(zip(boxes, confs))]
 
     def identify(self, ink, boxes):
-        return reader.name_boxes(self.classifier, ink, boxes, top=TOP, device=self.device)
+        if not boxes:
+            return []
+        names, probs = reader.boxed_probabilities(self.classifier, ink, boxes, self.device, self.tta, self.bank)
+        probs = reader.prior_correction(names, probs, self.real_counts, self.prior)
+        return reader.top_labels(names, probs, TOP)
+
+
+def _real_counts(dataset: Path) -> dict[str, int]:
+    from collections import Counter
+    return Counter(sign_id(s) for t in _annotations(dataset) if t["split"] == "train" for s in identified(t))
+
+
+def _train_bank(dataset: Path, classifier, backbone: str = "yolo", weight: float = 0.5,
+                temperature: float = 0.05) -> reader.NeighbourBank:
+    """Nearest-neighbour bank of every real train crop (never val or test)."""
+    from la import embeddings
+    signs, crops = [], []
+    for tablet in _annotations(dataset):
+        if tablet["split"] != "train":
+            continue
+        named = identified(tablet)
+        signs += [sign_id(s) for s in named]
+        crops += reader.crops_of(load_mask(dataset / tablet["image"]), [tuple(s["xyxy"]) for s in named])
+    return reader.NeighbourBank.build(embeddings.embedder(backbone, classifier), signs, crops,
+                                      weight=weight, temperature=temperature)
 
 
 class ShapeKNN(Reader):
