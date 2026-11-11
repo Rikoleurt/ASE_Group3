@@ -29,11 +29,19 @@ const tabs = computed(() => {
   for (const candidate of [chosen, ...given]) {
     if (!candidate.sign || seen.has(candidate.sign) || list.length === 3) continue
     seen.add(candidate.sign)
+    // The reader's label is often already "AB45 (de)"; only add the sign ID when it is missing.
     const name = candidate.label && candidate.label !== candidate.sign ? candidate.label : ''
-    list.push({ sign: candidate.sign, label: name ? `${candidate.sign} (${name})` : candidate.sign, probability: candidate.probability })
+    const label = !name ? candidate.sign : name.startsWith(candidate.sign) ? name : `${candidate.sign} (${name})`
+    list.push({ sign: candidate.sign, label, probability: candidate.probability })
   }
   return list
 })
+
+// Probabilities are percentages; a small one is not zero, so say so.
+function percent(value) {
+  if (value > 0 && value < 0.5) return '<1%'
+  return `${Math.round(value)}%`
+}
 
 const active = ref('')
 const items = ref([])
@@ -275,7 +283,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
         @click="openTab(tab.sign)"
         @keydown="moveTab($event, index)"
       >
-        {{ tab.label }}<span v-if="tab.probability !== undefined"> · {{ Math.round(tab.probability) }}%</span>
+        {{ tab.label }}<span v-if="tab.probability !== undefined"> · {{ percent(tab.probability) }}</span>
       </button>
     </div>
     <p v-if="tabs.length > 1" class="mt-1 text-sm text-ink/70">The reader can be wrong: check its other guesses too.</p>

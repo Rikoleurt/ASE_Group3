@@ -94,6 +94,15 @@ describe('Glyph occurrences pane', () => {
     expect(cards()[2].text()).toContain('Similarity unavailable')
   })
 
+  it('labels guesses once and never shows a small probability as 0%', async () => {
+    await render(api(), { selection: { sign: 'AB45', candidates: [
+      { sign: 'AB45', label: 'AB45 (de)', probability: 99.7 }, { sign: 'AB47', label: 'AB47', probability: 0.2 },
+      { sign: 'A343', label: 'A343', probability: 0 },
+    ] } })
+    const tabs = wrapper.findAll('[role="tab"]').map((tab) => tab.text())
+    expect(tabs).toEqual(['AB45 (de) · 100%', 'AB47 · <1%', 'A343 · 0%'])
+  })
+
   it('badges outliers in words, not only colour', async () => {
     await render(api())
     const badges = wrapper.findAll('[data-testid="outlier-badge"]')
