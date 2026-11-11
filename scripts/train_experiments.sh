@@ -28,13 +28,13 @@ queue() {  # queue <label> <vram MB> <ram MB> -- command...
 for run in "${runs[@]}"; do
   case "$run" in
     det_synth)
-      queue det_synth 4500 6000 -- "$PY" "$ROOT/train.py" detect --data "$OUT/yolo_signs_synth/data.yaml" \
+      queue det_synth 4500 4500 -- "$PY" "$ROOT/train.py" detect --data "$OUT/yolo_signs_synth/data.yaml" \
         --epochs 100 --workers 0 --name det_synth ;;
     det_s)
-      queue det_s 5200 6000 -- "$PY" "$ROOT/train.py" detect --model yolo26s.pt --batch 4 \
+      queue det_s 5200 4500 -- "$PY" "$ROOT/train.py" detect --model yolo26s.pt --batch 4 \
         --epochs 100 --workers 0 --name det_s ;;
     cls_s)
-      queue cls_s 3500 5000 -- "$PY" "$ROOT/train.py" classify --model yolo26s-cls.pt --imgsz 160 \
+      queue cls_s 3500 3500 -- "$PY" "$ROOT/train.py" classify --model yolo26s-cls.pt --imgsz 160 \
         --workers 0 --name cls_s ;;
     *) echo "unknown run $run" >&2; exit 2 ;;
   esac
