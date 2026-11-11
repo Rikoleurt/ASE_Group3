@@ -49,3 +49,13 @@ models:
   #   kind: two_stage
   #   detector: models/jason_detector.pt
   #   classifier: models/jason_classifier.pt
+
+  - name: synth-det-tta-knn
+    kind: two_stage
+    description: Detector retrained with 1,000 synthetic tablets (early-stopped, best epoch 52) + signs-v1 classifier, TTA, kNN 0.35, prior 0.25
+    detector: runs/detect/det_synth/weights/best.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/det_synth, runs/classify/sign_classifier]
+    tta: true
+    knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
+    prior: 0.25
