@@ -28,6 +28,32 @@
       "id_top1": 0.266
     },
     {
+      "version": "signs-v1-comparer",
+      "description": "signs-v1 + sign comparer (metric-learning embedding vs reference drawings and font renders)",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261111T231138Z",
+      "read_top1": 0.641,
+      "id_top1": 0.704
+    },
+    {
+      "version": "signs-v1-tta-knn-comparer",
+      "description": "signs-v1-tta-knn plus the sign comparer at its classifier-only tuned blend (combination not tuned jointly)",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261111T231138Z",
+      "read_top1": 0.646,
+      "id_top1": 0.693
+    },
+    {
       "version": "signs-v1-tta-knn",
       "description": "signs-v1 + TTA + nearest train crops (classifier features, weight 0.35, T 0.02) + frequency prior 0.25",
       "kind": "two_stage",
@@ -65,6 +91,19 @@
       "scored": "20261111T112430Z",
       "read_top1": 0.608,
       "id_top1": 0.679
+    },
+    {
+      "version": "synth-det-tta-knn",
+      "description": "Detector retrained with 1,000 synthetic tablets (early-stopped, best epoch 52) + signs-v1 classifier, TTA, kNN 0.35, prior 0.25",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261111T225939Z",
+      "read_top1": 0.611,
+      "id_top1": 0.691
     },
     {
       "version": "yolo26n-generic",

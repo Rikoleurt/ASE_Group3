@@ -1,0 +1,4618 @@
+{
+ "schema": 1,
+ "version": "signs-v1-tta-knn-comparer",
+ "description": "signs-v1-tta-knn plus the sign comparer at its classifier-only tuned blend (combination not tuned jointly)",
+ "kind": "two_stage",
+ "stages": {
+  "detection": true,
+  "identification": true
+ },
+ "split": "val",
+ "tablets": 131,
+ "run": "comparer-val",
+ "scored": "20261111T231138Z",
+ "published": "2026-11-11T23:25:15Z",
+ "reference": "signs-v1",
+ "metrics": {
+  "read_top1": 0.646,
+  "read_top3": 0.74,
+  "precision": 0.8686,
+  "recall": 0.886,
+  "ap50": 0.9006,
+  "id_top1": 0.693,
+  "id_top3": 0.813,
+  "id_top5": 0.843,
+  "id_macro_top1": 0.4471,
+  "id_ece": 0.0662
+ },
+ "ci95": {
+  "read_top1": [
+   0.5788,
+   0.7118
+  ],
+  "read_top3": [
+   0.6785,
+   0.7991
+  ],
+  "precision": [
+   0.8381,
+   0.8984
+  ],
+  "recall": [
+   0.8388,
+   0.9292
+  ],
+  "ap50": [
+   0.8616,
+   0.9377
+  ],
+  "id_top1": [
+   0.6377,
+   0.7477
+  ],
+  "id_top3": [
+   0.7673,
+   0.8545
+  ],
+  "id_top5": [
+   0.8,
+   0.8787
+  ],
+  "id_macro_top1": [
+   0.4289,
+   0.464
+  ],
+  "id_ece": [
+   0.0559,
+   0.0926
+  ]
+ },
+ "vs_reference": {
+  "recall": {
+   "diff": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "verdict": "tie"
+  },
+  "read_top3": {
+   "diff": 0.035,
+   "lo": 0.0186,
+   "hi": 0.0499,
+   "verdict": "better"
+  },
+  "read_top1": {
+   "diff": 0.038,
+   "lo": 0.0157,
+   "hi": 0.06,
+   "verdict": "better"
+  },
+  "id_ece": {
+   "diff": -0.114,
+   "lo": -0.1459,
+   "hi": -0.0708,
+   "verdict": "better"
+  },
+  "id_top5": {
+   "diff": 0.041,
+   "lo": 0.0185,
+   "hi": 0.0668,
+   "verdict": "better"
+  },
+  "id_top3": {
+   "diff": 0.037,
+   "lo": 0.017,
+   "hi": 0.0557,
+   "verdict": "better"
+  },
+  "id_macro_top1": {
+   "diff": 0.0452,
+   "lo": 0.0289,
+   "hi": 0.0627,
+   "verdict": "better"
+  },
+  "id_top1": {
+   "diff": 0.014,
+   "lo": -0.0069,
+   "hi": 0.0344,
+   "verdict": "tie"
+  },
+  "ap50": {
+   "diff": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "verdict": "tie"
+  },
+  "precision": {
+   "diff": 0.0,
+   "lo": 0.0,
+   "hi": 0.0,
+   "verdict": "tie"
+  }
+ },
+ "by_role": {
+  "fraction": 0.7826,
+  "logogram": 0.4961,
+  "syllabogram": 0.7612,
+  "transaction": 0.6667,
+  "unknown": 0.5
+ },
+ "by_bucket": {
+  "unseen": 0.1266,
+  "1": 0.25,
+  "2-4": 0.431,
+  "5+": 0.7796
+ },
+ "bucket_counts": {
+  "unseen": 79,
+  "1": 28,
+  "2-4": 58,
+  "5+": 835
+ },
+ "cost": {
+  "latency_s": 1.9101,
+  "weights_mb": 56.96,
+  "train_minutes": null
+ },
+ "coverage_curve": [
+  {
+   "coverage": 0.05,
+   "id_top1": 1.0
+  },
+  {
+   "coverage": 0.1,
+   "id_top1": 0.99
+  },
+  {
+   "coverage": 0.15,
+   "id_top1": 0.9933
+  },
+  {
+   "coverage": 0.2,
+   "id_top1": 0.985
+  },
+  {
+   "coverage": 0.25,
+   "id_top1": 0.988
+  },
+  {
+   "coverage": 0.3,
+   "id_top1": 0.9833
+  },
+  {
+   "coverage": 0.35,
+   "id_top1": 0.9857
+  },
+  {
+   "coverage": 0.4,
+   "id_top1": 0.9825
+  },
+  {
+   "coverage": 0.45,
+   "id_top1": 0.9711
+  },
+  {
+   "coverage": 0.5,
+   "id_top1": 0.958
+  },
+  {
+   "coverage": 0.55,
+   "id_top1": 0.9436
+  },
+  {
+   "coverage": 0.6,
+   "id_top1": 0.93
+  },
+  {
+   "coverage": 0.65,
+   "id_top1": 0.9062
+  },
+  {
+   "coverage": 0.7,
+   "id_top1": 0.8714
+  },
+  {
+   "coverage": 0.75,
+   "id_top1": 0.836
+  },
+  {
+   "coverage": 0.8,
+   "id_top1": 0.8087
+  },
+  {
+   "coverage": 0.85,
+   "id_top1": 0.78
+  },
+  {
+   "coverage": 0.9,
+   "id_top1": 0.7589
+  },
+  {
+   "coverage": 0.95,
+   "id_top1": 0.7274
+  },
+  {
+   "coverage": 1.0,
+   "id_top1": 0.693
+  }
+ ],
+ "sweep": [
+  {
+   "conf": 0.05,
+   "precision": 0.7836,
+   "recall": 0.92,
+   "read_top1": 0.657,
+   "read_top3": 0.757,
+   "read_top1_learnable": 0.7079,
+   "named_given_found": 0.7141
+  },
+  {
+   "conf": 0.1,
+   "precision": 0.8221,
+   "recall": 0.906,
+   "read_top1": 0.653,
+   "read_top3": 0.75,
+   "read_top1_learnable": 0.7036,
+   "named_given_found": 0.7208
+  },
+  {
+   "conf": 0.15,
+   "precision": 0.8424,
+   "recall": 0.898,
+   "read_top1": 0.651,
+   "read_top3": 0.746,
+   "read_top1_learnable": 0.7014,
+   "named_given_found": 0.7249
+  },
+  {
+   "conf": 0.25,
+   "precision": 0.8686,
+   "recall": 0.886,
+   "read_top1": 0.646,
+   "read_top3": 0.74,
+   "read_top1_learnable": 0.6971,
+   "named_given_found": 0.7291
+  },
+  {
+   "conf": 0.35,
+   "precision": 0.8901,
+   "recall": 0.875,
+   "read_top1": 0.64,
+   "read_top3": 0.733,
+   "read_top1_learnable": 0.6906,
+   "named_given_found": 0.7314
+  },
+  {
+   "conf": 0.5,
+   "precision": 0.9114,
+   "recall": 0.854,
+   "read_top1": 0.628,
+   "read_top3": 0.717,
+   "read_top1_learnable": 0.6775,
+   "named_given_found": 0.7354
+  },
+  {
+   "conf": 0.65,
+   "precision": 0.9295,
+   "recall": 0.817,
+   "read_top1": 0.608,
+   "read_top3": 0.69,
+   "read_top1_learnable": 0.6558,
+   "named_given_found": 0.7442
+  },
+  {
+   "conf": 0.8,
+   "precision": 0.951,
+   "recall": 0.718,
+   "read_top1": 0.552,
+   "read_top3": 0.611,
+   "read_top1_learnable": 0.595,
+   "named_given_found": 0.7688
+  }
+ ],
+ "signs": [
+  {
+   "sign": "A1000",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A566",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A1001",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A646",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A301",
+   "glyph": "𐙕",
+   "n": 12,
+   "id_correct": 9,
+   "e2e_n": 12,
+   "e2e_correct": 8,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB80",
+     "count": 1
+    },
+    {
+     "sign": "AB60",
+     "count": 1
+    },
+    {
+     "sign": "A550",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A303",
+   "glyph": "𐙗",
+   "n": 4,
+   "id_correct": 3,
+   "e2e_n": 4,
+   "e2e_correct": 2,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB10",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A304",
+   "glyph": "𐙘",
+   "n": 2,
+   "id_correct": 2,
+   "e2e_n": 2,
+   "e2e_correct": 2,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A305",
+   "glyph": "𐙙",
+   "n": 4,
+   "id_correct": 2,
+   "e2e_n": 4,
+   "e2e_correct": 3,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 1
+    },
+    {
+     "sign": "AB81",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A306",
+   "glyph": "𐙚",
+   "n": 2,
+   "id_correct": 2,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A308",
+   "glyph": "𐙜",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A309a",
+   "glyph": "𐙝",
+   "n": 5,
+   "id_correct": 1,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB78",
+     "count": 3
+    },
+    {
+     "sign": "unidentified",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A309b",
+   "glyph": "𐙞",
+   "n": 5,
+   "id_correct": 1,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB69",
+     "count": 1
+    },
+    {
+     "sign": "A309c",
+     "count": 1
+    },
+    {
+     "sign": "AB80",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A309c",
+   "glyph": "𐙟",
+   "n": 2,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB78",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "sign": "A310",
+   "glyph": "𐙠",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "A587",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A312",
+   "glyph": "𐙢",
+   "n": 2,
+   "id_correct": 2,
+   "e2e_n": 2,
+   "e2e_correct": 2,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A314",
+   "glyph": "𐙦",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB76",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A317",
+   "glyph": "𐙩",
+   "n": 2,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB08",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "sign": "A320",
+   "glyph": "𐙬",
+   "n": 2,
+   "id_correct": 1,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "A301",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A321",
+   "glyph": "𐙭",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "A516",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A323",
+   "glyph": "𐙯",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB39",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A325",
+   "glyph": "𐙱",
+   "n": 2,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB16",
+     "count": 1
+    },
+    {
+     "sign": "AB26",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A328",
+   "glyph": "𐙴",
+   "n": 2,
+   "id_correct": 1,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB27",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A329",
+   "glyph": "𐙵",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A303",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A331",
+   "glyph": "𐙷",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB131a",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A334",
+   "glyph": "𐙺",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": []
+  },
+  {
+   "sign": "A339",
+   "glyph": "𐙿",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB31",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A341",
+   "glyph": "𐚁",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "unknown",
+   "bucket": "unseen",
+   "confused_with": []
+  },
+  {
+   "sign": "A347",
+   "glyph": "𐚇",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB45",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A351",
+   "glyph": "𐚋",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A626",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A357",
+   "glyph": "𐚑",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB26",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A358",
+   "glyph": "𐚒",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB01",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A361",
+   "glyph": "𐚕",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": []
+  },
+  {
+   "sign": "A364",
+   "glyph": "𐚘",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB66",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A402",
+   "glyph": "𐚢",
+   "n": 4,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB67",
+     "count": 2
+    },
+    {
+     "sign": "AB69",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "sign": "A408",
+   "glyph": "𐚨",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": []
+  },
+  {
+   "sign": "A409",
+   "glyph": "𐚩",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB59",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A410",
+   "glyph": "𐚪",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB54",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A411b",
+   "glyph": null,
+   "n": 2,
+   "id_correct": 2,
+   "e2e_n": 2,
+   "e2e_correct": 2,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A411c",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A411b",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A415",
+   "glyph": "𐚯",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A325",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A416",
+   "glyph": "𐚰",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A412",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A417",
+   "glyph": "𐚱",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": []
+  },
+  {
+   "sign": "A507",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB08",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A508",
+   "glyph": "𐚹",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": []
+  },
+  {
+   "sign": "A509",
+   "glyph": "𐚺",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "A510",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A512",
+   "glyph": "𐚽",
+   "n": 3,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A305",
+     "count": 1
+    },
+    {
+     "sign": "AB41",
+     "count": 1
+    },
+    {
+     "sign": "AB21m",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A513",
+   "glyph": "𐚾",
+   "n": 2,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A629",
+     "count": 1
+    },
+    {
+     "sign": "A628",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A516",
+   "glyph": "𐛀",
+   "n": 2,
+   "id_correct": 2,
+   "e2e_n": 2,
+   "e2e_correct": 2,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A517",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": []
+  },
+  {
+   "sign": "A518",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A533",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A526",
+   "glyph": "𐛆",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "A656",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A531",
+   "glyph": "𐛋",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A635",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A537",
+   "glyph": "𐛐",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": []
+  },
+  {
+   "sign": "A539",
+   "glyph": "𐛒",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A659",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A546",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A550",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A552",
+   "glyph": "𐛜",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "A550",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A555",
+   "glyph": "𐛟",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A553",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A560",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB26",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A561",
+   "glyph": null,
+   "n": 3,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A646",
+     "count": 2
+    },
+    {
+     "sign": "A635",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A568",
+   "glyph": "𐛧",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A571",
+   "glyph": "𐛪",
+   "n": 3,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB50",
+     "count": 2
+    },
+    {
+     "sign": "AB40",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A574",
+   "glyph": "𐛭",
+   "n": 7,
+   "id_correct": 4,
+   "e2e_n": 7,
+   "e2e_correct": 4,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB39",
+     "count": 2
+    },
+    {
+     "sign": "A516",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A578",
+   "glyph": "𐛱",
+   "n": 3,
+   "id_correct": 2,
+   "e2e_n": 3,
+   "e2e_correct": 2,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "A646",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A580",
+   "glyph": "𐛳",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB120",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A581",
+   "glyph": "𐛴",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": []
+  },
+  {
+   "sign": "A584",
+   "glyph": "𐛷",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A577",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A594",
+   "glyph": "𐛿",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "A595",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A599",
+   "glyph": null,
+   "n": 2,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 1
+    },
+    {
+     "sign": "AB60",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A600",
+   "glyph": "𐜃",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A314",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A601",
+   "glyph": "𐜄",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB61",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A602",
+   "glyph": "𐜅",
+   "n": 3,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB61",
+     "count": 1
+    },
+    {
+     "sign": "A718",
+     "count": 1
+    },
+    {
+     "sign": "AB10",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A603",
+   "glyph": "𐜆",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB60",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A604",
+   "glyph": "𐜇",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB188",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A605",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB61",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A606",
+   "glyph": "𐜈",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A607",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A603",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A608",
+   "glyph": "𐜉",
+   "n": 5,
+   "id_correct": 2,
+   "e2e_n": 5,
+   "e2e_correct": 2,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A610",
+     "count": 1
+    },
+    {
+     "sign": "AB07",
+     "count": 1
+    },
+    {
+     "sign": "A618",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A610",
+   "glyph": "𐜋",
+   "n": 4,
+   "id_correct": 3,
+   "e2e_n": 4,
+   "e2e_correct": 3,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB81",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A611",
+   "glyph": "𐜌",
+   "n": 2,
+   "id_correct": 1,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB50",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A612",
+   "glyph": "𐜍",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB53",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A615",
+   "glyph": "𐜐",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A614",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A618",
+   "glyph": "𐜓",
+   "n": 5,
+   "id_correct": 5,
+   "e2e_n": 5,
+   "e2e_correct": 5,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A619",
+   "glyph": "𐜔",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A612",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A620",
+   "glyph": "𐜕",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A550",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A621",
+   "glyph": "𐜖",
+   "n": 2,
+   "id_correct": 1,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB302",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A622",
+   "glyph": "𐜗",
+   "n": 5,
+   "id_correct": 3,
+   "e2e_n": 5,
+   "e2e_correct": 3,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A567",
+     "count": 1
+    },
+    {
+     "sign": "AB73",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A624",
+   "glyph": "𐜙",
+   "n": 14,
+   "id_correct": 10,
+   "e2e_n": 14,
+   "e2e_correct": 9,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 2
+    },
+    {
+     "sign": "A626",
+     "count": 1
+    },
+    {
+     "sign": "AB53",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A626",
+   "glyph": "𐜚",
+   "n": 3,
+   "id_correct": 1,
+   "e2e_n": 3,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 1
+    },
+    {
+     "sign": "AB65",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A627",
+   "glyph": "𐜛",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A303",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A629",
+   "glyph": "𐜝",
+   "n": 3,
+   "id_correct": 2,
+   "e2e_n": 3,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB40",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A632",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A636",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A637",
+   "glyph": "𐜟",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": []
+  },
+  {
+   "sign": "A638",
+   "glyph": "𐜠",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB39",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A641",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "A517",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A644",
+   "glyph": "𐜤",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": []
+  },
+  {
+   "sign": "A646",
+   "glyph": "𐜦",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": []
+  },
+  {
+   "sign": "A651",
+   "glyph": "𐜩",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A653",
+   "glyph": "𐜫",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": []
+  },
+  {
+   "sign": "A684",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB188",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A701",
+   "glyph": "𐝀",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB03",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A702",
+   "glyph": "𐝁",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB02",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A703",
+   "glyph": "𐝂",
+   "n": 4,
+   "id_correct": 3,
+   "e2e_n": 4,
+   "e2e_correct": 2,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A308",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A704",
+   "glyph": "𐝃",
+   "n": 11,
+   "id_correct": 8,
+   "e2e_n": 11,
+   "e2e_correct": 7,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A706",
+     "count": 1
+    },
+    {
+     "sign": "AB78",
+     "count": 1
+    },
+    {
+     "sign": "AB59",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A705",
+   "glyph": "𐝄",
+   "n": 5,
+   "id_correct": 4,
+   "e2e_n": 5,
+   "e2e_correct": 4,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A704",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A707",
+   "glyph": "𐝆",
+   "n": 17,
+   "id_correct": 17,
+   "e2e_n": 17,
+   "e2e_correct": 13,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "A708",
+   "glyph": "𐝇",
+   "n": 3,
+   "id_correct": 2,
+   "e2e_n": 3,
+   "e2e_correct": 1,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A704",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A7092",
+   "glyph": "𐝉",
+   "n": 3,
+   "id_correct": 2,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "fraction",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB77",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "A7094",
+   "glyph": "𐝋",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "fraction",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "A702",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB01",
+   "glyph": "𐘀",
+   "n": 26,
+   "id_correct": 26,
+   "e2e_n": 26,
+   "e2e_correct": 24,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB02",
+   "glyph": "𐘁",
+   "n": 10,
+   "id_correct": 8,
+   "e2e_n": 10,
+   "e2e_correct": 8,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB01",
+     "count": 1
+    },
+    {
+     "sign": "A702",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB03",
+   "glyph": "𐘂",
+   "n": 17,
+   "id_correct": 10,
+   "e2e_n": 17,
+   "e2e_correct": 8,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A701",
+     "count": 3
+    },
+    {
+     "sign": "AB02",
+     "count": 1
+    },
+    {
+     "sign": "AB08",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB04",
+   "glyph": "𐘃",
+   "n": 14,
+   "id_correct": 13,
+   "e2e_n": 14,
+   "e2e_correct": 13,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB06",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB05",
+   "glyph": "𐘄",
+   "n": 2,
+   "id_correct": 2,
+   "e2e_n": 2,
+   "e2e_correct": 2,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB06",
+   "glyph": "𐘅",
+   "n": 17,
+   "id_correct": 15,
+   "e2e_n": 17,
+   "e2e_correct": 15,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB131b",
+     "count": 1
+    },
+    {
+     "sign": "A708",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB07",
+   "glyph": "𐘆",
+   "n": 15,
+   "id_correct": 13,
+   "e2e_n": 15,
+   "e2e_correct": 14,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB06",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "sign": "AB08",
+   "glyph": "𐘇",
+   "n": 27,
+   "id_correct": 24,
+   "e2e_n": 27,
+   "e2e_correct": 23,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB41",
+     "count": 1
+    },
+    {
+     "sign": "AB79",
+     "count": 1
+    },
+    {
+     "sign": "A513",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB09",
+   "glyph": "𐘈",
+   "n": 12,
+   "id_correct": 10,
+   "e2e_n": 12,
+   "e2e_correct": 9,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB28",
+     "count": 1
+    },
+    {
+     "sign": "AB81",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB10",
+   "glyph": "𐘉",
+   "n": 10,
+   "id_correct": 8,
+   "e2e_n": 10,
+   "e2e_correct": 8,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB131a",
+     "count": 1
+    },
+    {
+     "sign": "AB01",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB100",
+   "glyph": null,
+   "n": 2,
+   "id_correct": 2,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB11",
+   "glyph": "𐘊",
+   "n": 2,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB01",
+     "count": 1
+    },
+    {
+     "sign": "AB08",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB118",
+   "glyph": "𐙈",
+   "n": 3,
+   "id_correct": 1,
+   "e2e_n": 3,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB39",
+     "count": 1
+    },
+    {
+     "sign": "unidentified",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB120",
+   "glyph": "𐙉",
+   "n": 10,
+   "id_correct": 6,
+   "e2e_n": 10,
+   "e2e_correct": 5,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB07",
+     "count": 1
+    },
+    {
+     "sign": "AB122",
+     "count": 1
+    },
+    {
+     "sign": "A584",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB120b",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB120",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB122",
+   "glyph": "𐙋",
+   "n": 3,
+   "id_correct": 1,
+   "e2e_n": 3,
+   "e2e_correct": 2,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB27",
+     "count": 1
+    },
+    {
+     "sign": "AB86",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB123",
+   "glyph": "𐙌",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB40",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB13",
+   "glyph": "𐘋",
+   "n": 4,
+   "id_correct": 2,
+   "e2e_n": 4,
+   "e2e_correct": 2,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB51",
+     "count": 1
+    },
+    {
+     "sign": "AB01",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB130",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB120",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB131a",
+   "glyph": "𐙍",
+   "n": 11,
+   "id_correct": 8,
+   "e2e_n": 11,
+   "e2e_correct": 10,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB51",
+     "count": 1
+    },
+    {
+     "sign": "AB06",
+     "count": 1
+    },
+    {
+     "sign": "A356",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB131b",
+   "glyph": "𐙎",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": []
+  },
+  {
+   "sign": "AB131c",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB41",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB16",
+   "glyph": "𐘌",
+   "n": 3,
+   "id_correct": 2,
+   "e2e_n": 3,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A334",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB164a",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB61",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB164c",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB164a",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB17",
+   "glyph": "𐘍",
+   "n": 11,
+   "id_correct": 6,
+   "e2e_n": 11,
+   "e2e_correct": 4,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A702",
+     "count": 2
+    },
+    {
+     "sign": "AB02",
+     "count": 1
+    },
+    {
+     "sign": "AB77",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB180",
+   "glyph": "𐙒",
+   "n": 5,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB57",
+     "count": 1
+    },
+    {
+     "sign": "AB34",
+     "count": 1
+    },
+    {
+     "sign": "AB41",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB21",
+   "glyph": "𐘏",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB02",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB21f",
+   "glyph": "𐘐",
+   "n": 9,
+   "id_correct": 7,
+   "e2e_n": 9,
+   "e2e_correct": 7,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 1
+    },
+    {
+     "sign": "A306",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB21m",
+   "glyph": "𐘑",
+   "n": 5,
+   "id_correct": 3,
+   "e2e_n": 5,
+   "e2e_correct": 3,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB03",
+     "count": 1
+    },
+    {
+     "sign": "A303",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB22f",
+   "glyph": "𐘓",
+   "n": 2,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "A304",
+     "count": 2
+    }
+   ]
+  },
+  {
+   "sign": "AB22m",
+   "glyph": "𐘔",
+   "n": 4,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "logogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "A705",
+     "count": 1
+    },
+    {
+     "sign": "A7092",
+     "count": 1
+    },
+    {
+     "sign": "AB120",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB23",
+   "glyph": "𐘕",
+   "n": 4,
+   "id_correct": 1,
+   "e2e_n": 4,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB120",
+     "count": 1
+    },
+    {
+     "sign": "AB50",
+     "count": 1
+    },
+    {
+     "sign": "AB09",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB24",
+   "glyph": "𐘗",
+   "n": 9,
+   "id_correct": 7,
+   "e2e_n": 9,
+   "e2e_correct": 7,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB80",
+     "count": 1
+    },
+    {
+     "sign": "unidentified",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB26",
+   "glyph": "𐘘",
+   "n": 17,
+   "id_correct": 16,
+   "e2e_n": 17,
+   "e2e_correct": 16,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB27",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB27",
+   "glyph": "𐘙",
+   "n": 21,
+   "id_correct": 19,
+   "e2e_n": 21,
+   "e2e_correct": 18,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB122",
+     "count": 1
+    },
+    {
+     "sign": "unidentified",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB28",
+   "glyph": "𐘚",
+   "n": 18,
+   "id_correct": 16,
+   "e2e_n": 18,
+   "e2e_correct": 16,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB30",
+     "count": 1
+    },
+    {
+     "sign": "A645",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB28b",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "1",
+   "confused_with": [
+    {
+     "sign": "AB28",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB30",
+   "glyph": "𐘝",
+   "n": 11,
+   "id_correct": 11,
+   "e2e_n": 11,
+   "e2e_correct": 10,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB302",
+   "glyph": null,
+   "n": 4,
+   "id_correct": 3,
+   "e2e_n": 4,
+   "e2e_correct": 3,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB55",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB31",
+   "glyph": "𐘞",
+   "n": 20,
+   "id_correct": 20,
+   "e2e_n": 20,
+   "e2e_correct": 20,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB34",
+   "glyph": "𐘟",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB76",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB37",
+   "glyph": "𐘠",
+   "n": 12,
+   "id_correct": 12,
+   "e2e_n": 12,
+   "e2e_correct": 12,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB38",
+   "glyph": "𐘡",
+   "n": 6,
+   "id_correct": 5,
+   "e2e_n": 6,
+   "e2e_correct": 5,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB03",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB39",
+   "glyph": "𐘢",
+   "n": 9,
+   "id_correct": 5,
+   "e2e_n": 9,
+   "e2e_correct": 6,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB80",
+     "count": 1
+    },
+    {
+     "sign": "AB118",
+     "count": 1
+    },
+    {
+     "sign": "AB40",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB40",
+   "glyph": "𐘣",
+   "n": 4,
+   "id_correct": 3,
+   "e2e_n": 4,
+   "e2e_correct": 3,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB39",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB41",
+   "glyph": "𐘤",
+   "n": 22,
+   "id_correct": 21,
+   "e2e_n": 22,
+   "e2e_correct": 21,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB77",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB43",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB28",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB44",
+   "glyph": "𐘥",
+   "n": 2,
+   "id_correct": 1,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB28",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB45",
+   "glyph": "𐘦",
+   "n": 2,
+   "id_correct": 1,
+   "e2e_n": 2,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A344",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB46",
+   "glyph": "𐘧",
+   "n": 3,
+   "id_correct": 3,
+   "e2e_n": 3,
+   "e2e_correct": 3,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": []
+  },
+  {
+   "sign": "AB47",
+   "glyph": "𐘨",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB48",
+   "glyph": "𐘩",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB31",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB49",
+   "glyph": "𐘪",
+   "n": 1,
+   "id_correct": 1,
+   "e2e_n": 1,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": []
+  },
+  {
+   "sign": "AB50",
+   "glyph": "𐘫",
+   "n": 7,
+   "id_correct": 3,
+   "e2e_n": 7,
+   "e2e_correct": 2,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A615",
+     "count": 1
+    },
+    {
+     "sign": "AB67",
+     "count": 1
+    },
+    {
+     "sign": "AB188",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB51",
+   "glyph": "𐘬",
+   "n": 9,
+   "id_correct": 6,
+   "e2e_n": 9,
+   "e2e_correct": 5,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 2
+    },
+    {
+     "sign": "AB60",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB53",
+   "glyph": "𐘭",
+   "n": 21,
+   "id_correct": 12,
+   "e2e_n": 21,
+   "e2e_correct": 12,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A704",
+     "count": 2
+    },
+    {
+     "sign": "A707",
+     "count": 1
+    },
+    {
+     "sign": "A703",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB54",
+   "glyph": "𐘮",
+   "n": 7,
+   "id_correct": 3,
+   "e2e_n": 7,
+   "e2e_correct": 4,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB118",
+     "count": 2
+    },
+    {
+     "sign": "A603",
+     "count": 1
+    },
+    {
+     "sign": "AB131a",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB55",
+   "glyph": "𐘯",
+   "n": 10,
+   "id_correct": 10,
+   "e2e_n": 10,
+   "e2e_correct": 9,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB56",
+   "glyph": "𐘰",
+   "n": 9,
+   "id_correct": 6,
+   "e2e_n": 9,
+   "e2e_correct": 4,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB55",
+     "count": 2
+    },
+    {
+     "sign": "AB57",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB57",
+   "glyph": "𐘱",
+   "n": 23,
+   "id_correct": 22,
+   "e2e_n": 23,
+   "e2e_correct": 21,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB59",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB58",
+   "glyph": "𐘲",
+   "n": 9,
+   "id_correct": 8,
+   "e2e_n": 9,
+   "e2e_correct": 8,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB73",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB59",
+   "glyph": "𐘳",
+   "n": 21,
+   "id_correct": 18,
+   "e2e_n": 21,
+   "e2e_correct": 18,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB58",
+     "count": 1
+    },
+    {
+     "sign": "AB81",
+     "count": 1
+    },
+    {
+     "sign": "AB57",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB60",
+   "glyph": "𐘴",
+   "n": 15,
+   "id_correct": 14,
+   "e2e_n": 15,
+   "e2e_correct": 12,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB73",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB61",
+   "glyph": "𐘵",
+   "n": 7,
+   "id_correct": 6,
+   "e2e_n": 7,
+   "e2e_correct": 7,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB69",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB65",
+   "glyph": "𐘶",
+   "n": 12,
+   "id_correct": 8,
+   "e2e_n": 12,
+   "e2e_correct": 10,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB118",
+     "count": 1
+    },
+    {
+     "sign": "AB51",
+     "count": 1
+    },
+    {
+     "sign": "AB100",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB66",
+   "glyph": "𐘷",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB41",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB67",
+   "glyph": "𐘸",
+   "n": 17,
+   "id_correct": 14,
+   "e2e_n": 17,
+   "e2e_correct": 14,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB57",
+     "count": 1
+    },
+    {
+     "sign": "AB100",
+     "count": 1
+    },
+    {
+     "sign": "AB55",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB69",
+   "glyph": "𐘹",
+   "n": 11,
+   "id_correct": 11,
+   "e2e_n": 11,
+   "e2e_correct": 9,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB70",
+   "glyph": "𐘺",
+   "n": 7,
+   "id_correct": 1,
+   "e2e_n": 7,
+   "e2e_correct": 2,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "AB77",
+     "count": 3
+    },
+    {
+     "sign": "AB120",
+     "count": 1
+    },
+    {
+     "sign": "AB16",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB72",
+   "glyph": null,
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "unseen",
+   "confused_with": [
+    {
+     "sign": "AB76",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB73",
+   "glyph": "𐘻",
+   "n": 14,
+   "id_correct": 11,
+   "e2e_n": 14,
+   "e2e_correct": 11,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "unidentified",
+     "count": 2
+    },
+    {
+     "sign": "AB07",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB74",
+   "glyph": "𐘼",
+   "n": 6,
+   "id_correct": 3,
+   "e2e_n": 6,
+   "e2e_correct": 5,
+   "role": "logogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB40",
+     "count": 1
+    },
+    {
+     "sign": "AB34",
+     "count": 1
+    },
+    {
+     "sign": "AB53",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB76",
+   "glyph": "𐘽",
+   "n": 8,
+   "id_correct": 7,
+   "e2e_n": 8,
+   "e2e_correct": 7,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A314",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB77",
+   "glyph": "𐘾",
+   "n": 17,
+   "id_correct": 17,
+   "e2e_n": 17,
+   "e2e_correct": 16,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB78",
+   "glyph": "𐘿",
+   "n": 7,
+   "id_correct": 7,
+   "e2e_n": 7,
+   "e2e_correct": 6,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": []
+  },
+  {
+   "sign": "AB79",
+   "glyph": "𐙀",
+   "n": 3,
+   "id_correct": 1,
+   "e2e_n": 3,
+   "e2e_correct": 1,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB120",
+     "count": 1
+    },
+    {
+     "sign": "AB122",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB80",
+   "glyph": "𐙁",
+   "n": 19,
+   "id_correct": 17,
+   "e2e_n": 19,
+   "e2e_correct": 18,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB69",
+     "count": 1
+    },
+    {
+     "sign": "A626",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB81",
+   "glyph": "𐙂",
+   "n": 36,
+   "id_correct": 35,
+   "e2e_n": 36,
+   "e2e_correct": 35,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "A303",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "AB85",
+   "glyph": "𐙄",
+   "n": 1,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "syllabogram",
+   "bucket": "2-4",
+   "confused_with": [
+    {
+     "sign": "A303",
+     "count": 1
+    }
+   ]
+  },
+  {
+   "sign": "unidentified",
+   "glyph": null,
+   "n": 67,
+   "id_correct": 25,
+   "e2e_n": 67,
+   "e2e_correct": 11,
+   "role": "syllabogram",
+   "bucket": "5+",
+   "confused_with": [
+    {
+     "sign": "AB02",
+     "count": 4
+    },
+    {
+     "sign": "AB07",
+     "count": 3
+    },
+    {
+     "sign": "AB03",
+     "count": 3
+    }
+   ]
+  }
+ ],
+ "tablet_results": [
+  {
+   "tablet": "ARKH 3a",
+   "truths": 12,
+   "found": 12,
+   "named": 12,
+   "read_top1": 7,
+   "identified": 12,
+   "id_correct": 7
+  },
+  {
+   "tablet": "ARKH 3b",
+   "truths": 9,
+   "found": 9,
+   "named": 9,
+   "read_top1": 7,
+   "identified": 9,
+   "id_correct": 5
+  },
+  {
+   "tablet": "ARKH 7",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 2,
+   "id_correct": 2
+  },
+  {
+   "tablet": "HT 10a",
+   "truths": 24,
+   "found": 24,
+   "named": 24,
+   "read_top1": 16,
+   "identified": 24,
+   "id_correct": 16
+  },
+  {
+   "tablet": "HT 10b",
+   "truths": 17,
+   "found": 17,
+   "named": 17,
+   "read_top1": 17,
+   "identified": 17,
+   "id_correct": 17
+  },
+  {
+   "tablet": "HT 117a",
+   "truths": 61,
+   "found": 61,
+   "named": 61,
+   "read_top1": 58,
+   "identified": 61,
+   "id_correct": 58
+  },
+  {
+   "tablet": "HT 117b",
+   "truths": 9,
+   "found": 9,
+   "named": 9,
+   "read_top1": 9,
+   "identified": 9,
+   "id_correct": 9
+  },
+  {
+   "tablet": "HT 120",
+   "truths": 23,
+   "found": 22,
+   "named": 23,
+   "read_top1": 18,
+   "identified": 23,
+   "id_correct": 19
+  },
+  {
+   "tablet": "HT 139",
+   "truths": 9,
+   "found": 9,
+   "named": 9,
+   "read_top1": 8,
+   "identified": 9,
+   "id_correct": 8
+  },
+  {
+   "tablet": "HT 141",
+   "truths": 5,
+   "found": 4,
+   "named": 5,
+   "read_top1": 4,
+   "identified": 5,
+   "id_correct": 5
+  },
+  {
+   "tablet": "HT 144",
+   "truths": 3,
+   "found": 3,
+   "named": 3,
+   "read_top1": 1,
+   "identified": 3,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT 16",
+   "truths": 16,
+   "found": 16,
+   "named": 16,
+   "read_top1": 10,
+   "identified": 16,
+   "id_correct": 9
+  },
+  {
+   "tablet": "HT 18",
+   "truths": 9,
+   "found": 9,
+   "named": 9,
+   "read_top1": 9,
+   "identified": 9,
+   "id_correct": 9
+  },
+  {
+   "tablet": "HT 20",
+   "truths": 22,
+   "found": 21,
+   "named": 22,
+   "read_top1": 17,
+   "identified": 22,
+   "id_correct": 17
+  },
+  {
+   "tablet": "HT 24a",
+   "truths": 17,
+   "found": 15,
+   "named": 17,
+   "read_top1": 11,
+   "identified": 17,
+   "id_correct": 11
+  },
+  {
+   "tablet": "HT 24b",
+   "truths": 9,
+   "found": 9,
+   "named": 9,
+   "read_top1": 5,
+   "identified": 9,
+   "id_correct": 5
+  },
+  {
+   "tablet": "HT 28a",
+   "truths": 31,
+   "found": 30,
+   "named": 31,
+   "read_top1": 24,
+   "identified": 31,
+   "id_correct": 25
+  },
+  {
+   "tablet": "HT 28b",
+   "truths": 27,
+   "found": 26,
+   "named": 27,
+   "read_top1": 22,
+   "identified": 27,
+   "id_correct": 22
+  },
+  {
+   "tablet": "HT 31",
+   "truths": 33,
+   "found": 20,
+   "named": 33,
+   "read_top1": 13,
+   "identified": 33,
+   "id_correct": 22
+  },
+  {
+   "tablet": "HT 33",
+   "truths": 18,
+   "found": 11,
+   "named": 18,
+   "read_top1": 6,
+   "identified": 18,
+   "id_correct": 13
+  },
+  {
+   "tablet": "HT 36",
+   "truths": 9,
+   "found": 8,
+   "named": 9,
+   "read_top1": 7,
+   "identified": 9,
+   "id_correct": 8
+  },
+  {
+   "tablet": "HT 40",
+   "truths": 12,
+   "found": 12,
+   "named": 12,
+   "read_top1": 10,
+   "identified": 12,
+   "id_correct": 10
+  },
+  {
+   "tablet": "HT 55a",
+   "truths": 10,
+   "found": 10,
+   "named": 10,
+   "read_top1": 6,
+   "identified": 10,
+   "id_correct": 8
+  },
+  {
+   "tablet": "HT 55b",
+   "truths": 5,
+   "found": 5,
+   "named": 5,
+   "read_top1": 5,
+   "identified": 5,
+   "id_correct": 5
+  },
+  {
+   "tablet": "HT 57a",
+   "truths": 5,
+   "found": 5,
+   "named": 5,
+   "read_top1": 4,
+   "identified": 5,
+   "id_correct": 4
+  },
+  {
+   "tablet": "HT 57b",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 65",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 1,
+   "identified": 2,
+   "id_correct": 2
+  },
+  {
+   "tablet": "HT 75",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 2,
+   "identified": 2,
+   "id_correct": 2
+  },
+  {
+   "tablet": "HT 7a",
+   "truths": 15,
+   "found": 15,
+   "named": 15,
+   "read_top1": 14,
+   "identified": 15,
+   "id_correct": 15
+  },
+  {
+   "tablet": "HT 7b",
+   "truths": 6,
+   "found": 6,
+   "named": 6,
+   "read_top1": 5,
+   "identified": 6,
+   "id_correct": 5
+  },
+  {
+   "tablet": "HT Wa 1007",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 1,
+   "identified": 2,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1009",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 2,
+   "identified": 2,
+   "id_correct": 2
+  },
+  {
+   "tablet": "HT Wa 1010",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 2,
+   "identified": 2,
+   "id_correct": 2
+  },
+  {
+   "tablet": "HT Wa 1015",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 2,
+   "identified": 2,
+   "id_correct": 2
+  },
+  {
+   "tablet": "HT Wa 1128",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1148",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1150",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1255",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1282",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1293",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1308",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1451",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1481",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1490",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1533",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1544",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1559",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1579",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1612",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1624",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1625",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1753",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1766",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wa 1809",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wc 3016a",
+   "truths": 3,
+   "found": 3,
+   "named": 3,
+   "read_top1": 3,
+   "identified": 3,
+   "id_correct": 3
+  },
+  {
+   "tablet": "HT Wc 3016b",
+   "truths": 2,
+   "found": 1,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 2,
+   "id_correct": 1
+  },
+  {
+   "tablet": "HT Wc 3019",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Zb 159",
+   "truths": 6,
+   "found": 6,
+   "named": 6,
+   "read_top1": 4,
+   "identified": 6,
+   "id_correct": 5
+  },
+  {
+   "tablet": "KH 13",
+   "truths": 8,
+   "found": 6,
+   "named": 8,
+   "read_top1": 6,
+   "identified": 8,
+   "id_correct": 7
+  },
+  {
+   "tablet": "KH 20",
+   "truths": 10,
+   "found": 8,
+   "named": 10,
+   "read_top1": 7,
+   "identified": 10,
+   "id_correct": 7
+  },
+  {
+   "tablet": "KH 24",
+   "truths": 3,
+   "found": 3,
+   "named": 3,
+   "read_top1": 3,
+   "identified": 3,
+   "id_correct": 3
+  },
+  {
+   "tablet": "KH 33",
+   "truths": 3,
+   "found": 3,
+   "named": 3,
+   "read_top1": 2,
+   "identified": 3,
+   "id_correct": 2
+  },
+  {
+   "tablet": "KH 42",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH 6",
+   "truths": 31,
+   "found": 30,
+   "named": 31,
+   "read_top1": 22,
+   "identified": 31,
+   "id_correct": 24
+  },
+  {
+   "tablet": "KH 61",
+   "truths": 6,
+   "found": 6,
+   "named": 6,
+   "read_top1": 1,
+   "identified": 6,
+   "id_correct": 2
+  },
+  {
+   "tablet": "KH 73",
+   "truths": 7,
+   "found": 6,
+   "named": 7,
+   "read_top1": 5,
+   "identified": 7,
+   "id_correct": 6
+  },
+  {
+   "tablet": "KH 74",
+   "truths": 7,
+   "found": 6,
+   "named": 7,
+   "read_top1": 5,
+   "identified": 7,
+   "id_correct": 5
+  },
+  {
+   "tablet": "KH 7a",
+   "truths": 29,
+   "found": 27,
+   "named": 29,
+   "read_top1": 21,
+   "identified": 29,
+   "id_correct": 20
+  },
+  {
+   "tablet": "KH 7b",
+   "truths": 12,
+   "found": 11,
+   "named": 12,
+   "read_top1": 9,
+   "identified": 12,
+   "id_correct": 10
+  },
+  {
+   "tablet": "KH 84",
+   "truths": 6,
+   "found": 6,
+   "named": 6,
+   "read_top1": 2,
+   "identified": 6,
+   "id_correct": 3
+  },
+  {
+   "tablet": "KH 94",
+   "truths": 3,
+   "found": 3,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 3,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wa 1008",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wa 1009",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wa 1012",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2001",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2006",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2013",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2015",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2018",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2025",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2035",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2041",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2043",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2048",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2065",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 2,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2101",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2102",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2103",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KH Wc 2104",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KN 22a",
+   "truths": 6,
+   "found": 6,
+   "named": 6,
+   "read_top1": 4,
+   "identified": 6,
+   "id_correct": 3
+  },
+  {
+   "tablet": "KN 22b",
+   "truths": 3,
+   "found": 2,
+   "named": 3,
+   "read_top1": 1,
+   "identified": 3,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN 22c",
+   "truths": 6,
+   "found": 5,
+   "named": 6,
+   "read_top1": 3,
+   "identified": 6,
+   "id_correct": 2
+  },
+  {
+   "tablet": "KN Wb 33a",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 2,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Wb 33b",
+   "truths": 3,
+   "found": 3,
+   "named": 3,
+   "read_top1": 2,
+   "identified": 3,
+   "id_correct": 3
+  },
+  {
+   "tablet": "KN Wc <24a>",
+   "truths": 3,
+   "found": 2,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 3,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Wc <25>",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "KN Zb 35",
+   "truths": 5,
+   "found": 5,
+   "named": 5,
+   "read_top1": 4,
+   "identified": 5,
+   "id_correct": 4
+  },
+  {
+   "tablet": "KN Ze 16",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 2,
+   "identified": 2,
+   "id_correct": 2
+  },
+  {
+   "tablet": "KN Zf 13",
+   "truths": 19,
+   "found": 13,
+   "named": 19,
+   "read_top1": 2,
+   "identified": 19,
+   "id_correct": 3
+  },
+  {
+   "tablet": "MA 4a",
+   "truths": 5,
+   "found": 5,
+   "named": 5,
+   "read_top1": 0,
+   "identified": 5,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 4b",
+   "truths": 4,
+   "found": 2,
+   "named": 4,
+   "read_top1": 1,
+   "identified": 4,
+   "id_correct": 3
+  },
+  {
+   "tablet": "MA 6a",
+   "truths": 2,
+   "found": 1,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 2,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 6b",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 6c",
+   "truths": 3,
+   "found": 2,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 3,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 6d",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA Wc <5b>",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "MY Zf 2",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 15a",
+   "truths": 4,
+   "found": 4,
+   "named": 4,
+   "read_top1": 2,
+   "identified": 4,
+   "id_correct": 2
+  },
+  {
+   "tablet": "PH 15b",
+   "truths": 3,
+   "found": 2,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 3,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 16a",
+   "truths": 7,
+   "found": 4,
+   "named": 7,
+   "read_top1": 1,
+   "identified": 7,
+   "id_correct": 3
+  },
+  {
+   "tablet": "PH 16b",
+   "truths": 6,
+   "found": 5,
+   "named": 6,
+   "read_top1": 3,
+   "identified": 6,
+   "id_correct": 4
+  },
+  {
+   "tablet": "PH 19",
+   "truths": 2,
+   "found": 2,
+   "named": 2,
+   "read_top1": 2,
+   "identified": 2,
+   "id_correct": 1
+  },
+  {
+   "tablet": "PH 31a",
+   "truths": 22,
+   "found": 19,
+   "named": 22,
+   "read_top1": 14,
+   "identified": 22,
+   "id_correct": 15
+  },
+  {
+   "tablet": "PH 31b",
+   "truths": 25,
+   "found": 23,
+   "named": 25,
+   "read_top1": 15,
+   "identified": 25,
+   "id_correct": 15
+  },
+  {
+   "tablet": "PH Wb 34",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc 42",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc 45",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 3,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc 46",
+   "truths": 2,
+   "found": 1,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 2,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc <47>",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 1,
+   "identified": 1,
+   "id_correct": 1
+  },
+  {
+   "tablet": "SY Za 4",
+   "truths": 13,
+   "found": 13,
+   "named": 13,
+   "read_top1": 10,
+   "identified": 13,
+   "id_correct": 11
+  },
+  {
+   "tablet": "TY 2",
+   "truths": 46,
+   "found": 24,
+   "named": 46,
+   "read_top1": 11,
+   "identified": 46,
+   "id_correct": 18
+  },
+  {
+   "tablet": "TY 3a",
+   "truths": 37,
+   "found": 31,
+   "named": 37,
+   "read_top1": 20,
+   "identified": 37,
+   "id_correct": 22
+  },
+  {
+   "tablet": "TY 3b",
+   "truths": 14,
+   "found": 13,
+   "named": 14,
+   "read_top1": 7,
+   "identified": 14,
+   "id_correct": 8
+  },
+  {
+   "tablet": "ZA 11a",
+   "truths": 24,
+   "found": 23,
+   "named": 24,
+   "read_top1": 16,
+   "identified": 24,
+   "id_correct": 15
+  },
+  {
+   "tablet": "ZA 11b",
+   "truths": 15,
+   "found": 13,
+   "named": 15,
+   "read_top1": 7,
+   "identified": 15,
+   "id_correct": 8
+  },
+  {
+   "tablet": "ZA 15a",
+   "truths": 34,
+   "found": 32,
+   "named": 34,
+   "read_top1": 27,
+   "identified": 34,
+   "id_correct": 29
+  },
+  {
+   "tablet": "ZA 15b",
+   "truths": 7,
+   "found": 7,
+   "named": 7,
+   "read_top1": 6,
+   "identified": 7,
+   "id_correct": 6
+  },
+  {
+   "tablet": "ZA 20",
+   "truths": 21,
+   "found": 16,
+   "named": 21,
+   "read_top1": 14,
+   "identified": 21,
+   "id_correct": 15
+  },
+  {
+   "tablet": "ZA 28",
+   "truths": 1,
+   "found": 1,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 1,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 9",
+   "truths": 28,
+   "found": 24,
+   "named": 28,
+   "read_top1": 20,
+   "identified": 28,
+   "id_correct": 20
+  },
+  {
+   "tablet": "ZA Wc 2",
+   "truths": 7,
+   "found": 7,
+   "named": 7,
+   "read_top1": 4,
+   "identified": 7,
+   "id_correct": 4
+  }
+ ]
+}
