@@ -1,6 +1,6 @@
 """la.reader: crops, test-time augmentation and the nearest-neighbour blend, with fake models."""
 
-from types import SimpleNamespace
+from types import MappingProxyType, SimpleNamespace
 
 import numpy as np
 import pytest
@@ -9,7 +9,7 @@ from la import reader
 
 class FakeClassifier:
     """Two classes; the probability of class 'A' is the crop's ink share, so crops change answers."""
-    names = {0: "A", 1: "B"}
+    names = MappingProxyType({0: "A", 1: "B"})
 
     def __init__(self):
         self.calls = 0
@@ -57,7 +57,7 @@ def test_tta_boxes_keep_the_original_first_and_vary_the_rest():
 
 def test_tta_averages_over_variants_in_one_batch():
     clf = FakeClassifier()
-    names, probs = reader.boxed_probabilities(clf, drawing(), [(20, 20, 40, 40), (55, 55, 85, 85)], tta=True)
+    _, probs = reader.boxed_probabilities(clf, drawing(), [(20, 20, 40, 40), (55, 55, 85, 85)], tta=True)
     assert clf.calls == 1
     assert probs.shape == (2, 2)
     assert np.allclose(probs.sum(axis=1), 1.0)
