@@ -19,6 +19,7 @@ from __future__ import annotations
 import json
 import os
 import re
+from threading import Lock
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -169,13 +170,26 @@ def _load_embeddings(path: Path) -> dict | None:
         return {key: data[key] for key in data.files}
 
 
-@lru_cache(maxsize=1)
+_BUILD_LOCK = Lock()
+_index: GlyphIndex | None = None
+
+
 def get_index() -> GlyphIndex:
-    docs = fetch.load_cached() if fetch.CACHE_DIR.is_dir() else {}
-    if not docs:
-        raise CorpusMissing("The cached lineara.eu corpus is not installed on this server.")
-    annotations = json.loads(ANNOTATIONS.read_text(encoding="utf-8")) if ANNOTATIONS.is_file() else []
-    return GlyphIndex(docs, annotations, _load_embeddings(EMBEDDINGS))
+    """Built once, under a lock, so concurrent first requests do not each read the corpus.
+
+    A missing corpus is not cached (it may be installed later); that check is a single
+    directory glob, so retrying on every request is cheap.
+    """
+    global _index
+    if _index is not None:
+        return _index
+    with _BUILD_LOCK:
+        if _index is None:
+            if not fetch.CACHE_DIR.is_dir() or next(fetch.CACHE_DIR.glob("*.json"), None) is None:
+                raise CorpusMissing("The cached lineara.eu corpus is not installed on this server.")
+            annotations = json.loads(ANNOTATIONS.read_text(encoding="utf-8")) if ANNOTATIONS.is_file() else []
+            _index = GlyphIndex(fetch.load_cached(), annotations, _load_embeddings(EMBEDDINGS))
+        return _index
 
 
 @lru_cache(maxsize=1)

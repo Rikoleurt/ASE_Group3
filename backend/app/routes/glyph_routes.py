@@ -5,12 +5,12 @@ from io import BytesIO
 from typing import Annotated
 
 import numpy as np
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, Query, Request, Response, UploadFile
 from mysql.connector import Error as DatabaseError
 from PIL import Image, ImageDraw
 
 from backend.app import glyph_index
-from backend.app.auth import AuthenticatedWrite, require_ajax
+from backend.app.auth import AuthenticatedWrite
 from backend.app.data_controller.glyph_data_controller import GlyphDataController
 from backend.app.model.analysis import ApiError
 from backend.app.model.glyph import (Annotation, AnnotationCreate, AnnotationPage, GlyphBox,
@@ -85,15 +85,24 @@ def occurrences(sign: Annotated[str, SIGN_PATH], index: Index,
     return _page(index, sign, limit, offset, reference)
 
 
+def limit_body(request: Request) -> None:
+    """Refuse an oversized upload before it is parsed (the multipart overhead is small)."""
+    declared = request.headers.get("content-length", "")
+    if not declared.isdigit() or int(declared) > glyphembed.MAX_CROP_BYTES + 64 * 1024:
+        raise HTTPException(413, "The crop is larger than 2 MB.")
+
+
 @router.post("/glyphs/{sign}/occurrences/search", response_model=GlyphOccurrencePage,
-             dependencies=[Depends(require_ajax)],
-             responses={**ERRORS, 413: {"model": ApiError}, 422: {"model": ApiError}})
-def occurrences_for_crop(sign: Annotated[str, SIGN_PATH], index: Index,
+             dependencies=[Depends(limit_body)],
+             responses={**ERRORS, 401: {"model": ApiError}, 403: {"model": ApiError},
+                        413: {"model": ApiError}, 422: {"model": ApiError}})
+def occurrences_for_crop(sign: Annotated[str, SIGN_PATH], index: Index, user: AuthenticatedWrite,
                          file: Annotated[UploadFile, File()],
                          limit: Annotated[int, Form(ge=1, le=100)] = 30,
                          offset: Annotated[int, Form(ge=0, le=100_000)] = 0):
     """Order the occurrences by similarity to an uploaded crop (the PNG of a detected sign).
 
+    Needs a login session: embedding holds the shared inference lock, which /analysis also uses.
     The crop is embedded on the server with the same classifier as the corpus; it is not stored.
     """
     data = file.file.read(glyphembed.MAX_CROP_BYTES + 1)

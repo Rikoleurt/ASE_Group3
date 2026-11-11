@@ -14,6 +14,7 @@ from backend.app.data_controller.user_data_controller import UserDataController
 from backend.app.main import app
 from backend.app.model.user import UserPublic
 from backend.app.routes import glyph_routes
+from la import glyphembed
 from backend.tests.glyph_fixtures import index as fixture_index
 
 TOKEN = "a" * 43
@@ -102,21 +103,31 @@ def png(size=(30, 40)) -> bytes:
 
 
 def test_search_by_uploaded_crop(client, monkeypatch):
+    login(client)
     monkeypatch.setattr(glyph_index, "embed_crop", lambda data: np.array([0.0, 1.0, 0.0, 0.0], dtype=np.float32))
-    response = client.post("/glyphs/AB77/occurrences/search", files={"file": ("c.png", png())},
-                           data={"limit": "2"}, headers={"X-Requested-With": "ASE"})
+    response = client.post("/glyphs/AB77/occurrences/search", files={"file": ("c.png", png())}, data={"limit": "2"})
     assert response.status_code == 200
     body = response.json()
     assert body["ranked_by"] == "glyph" and body["items"][0]["position"] == 11 and len(body["items"]) == 2
 
 
-def test_search_rejects_big_bad_and_header_less_uploads(client):
-    ase = {"X-Requested-With": "ASE"}
-    assert client.post("/glyphs/AB77/occurrences/search", files={"file": ("c.png", png())}).status_code == 403
-    big = b"\x89PNG" + b"0" * (2 * 1024 * 1024 + 1)
-    assert client.post("/glyphs/AB77/occurrences/search", files={"file": ("c.png", big)}, headers=ase).status_code == 413
-    assert client.post("/glyphs/AB77/occurrences/search", files={"file": ("c.png", b"junk")}, headers=ase).status_code == 422
-    assert client.post("/glyphs/ZZ99/occurrences/search", files={"file": ("c.png", png())}, headers=ase).status_code == 404
+def test_search_needs_a_session_and_never_embeds_without_one(client, monkeypatch):
+    embed = MagicMock()
+    monkeypatch.setattr(glyph_index, "embed_crop", embed)
+    files = {"file": ("c.png", png())}
+    assert client.post("/glyphs/AB77/occurrences/search", files=files).status_code == 401
+    client.cookies.set(COOKIE_NAME, TOKEN)  # session but no CSRF token
+    assert client.post("/glyphs/AB77/occurrences/search", files=files).status_code == 403
+    embed.assert_not_called()
+
+
+def test_search_rejects_big_and_bad_uploads(client, monkeypatch):
+    login(client)
+    monkeypatch.setattr(glyph_index, "embed_crop", MagicMock(side_effect=glyphembed.BadCrop("Invalid image.")))
+    big = b"PNG" + b"0" * (2 * 1024 * 1024 + 100 * 1024)
+    assert client.post("/glyphs/AB77/occurrences/search", files={"file": ("c.png", big)}).status_code == 413
+    assert client.post("/glyphs/AB77/occurrences/search", files={"file": ("c.png", b"junk")}).status_code == 422
+    assert client.post("/glyphs/ZZ99/occurrences/search", files={"file": ("c.png", png())}).status_code == 404
 
 
 def targets(*pairs):
@@ -233,3 +244,35 @@ def test_thumbnail_highlights_the_box_and_validates_paths(client, tmp_path, monk
     assert client.get("/tablets/HT-9/thumbnail.png").status_code == 404
     assert client.get("/tablets/HT-1/thumbnail.png", params={"width": 5000}).status_code == 422
     assert client.get("/tablets/..%2F..%2Fsecret/thumbnail.png").status_code in (404, 422)
+
+
+def test_failed_target_insert_rolls_back_and_commits_nothing(client, connection):
+    login(client)
+    cursor = connection.cursor.return_value
+    cursor.lastrowid = 3
+    cursor.executemany.side_effect = DatabaseError("boom")
+    response = client.post("/glyphs/AB77/annotations", json={"body": "x", "targets": targets(("HT-1", 1), ("HT-2", 1))})
+    assert response.status_code == 503
+    connection.rollback.assert_called_once()
+    connection.commit.assert_not_called()
+    connection.close.assert_called_once()
+
+
+def test_index_is_built_once_under_a_lock_and_missing_corpus_is_not_cached(monkeypatch, tmp_path):
+    from backend.app.glyph_index import CorpusMissing
+
+    monkeypatch.setattr(glyph_index, "_index", None)
+    monkeypatch.setattr(glyph_index.fetch, "CACHE_DIR", tmp_path / "absent")
+    with pytest.raises(CorpusMissing):
+        glyph_index.get_index()
+    built = MagicMock(return_value=fixture_index())
+    (tmp_path / "cache").mkdir()
+    (tmp_path / "cache" / "HT-1.json").write_text("{}")
+    monkeypatch.setattr(glyph_index.fetch, "CACHE_DIR", tmp_path / "cache")
+    monkeypatch.setattr(glyph_index.fetch, "load_cached", lambda: {"HT 1": {}})
+    monkeypatch.setattr(glyph_index, "GlyphIndex", built)
+    monkeypatch.setattr(glyph_index, "_load_embeddings", lambda path: None)
+    first = glyph_index.get_index()
+    assert glyph_index.get_index() is first
+    built.assert_called_once()
+    monkeypatch.setattr(glyph_index, "_index", None)

@@ -1836,7 +1836,7 @@
     },
     "/glyphs/{sign}/occurrences/search": {
       "post": {
-        "description": "Order the occurrences by similarity to an uploaded crop (the PNG of a detected sign).\n\nThe crop is embedded on the server with the same classifier as the corpus; it is not stored.",
+        "description": "Order the occurrences by similarity to an uploaded crop (the PNG of a detected sign).\n\nNeeds a login session: embedding holds the shared inference lock, which /analysis also uses.\nThe crop is embedded on the server with the same classifier as the corpus; it is not stored.",
         "operationId": "occurrences_for_crop_glyphs__sign__occurrences_search_post",
         "parameters": [
           {
@@ -1851,7 +1851,7 @@
           },
           {
             "in": "header",
-            "name": "x-requested-with",
+            "name": "x-csrf-token",
             "required": false,
             "schema": {
               "anyOf": [
@@ -1862,7 +1862,7 @@
                   "type": "null"
                 }
               ],
-              "title": "X-Requested-With"
+              "title": "X-Csrf-Token"
             }
           }
         ],
@@ -1886,6 +1886,26 @@
               }
             },
             "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
           },
           "404": {
             "content": {
@@ -1928,6 +1948,11 @@
             "description": "Service Unavailable"
           }
         },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
         "summary": "Occurrences For Crop",
         "tags": [
           "glyphs"
