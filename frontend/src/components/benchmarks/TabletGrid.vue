@@ -4,10 +4,10 @@ import { accuracyColor, pct, tabletRate } from './benchmarkData'
 
 const props = defineProps({
   tablets: { type: Array, required: true },
-  identifies: { type: Boolean, default: false },
+  mode: { type: String, default: 'id' },
   reduceMotion: { type: Boolean, default: false },
 })
-const cells = computed(() => props.tablets.map((t) => ({ ...t, ...tabletRate(t, props.identifies) })))
+const cells = computed(() => props.tablets.map((t) => ({ ...t, ...tabletRate(t, props.mode) })))
 const text = (c) =>
   c.n
     ? `${c.tablet}: ${c.correct} of ${c.n} signs ${c.what} (${pct(c.rate, 0)}); ${c.truths} signs on the tablet, ${c.found} found`
@@ -22,7 +22,7 @@ const text = (c) =>
           type="button"
           :title="text(c)"
           :aria-label="text(c)"
-          class="tablet-cell h-6 w-6 cursor-default rounded-sm border border-ink/25 focus-visible:outline-2 focus-visible:outline-offset-2"
+          class="tablet-cell h-6 w-6 cursor-default rounded-sm border border-ink/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           :class="{ 'border-dashed': c.rate == null, 'no-motion': reduceMotion }"
           :style="{ backgroundColor: accuracyColor(c.rate).bg }"
         />

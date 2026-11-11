@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 import BenchmarksView from '../views/BenchmarksView.vue'
-import { accuracyColor, worstToBest } from '../components/benchmarks/benchmarkData'
+import { accuracyColor, bestVersion, contrast, gridMode, rampRgb, rankVersions, textRgb, worstToBest } from '../components/benchmarks/benchmarkData'
 
 let wrapper
 
@@ -37,7 +37,7 @@ const docs = {
   detonly: doc('detonly', { kind: 'detector', stages: { detection: true, identification: false }, metrics: { recall: 0.5 }, by_role: {}, by_bucket: {}, bucket_counts: {}, coverage_curve: [] }),
 }
 const index = {
-  versions: ['alpha', 'beta', 'idonly'].map((v) => ({ version: v, description: `${v} description`, read_top1: docs[v].metrics.read_top1 ?? null, id_top1: docs[v].metrics.id_top1 ?? null })),
+  versions: ['alpha', 'beta', 'idonly'].map((v) => ({ version: v, kind: docs[v].kind, stages: docs[v].stages, description: `${v} description`, read_top1: docs[v].metrics.read_top1 ?? null, id_top1: docs[v].metrics.id_top1 ?? null })),
 }
 
 function stubFetch(overrides = {}) {
@@ -103,7 +103,7 @@ describe('Benchmarks page', () => {
     await select().setValue('idonly')
     await flushPromises()
     expect(tile('read_top1').text()).toContain('—')
-    expect(tile('read_top1').text()).toContain('only identifies')
+    expect(tile('read_top1').text()).toContain('names signs on given boxes')
     expect(tile('recall').text()).toContain('does not detect')
     expect(tile('id_top1').text()).toContain('65.0%')
     expect(tile('id_top1').text()).toContain('No comparison with ref')
@@ -111,7 +111,7 @@ describe('Benchmarks page', () => {
   })
 
   it('shows empty group bars for a detection-only version', async () => {
-    const withDetOnly = { versions: [...index.versions, { version: 'detonly', description: '', read_top1: null, id_top1: null }] }
+    const withDetOnly = { versions: [...index.versions, { version: 'detonly', kind: 'generic', stages: docs.detonly.stages, description: '', read_top1: null, id_top1: null }] }
     stubFetch({ '/api/benchmarks': { ok: true, status: 200, json: async () => withDetOnly } })
     await render()
     await select().setValue('detonly')
@@ -170,12 +170,14 @@ describe('Glyph grid', () => {
   it('scores read end to end for versions that do not identify', async () => {
     stubFetch()
     docs.alpha.stages = { detection: true, identification: false }
+    docs.alpha.kind = 'one_stage'
     await render()
     await select().setValue('alpha')
     await flushPromises()
     expect(wrapper.get('[data-sign="AB01"]').attributes('title')).toContain('50% read correctly end to end')
     expect(wrapper.get('[data-sign="AB10"]').classes()).not.toContain('border-dashed')
     docs.alpha.stages = both
+    docs.alpha.kind = 'two_stage'
   })
 
   it('sorts by frequency, accuracy and sign ID', async () => {
@@ -215,10 +217,10 @@ describe('Glyph grid', () => {
 
 describe('Play worst to best', () => {
   it('orders versions by headline score, worst first, marking identification-only ones', () => {
-    expect(worstToBest(index.versions).map((v) => v.version)).toEqual(['alpha', 'idonly', 'beta'])
+    expect(worstToBest(index.versions).map((v) => v.version)).toEqual(['alpha', 'beta', 'idonly'])
   })
 
-  it('steps through the versions and stops on the best', async () => {
+  it('steps through the end-to-end tier, then the true-box tier, and stops on the last', async () => {
     stubFetch()
     await render()
     vi.useFakeTimers()
@@ -226,19 +228,18 @@ describe('Play worst to best', () => {
     await tick(0)
     expect(select().element.value).toBe('alpha')
     expect(wrapper.get('[data-testid="progress"]').text()).toContain('Version 1 of 3: alpha')
+    expect(wrapper.find('[data-testid="tier-note"]').exists()).toBe(false)
     expect(tile('read_top1').text()).toContain('40.0%')
-    await tick(1500)
-    expect(select().element.value).toBe('idonly')
-    expect(wrapper.get('[data-testid="progress"]').text()).toContain('identification only')
-    expect(wrapper.get('[data-testid="progress"]').text()).toContain('65.0% named')
     await tick(1500)
     expect(select().element.value).toBe('beta')
     expect(tile('read_top1').text()).toContain('70.0%')
     await tick(1500)
+    expect(select().element.value).toBe('idonly')
+    expect(wrapper.get('[data-testid="tier-note"]').text()).toContain('not comparable')
+    expect(wrapper.get('[data-testid="progress"]').text()).toContain('65.0% named')
+    await tick(1500)
     expect(wrapper.find('[data-testid="pause"]').exists()).toBe(false)
-    expect(wrapper.get('[data-testid="play"]').exists()).toBe(true)
     expect(wrapper.get('[data-testid="progress"]').text()).toContain('done')
-    expect(select().element.value).toBe('beta')
   })
 
   it('pauses, resumes and stops back at the starting version', async () => {
@@ -253,7 +254,7 @@ describe('Play worst to best', () => {
     expect(select().element.value).toBe('alpha')
     await wrapper.get('[data-testid="pause"]').trigger('click')
     await tick(1500)
-    expect(select().element.value).toBe('idonly')
+    expect(select().element.value).toBe('beta')
     await wrapper.get('[data-testid="stop"]').trigger('click')
     await tick(0)
     expect(select().element.value).toBe('beta')
@@ -285,7 +286,7 @@ describe('Play worst to best', () => {
     await wrapper.get('[data-testid="play"]').trigger('click')
     await tick(0)
     await tick(1500)
-    expect(select().element.value).toBe('idonly')
+    expect(select().element.value).toBe('beta')
   })
 
   it('animates by default', async () => {
@@ -293,5 +294,152 @@ describe('Play worst to best', () => {
     await render()
     expect(wrapper.get('main').classes()).not.toContain('reduce-motion')
     expect(wrapper.get('[data-sign="AB01"]').classes()).not.toContain('no-motion')
+  })
+})
+
+// Real shapes from benchmark/history: a plain detector (kind "generic") cannot name signs,
+// the one-stage identity baseline names them end to end (badly), shape-knn only names given boxes.
+const generic = doc('generic-det', { kind: 'generic', stages: { detection: true, identification: false }, metrics: { read_top1: 0, recall: 0.8 }, ci95: { read_top1: [0, 0] }, vs_reference: {}, by_role: {}, by_bucket: {}, bucket_counts: {}, coverage_curve: [],
+  signs: signs.map((x) => ({ ...x, n: 0, id_correct: 0, e2e_correct: 0 })), tablet_results: tablets.map((t) => ({ ...t, read_top1: 0, identified: 0, id_correct: 0 })) })
+const oneStage = doc('one-stage', { kind: 'one_stage', stages: { detection: true, identification: false }, metrics: { read_top1: 0.01, recall: 0.05 }, vs_reference: {}, by_role: {}, by_bucket: {}, bucket_counts: {}, coverage_curve: [],
+  signs: signs.map((x) => ({ ...x, n: 0, id_correct: 0 })), tablet_results: tablets.map((t) => ({ ...t, identified: 0, id_correct: 0 })) })
+
+function withExtras(extra) {
+  const all = { ...docs, 'generic-det': generic, 'one-stage': oneStage }
+  const idx = { versions: [...index.versions, ...extra.map((v) => ({ version: v, kind: all[v].kind, stages: all[v].stages, description: '', read_top1: all[v].metrics.read_top1 ?? null, id_top1: null }))] }
+  vi.stubGlobal('fetch', vi.fn(async (url) => {
+    const body = url === '/api/benchmarks' ? idx : all[decodeURIComponent(url.split('/').pop())]
+    return { ok: !!body, status: body ? 200 : 404, json: async () => body }
+  }))
+}
+
+describe('Versions that cannot name signs', () => {
+  it('shows no per-sign or per-tablet zeros for a detector, and no read rate', async () => {
+    withExtras(['generic-det'])
+    await render()
+    await select().setValue('generic-det')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="glyph-grid"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="tablet-grid"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="grid-note"]').text()).toContain('Not measured')
+    expect(tile('read_top1').text()).toContain('—')
+    expect(tile('read_top1').text()).not.toContain('0.0%')
+    expect(tile('recall').text()).toContain('80.0%')
+  })
+
+  it('still shows the one-stage detector end to end', async () => {
+    withExtras(['one-stage'])
+    await render()
+    await select().setValue('one-stage')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="glyph-grid"]').exists()).toBe(true)
+    expect(wrapper.get('[data-sign="AB01"]').attributes('title')).toContain('50% read correctly end to end')
+    expect(tile('read_top1').text()).toContain('1.0%')
+    expect(gridMode(oneStage)).toBe('e2e')
+    expect(gridMode(generic)).toBe(null)
+    expect(gridMode(docs.idonly)).toBe('id')
+  })
+
+  it('lists a detector without a score but leaves it out of playback', async () => {
+    withExtras(['generic-det'])
+    await render()
+    const entry = { version: 'generic-det', kind: 'generic', stages: generic.stages, read_top1: 0, id_top1: null }
+    expect(worstToBest([...index.versions, entry]).map((v) => v.version)).not.toContain('generic-det')
+    expect(select().findAll('option').map((o) => o.element.value)).toContain('generic-det')
+  })
+})
+
+describe('Ranking tiers', () => {
+  it('ranks end to end first, never mixing true-box scores into that order', () => {
+    const e = (version, read, id, kind = 'two_stage', stages = both) => ({ version, kind, stages, read_top1: read, id_top1: id })
+    const list = [e('hi-id', null, 0.99, 'shape_knn', { detection: false, identification: true }), e('low', 0.2, 0.3), e('high', 0.6, 0.7), e('none', null, null, 'x', { detection: false, identification: false })]
+    const t = rankVersions(list)
+    expect(t.endToEnd.map((v) => v.version)).toEqual(['low', 'high'])
+    expect(t.idOnly.map((v) => v.version)).toEqual(['hi-id'])
+    expect(t.unscored.map((v) => v.version)).toEqual(['none'])
+    expect(bestVersion(list).version).toBe('high')
+    expect(bestVersion([list[0]]).version).toBe('hi-id')
+  })
+})
+
+describe('Playback robustness', () => {
+  const answer = (url) => ({ ok: true, status: 200, json: async () => docs[url.split('/').pop()] })
+
+  it('does nothing after unmount during the prefetch', async () => {
+    let release
+    const gate = new Promise((r) => { release = r })
+    const fetch = stubFetch()
+    await render()
+    fetch.mockImplementation(async (url) => {
+      if (url.endsWith('/alpha')) await gate
+      return answer(url)
+    })
+    vi.useFakeTimers()
+    await wrapper.get('[data-testid="play"]').trigger('click')
+    wrapper.unmount()
+    release()
+    await tick(0)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('Stop during the prefetch cancels playback', async () => {
+    let release
+    const gate = new Promise((r) => { release = r })
+    const fetch = stubFetch()
+    await render()
+    fetch.mockImplementation(async (url) => {
+      if (url.endsWith('/alpha')) await gate
+      return answer(url)
+    })
+    vi.useFakeTimers()
+    await wrapper.get('[data-testid="play"]').trigger('click')
+    await wrapper.get('[data-testid="stop"]').trigger('click')
+    release()
+    await tick(5000)
+    expect(select().element.value).toBe('beta')
+    expect(wrapper.find('[data-testid="stop"]').exists()).toBe(false)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it('ignores a second Play while starting', async () => {
+    const fetch = stubFetch()
+    await render()
+    const before = fetch.mock.calls.length
+    vi.useFakeTimers()
+    await wrapper.get('[data-testid="play"]').trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(wrapper.find('[data-testid="play"]').exists()).toBe(false)
+    await tick(0)
+    expect(fetch.mock.calls.length - before).toBe(2)
+  })
+
+  it('skips a version that fails to load and plays the rest', async () => {
+    const fetch = stubFetch()
+    await render()
+    fetch.mockImplementation(async (url) => (url.endsWith('/alpha') ? { ok: false, status: 500, json: async () => ({ detail: 'boom' }) } : answer(url)))
+    vi.useFakeTimers()
+    await wrapper.get('[data-testid="play"]').trigger('click')
+    await tick(0)
+    expect(wrapper.get('[data-testid="skipped"]').text()).toContain('alpha')
+    expect(select().element.value).toBe('beta')
+    expect(wrapper.get('[data-testid="progress"]').text()).toContain('Version 1 of 2: beta')
+    await tick(1500)
+    expect(select().element.value).toBe('idonly')
+  })
+})
+
+describe('Colour scale', () => {
+  it('keeps text readable on every tile colour', () => {
+    for (let i = 0; i <= 200; i++) {
+      const r = i / 200
+      expect(contrast(rampRgb(r), textRgb(r)), `accuracy ${r}`).toBeGreaterThanOrEqual(4.5)
+    }
+    expect(contrast(rampRgb(null), textRgb(null))).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('gives focused tiles an outline that clears the fill', async () => {
+    stubFetch()
+    await render()
+    expect(wrapper.get('[data-sign="AB01"]').classes()).toEqual(expect.arrayContaining(['focus-visible:outline-offset-2', 'focus-visible:outline-ink']))
   })
 })

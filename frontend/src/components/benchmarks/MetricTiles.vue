@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { HEADLINE_TILES, missingNote, pct } from './benchmarkData'
+import { HEADLINE_TILES, missingNote, pct, readsEndToEnd } from './benchmarkData'
 
 const props = defineProps({ version: { type: Object, required: true } })
 
@@ -9,7 +9,8 @@ const verdictMark = { better: '▲', worse: '▼', tie: '＝' }
 
 const tiles = computed(() =>
   HEADLINE_TILES.map((tile) => {
-    const value = props.version.metrics?.[tile.key]
+    // A detector that cannot name signs has a read rate of 0 by construction: not a measurement.
+    const value = tile.key === 'read_top1' && !readsEndToEnd(props.version) ? null : props.version.metrics?.[tile.key]
     const ci = props.version.ci95?.[tile.key]
     const vs = props.version.vs_reference?.[tile.key]
     const present = value != null

@@ -5,7 +5,7 @@ import { BUCKET_LABELS, BUCKET_ORDER, accuracyColor, pct, signAccuracy, sortSign
 
 const props = defineProps({
   signs: { type: Array, required: true },
-  identifies: { type: Boolean, default: false },
+  mode: { type: String, default: 'id' },
   reduceMotion: { type: Boolean, default: false },
 })
 
@@ -14,7 +14,7 @@ const role = ref('all')
 const bucket = ref('all')
 const active = ref(null)
 
-const rows = computed(() => props.signs.map((s) => ({ ...s, ...signAccuracy(s, props.identifies) })))
+const rows = computed(() => props.signs.map((s) => ({ ...s, ...signAccuracy(s, props.mode) })))
 const roles = computed(() => [...new Set(props.signs.map((s) => s.role))].sort())
 const buckets = computed(() => {
   const present = new Set(props.signs.map((s) => s.bucket).filter(Boolean))
@@ -27,7 +27,7 @@ const shown = computed(() =>
   ),
 )
 
-const what = computed(() => (props.identifies ? 'named correctly on the true box' : 'read correctly end to end'))
+const what = computed(() => (props.mode === 'id' ? 'named correctly on the true box' : 'read correctly end to end'))
 function describe(s) {
   const acc = s.n ? `${pct(s.rate, 0)} ${what.value} (${s.correct} of ${s.n})` : 'no examples in this set'
   const conf = s.confused_with?.length ? `; most often confused with ${s.confused_with.map((c) => `${c.sign} (${c.count})`).join(', ')}` : ''
@@ -71,7 +71,7 @@ const tileStyle = (s) => {
           :data-sign="s.sign"
           :title="describe(s)"
           :aria-label="describe(s)"
-          class="glyph-tile flex h-14 w-14 cursor-default flex-col items-center justify-center rounded border border-ink/25 leading-none focus-visible:outline-2 focus-visible:outline-offset-2"
+          class="glyph-tile flex h-14 w-14 cursor-default flex-col items-center justify-center rounded border border-ink/25 leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           :class="{ 'border-dashed': s.rate == null, 'no-motion': reduceMotion }"
           :style="tileStyle(s)"
           @mouseenter="active = s"

@@ -5,7 +5,7 @@ import CoverageChart from '../components/benchmarks/CoverageChart.vue'
 import GlyphGrid from '../components/benchmarks/GlyphGrid.vue'
 import MetricTiles from '../components/benchmarks/MetricTiles.vue'
 import TabletGrid from '../components/benchmarks/TabletGrid.vue'
-import { BUCKET_LABELS, BUCKET_ORDER, GRADIENT, NO_DATA, bestVersion, headline, pct, worstToBest } from '../components/benchmarks/benchmarkData'
+import { BUCKET_LABELS, BUCKET_ORDER, GRADIENT, NO_DATA, bestVersion, gridMode, headline, pct, rankVersions, worstToBest } from '../components/benchmarks/benchmarkData'
 
 const STEP_MS = 1500
 
@@ -25,6 +25,8 @@ const step = ref(-1)
 const finished = ref(false)
 let timer = null
 let restore = ''
+let playToken = 0
+const skipped = ref([])
 
 const reduceMotion = ref(false)
 let motionQuery = null
@@ -83,7 +85,7 @@ function clearTimer() {
 }
 
 function onPick(name) {
-  if (mode.value !== 'idle') halt()
+  if (mode.value !== 'idle') { playToken++; halt() }
   finished.value = false
   step.value = -1
   select(name)
@@ -120,20 +122,24 @@ function advance() {
 
 async function play() {
   if (mode.value !== 'idle' || !versions.value.length) return
-  order.value = worstToBest(versions.value)
+  const token = ++playToken
+  const wanted = worstToBest(versions.value)
   restore = selected.value
   finished.value = false
   detailError.value = ''
+  skipped.value = []
+  order.value = wanted
   mode.value = 'playing'
   step.value = -1
-  try {
-    await Promise.all(order.value.map((entry) => fetchVersion(entry.version)))
-  } catch (failure) {
+  const results = await Promise.allSettled(wanted.map((entry) => fetchVersion(entry.version)))
+  if (token !== playToken || mode.value !== 'playing') return
+  skipped.value = wanted.filter((_, i) => results[i].status === 'rejected').map((entry) => entry.version)
+  order.value = wanted.filter((_, i) => results[i].status === 'fulfilled')
+  if (!order.value.length) {
     mode.value = 'idle'
-    detailError.value = failure.message
+    detailError.value = 'None of the versions could be loaded for playback.'
     return
   }
-  if (mode.value !== 'playing') return
   loadToken++
   show(0)
   schedule()
@@ -150,6 +156,7 @@ function togglePause() {
 }
 
 function stop() {
+  playToken++
   halt()
   finished.value = false
   step.value = -1
@@ -165,6 +172,7 @@ onMounted(() => {
   loadIndex()
 })
 onBeforeUnmount(() => {
+  playToken++
   clearTimer()
   motionQuery?.removeEventListener?.('change', onMotionChange)
 })
@@ -175,7 +183,9 @@ const scoreText = (entry) => {
 }
 const optionText = (entry) => `${entry.version} — ${scoreText(entry)}${headline(entry).fallback && headline(entry).value != null ? ' (identification only)' : ''}`
 
-const identifies = computed(() => !!data.value?.stages?.identification)
+const grids = computed(() => gridMode(data.value))
+const tiers = computed(() => rankVersions(versions.value))
+const tierOfProgress = computed(() => (progressEntry.value ? headline(progressEntry.value).fallback : false))
 const current = computed(() => (data.value && data.value.version === selected.value ? data.value : null))
 const playing = computed(() => mode.value !== 'idle')
 const showProgress = computed(() => playing.value || finished.value)
@@ -228,7 +238,15 @@ const cost = computed(() => {
             data-testid="version-select"
             @change="onPick($event.target.value)"
           >
-            <option v-for="v in versions" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+            <optgroup v-if="tiers.endToEnd.length" label="Read end to end">
+              <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+            </optgroup>
+            <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable with the group above)">
+              <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+            </optgroup>
+            <optgroup v-if="tiers.unscored.length" label="No score (skipped in playback)">
+              <option v-for="v in tiers.unscored" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+            </optgroup>
           </select>
         </label>
         <div class="flex flex-wrap items-center gap-2">
@@ -250,13 +268,15 @@ const cost = computed(() => {
           <template v-if="progressEntry">
             <strong>Version {{ step + 1 }} of {{ order.length }}: {{ progressEntry.version }}</strong>,
             {{ scoreText(progressEntry) }}
-            <span v-if="headline(progressEntry).fallback" class="rounded bg-card px-1">identification only: placed by what it can do</span>
+            <span v-if="tierOfProgress" class="rounded bg-card px-1" data-testid="tier-note">named on true boxes, not comparable with the end-to-end versions before it</span>
             <span v-if="mode === 'paused'"> (paused)</span>
             <span v-if="finished"> (done, best version)</span>
           </template>
           <template v-else>Loading all versions…</template>
         </p>
       </div>
+
+      <p v-if="skipped.length" role="status" class="mt-2 text-sm" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
 
       <p v-if="detailError" role="alert" class="mt-4 rounded-2xl bg-card p-4">{{ detailError }}</p>
 
@@ -276,24 +296,25 @@ const cost = computed(() => {
 
         <section class="mt-8" aria-labelledby="glyphs-h">
           <h3 id="glyphs-h" class="text-xl font-bold">Every sign</h3>
-          <p class="text-sm text-ink/80">
-            Each tile is one sign, coloured by how often it is {{ identifies ? 'named correctly when the box is right' : 'read correctly end to end' }}.
+          <p v-if="grids" class="text-sm text-ink/80">
+            Each tile is one sign, coloured by how often it is {{ grids === 'id' ? 'named correctly when the box is right' : 'read correctly end to end' }}.
           </p>
-          <div class="mt-2 flex flex-wrap items-center gap-3 text-sm" aria-label="Colour legend" data-testid="legend">
+          <p v-if="!grids" class="mt-2 rounded-2xl bg-card p-4" data-testid="grid-note">Not measured: this version finds signs but does not name them, so there is no per-sign result.</p>
+          <div v-if="grids" class="mt-2 flex flex-wrap items-center gap-3 text-sm" aria-label="Colour legend" data-testid="legend">
             <span>0%</span>
             <span class="inline-block h-3 w-40 rounded border border-ink/25" :style="{ backgroundImage: GRADIENT }" role="img" aria-label="Colour scale from 0% accuracy (light) to 100% (dark)" />
             <span>100%</span>
             <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded-sm border border-dashed border-ink/40" :style="{ backgroundColor: NO_DATA.bg }" />no examples</span>
           </div>
-          <div class="mt-3"><GlyphGrid :signs="current.signs ?? []" :identifies="identifies" :reduce-motion="reduceMotion" /></div>
+          <div v-if="grids" class="mt-3"><GlyphGrid :signs="current.signs ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
         </section>
 
-        <section class="mt-8" aria-labelledby="tablets-h">
+        <section v-if="grids" class="mt-8" aria-labelledby="tablets-h">
           <h3 id="tablets-h" class="text-xl font-bold">Every tablet</h3>
           <p class="text-sm text-ink/80">
-            One cell per tablet, coloured by the share of its signs {{ identifies ? 'named correctly' : 'read correctly' }} (same scale as above). Hover for counts.
+            One cell per tablet, coloured by the share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }} (same scale as above). Hover for counts.
           </p>
-          <div class="mt-3"><TabletGrid :tablets="current.tablet_results ?? []" :identifies="identifies" :reduce-motion="reduceMotion" /></div>
+          <div v-if="grids" class="mt-3"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
         </section>
 
         <section class="mt-8 grid gap-8 md:grid-cols-2" aria-label="Accuracy by group">
