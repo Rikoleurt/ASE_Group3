@@ -52,6 +52,7 @@ const comments = ref([])
 const commentsError = ref('')
 const commentsMore = ref(null)
 let generation = 0
+let commentsGeneration = 0
 const root = ref(null)
 
 // The page the reader is on, so logging in brings them back to it.
@@ -62,9 +63,15 @@ const tickedItems = computed(() => items.value.filter((item) => ticked.value.has
 const canSubmit = computed(() => tickedItems.value.length > 0 && trimmed.value.length > 0 && trimmed.value.length <= MAX_COMMENT && !posting.value)
 
 function dataUrlToBlob(url) {
+  const unusable = new Error('The selected glyph image cannot be used for the comparison.')
+  if (typeof url !== 'string' || !url.startsWith('data:')) throw unusable
   const [head, data] = url.split(',')
-  const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0))
-  return new Blob([bytes], { type: /^data:([^;]+)/.exec(head)?.[1] ?? 'image/png' })
+  try {
+    const bytes = Uint8Array.from(atob(data), (char) => char.charCodeAt(0))
+    return new Blob([bytes], { type: /^data:([^;]+)/.exec(head)?.[1] ?? 'image/png' })
+  } catch {
+    throw unusable
+  }
 }
 
 async function readError(response) {
@@ -86,16 +93,22 @@ async function loadOccurrences(offset = 0) {
   try {
     const sel = props.selection
     let response
-    if (sel.crop) {
+    // Comparing with a crop costs server inference, so it needs a login; anyone else gets
+    // the reference glyph's order, or corpus order.
+    if (sel.crop && sessionUser.value) {
       // The crop is embedded on the server; it is not stored.
       const form = new FormData()
       form.append('file', dataUrlToBlob(sel.crop), 'crop.png')
       form.append('limit', String(PAGE))
       form.append('offset', String(offset))
-      response = await fetch(`/api/glyphs/${sign}/occurrences/search`, {
-        method: 'POST', body: form, headers: { 'X-Requested-With': 'ASE' },
-      })
-    } else {
+      try {
+        response = await sessionFetch(`/api/glyphs/${sign}/occurrences/search`, { method: 'POST', body: form })
+      } catch (failure) {
+        if (failure.status !== 401) throw failure // an expired session: sessionFetch refreshes it before a write
+      }
+    }
+    if (!response || response.status === 401 || response.status === 403) {
+      // Logged out (or the session lapsed): fall back to the reference or corpus order.
       const query = new URLSearchParams({ limit: String(PAGE), offset: String(offset) })
       if (sel.reference) {
         query.set('ref_tablet', sel.reference.tablet)
@@ -129,15 +142,17 @@ async function loadOccurrences(offset = 0) {
 async function loadComments(before = null) {
   const sign = active.value
   if (!sign) return
+  const mine = ++commentsGeneration
   commentsError.value = ''
   try {
     const response = await fetch(`/api/glyphs/${sign}/annotations${before ? `?before=${before}` : ''}`, { cache: 'no-store' })
     if (!response.ok) throw new Error(await readError(response))
     const page = await response.json()
-    if (sign !== active.value) return
+    if (mine !== commentsGeneration) return
     comments.value = before ? [...comments.value, ...page.items] : page.items
     commentsMore.value = page.next_before
   } catch (failure) {
+    if (mine !== commentsGeneration) return
     commentsError.value = failure instanceof TypeError ? 'Comments could not be loaded.' : failure.message
   }
 }
@@ -163,13 +178,21 @@ function moveTab(event, index) {
 
 watch(
   () => props.selection,
-  (selection) => {
+  async (selection) => {
+    generation++ // answers still on their way belong to the previous selection
+    commentsGeneration++
     active.value = ''
     items.value = []
     comments.value = []
+    commentsMore.value = null
+    loading.value = false
+    loadError.value = commentsError.value = ''
+    missing.value = false
     notice.value = postError.value = ''
     if (!selection?.sign) return
-    if (!sessionUser.value) loadSession().catch(() => {})
+    // Know whether the reader is logged in before choosing how to order the occurrences.
+    if (!sessionUser.value) await loadSession().catch(() => {})
+    if (props.selection !== selection) return
     openTab(tabs.value[0].sign)
     nextTick(() => root.value?.scrollIntoView?.({ block: 'nearest' }))
   },
@@ -190,8 +213,9 @@ async function submit() {
   posting.value = true
   postError.value = notice.value = ''
   const count = tickedItems.value.length
+  const sign = active.value
   try {
-    const response = await sessionFetch(`/api/glyphs/${active.value}/annotations`, {
+    const response = await sessionFetch(`/api/glyphs/${sign}/annotations`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -204,8 +228,10 @@ async function submit() {
       return
     }
     if (!response.ok) throw new Error(await readError(response))
-    comments.value = [await response.json(), ...comments.value]
+    const saved = await response.json()
     body.value = ''
+    // Only show it where it belongs: the tabs are locked while posting, but never trust that.
+    if (sign === active.value) comments.value = [saved, ...comments.value]
     notice.value = `Saved on ${count} occurrence${count === 1 ? '' : 's'}.`
   } catch (failure) {
     postError.value = failure.status === 401 ? 'Please log in to comment.' : failure instanceof TypeError ? 'Unable to reach the server. Your comment was not saved.' : failure.message
@@ -242,8 +268,9 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
         role="tab"
         data-testid="glyph-tab"
         :aria-selected="tab.sign === active"
+        :disabled="posting"
         :tabindex="tab.sign === active ? 0 : -1"
-        class="cursor-pointer rounded px-3 py-1.5 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        class="cursor-pointer rounded px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         :class="tab.sign === active ? 'bg-ink text-page' : 'bg-bar hover:brightness-95'"
         @click="openTab(tab.sign)"
         @keydown="moveTab($event, index)"

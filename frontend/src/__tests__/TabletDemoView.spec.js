@@ -87,7 +87,7 @@ describe('HT13 demo', () => {
   it('opens the other-tablets pane from a box activated with Enter', async () => {
     const named = [{ ...predictions[0], candidates: [{ sign: 'AB77', label: 'ka', roles: [], probability: 90 }] }]
     const fetch = vi.fn(async (url) => {
-      if (url.includes('/occurrences/search')) return { ok: true, json: async () => ({ sign: 'AB77', total: 0, limit: 30, offset: 0, ranked_by: 'glyph', items: [], credit: null }) }
+      if (url.includes('/occurrences')) return { ok: true, json: async () => ({ sign: 'AB77', total: 0, limit: 30, offset: 0, ranked_by: 'glyph', items: [], credit: null }) }
       if (url.includes('/annotations')) return { ok: true, json: async () => ({ items: [], next_before: null }) }
       if (url === '/api/users/me') return { ok: false, status: 401, json: async () => ({}) }
       return response(named)
@@ -101,7 +101,9 @@ describe('HT13 demo', () => {
     await flushPromises()
     expect(box.attributes('aria-pressed')).toBe('true')
     expect(wrapper.get('[data-testid="glyph-pane"]').exists()).toBe(true)
-    expect(fetch.mock.calls.some(([url]) => url === '/api/glyphs/AB77/occurrences/search')).toBe(true)
+    // Logged out here, so the crop is not uploaded: corpus order.
+    expect(fetch.mock.calls.some(([url]) => url === '/api/glyphs/AB77/occurrences?limit=30&offset=0')).toBe(true)
+    expect(fetch.mock.calls.some(([url]) => url.includes('/search'))).toBe(false)
   })
 
   it('does not open the pane for a box the reader could not name', async () => {

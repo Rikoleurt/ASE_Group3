@@ -30,7 +30,7 @@ const CALLS = [
   { method: 'get', path: '/glyphs/{sign}/occurrences', source: glyphPane, snippet: '/api/glyphs/${sign}/occurrences?${query}' },
   { method: 'post', path: '/glyphs/{sign}/occurrences/search', source: glyphPane, snippet: '/api/glyphs/${sign}/occurrences/search' },
   { method: 'get', path: '/glyphs/{sign}/annotations', source: glyphPane, snippet: '/api/glyphs/${sign}/annotations' },
-  { method: 'post', path: '/glyphs/{sign}/annotations', source: glyphPane, snippet: '/api/glyphs/${active.value}/annotations' },
+  { method: 'post', path: '/glyphs/{sign}/annotations', source: glyphPane, snippet: '/api/glyphs/${sign}/annotations' },
   { method: 'delete', path: '/glyphs/annotations/{annotation_id}', source: glyphPane, snippet: '/api/glyphs/annotations/${comment.id}' },
   { method: 'get', path: '/tablets/{slug}/thumbnail.png', source: glyphPane, snippet: 'apiUrl(item.thumbnail_url)' },
   { method: 'get', path: '/tablets/{slug}/signs/{position}.png', source: glyphPane, snippet: 'apiUrl(item.crop_url)' },

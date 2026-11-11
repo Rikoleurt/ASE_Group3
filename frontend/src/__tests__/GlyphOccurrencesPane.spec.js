@@ -78,7 +78,7 @@ describe('Glyph occurrences pane', () => {
     const search = fetch.mock.calls.find(([url]) => url.includes('/occurrences/search'))
     expect(search[0]).toBe('/api/glyphs/AB77/occurrences/search')
     expect(search[1].method).toBe('POST')
-    expect(search[1].headers).toEqual({ 'X-Requested-With': 'ASE' })
+    expect(search[1].headers['X-CSRF-Token']).toBe('csrf')
     expect(search[1].body.get('file').type).toBe('image/png')
     expect(search[1].body.get('limit')).toBe('30')
     expect(cards()).toHaveLength(3)
@@ -108,6 +108,26 @@ describe('Glyph occurrences pane', () => {
     expect(strip.classes()).toEqual(expect.arrayContaining(['overflow-x-auto', 'snap-x']))
     expect(strip.attributes('tabindex')).toBe('0')
     expect(cards()[0].classes()).toContain('snap-start')
+  })
+
+  it('does not upload the crop for a logged-out reader: corpus order instead', async () => {
+    const fetch = api({ '/api/users/me': () => json({}, 401) })
+    await render(fetch, { selection }, false)
+    expect(fetch.mock.calls.some(([url]) => url.includes('/occurrences/search'))).toBe(false)
+    expect(fetch.mock.calls.some(([url]) => url === '/api/glyphs/AB77/occurrences?limit=30&offset=0')).toBe(true)
+    expect(cards()).toHaveLength(3)
+  })
+
+  it('falls back to corpus order when the session has lapsed at search time', async () => {
+    const fetch = api({ 'POST /api/glyphs/AB77/occurrences/search': () => json({ detail: 'Please log in.' }, 401) })
+    await render(fetch)
+    expect(fetch.mock.calls.some(([url]) => url === '/api/glyphs/AB77/occurrences?limit=30&offset=0')).toBe(true)
+    expect(cards()).toHaveLength(3)
+  })
+
+  it('says so plainly when the crop is not a data URL', async () => {
+    await render(api(), { selection: { sign: 'AB77', crop: 'https://example.com/x.png' } })
+    expect(wrapper.get('[role="alert"]').text()).toContain('cannot be used for the comparison')
   })
 
   it('searches by a corpus reference glyph when there is no crop', async () => {
@@ -246,5 +266,75 @@ describe('Glyph occurrences pane', () => {
     await flushPromises()
     expect(fetch.mock.calls.some(([url]) => url.includes('/glyphs/AB01/occurrences'))).toBe(true)
     expect(wrapper.findAll('[data-testid="glyph-tab"]')).toHaveLength(1)
+  })
+
+  it('ignores a slow comment list from the tab you left, success or failure', async () => {
+    const pending = {}
+    const fetch = api({
+      '/glyphs/AB77/annotations': () => new Promise((resolve) => { pending.first = resolve }),
+      '/glyphs/AB78/annotations': () => json({ items: [comment(50)], next_before: null }),
+    })
+    await render(fetch)
+    await wrapper.findAll('[data-testid="glyph-tab"]')[1].trigger('click')
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="glyph-comment"]').map((c) => c.text())).toEqual([expect.stringContaining('note 50')])
+    pending.first(json({ items: [comment(1)], next_before: null }))
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="glyph-comment"]').map((c) => c.text())).toEqual([expect.stringContaining('note 50')])
+    expect(wrapper.text()).not.toContain('Comments could not be loaded')
+  })
+
+  it('ignores a failing comment list from the tab you left', async () => {
+    const pending = {}
+    const fetch = api({
+      '/glyphs/AB77/annotations': () => new Promise((resolve) => { pending.first = resolve }),
+      '/glyphs/AB78/annotations': () => json({ items: [comment(50)], next_before: null }),
+    })
+    await render(fetch)
+    await wrapper.findAll('[data-testid="glyph-tab"]')[1].trigger('click')
+    await flushPromises()
+    pending.first(json({ detail: 'down' }, 503))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="glyph-comments"] [role="alert"]').exists()).toBe(false)
+    expect(wrapper.findAll('[data-testid="glyph-comment"]')).toHaveLength(1)
+  })
+
+  it('locks the tabs while a comment is being saved and files it under the sign it was written for', async () => {
+    let finish
+    const fetch = api({ 'POST /api/glyphs/AB77/annotations': () => new Promise((resolve) => { finish = resolve }) })
+    await render(fetch)
+    await wrapper.get('textarea').setValue('slow note')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="glyph-tab"]').every((tab) => tab.attributes('disabled') !== undefined)).toBe(true)
+    finish(json(comment(77), 201))
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="glyph-tab"]').every((tab) => tab.attributes('disabled') === undefined)).toBe(true)
+    expect(wrapper.findAll('[data-testid="glyph-comment"]')[0].text()).toContain('note 77')
+  })
+
+  it('does not show a saved comment on another sign if the selection changed meanwhile', async () => {
+    let finish
+    const fetch = api({ 'POST /api/glyphs/AB77/annotations': () => new Promise((resolve) => { finish = resolve }) })
+    await render(fetch)
+    await wrapper.get('textarea').setValue('slow note')
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+    await wrapper.setProps({ selection: { sign: 'AB01' } })
+    await flushPromises()
+    finish(json(comment(77), 201))
+    await flushPromises()
+    expect(wrapper.findAll('[data-testid="glyph-comment"]').map((c) => c.text()).join()).not.toContain('note 77')
+  })
+
+  it('drops answers that arrive after the selection was cleared', async () => {
+    let finish
+    const fetch = api({ '/occurrences': () => new Promise((resolve) => { finish = resolve }) })
+    await render(fetch, { selection: { sign: 'AB77' } })
+    await wrapper.setProps({ selection: null })
+    finish(json(page(ITEMS)))
+    await flushPromises()
+    expect(wrapper.find('[data-testid="glyph-pane"]').exists()).toBe(false)
+    expect(cards()).toHaveLength(0)
   })
 })
