@@ -9,6 +9,7 @@ import profileView from '../views/ProfileView.vue?raw'
 import tabletDemoView from '../views/TabletDemoView.vue?raw'
 import connectionTest from '../components/ConnectionTest.vue?raw'
 import tabletReadingView from '../views/TabletReadingView.vue?raw'
+import benchmarksView from '../views/BenchmarksView.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -26,6 +27,8 @@ const CALLS = [
   { method: 'get', path: '/tablets/{slug}/reading', source: tabletReadingView, snippet: '/api/tablets/${slug}/reading' },
   { method: 'get', path: '/tablets/{slug}/fraction-signs', source: tabletReadingView, snippet: '/api/tablets/${slug}/fraction-signs' },
   { method: 'get', path: '/tablet-demo/ht13', source: tabletReadingView, snippet: '/api/tablet-demo/ht13?annotated=false' },
+  { method: 'get', path: '/benchmarks', source: benchmarksView, snippet: "'/api/benchmarks'" },
+  { method: 'get', path: '/benchmarks/{version}', source: benchmarksView, snippet: '/api/benchmarks/${encodeURIComponent(name)}' },
 ]
 
 function resolve(schema) {
