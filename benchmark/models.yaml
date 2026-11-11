@@ -1,0 +1,32 @@
+# Readers compared by `python -m benchmark.run`. Weight paths are relative to the repo root.
+# kind: generic | one_stage | two_stage | shape_knn  (see benchmark/readers.py)
+# A model whose weights are missing is listed as skipped, not an error.
+# train_run (optional): Ultralytics run folder(s), summed for training time.
+models:
+  - name: signs-v1
+    kind: two_stage
+    description: Released reader (GitHub release signs-v1) - one-class detector + 279-class classifier
+    detector: models/linear_a_signs.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/sign_detector, runs/classify/sign_classifier]
+
+  - name: identity-baseline
+    kind: one_stage
+    description: 361-class detector that finds and names signs at once (stopped at epoch 44, out of GPU memory)
+    detector: runs/detect/identity_baseline/weights/best.pt
+    train_run: runs/detect/identity_baseline
+
+  - name: yolo26n-generic
+    kind: generic
+    description: Stock pretrained yolo26n.pt, never trained on Linear A (detection only)
+    detector: yolo26n.pt
+
+  - name: shape-knn
+    kind: shape_knn
+    description: Classical baseline, no training - nearest train crop by mask overlap (FINDINGS.md section 4)
+
+  # Jason's model: put its weights under models/ and uncomment.
+  # - name: jason
+  #   kind: two_stage
+  #   detector: models/jason_detector.pt
+  #   classifier: models/jason_classifier.pt
