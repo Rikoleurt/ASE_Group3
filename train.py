@@ -57,6 +57,11 @@ def classify(args: argparse.Namespace) -> None:
     )
 
 
+def resume(args: argparse.Namespace) -> None:
+    """Continue an interrupted run from its last saved epoch (Ultralytics keeps every setting)."""
+    YOLO(str(Path(args.resume) / "weights" / "last.pt")).train(resume=True)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("task", choices=["detect", "classify"])
@@ -68,7 +73,11 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--workers", type=int, default=2, help="dataloader processes (each holds images in RAM)")
     parser.add_argument("--name", help="run name under runs/<task>/")
+    parser.add_argument("--resume", type=Path, help="continue the interrupted run in this folder instead")
     args = parser.parse_args()
+    if args.resume:
+        resume(args)
+        return
     {"detect": detect, "classify": classify}[args.task](args)
 
 
