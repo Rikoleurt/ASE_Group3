@@ -41,55 +41,55 @@ const tileStyle = (s) => {
 
 <template>
   <div>
-    <div class="flex flex-wrap items-end gap-4">
-      <label class="flex flex-col text-sm font-semibold">Sort by
-        <select v-model="sortBy" class="mt-1 rounded border border-ink/30 bg-page px-2 py-1 font-normal">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <label class="flex items-center gap-1 text-xs font-semibold">Sort by
+        <select v-model="sortBy" class="rounded border border-ink/30 bg-page px-1 py-0.5 text-xs font-normal">
           <option value="frequency">Frequency</option>
           <option value="accuracy">Accuracy</option>
           <option value="sign">Sign ID</option>
         </select>
       </label>
-      <label class="flex flex-col text-sm font-semibold">Role
-        <select v-model="role" class="mt-1 rounded border border-ink/30 bg-page px-2 py-1 font-normal">
+      <label class="flex items-center gap-1 text-xs font-semibold">Role
+        <select v-model="role" class="rounded border border-ink/30 bg-page px-1 py-0.5 text-xs font-normal">
           <option value="all">All roles</option>
           <option v-for="r in roles" :key="r" :value="r">{{ r }}</option>
         </select>
       </label>
-      <label class="flex flex-col text-sm font-semibold">Training examples
-        <select v-model="bucket" class="mt-1 rounded border border-ink/30 bg-page px-2 py-1 font-normal">
+      <label class="flex items-center gap-1 text-xs font-semibold">Training examples
+        <select v-model="bucket" class="rounded border border-ink/30 bg-page px-1 py-0.5 text-xs font-normal">
           <option value="all">Any number</option>
           <option v-for="b in buckets" :key="b" :value="b">{{ BUCKET_LABELS[b] ?? b }}</option>
         </select>
       </label>
-      <p class="pb-1 text-sm" role="status" data-testid="glyph-count">{{ shown.length }} of {{ rows.length }} signs</p>
+      <p class="text-xs" role="status" data-testid="glyph-count">{{ shown.length }} of {{ rows.length }} signs</p>
     </div>
 
-    <ul class="mt-3 flex flex-wrap gap-1" aria-label="Accuracy per sign" data-testid="glyph-grid" @mouseleave="active = null">
+    <ul class="mt-1.5 flex flex-wrap gap-0.5" aria-label="Accuracy per sign" data-testid="glyph-grid" @mouseleave="active = null">
       <li v-for="s in shown" :key="s.sign">
         <button
           type="button"
           :data-sign="s.sign"
           :title="describe(s)"
           :aria-label="describe(s)"
-          class="glyph-tile flex h-14 w-14 cursor-default flex-col items-center justify-center rounded border border-ink/25 leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          class="glyph-tile flex h-8 w-8 cursor-default items-center justify-center rounded-sm border border-ink/25 leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           :class="{ 'border-dashed': s.rate == null, 'no-motion': reduceMotion }"
           :style="tileStyle(s)"
           @mouseenter="active = s"
           @focus="active = s"
           @blur="active = null"
         >
-          <span v-if="s.glyph" class="linear-a text-2xl" aria-hidden="true">{{ s.glyph }}</span>
-          <span class="text-[0.65rem] font-semibold" :class="{ 'mt-1': s.glyph }" aria-hidden="true">{{ s.sign }}</span>
+          <span v-if="s.glyph" class="linear-a text-xl" aria-hidden="true">{{ s.glyph }}</span>
+          <span v-else class="text-[0.55rem] font-semibold" aria-hidden="true">{{ s.sign }}</span>
         </button>
       </li>
     </ul>
-    <p v-if="!shown.length" class="mt-3">No signs match these filters.</p>
-    <p class="mt-3 min-h-12 rounded bg-card px-3 py-2 text-sm" data-testid="glyph-detail">
+    <p v-if="!shown.length" class="mt-2 text-sm">No signs match these filters.</p>
+    <p class="mt-1.5 min-h-9 rounded bg-card px-2 py-1 text-xs" data-testid="glyph-detail">
       {{ active ? describe(active) : 'Hover or focus a sign for its ID, accuracy, number of examples and top confusions.' }}
     </p>
 
-    <details class="mt-3">
-      <summary class="cursor-pointer text-sm font-semibold">Show as a table</summary>
+    <details class="mt-1.5">
+      <summary class="cursor-pointer text-xs font-semibold">Show as a table</summary>
       <div class="mt-2 max-h-72 overflow-auto">
         <table class="w-full text-left text-sm">
           <caption class="sr-only">Accuracy per sign</caption>

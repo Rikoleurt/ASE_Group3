@@ -16,20 +16,20 @@ const text = (c) =>
 
 <template>
   <div>
-    <ul class="flex flex-wrap gap-1" aria-label="Result per tablet" data-testid="tablet-grid">
+    <ul class="flex flex-wrap gap-0.5" aria-label="Result per tablet" data-testid="tablet-grid">
       <li v-for="c in cells" :key="c.tablet">
         <button
           type="button"
           :title="text(c)"
           :aria-label="text(c)"
-          class="tablet-cell h-6 w-6 cursor-default rounded-sm border border-ink/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          class="tablet-cell h-3.5 w-3.5 cursor-default rounded-[2px] border border-ink/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           :class="{ 'border-dashed': c.rate == null, 'no-motion': reduceMotion }"
           :style="{ backgroundColor: accuracyColor(c.rate).bg }"
         />
       </li>
     </ul>
-    <details class="mt-3">
-      <summary class="cursor-pointer text-sm font-semibold">Show as a table</summary>
+    <details class="mt-1.5">
+      <summary class="cursor-pointer text-xs font-semibold">Show as a table</summary>
       <div class="mt-2 max-h-72 overflow-auto">
         <table class="w-full text-left text-sm">
           <caption class="sr-only">Result per tablet</caption>

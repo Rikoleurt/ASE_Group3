@@ -19,7 +19,7 @@ const label = (b, countLabel) => `${b.label}: ${pct(b.value, 0)}${b.count != nul
     <ul v-else class="mt-2 flex items-end gap-2" :aria-label="title">
       <li v-for="b in bars" :key="b.key" class="flex min-w-0 flex-1 flex-col items-center" :data-bar="b.key">
         <span class="text-sm font-semibold tabular-nums">{{ pct(b.value, 0) }}</span>
-        <div class="flex h-28 w-full items-end border-b border-ink/40" role="img" :aria-label="label(b, countLabel)" :title="label(b, countLabel)">
+        <div class="flex h-20 w-full items-end border-b border-ink/40" role="img" :aria-label="label(b, countLabel)" :title="label(b, countLabel)">
           <div class="bar w-full rounded-t" :class="{ 'no-motion': reduceMotion }" :style="{ height: `${Math.max(0, (b.value ?? 0) * 100)}%`, backgroundColor: BAR_FILL }" data-testid="bar-fill" />
         </div>
         <span class="mt-1 text-center text-xs leading-tight">{{ b.label }}</span>

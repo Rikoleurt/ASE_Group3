@@ -217,29 +217,30 @@ describe('Glyph grid', () => {
 
 describe('Play worst to best', () => {
   it('orders versions by headline score, worst first, marking identification-only ones', () => {
-    expect(worstToBest(index.versions).map((v) => v.version)).toEqual(['alpha', 'beta', 'idonly'])
+    expect(worstToBest(index.versions).map((v) => v.version)).toEqual(['alpha', 'beta'])
   })
 
-  it('steps through the end-to-end tier, then the true-box tier, and stops on the last', async () => {
+  it('plays only the end-to-end versions, worst to best, and skips identification-only ones', async () => {
     stubFetch()
     await render()
     vi.useFakeTimers()
     await wrapper.get('[data-testid="play"]').trigger('click')
     await tick(0)
     expect(select().element.value).toBe('alpha')
-    expect(wrapper.get('[data-testid="progress"]').text()).toContain('Version 1 of 3: alpha')
-    expect(wrapper.find('[data-testid="tier-note"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="progress"]').text()).toContain('Version 1 of 2: alpha')
     expect(tile('read_top1').text()).toContain('40.0%')
     await tick(1500)
     expect(select().element.value).toBe('beta')
     expect(tile('read_top1').text()).toContain('70.0%')
     await tick(1500)
-    expect(select().element.value).toBe('idonly')
-    expect(wrapper.get('[data-testid="tier-note"]').text()).toContain('not comparable')
-    expect(wrapper.get('[data-testid="progress"]').text()).toContain('65.0% named')
-    await tick(1500)
     expect(wrapper.find('[data-testid="pause"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="progress"]').text()).toContain('done')
+    expect(select().element.value).toBe('beta')
+    expect(wrapper.text()).not.toContain('Version 3')
+    // still selectable by hand
+    await select().setValue('idonly')
+    await tick(0)
+    expect(tile('id_top1').text()).toContain('65.0%')
   })
 
   it('pauses, resumes and stops back at the starting version', async () => {
@@ -410,7 +411,7 @@ describe('Playback robustness', () => {
     await wrapper.vm.$nextTick()
     expect(wrapper.find('[data-testid="play"]').exists()).toBe(false)
     await tick(0)
-    expect(fetch.mock.calls.length - before).toBe(2)
+    expect(fetch.mock.calls.length - before).toBe(1)
   })
 
   it('skips a version that fails to load and plays the rest', async () => {
@@ -422,9 +423,7 @@ describe('Playback robustness', () => {
     await tick(0)
     expect(wrapper.get('[data-testid="skipped"]').text()).toContain('alpha')
     expect(select().element.value).toBe('beta')
-    expect(wrapper.get('[data-testid="progress"]').text()).toContain('Version 1 of 2: beta')
-    await tick(1500)
-    expect(select().element.value).toBe('idonly')
+    expect(wrapper.get('[data-testid="progress"]').text()).toContain('Version 1 of 1: beta')
   })
 })
 

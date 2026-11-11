@@ -30,10 +30,9 @@ export function rankVersions(versions) {
   return { endToEnd: sort(tiers.endToEnd), idOnly: sort(tiers.idOnly), unscored: sort(tiers.unscored) }
 }
 
-/** The playback order: end-to-end tier worst to best, then the true-box tier worst to best. Unscored versions are left out. */
+/** The playback order: only versions scored end to end, worst to best. True-box-only and unscored versions stay selectable but are not played. */
 export function worstToBest(versions) {
-  const t = rankVersions(versions)
-  return [...t.endToEnd, ...t.idOnly]
+  return rankVersions(versions).endToEnd
 }
 
 /** The best end-to-end version; only when there is none does it fall back to the best true-box one. */

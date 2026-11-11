@@ -185,7 +185,6 @@ const optionText = (entry) => `${entry.version} — ${scoreText(entry)}${headlin
 
 const grids = computed(() => gridMode(data.value))
 const tiers = computed(() => rankVersions(versions.value))
-const tierOfProgress = computed(() => (progressEntry.value ? headline(progressEntry.value).fallback : false))
 const current = computed(() => (data.value && data.value.version === selected.value ? data.value : null))
 const playing = computed(() => mode.value !== 'idle')
 const showProgress = computed(() => playing.value || finished.value)
@@ -216,125 +215,111 @@ const cost = computed(() => {
 </script>
 
 <template>
-  <main class="mx-auto max-w-6xl px-4 py-8 sm:px-6" :class="{ 'reduce-motion': reduceMotion }" :data-reduce-motion="reduceMotion">
-    <h1 class="text-3xl font-bold">Benchmarks</h1>
-    <p class="mt-2 max-w-3xl text-ink/80">
-      How each version of the sign reader does on the same tablets. Every version is scored the same way and compared with the released reader.
-    </p>
+  <main class="mx-auto max-w-[1800px] px-3 py-3 sm:px-4" :class="{ 'reduce-motion': reduceMotion }" :data-reduce-motion="reduceMotion">
+    <h1 class="sr-only">Benchmarks</h1>
 
-    <p v-if="loading" role="status" class="mt-6">Loading benchmark results…</p>
-    <div v-else-if="error" role="alert" class="mt-6 rounded-2xl bg-card p-5">
+    <p v-if="loading" role="status">Loading benchmark results…</p>
+    <div v-else-if="error" role="alert" class="rounded-2xl bg-card p-4">
       <p>{{ error }}</p>
-      <button type="button" class="mt-3 cursor-pointer rounded bg-bar px-5 py-2 hover:brightness-95" @click="loadIndex">Try again</button>
+      <button type="button" class="mt-2 cursor-pointer rounded bg-bar px-4 py-1.5 hover:brightness-95" @click="loadIndex">Try again</button>
     </div>
-    <p v-else-if="!versions.length" class="mt-6 rounded-2xl bg-card p-5">No benchmark results have been published yet.</p>
+    <p v-else-if="!versions.length" class="rounded-2xl bg-card p-4">No benchmark results have been published yet.</p>
 
     <template v-else>
-      <section class="mt-6 flex flex-wrap items-end gap-4" aria-label="Version and playback">
-        <label class="flex min-w-0 flex-col text-sm font-semibold">Model version
+      <section class="flex flex-wrap items-end gap-x-3 gap-y-2" aria-label="Version and playback">
+        <label class="flex min-w-0 flex-col text-xs font-semibold">Model version
           <select
             :value="selected"
-            class="mt-1 max-w-full rounded border border-ink/30 bg-page px-3 py-2 text-base font-normal"
+            class="mt-0.5 max-w-full rounded border border-ink/30 bg-page px-2 py-1 text-sm font-normal"
             data-testid="version-select"
             @change="onPick($event.target.value)"
           >
-            <optgroup v-if="tiers.endToEnd.length" label="Read end to end">
+            <optgroup v-if="tiers.endToEnd.length" label="Read end to end (played)">
               <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
             </optgroup>
-            <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable with the group above)">
+            <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable, not played)">
               <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
             </optgroup>
-            <optgroup v-if="tiers.unscored.length" label="No score (skipped in playback)">
+            <optgroup v-if="tiers.unscored.length" label="No score (not played)">
               <option v-for="v in tiers.unscored" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
             </optgroup>
           </select>
         </label>
         <div class="flex flex-wrap items-center gap-2">
-          <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-5 py-2 font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2" data-testid="play" @click="play">
+          <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="play" @click="play">
             Play worst → best
           </button>
           <template v-else>
-            <button type="button" class="cursor-pointer rounded bg-bar px-5 py-2 font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2" data-testid="pause" @click="togglePause">
+            <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" @click="togglePause">
               {{ mode === 'paused' ? 'Resume' : 'Pause' }}
             </button>
-            <button type="button" class="cursor-pointer rounded bg-card px-5 py-2 font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2" data-testid="stop" @click="stop">Stop</button>
+            <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="stop" @click="stop">Stop</button>
           </template>
         </div>
+        <div v-if="showProgress" class="flex min-w-48 items-center gap-2" data-testid="progress">
+          <progress class="h-2 w-24" :value="Math.max(step + 1, 0)" :max="order.length" aria-label="Progress through the versions" />
+          <p role="status" class="text-xs">
+            <template v-if="progressEntry">
+              <strong>Version {{ step + 1 }} of {{ order.length }}: {{ progressEntry.version }}</strong>, {{ scoreText(progressEntry) }}
+              <span v-if="mode === 'paused'"> (paused)</span>
+              <span v-if="finished"> (done, best version)</span>
+            </template>
+            <template v-else>Loading all versions…</template>
+          </p>
+        </div>
+        <p v-if="current" class="min-w-0 flex-1 basis-64 text-xs text-ink/80" data-testid="meta" aria-label="About this version">
+          <strong class="text-ink">{{ current.version }}</strong>: {{ current.description }}
+          · {{ current.split }} split · {{ current.tablets }} tablets · vs {{ current.reference }}
+          <template v-if="current.stages && !current.stages.detection"> · identification only</template>
+          <template v-else-if="current.stages && !current.stages.identification && current.kind !== 'one_stage'"> · detection only</template>
+        </p>
       </section>
 
-      <div v-if="showProgress" class="mt-3 max-w-xl" data-testid="progress">
-        <progress class="h-2 w-full" :value="Math.max(step + 1, 0)" :max="order.length" aria-label="Progress through the versions" />
-        <p role="status" class="mt-1 text-sm">
-          <template v-if="progressEntry">
-            <strong>Version {{ step + 1 }} of {{ order.length }}: {{ progressEntry.version }}</strong>,
-            {{ scoreText(progressEntry) }}
-            <span v-if="tierOfProgress" class="rounded bg-card px-1" data-testid="tier-note">named on true boxes, not comparable with the end-to-end versions before it</span>
-            <span v-if="mode === 'paused'"> (paused)</span>
-            <span v-if="finished"> (done, best version)</span>
-          </template>
-          <template v-else>Loading all versions…</template>
-        </p>
-      </div>
-
-      <p v-if="skipped.length" role="status" class="mt-2 text-sm" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
-
-      <p v-if="detailError" role="alert" class="mt-4 rounded-2xl bg-card p-4">{{ detailError }}</p>
+      <p v-if="skipped.length" role="status" class="mt-1 text-xs" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
+      <p v-if="detailError" role="alert" class="mt-2 rounded-2xl bg-card p-3">{{ detailError }}</p>
 
       <template v-if="current">
-        <section class="mt-5 rounded-2xl bg-card p-4" aria-label="About this version">
-          <h2 class="text-xl font-bold">{{ current.version }}</h2>
-          <p class="mt-1">{{ current.description }}</p>
-          <p class="mt-1 text-sm text-ink/80" data-testid="meta">
-            Scored on the {{ current.split }} split · {{ current.tablets }} tablets · compared with {{ current.reference }}
-            <span v-if="current.stages && !current.stages.detection"> · identification only</span>
-            <span v-else-if="current.stages && !current.stages.identification && current.kind !== 'one_stage'"> · detection only</span>
-          </p>
-        </section>
+        <div class="mt-2"><MetricTiles :version="current" /></div>
 
-        <h2 class="mt-8 text-2xl font-bold">Across the corpus</h2>
-        <div class="mt-3"><MetricTiles :version="current" /></div>
+        <div class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+          <section aria-labelledby="glyphs-h" class="min-w-0">
+            <h2 id="glyphs-h" class="text-sm font-bold">Every sign</h2>
+            <p v-if="!grids" class="mt-1 rounded-2xl bg-card p-3 text-sm" data-testid="grid-note">Not measured: this version finds signs but does not name them, so there is no per-sign result.</p>
+            <template v-else>
+              <div class="flex flex-wrap items-center gap-2 text-xs" aria-label="Colour legend" data-testid="legend">
+                <span>{{ grids === 'id' ? 'Named correctly' : 'Read correctly' }}: 0%</span>
+                <span class="inline-block h-2.5 w-28 rounded border border-ink/25" :style="{ backgroundImage: GRADIENT }" role="img" aria-label="Colour scale from 0% accuracy (light) to 100% (dark)" />
+                <span>100%</span>
+                <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border border-dashed border-ink/40" :style="{ backgroundColor: NO_DATA.bg }" />no examples</span>
+              </div>
+              <div class="mt-1"><GlyphGrid :signs="current.signs ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+            </template>
+          </section>
 
-        <section class="mt-8" aria-labelledby="glyphs-h">
-          <h3 id="glyphs-h" class="text-xl font-bold">Every sign</h3>
-          <p v-if="grids" class="text-sm text-ink/80">
-            Each tile is one sign, coloured by how often it is {{ grids === 'id' ? 'named correctly when the box is right' : 'read correctly end to end' }}.
-          </p>
-          <p v-if="!grids" class="mt-2 rounded-2xl bg-card p-4" data-testid="grid-note">Not measured: this version finds signs but does not name them, so there is no per-sign result.</p>
-          <div v-if="grids" class="mt-2 flex flex-wrap items-center gap-3 text-sm" aria-label="Colour legend" data-testid="legend">
-            <span>0%</span>
-            <span class="inline-block h-3 w-40 rounded border border-ink/25" :style="{ backgroundImage: GRADIENT }" role="img" aria-label="Colour scale from 0% accuracy (light) to 100% (dark)" />
-            <span>100%</span>
-            <span class="inline-flex items-center gap-1"><span class="inline-block h-3 w-3 rounded-sm border border-dashed border-ink/40" :style="{ backgroundColor: NO_DATA.bg }" />no examples</span>
-          </div>
-          <div v-if="grids" class="mt-3"><GlyphGrid :signs="current.signs ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
-        </section>
+          <section v-if="grids" aria-labelledby="tablets-h" class="min-w-0">
+            <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
+            <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
+            <div class="mt-1"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+          </section>
+        </div>
 
-        <section v-if="grids" class="mt-8" aria-labelledby="tablets-h">
-          <h3 id="tablets-h" class="text-xl font-bold">Every tablet</h3>
-          <p class="text-sm text-ink/80">
-            One cell per tablet, coloured by the share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }} (same scale as above). Hover for counts.
-          </p>
-          <div v-if="grids" class="mt-3"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
-        </section>
-
-        <section class="mt-8 grid gap-8 md:grid-cols-2" aria-label="Accuracy by group">
+        <section class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="More detail">
           <ColumnBars title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
           <ColumnBars title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+          <CoverageChart v-if="current.coverage_curve?.length" :points="current.coverage_curve" />
         </section>
 
-        <section v-if="current.coverage_curve?.length" class="mt-8"><CoverageChart :points="current.coverage_curve" /></section>
-
-        <section class="mt-8" aria-labelledby="cost-h">
-          <h3 id="cost-h" class="text-xl font-bold">Cost</h3>
-          <dl class="mt-2 flex flex-wrap gap-x-8 gap-y-2" data-testid="cost">
-            <div v-for="c in cost" :key="c.key">
-              <dt class="text-sm text-ink/80">{{ c.label }}</dt>
-              <dd class="text-lg font-semibold tabular-nums">{{ c.value ?? '—' }}</dd>
+        <section class="mt-3" aria-labelledby="cost-h">
+          <h2 id="cost-h" class="sr-only">Cost</h2>
+          <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm" data-testid="cost">
+            <div v-for="c in cost" :key="c.key" class="flex gap-1">
+              <dt class="text-ink/80">{{ c.label }}:</dt>
+              <dd class="font-semibold tabular-nums">{{ c.value ?? '—' }}</dd>
             </div>
           </dl>
         </section>
       </template>
-      <p v-else-if="!detailError" role="status" class="mt-6">Loading {{ selected }}…</p>
+      <p v-else-if="!detailError" role="status" class="mt-4">Loading {{ selected }}…</p>
     </template>
   </main>
 </template>

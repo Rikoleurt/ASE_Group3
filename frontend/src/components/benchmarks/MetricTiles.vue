@@ -30,21 +30,22 @@ const tiles = computed(() =>
 </script>
 
 <template>
-  <ul class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4" aria-label="Headline results">
-    <li v-for="tile in tiles" :key="tile.key" :data-metric="tile.key" class="flex flex-col rounded-2xl bg-card p-4">
-      <h3 class="text-sm font-semibold">{{ tile.title }}</h3>
-      <p class="mt-1 text-3xl font-bold tabular-nums">{{ tile.value }}</p>
-      <p v-if="tile.interval" class="text-sm text-ink/80">{{ tile.interval }}</p>
-      <p v-if="tile.note" class="text-sm text-ink/80">{{ tile.note }}</p>
-      <p v-if="tile.present && tile.vs" class="mt-2 text-sm" data-testid="vs">
+  <ul class="grid grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Headline results">
+    <li v-for="tile in tiles" :key="tile.key" :data-metric="tile.key" class="rounded-lg bg-card px-3 py-1.5" :title="tile.hint">
+      <h3 class="text-xs font-semibold">{{ tile.title }}</h3>
+      <p class="flex flex-wrap items-baseline gap-x-2">
+        <span class="text-xl font-bold tabular-nums">{{ tile.value }}</span>
+        <span v-if="tile.interval" class="text-xs text-ink/80">{{ tile.interval }}</span>
+        <span v-if="tile.note" class="text-xs text-ink/80">{{ tile.note }}</span>
+      </p>
+      <p v-if="tile.present && tile.vs" class="text-xs" data-testid="vs">
         <span aria-hidden="true">{{ tile.mark }}</span>
         {{ tile.points }} vs {{ version.reference }}:
         <strong>{{ tile.vs.verdict }}</strong>
         <span class="text-ink/70"> ({{ (tile.vs.lo * 100).toFixed(1) }} to {{ (tile.vs.hi * 100).toFixed(1) }})</span>
       </p>
-      <p v-else-if="tile.present && isReference" class="mt-2 text-sm text-ink/80">This is the reference version.</p>
-      <p v-else-if="tile.present" class="mt-2 text-sm text-ink/80">No comparison with {{ version.reference }}.</p>
-      <p class="mt-auto pt-2 text-xs text-ink/70">{{ tile.hint }}</p>
+      <p v-else-if="tile.present && isReference" class="text-xs text-ink/80">This is the reference version.</p>
+      <p v-else-if="tile.present" class="text-xs text-ink/80">No comparison with {{ version.reference }}.</p>
     </li>
   </ul>
 </template>
