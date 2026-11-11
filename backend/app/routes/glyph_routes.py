@@ -1,5 +1,6 @@
 """Corpus occurrences of a sign, ordered by look, and comments saved against many of them."""
 
+import re
 from functools import lru_cache
 from io import BytesIO
 from typing import Annotated
@@ -16,6 +17,7 @@ from backend.app.model.analysis import ApiError
 from backend.app.model.glyph import (Annotation, AnnotationCreate, AnnotationPage, GlyphBox,
                                      GlyphOccurrence, GlyphOccurrencePage)
 from backend.app.reading import CREDIT
+from backend.app.reading_pipeline.glyphs import glyph as unicode_glyph
 from la import glyphembed
 
 router = APIRouter(tags=["glyphs"])
@@ -23,6 +25,8 @@ router = APIRouter(tags=["glyphs"])
 SIGN_PATH = Path(pattern=r"^[A-Za-z0-9]{1,12}$")
 SLUG_PATH = Path(pattern=r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$", max_length=64)
 MAX_THUMBNAIL = 960
+MAX_CHARACTERS = 20
+SIGN_ID = re.compile(r"[A-Za-z0-9]{1,12}")
 ERRORS = {code: {"model": ApiError} for code in (404, 503)}
 
 
@@ -63,8 +67,22 @@ def _page(index: glyph_index.GlyphIndex, sign: str, limit: int, offset: int, ref
         raise HTTPException(404, "No corpus tablet has this sign.")
     mode, ranked = index.ranked(sign, reference)
     return GlyphOccurrencePage(
-        sign=sign, total=len(ranked), limit=limit, offset=offset, ranked_by=mode,
+        sign=sign, glyph=unicode_glyph(sign), total=len(ranked), limit=limit, offset=offset, ranked_by=mode,
         items=[_item(index, o, s) for o, s in ranked[offset:offset + limit]], credit=CREDIT)
+
+
+@router.get("/glyphs/characters", response_model=dict[str, str | None], responses={422: {"model": ApiError}})
+def characters(signs: Annotated[str, Query(min_length=1, max_length=400)]) -> dict[str, str | None]:
+    """The Unicode Linear A character of each sign ID (null where Unicode has none).
+
+    `signs` is a comma-separated list of at most 20 distinct sign IDs, e.g. AB45,AB47,A343.
+    """
+    wanted = signs.split(",")
+    if len(wanted) > MAX_CHARACTERS:
+        raise HTTPException(422, f"At most {MAX_CHARACTERS} signs per request.")
+    if not all(SIGN_ID.fullmatch(sign) for sign in wanted):
+        raise HTTPException(422, "Sign IDs are 1 to 12 letters or digits, separated by commas.")
+    return {sign: unicode_glyph(sign) for sign in dict.fromkeys(wanted)}
 
 
 @router.get("/glyphs/{sign}/occurrences", response_model=GlyphOccurrencePage, responses=ERRORS)

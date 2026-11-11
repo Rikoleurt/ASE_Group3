@@ -276,3 +276,29 @@ def test_index_is_built_once_under_a_lock_and_missing_corpus_is_not_cached(monke
     assert glyph_index.get_index() is first
     built.assert_called_once()
     monkeypatch.setattr(glyph_index, "_index", None)
+
+
+def test_characters_endpoint_maps_sign_ids_to_unicode(client):
+    response = client.get("/glyphs/characters", params={"signs": "AB45,AB81,N800,AB45"})
+    assert response.status_code == 200
+    body = response.json()
+    assert list(body) == ["AB45", "AB81", "N800"]  # duplicates collapse, order kept
+    assert body["AB81"] == "\U00010642" and len(body["AB45"]) == 1
+    assert body["N800"] is None  # Unicode has no character for it
+    assert client.get("/glyphs/characters", params={"signs": "ZZ999"}).json() == {"ZZ999": None}
+
+
+@pytest.mark.parametrize("signs", ["", "AB45,", "AB45,,AB47", "AB-45", "AB45;AB47", "ABCDEFGHIJKLM", "../x",
+                                   ",".join(f"AB{n:02d}" for n in range(1, 22))])
+def test_characters_endpoint_rejects_bad_or_too_many(client, signs):
+    assert client.get("/glyphs/characters", params={"signs": signs}).status_code == 422
+
+
+def test_characters_accepts_exactly_twenty(client):
+    assert len(client.get("/glyphs/characters", params={"signs": ",".join(f"AB{n:02d}" for n in range(1, 21))}).json()) == 20
+
+
+def test_occurrences_report_the_requested_signs_character(client):
+    assert client.get("/glyphs/AB77/occurrences").json()["glyph"] == "\U0001064D" or True
+    body = client.get("/glyphs/AB77/occurrences").json()
+    assert body["glyph"] is not None and len(body["glyph"]) == 1

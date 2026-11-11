@@ -921,6 +921,17 @@
             "title": "Credit",
             "type": "object"
           },
+          "glyph": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Glyph"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/GlyphOccurrence"
@@ -1509,6 +1520,62 @@
           }
         ],
         "summary": "Delete Annotation",
+        "tags": [
+          "glyphs"
+        ]
+      }
+    },
+    "/glyphs/characters": {
+      "get": {
+        "description": "The Unicode Linear A character of each sign ID (null where Unicode has none).\n\n`signs` is a comma-separated list of at most 20 distinct sign IDs, e.g. AB45,AB47,A343.",
+        "operationId": "characters_glyphs_characters_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "signs",
+            "required": true,
+            "schema": {
+              "maxLength": 400,
+              "minLength": 1,
+              "title": "Signs",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "title": "Response Characters Glyphs Characters Get",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          }
+        },
+        "summary": "Characters",
         "tags": [
           "glyphs"
         ]

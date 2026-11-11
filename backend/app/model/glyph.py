@@ -32,6 +32,7 @@ class GlyphOccurrence(BaseModel):
 
 class GlyphOccurrencePage(BaseModel):
     sign: str
+    glyph: str | None = None  # the Unicode Linear A character of `sign`, when there is one
     total: int
     limit: int
     offset: int
