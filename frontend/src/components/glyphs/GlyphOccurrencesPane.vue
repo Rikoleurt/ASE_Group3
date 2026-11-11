@@ -10,6 +10,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { loadSession, sessionFetch, sessionUser } from '../../state/session'
+import '../analysis/linearA.css'
 
 const props = defineProps({
   selection: { type: Object, default: null },
@@ -44,6 +45,32 @@ function percent(value) {
 }
 
 const active = ref('')
+// Sign ID -> its Unicode Linear A character (null where Unicode has none). Sign IDs only:
+// nothing that names a tablet gets a character. A failed lookup just leaves them off.
+const characters = ref({})
+const activeTab = computed(() => tabs.value.find((tab) => tab.sign === active.value) ?? null)
+const activeCharacter = computed(() => characters.value[active.value] ?? null)
+const charactersKnown = computed(() => active.value in characters.value)
+// What was clicked: the crop of the box, or, for a corpus reference, that glyph's own drawing.
+const clickedImage = computed(() => {
+  const sel = props.selection
+  if (sel?.crop?.startsWith?.('data:')) return sel.crop
+  return sel?.reference ? `/api/tablets/${sel.reference.tablet}/signs/${sel.reference.position}.png` : null
+})
+
+async function loadCharacters(selection) {
+  characters.value = {}
+  const signs = tabs.value.map((tab) => tab.sign)
+  if (!signs.length) return
+  try {
+    const response = await fetch(`/api/glyphs/characters?signs=${signs.join(',')}`)
+    if (!response.ok) return
+    const data = await response.json()
+    if (props.selection === selection) characters.value = data
+  } catch {
+    // The characters are decoration: no banner.
+  }
+}
 const items = ref([])
 const total = ref(0)
 const rankedBy = ref('none')
@@ -197,7 +224,9 @@ watch(
     loadError.value = commentsError.value = ''
     missing.value = false
     notice.value = postError.value = ''
+    characters.value = {}
     if (!selection?.sign) return
+    loadCharacters(selection)
     // Know whether the reader is logged in before choosing how to order the occurrences.
     if (!sessionUser.value) await loadSession().catch(() => {})
     if (props.selection !== selection) return
@@ -259,6 +288,8 @@ async function remove(comment) {
   }
 }
 
+// The selected sign's reading (e.g. "de"), from the reader's label "AB45 (de)".
+const reading = computed(() => /\((.+)\)$/.exec(activeTab.value?.label ?? '')?.[1] ?? null)
 const apiUrl = (url) => `/api${url}`
 const when = (iso) => new Date(iso).toISOString().slice(0, 10)
 </script>
@@ -266,6 +297,33 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
 <template>
   <section v-if="tabs.length" ref="root" class="rounded-3xl bg-card p-4 sm:p-6" aria-labelledby="glyph-pane-title" data-testid="glyph-pane">
     <h2 id="glyph-pane-title" class="text-xl font-bold">Other tablets with this sign</h2>
+
+    <div
+      v-if="active"
+      class="mt-3 flex flex-wrap items-center gap-4 rounded-xl bg-page p-3"
+      data-testid="glyph-selected"
+      aria-labelledby="glyph-selected-title"
+    >
+      <h3 id="glyph-selected-title" class="sr-only">Selected glyph</h3>
+      <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white">
+        <img v-if="clickedImage" :src="clickedImage" :alt="`The glyph you selected, read as ${active}`" class="max-h-full max-w-full" data-testid="glyph-selected-crop" />
+        <span v-else class="px-1 text-center text-xs text-ink/70">No image of the glyph</span>
+      </div>
+      <div
+        v-if="activeCharacter"
+        class="linear-a flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white text-7xl"
+        role="img"
+        :aria-label="`Unicode character for ${active}`"
+        data-testid="glyph-selected-character"
+      >
+        {{ activeCharacter }}
+      </div>
+      <div class="min-w-0">
+        <p class="text-lg font-bold" data-testid="glyph-selected-sign">{{ active }}<span v-if="reading" class="font-normal"> ({{ reading }})</span></p>
+        <p v-if="activeTab?.probability !== undefined" class="text-sm">The reader's confidence: {{ percent(activeTab.probability) }}</p>
+        <p v-if="charactersKnown && !activeCharacter" class="text-sm text-ink/70" data-testid="glyph-selected-no-character">This sign has no Unicode character.</p>
+      </div>
+    </div>
 
     <div role="tablist" aria-label="The reader's best guesses for this sign" class="mt-3 flex flex-wrap gap-2">
       <button
@@ -276,6 +334,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
         role="tab"
         data-testid="glyph-tab"
         :aria-selected="tab.sign === active"
+        :aria-label="characters[tab.sign] ? `${tab.label}${tab.probability !== undefined ? `, ${percent(tab.probability)}` : ''}` : undefined"
         :disabled="posting"
         :tabindex="tab.sign === active ? 0 : -1"
         class="cursor-pointer rounded px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -283,7 +342,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
         @click="openTab(tab.sign)"
         @keydown="moveTab($event, index)"
       >
-        {{ tab.label }}<span v-if="tab.probability !== undefined"> · {{ percent(tab.probability) }}</span>
+        <span v-if="characters[tab.sign]" class="linear-a mr-1 text-lg align-middle" aria-hidden="true" data-testid="glyph-tab-character">{{ characters[tab.sign] }}</span>{{ tab.label }}<span v-if="tab.probability !== undefined"> · {{ percent(tab.probability) }}</span>
       </button>
     </div>
     <p v-if="tabs.length > 1" class="mt-1 text-sm text-ink/70">The reader can be wrong: check its other guesses too.</p>

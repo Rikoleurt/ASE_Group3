@@ -346,4 +346,56 @@ describe('Glyph occurrences pane', () => {
     expect(wrapper.find('[data-testid="glyph-pane"]').exists()).toBe(false)
     expect(cards()).toHaveLength(0)
   })
+
+  describe('selected glyph and sign characters', () => {
+    const CHARS = { AB77: '\u{1064D}', AB78: '\u{10642}', AB79: null }
+    const withChars = (extra = {}) => api({ '/api/glyphs/characters': () => json(CHARS), ...extra })
+
+    it('shows the clicked crop, the large character, the sign, reading and probability', async () => {
+      const fetch = withChars()
+      await render(fetch)
+      expect(fetch.mock.calls.some(([url]) => url === '/api/glyphs/characters?signs=AB77,AB78,AB79')).toBe(true)
+      const section = wrapper.get('[data-testid="glyph-selected"]')
+      expect(section.get('[data-testid="glyph-selected-crop"]').attributes('src')).toBe(selection.crop)
+      expect(section.get('[data-testid="glyph-selected-character"]').text()).toBe('\u{1064D}')
+      expect(section.get('[data-testid="glyph-selected-character"]').classes()).toContain('linear-a')
+      expect(section.get('[data-testid="glyph-selected-sign"]').text()).toBe('AB77 (ka)')
+      expect(section.text()).toContain("The reader's confidence: 81%")
+      expect(section.find('[data-testid="glyph-selected-no-character"]').exists()).toBe(false)
+    })
+
+    it("falls back to the reference glyph's corpus drawing when there is no crop", async () => {
+      await render(withChars(), { selection: { sign: 'AB77', reference: { tablet: 'HT-13', position: 9 } } })
+      expect(wrapper.get('[data-testid="glyph-selected-crop"]').attributes('src')).toBe('/api/tablets/HT-13/signs/9.png')
+    })
+
+    it('says in words when the sign has no Unicode character, and follows the active tab', async () => {
+      await render(withChars())
+      await wrapper.findAll('[data-testid="glyph-tab"]')[2].trigger('click')
+      await flushPromises()
+      expect(wrapper.find('[data-testid="glyph-selected-character"]').exists()).toBe(false)
+      expect(wrapper.get('[data-testid="glyph-selected-no-character"]').text()).toBe('This sign has no Unicode character.')
+      expect(wrapper.get('[data-testid="glyph-selected-sign"]').text()).toBe('AB79 (x)')
+    })
+
+    it('puts the character before the label on tabs that have one, with an aria-label spelling out the sign', async () => {
+      await render(withChars())
+      const tabs = wrapper.findAll('[data-testid="glyph-tab"]')
+      expect(tabs[0].get('[data-testid="glyph-tab-character"]').text()).toBe('\u{1064D}')
+      expect(tabs[0].get('[data-testid="glyph-tab-character"]').attributes('aria-hidden')).toBe('true')
+      expect(tabs[0].text()).toBe('\u{1064D}AB77 (ka) \u00b7 81%')
+      expect(tabs[0].attributes('aria-label')).toBe('AB77 (ka), 81%')
+      expect(tabs[2].find('[data-testid="glyph-tab-character"]').exists()).toBe(false)
+      expect(tabs[2].attributes('aria-label')).toBeUndefined()
+      expect(tabs[2].text()).toBe('AB79 (x) \u00b7 3%')
+    })
+
+    it('leaves the characters off, without an error banner, when the lookup fails', async () => {
+      await render(api({ '/api/glyphs/characters': () => json({ detail: 'down' }, 503) }))
+      expect(wrapper.find('[data-testid="glyph-tab-character"]').exists()).toBe(false)
+      expect(wrapper.find('[data-testid="glyph-selected-no-character"]').exists()).toBe(false)
+      expect(wrapper.find('[role="alert"]').exists()).toBe(false)
+      expect(cards()).toHaveLength(3)
+    })
+  })
 })
