@@ -135,3 +135,17 @@ def test_macro_interval_contains_estimate_despite_resampling_bias():
     point = M.identification(rs)["id_macro_top1"]
     lo, hi = M.bootstrap(rs, M.identification, M.resample_indices(len(rs), 400, seed=4))["id_macro_top1"]
     assert lo <= point <= hi
+
+
+def test_publish_per_sign_and_per_tablet_counts():
+    from benchmark import publish
+    rec = M.TabletRecord("T1", ["A", "B", None], [True, True, True],
+                         detections=[det(0.9, ["A"], truth=0), det(0.9, ["C"], truth=1), det(0.1, ["B"], truth=1)],
+                         identifications=[ident("A", ["A"]), ident("B", ["C", "B"])])
+    signs = {s["sign"]: s for s in publish.per_sign([rec])}
+    assert signs["A"]["id_correct"] == 1 and signs["A"]["e2e_correct"] == 1
+    assert signs["B"]["id_correct"] == 0 and signs["B"]["e2e_n"] == 1 and signs["B"]["e2e_correct"] == 0
+    assert signs["B"]["confused_with"] == [{"sign": "C", "count": 1}]
+    (tablet,) = publish.per_tablet([rec])
+    assert tablet == {"tablet": "T1", "truths": 3, "found": 2, "named": 2, "read_top1": 1,
+                      "identified": 2, "id_correct": 1}
