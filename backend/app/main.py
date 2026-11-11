@@ -10,6 +10,7 @@ from backend.app.routes.reading_routes import router as reading_router
 from backend.app.routes.tablet_demo_routes import router as tablet_demo_router
 from backend.app.routes.user_routes import router as user_router
 from backend.app.routes.analysis_routes import router as analysis_router
+from backend.app.routes.benchmark_routes import router as benchmark_router
 
 
 
@@ -28,6 +29,7 @@ app.include_router(user_router)
 app.include_router(tablet_demo_router)
 app.include_router(reading_router)
 app.include_router(analysis_router)
+app.include_router(benchmark_router)
 
 @app.exception_handler(DatabaseError)
 async def database_unavailable(_request, _error):
