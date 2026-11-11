@@ -73,11 +73,28 @@ Raw numbers: [`results/results.csv`](results/results.csv). Charts:
 
 - **Detector:** yolo26n is best and also the smallest. The small variants gain
   nothing here.
-- **Classifier:** ConvNeXt-Tiny and EfficientNet-B0 lead, but **end to end the 95%
-  intervals of all ten classifiers overlap**, so the choice is not statistically
-  significant on this test set. EfficientNet-B0 is within noise of ConvNeXt at a
-  sixth of the parameters and a third of the training time.
+- **Classifier:** ConvNeXt-Tiny is best end to end. The marginal 95% intervals above
+  overlap, but they are not a significance test: every pipeline reads the same tablets,
+  so errors are paired. A paired bootstrap (tablets resampled together, 10,000 draws)
+  of the top-1 difference against ConvNeXt-Tiny:
+
+  | Classifier | Difference | 95% CI | Excludes 0 |
+  |---|---|---|---|
+  | tv-efficientnet_b0 | +1.1 pts | -1.6 to +3.9 | no |
+  | yolo11n-cls | +1.4 pts | -1.0 to +4.0 | no |
+  | tv-resnet18 | +2.3 pts | 0.0 to +4.9 | no (borderline) |
+  | tv-mobilenet_v3_large | +3.5 pts | +0.5 to +6.7 | yes |
+  | yolo11s-cls | +3.5 pts | +0.9 to +6.3 | yes |
+  | yolov8n-cls | +3.5 pts | +0.7 to +6.5 | yes |
+  | tv-resnet50 | +3.8 pts | +1.2 to +6.7 | yes |
+  | yolo26s-cls | +4.0 pts | +1.5 to +6.8 | yes |
+  | yolo26n-cls | +4.1 pts | +1.7 to +6.7 | yes |
+
+  So ConvNeXt-Tiny is credibly better than six of the nine, but **not distinguishable
+  from EfficientNet-B0, YOLO11n-cls or ResNet-18**. These are nine uncorrected
+  comparisons, so the smaller gaps are weaker evidence than they look. EfficientNet-B0
+  is within noise of ConvNeXt at a sixth of the parameters and a third of the training time.
 - **Bottleneck:** detection recall is about 89% and the classifier names about 71%
   of the signs it is handed, so recognition limits the pipeline more than detection.
-- **Limitations:** one seed per model, one detector used for the end-to-end stage,
+- **Limitations:** one seed per model, one detector used for the end-to-end stage, uncorrected multiple comparisons,
   and a small test set (99 tablets, 657 signs).

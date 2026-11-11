@@ -31,3 +31,15 @@ yolo26n+yolov8n-cls,0.6119,0.7139,0.8904,0.8891
 yolo26n+tv-resnet50,0.6088,0.7002,0.8904,0.8891
 yolo26n+yolo26s-cls,0.6073,0.6941,0.8904,0.8891
 yolo26n+yolo26n-cls,0.6058,0.6956,0.8904,0.8891
+
+# Paired difference in top-1 vs the best classifier (95% CI, same tablets resampled together)
+classifier,difference,ci_low,ci_high,excludes_zero
+tv-efficientnet_b0,0.0107,-0.0155,0.0386,False
+yolo11n-cls,0.0137,-0.0103,0.0399,False
+tv-resnet18,0.0228,0.0000,0.0491,False
+tv-mobilenet_v3_large,0.0350,0.0047,0.0674,True
+yolo11s-cls,0.0350,0.0087,0.0630,True
+yolov8n-cls,0.0350,0.0070,0.0645,True
+tv-resnet50,0.0381,0.0120,0.0671,True
+yolo26s-cls,0.0396,0.0145,0.0676,True
+yolo26n-cls,0.0411,0.0174,0.0674,True

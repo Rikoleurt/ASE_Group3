@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -29,6 +30,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
 OUT = ROOT / "runs" / "benchmark"
+PREFIX = "bench_"  # run-folder prefix; --quick switches both to separate names (see main)
 
 # Same family sizes where they exist, so size and generation are not confounded.
 DETECTORS = ["yolo26n.pt", "yolo26s.pt", "yolo11n.pt", "yolo11s.pt", "yolov8n.pt"]
@@ -59,7 +61,7 @@ def train_args(args: argparse.Namespace, weights: str) -> argparse.Namespace:
     """The arguments `train.py` expects, with one run per model under runs/benchmark."""
     return argparse.Namespace(
         data=args.data, model=weights, epochs=QUICK_EPOCHS if args.quick else args.epochs,
-        batch=args.batch, seed=args.seed, workers=args.workers, name=f"bench_{stem(weights)}",
+        batch=args.batch, seed=args.seed, workers=args.workers, name=f"{PREFIX}{stem(weights)}",
     )
 
 
@@ -72,10 +74,11 @@ def detect(args: argparse.Namespace) -> None:
         if (OUT / "detect" / f"{name}.json").exists() and not args.force:
             print(f"skip {name}: already benchmarked (use --force)")
             continue
+        shutil.rmtree(ROOT / "runs" / "detect" / f"{PREFIX}{name}", ignore_errors=True)  # else Ultralytics numbers a new folder
         started = time.time()
         train.detect(train_args(args, weights))
         train_seconds = time.time() - started
-        run = ROOT / "runs" / "detect" / f"bench_{name}"
+        run = ROOT / "runs" / "detect" / f"{PREFIX}{name}"
         best = (RTDETR if "rtdetr" in name else YOLO)(str(run / "weights" / "best.pt"))
         data = args.data or train.DATA / "yolo_signs" / "data.yaml"
         metrics = best.val(data=str(data), split="test", imgsz=1024, conf=0.001, plots=False, verbose=False)
@@ -150,7 +153,8 @@ def train_torchvision(args: argparse.Namespace, arch: str, data: Path) -> dict:
                 n += len(y)
         return top1 / max(n, 1), top5 / max(n, 1)
 
-    run = ROOT / "runs" / "classify" / f"bench_tv-{arch}" / "weights"
+    run = ROOT / "runs" / "classify" / f"{PREFIX}tv-{arch}" / "weights"
+    shutil.rmtree(run.parent, ignore_errors=True)
     run.mkdir(parents=True, exist_ok=True)
     best, stale = -1.0, 0
     for epoch in range(epochs):
@@ -223,7 +227,7 @@ class TorchvisionClassifier:
 
 def load_classifier(path: Path):
     """An Ultralytics or torchvision classifier, whichever `path` holds."""
-    if path.parent.parent.name.startswith("bench_tv-"):
+    if "bench_tv-" in path.parent.parent.name:
         return TorchvisionClassifier(str(path))
     from ultralytics import YOLO
 
@@ -247,10 +251,11 @@ def classify(args: argparse.Namespace) -> None:
                                            "seed": args.seed, "quick": args.quick, **r})
             print(f"{name}: top-1 {r['top1']:.3f}, top-5 {r['top5']:.3f} -> {path}")
             continue
+        shutil.rmtree(ROOT / "runs" / "classify" / f"{PREFIX}{name}", ignore_errors=True)
         started = time.time()
         train.classify(train_args(args, weights))
         train_seconds = time.time() - started
-        run = ROOT / "runs" / "classify" / f"bench_{name}"
+        run = ROOT / "runs" / "classify" / f"{PREFIX}{name}"
         best = YOLO(str(run / "weights" / "best.pt"))
         data = args.data or train.DATA / "sign_crops"
         metrics = best.val(data=str(data), split="test", imgsz=128, plots=False, verbose=False)
@@ -280,10 +285,29 @@ def end2end(args: argparse.Namespace) -> None:
     for entry in load("classify"):
         name = f"{best['model']}+{entry['model']}"
         subprocess.run([sys.executable, str(ROOT / "evaluate.py"), "--detector", best["weights"],
-                        "--classifier", entry["weights"], "--name", f"bench_{name}"], check=True)
-        result = json.loads((ROOT / "runs" / "eval" / f"bench_{name}.json").read_text(encoding="utf-8"))
+                        "--classifier", entry["weights"], "--name", f"{PREFIX}{name}"], check=True)
+        result = json.loads((ROOT / "runs" / "eval" / f"{PREFIX}{name}.json").read_text(encoding="utf-8"))
         save("end2end", name, {"pipeline": name, "detector": best["model"], "classifier": entry["model"],
-                               "rates": result["rates"], "ci95": result["ci95"], "seconds": result["seconds"]})
+                               "rates": result["rates"], "ci95": result["ci95"], "seconds": result["seconds"],
+                               "per_tablet": result["per_tablet"]})
+
+
+def paired_difference(a: dict, b: dict, resamples: int = 10000, seed: int = 0) -> tuple[float, float, float]:
+    """Top-1 of `a` minus `b` with a 95% bootstrap interval, resampling whole tablets once for both.
+
+    Both pipelines read the same tablets, so their errors are paired; comparing the two
+    marginal intervals by eye is not a significance test.
+    """
+    import numpy as np
+
+    ta, tb = a["per_tablet"], b["per_tablet"]
+    assert [t["tablet"] for t in ta] == [t["tablet"] for t in tb], "pipelines scored different tablets"
+    named = np.array([t["named"] for t in ta], dtype=float)
+    ra, rb = np.array([t["read_top1"] for t in ta], dtype=float), np.array([t["read_top1"] for t in tb], dtype=float)
+    idx = np.random.default_rng(seed).integers(0, len(ta), (resamples, len(ta)))
+    diffs = (ra[idx].sum(1) - rb[idx].sum(1)) / named[idx].sum(1)
+    lo, hi = np.percentile(diffs, [2.5, 97.5])
+    return float((ra.sum() - rb.sum()) / named.sum()), float(lo), float(hi)
 
 
 def report(args: argparse.Namespace) -> None:
@@ -331,6 +355,10 @@ def report(args: argparse.Namespace) -> None:
         lines += ["# End to end (whole tablets, detector held fixed)", "pipeline,read_top1,read_top3,recall,precision",
                   *[f"{r['pipeline']},{r['rates']['read_top1']:.4f},{r['rates']['read_top3']:.4f},"
                     f"{r['rates']['recall']:.4f},{r['rates']['precision']:.4f}" for r in rows], ""]
+        lines += ["# Paired difference in top-1 vs the best classifier (95% CI, same tablets resampled together)",
+                  "classifier,difference,ci_low,ci_high,excludes_zero",
+                  *[f"{r['classifier']},{d:.4f},{lo_:.4f},{hi_:.4f},{lo_ > 0 or hi_ < 0}"
+                    for r in rows[1:] for d, lo_, hi_ in [paired_difference(rows[0], r)]], ""]
         fig, ax = plt.subplots(figsize=(8, 4.5))
         lo = [r["ci95"]["read_top1"][0] for r in rows]
         hi = [r["ci95"]["read_top1"][1] for r in rows]
@@ -362,6 +390,9 @@ def main() -> None:
     parser.add_argument("--quick", action="store_true", help=f"{QUICK_EPOCHS} epochs per model, to test the pipeline")
     parser.add_argument("--force", action="store_true", help="retrain models that already have results")
     args = parser.parse_args()
+    if args.quick:  # smoke-test results never mix with the real ones
+        global OUT, PREFIX
+        OUT, PREFIX = ROOT / "runs" / "benchmark_quick", "quickbench_"
     {"detect": detect, "classify": classify, "end2end": end2end, "report": report}[args.stage](args)
 
 
