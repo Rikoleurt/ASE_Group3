@@ -182,7 +182,8 @@ function alignGrids() {
   if (block) tabletMin.value = Math.max(tabletMin.value, Math.round(block.getBoundingClientRect().height))
   const glyphs = row?.querySelector('[data-testid="glyph-grid"]')
   const tablets = row?.querySelector('[data-testid="tablet-grid"]')
-  if (!glyphs || !tablets) return
+  // Hidden while a sign's pane is open: keep the last alignment, so the sign grid does not move.
+  if (!glyphs || !tablets || !tablets.getClientRects().length) return
   const sideBySide = glyphs.getBoundingClientRect().left < tablets.getBoundingClientRect().left - 1
   // Where each grid would start unpadded; pad the higher one down to the other.
   const diff = (glyphs.getBoundingClientRect().top - glyphPad.value) - (tablets.getBoundingClientRect().top - tabletPad.value)
