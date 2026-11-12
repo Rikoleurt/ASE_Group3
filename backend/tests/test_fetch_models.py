@@ -22,7 +22,7 @@ def github(monkeypatch, tmp_path):
 
     def urlopen(req):
         requests.append(req)
-        if req.full_url.endswith("/releases/tags/signs-v1"):
+        if "/releases/tags/" in req.full_url:
             return io.BytesIO(json.dumps(RELEASE).encode())
         asset = next(a for a in RELEASE["assets"] if a["url"] == req.full_url)
         return io.BytesIO(asset["name"].encode())
@@ -70,3 +70,19 @@ def test_environment_token_wins_over_git(monkeypatch):
     monkeypatch.setenv("GITHUB_TOKEN", "from-env")
     monkeypatch.setattr(fetch_models.subprocess, "run", lambda *a, **k: pytest.fail("git was asked"))
     assert fetch_models.token() == "from-env"
+
+
+def test_optional_reader_files_are_downloaded_when_the_release_has_them(github, monkeypatch):
+    extra = [{"name": name, "url": f"https://api.github.test/assets/x{index}", "size": len(name)}
+             for index, name in enumerate(fetch_models.OPTIONAL[:2])]
+    monkeypatch.setitem(RELEASE, "assets", RELEASE["assets"] + extra)
+    assert fetch_models.main() == 0
+    for name in fetch_models.OPTIONAL[:2]:
+        assert (fetch_models.MODELS / name).read_bytes() == name.encode()
+    for name in fetch_models.OPTIONAL[2:]:  # not in this release: skipped, not an error
+        assert not (fetch_models.MODELS / name).exists()
+
+
+def test_the_default_release_is_reader_v2(github):
+    fetch_models.main()
+    assert github[0].full_url.endswith("/releases/tags/reader-v2")

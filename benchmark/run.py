@@ -219,6 +219,8 @@ def main(argv: list[str] | None = None) -> Path:
     for entry in entries:
         name = entry["name"]
         weights = [Path(entry[k]) for k in ("detector", "classifier") if k in entry]
+        if "comparer" in entry:
+            weights.append(Path(entry["comparer"]["weights"]))
         absent = [w for w in weights if not (w if w.is_absolute() else ROOT / w).is_file()]
         if absent:
             print(f"  {name}: skipped, missing {', '.join(map(str, absent))}")
