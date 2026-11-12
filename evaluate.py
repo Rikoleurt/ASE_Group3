@@ -59,7 +59,10 @@ def main() -> None:
     annotations = json.loads((args.dataset / "annotations.json").read_text(encoding="utf-8"))
     learnable = {sign_id(s) for t in annotations if t["split"] == "train" for s in identified(t)}
     detector = YOLO(str(args.detector))
-    classifier = YOLO(str(args.classifier)) if args.classifier else None
+    # In la/, not benchmark.py: the benchmark/ package (reader benchmark) shares that import name.
+    from la.classifiers import load_classifier
+
+    classifier = load_classifier(args.classifier) if args.classifier else None
 
     scores, started = [], time.time()
     for tablet in (t for t in annotations if t["split"] == args.split):

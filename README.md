@@ -422,7 +422,13 @@ correctly 69.7% of the time. On HT 13, the demo tablet, 26 of its 27 signs are
 found and 24 are read correctly. The test labels miss some signs (see
 self-training above), so some correct detections still count as false positives.
 
-### Compare models (benchmark)
+### Benchmarks
+
+Two complementary benchmarks. **Architectures** (`benchmark.py`, PR #67) trains alternative detectors and
+classifiers and compares them; **readers** (`benchmark/`, below) compares ways of using the trained models
+(test-time augmentation, neighbour votes, the sign comparer…) and publishes them to the app's Benchmarks page.
+
+#### Compare readers (`benchmark/`)
 
 ```bash
 python -m benchmark.run                         # every reader in benchmark/models.yaml, val split
@@ -447,6 +453,13 @@ interval excludes zero is reported as `better` or `worse`, otherwise `tie`.
 `report` writes `report.md` (tables, best first) and charts. Choose models on `val`;
 `--split test --final` is for final candidates and every test run is logged in
 `runs/benchmark/test_runs.csv`. `benchmark/benchmark.ipynb` runs both steps.
+
+#### Benchmark alternative models (`benchmark.py`)
+
+`benchmark.py` trains several detectors and classifiers with the same recipe and
+scores them on the same test tablets (`python benchmark.py detect|classify|end2end|report`).
+Results, charts and conclusions are in [research/benchmarking](research/benchmarking/README.md);
+`benchmark.ipynb` there runs the same thing on Colab.
 
 ### Use the models in the application
 

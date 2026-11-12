@@ -21,8 +21,9 @@ import argparse
 import json
 import math
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -45,8 +46,43 @@ def _glyph(sign: str) -> str | None:
         return None
 
 
+@lru_cache(maxsize=1)
+def _drawings() -> dict[str, dict]:
+    """Sign ID -> one corpus example with a cached drawing: {"tablet": slug, "position": n}.
+
+    Only a reference is published (the app serves the drawing from its own corpus
+    cache, GET /tablets/{slug}/signs/{position}.png), never the image itself.
+    The first example in document and position order, so republishing is stable.
+    """
+    try:
+        from la import fetch, signboxes
+        docs = fetch.load_cached()
+    except Exception:  # noqa: BLE001 - decoration only, like the glyph
+        return {}
+    out: dict[str, dict] = {}
+    for doc_id in sorted(docs):
+        doc = docs[doc_id]
+        for s in sorted(doc.get("signs") or [], key=lambda s: s.get("position") or 0):
+            sign = s.get("sign")
+            if not sign or sign in out or not s.get("image"):
+                continue
+            if signboxes.image_path(doc, s["image"]).exists():
+                out[sign] = {"tablet": signboxes.slug(doc), "position": s["position"]}
+    return out
+
+
+def drawing(sign: str) -> dict | None:
+    """A corpus drawing to show for a sign that has no Unicode character."""
+    return None if _glyph(sign) else _drawings().get(sign)
+
+
 def _num(x):
     return None if x is None or math.isnan(float(x)) else round(float(x), 4)
+
+
+def role_counts(records: list[M.TabletRecord]) -> dict[str, int]:
+    """True signs per role (a sign's role on that tablet), the n behind `by_role`."""
+    return dict(sorted(Counter(i.role for i in M._idents(records)).items()))
 
 
 def per_sign(records: list[M.TabletRecord]) -> list[dict]:
@@ -73,7 +109,7 @@ def per_sign(records: list[M.TabletRecord]) -> list[dict]:
     rows = []
     for sign, s in sorted(out.items()):
         confusions = sorted(s.pop("confusions").items(), key=lambda kv: -kv[1])[:3]
-        rows.append({"sign": sign, "glyph": _glyph(sign), **s,
+        rows.append({"sign": sign, "glyph": _glyph(sign), "drawing": drawing(sign), **s,
                      "confused_with": [{"sign": c, "count": n} for c, n in confusions]})
     return rows
 
@@ -109,6 +145,7 @@ def version_document(name: str, result: dict, records: list[M.TabletRecord], run
                          for k, d in result.get("vs_reference", {}).items() if k in HEADLINE},
         "by_role": groups["role"], "by_bucket": groups["bucket"],
         "bucket_counts": {b: result["counts"].get(f"bucket_{b}", 0) for b in M.BUCKETS},
+        "role_counts": role_counts(records),
         "cost": {"latency_s": _num(result.get("latency_s_median")), "weights_mb": result.get("weights_mb"),
                  "train_minutes": _num((result.get("train_seconds") or 0) / 60) if result.get("train_seconds") else None},
         "coverage_curve": [{k: _num(v) for k, v in p.items()} for p in result.get("coverage_curve", [])],
