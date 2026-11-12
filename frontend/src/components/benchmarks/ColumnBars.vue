@@ -26,7 +26,7 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
       <ul class="m-0 list-none p-0" :aria-label="title">
         <li v-for="b in bars" :key="b.key" class="row" :data-bar="b.key">
           <span class="cat">
-            <span class="leading-tight">{{ compact ? (b.short ?? b.label) : b.label }}<template v-if="compact && b.count != null"> <span class="text-ink/70 tabular-nums">({{ b.count }})</span></template></span>
+            <span class="leading-tight">{{ compact ? (b.short ?? b.label) : b.label }}<span v-if="compact && b.count != null" class="ml-1 text-ink/70 tabular-nums">({{ b.count }})</span></span>
             <span v-if="!compact && b.count != null" class="text-ink/70 tabular-nums">n = {{ b.count }}</span>
           </span>
           <span class="plot" role="img" :aria-label="label(b, countLabel)" :title="label(b, countLabel)">
