@@ -5,6 +5,7 @@ import CoverageChart from '../components/benchmarks/CoverageChart.vue'
 import GlyphGrid from '../components/benchmarks/GlyphGrid.vue'
 import MetricTiles from '../components/benchmarks/MetricTiles.vue'
 import TabletGrid from '../components/benchmarks/TabletGrid.vue'
+import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 import { BUCKET_LABELS, BUCKET_ORDER, BUCKET_SHORT, GRADIENT, NO_DATA, bestVersion, gridMode, headline, pct, rankVersions, worstToBest } from '../components/benchmarks/benchmarkData'
 
 const STEP_MS = 1500
@@ -200,6 +201,7 @@ onMounted(() => {
   }
   if (typeof ResizeObserver !== 'undefined') resizer = new ResizeObserver(() => alignGrids())
   window.addEventListener?.('resize', onWindowResize)
+  window.addEventListener?.('keydown', onKey)
   loadIndex()
 })
 onBeforeUnmount(() => {
@@ -208,12 +210,30 @@ onBeforeUnmount(() => {
   motionQuery?.removeEventListener?.('change', onMotionChange)
   resizer?.disconnect()
   window.removeEventListener?.('resize', onWindowResize)
+  window.removeEventListener?.('keydown', onKey)
 })
 
 const scoreText = (entry) => {
   const h = headline(entry)
   return h.value == null ? 'no score' : `${pct(h.value)} ${h.fallback ? 'named' : 'read'}`
 }
+// Clicking a sign opens its occurrences and comments (the same pane as on the tablet pages).
+// Its tabs offer the sign and the signs it is most often confused with in this version.
+const picked = ref(null)
+function pick(s) {
+  if (s.sign === 'unidentified') return // no sign ID, so no occurrences to list
+  picked.value = picked.value?.sign === s.sign ? null : s
+}
+function unpick() { picked.value = null }
+const selection = computed(() => {
+  const s = picked.value
+  if (!s) return null
+  const candidates = [{ sign: s.sign, label: s.sign }, ...(s.confused_with ?? []).map((c) => ({ sign: c.sign, label: c.sign }))]
+  return { sign: s.sign, candidates, ...(s.drawing ? { reference: s.drawing } : {}) }
+})
+// The pane scrolls inside the column rather than lengthening the page.
+const paneMax = computed(() => (rowMin.value ? `${Math.max(rowMin.value - 40, 320)}px` : '70vh'))
+function onKey(e) { if (e.key === 'Escape' && picked.value) unpick() }
 const aboutVersion = computed(() => {
   const c = current.value
   if (!c) return ''
@@ -340,11 +360,24 @@ const cost = computed(() => {
                 <span>100%</span>
                 <span class="inline-flex items-center gap-1"><span class="inline-block h-2.5 w-2.5 rounded-sm border border-dashed border-ink/40" :style="{ backgroundColor: NO_DATA.bg }" />no examples</span>
               </div>
-              <div class="mt-1"><GlyphGrid :signs="current.signs ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+              <div class="mt-1"><GlyphGrid :signs="current.signs ?? []" :mode="grids" :reduce-motion="reduceMotion" :picked="picked?.sign ?? null" @pick="pick" /></div>
             </template>
           </section>
 
-          <section aria-labelledby="tablets-h" class="min-w-0">
+          <!-- A picked sign's corpus occurrences and shared comments take the place of the
+               tablet grid and charts, so the page still fits on one screen. -->
+          <section v-if="picked" aria-label="Occurrences of the picked sign" class="min-w-0" data-testid="picked-pane">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-sm font-bold">Every tablet with {{ picked.sign }}</h2>
+              <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="close-pane" @click="unpick">
+                Back to charts
+              </button>
+            </div>
+            <div class="mt-1 overflow-y-auto" :style="{ maxHeight: paneMax }">
+              <GlyphOccurrencesPane :selection="selection" />
+            </div>
+          </section>
+          <section v-show="!picked" aria-labelledby="tablets-h" class="min-w-0">
             <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
             <div data-testid="tablet-block" :style="tabletMin ? { minHeight: `${tabletMin}px` } : null">
             <template v-if="grids">

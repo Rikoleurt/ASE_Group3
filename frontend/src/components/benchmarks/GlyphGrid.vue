@@ -7,7 +7,10 @@ const props = defineProps({
   signs: { type: Array, required: true },
   mode: { type: String, default: 'id' },
   reduceMotion: { type: Boolean, default: false },
+  // The sign whose occurrences and comments are open (highlighted); click a tile to pick one.
+  picked: { type: String, default: null },
 })
+const emit = defineEmits(['pick'])
 
 const sortBy = ref('frequency')
 const role = ref('all')
@@ -78,9 +81,12 @@ const tileStyle = (s) => {
           :data-sign="s.sign"
           :title="describe(s)"
           :aria-label="describe(s)"
-          class="glyph-tile flex h-8 w-8 cursor-default items-center justify-center rounded-sm border border-ink/25 leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+          class="glyph-tile flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm border border-ink/25 leading-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
           :class="{ 'border-dashed': s.rate == null, 'no-motion': reduceMotion }"
           :style="tileStyle(s)"
+          :aria-pressed="picked === s.sign"
+          :data-picked="picked === s.sign || null"
+          @click="emit('pick', s)"
           @mouseenter="active = s"
           @focus="active = s"
           @blur="active = null"
@@ -126,6 +132,7 @@ const tileStyle = (s) => {
 <style scoped>
 .glyph-tile { transition: background-color 0.6s ease, color 0.6s ease; }
 .glyph-tile.no-motion { transition: none; }
+.glyph-tile[data-picked] { outline: 3px solid var(--color-accent); outline-offset: 1px; }
 .sign-drawing.dark-ink { mix-blend-mode: multiply; }
 .sign-drawing.light-ink { filter: invert(1); mix-blend-mode: screen; }
 @media (prefers-reduced-motion: reduce) { .glyph-tile { transition: none; } }

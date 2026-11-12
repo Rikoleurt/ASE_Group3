@@ -143,6 +143,18 @@ describe('Benchmarks page', () => {
     expect(tile('recall').find('[data-verdict]').exists()).toBe(false) // no comparison: no colour
   })
 
+  it('opens the occurrences of a sign in place of the charts, and closes them again', async () => {
+    stubFetch()
+    await render()
+    expect(wrapper.find('[data-testid="picked-pane"]').exists()).toBe(false)
+    await wrapper.get('[data-sign="AB02"]').trigger('click')
+    expect(wrapper.get('[data-testid="picked-pane"]').text()).toContain('Every tablet with AB02')
+    expect(wrapper.get('[data-sign="AB02"]').attributes('aria-pressed')).toBe('true')
+    expect(wrapper.get('[data-testid="side-charts"]').isVisible()).toBe(false)
+    await wrapper.get('[data-testid="close-pane"]').trigger('click')
+    expect(wrapper.find('[data-testid="picked-pane"]').exists()).toBe(false)
+  })
+
   it('reports a failed index load and retries', async () => {
     stubFetch({ '/api/benchmarks': { ok: false, status: 503, json: async () => ({ detail: 'Benchmark results are not available on this server.' }) } })
     await render()
