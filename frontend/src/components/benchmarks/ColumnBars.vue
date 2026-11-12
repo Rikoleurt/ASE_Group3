@@ -21,7 +21,7 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
 <template>
   <figure class="m-0">
     <figcaption class="text-sm font-semibold">{{ title }}</figcaption>
-    <p v-if="!bars.length" class="mt-2 text-sm text-ink/80" :class="{ 'min-h-[calc(6*1.3rem)]': compact }">— {{ empty }}</p>
+    <p v-if="!bars.length" class="mt-2 text-sm text-ink/80" :class="{ 'min-h-[7.375rem]': compact }">— {{ empty }}</p>
     <div v-else class="chart mt-2 text-xs" :class="{ compact }">
       <ul class="m-0 list-none p-0" :aria-label="title">
         <li v-for="b in bars" :key="b.key" class="row" :data-bar="b.key">

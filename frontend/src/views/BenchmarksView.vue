@@ -170,11 +170,14 @@ const tabletPad = ref(0)
 // The grids row keeps the tallest height it has had (versions differ in sign count), so the
 // page below it does not jump while switching or playing; a window resize starts over.
 const rowMin = ref(0)
+const tabletMin = ref(0) // likewise for the tablet grid, so the charts under it stay put
 let resizer = null
-function onWindowResize() { rowMin.value = 0 }
+function onWindowResize() { rowMin.value = 0; tabletMin.value = 0 }
 function alignGrids() {
   const row = gridsRow.value
   if (row) rowMin.value = Math.max(rowMin.value, Math.round(row.getBoundingClientRect().height))
+  const block = row?.querySelector('[data-testid="tablet-block"]')
+  if (block) tabletMin.value = Math.max(tabletMin.value, Math.round(block.getBoundingClientRect().height))
   const glyphs = row?.querySelector('[data-testid="glyph-grid"]')
   const tablets = row?.querySelector('[data-testid="tablet-grid"]')
   if (!glyphs || !tablets) return
@@ -338,16 +341,18 @@ const cost = computed(() => {
 
           <section aria-labelledby="tablets-h" class="min-w-0">
             <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
+            <div data-testid="tablet-block" :style="tabletMin ? { minHeight: `${tabletMin}px` } : null">
             <template v-if="grids">
               <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
               <div class="mt-1" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
             </template>
             <p v-else class="mt-1 rounded-2xl bg-card p-3 text-sm" data-testid="tablet-note">Not measured: no per-tablet result without sign names.</p>
+            </div>
             <div class="mt-3 grid gap-x-4 gap-y-3 sm:grid-cols-2" data-testid="side-charts">
               <ColumnBars compact title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
               <ColumnBars compact title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
               <CoverageChart v-if="current.coverage_curve?.length" compact :points="current.coverage_curve" />
-              <figure v-else class="m-0 sm:min-h-[13rem]" data-testid="coverage-empty">
+              <figure v-else class="m-0 sm:min-h-[12.5rem]" data-testid="coverage-empty">
                 <figcaption class="text-sm leading-tight font-semibold">Accuracy when answering only the most confident signs</figcaption>
                 <p class="mt-2 text-sm text-ink/80">— Not measured for this version.</p>
               </figure>
