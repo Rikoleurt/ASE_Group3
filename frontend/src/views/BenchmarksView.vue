@@ -324,12 +324,18 @@ const cost = computed(() => {
             <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
             <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
             <div class="mt-1" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+            <div class="mt-4 grid gap-4" data-testid="side-charts">
+              <ColumnBars title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+              <ColumnBars title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+            </div>
           </section>
         </div>
 
         <section class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="More detail">
-          <ColumnBars title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
-          <ColumnBars title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+          <template v-if="!grids">
+            <ColumnBars title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+            <ColumnBars title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+          </template>
           <CoverageChart v-if="current.coverage_curve?.length" :points="current.coverage_curve" />
         </section>
 
