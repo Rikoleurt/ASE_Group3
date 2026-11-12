@@ -321,13 +321,13 @@ const cost = computed(() => {
                     </optgroup>
                   </select>
                   <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" title="Play every version, worst to best" aria-label="Play worst to best" data-testid="play" @click="play">
-                    <span aria-hidden="true">▶</span>
+                    <span aria-hidden="true">▶︎</span>
                   </button>
                   <template v-else>
                     <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" :title="mode === 'paused' ? 'Resume' : 'Pause'" :aria-label="mode === 'paused' ? 'Resume' : 'Pause'" @click="togglePause">
-                      <span aria-hidden="true">{{ mode === 'paused' ? '▶' : '⏸' }}</span>
+                      <span aria-hidden="true">{{ mode === 'paused' ? '▶︎' : '⏸︎' }}</span>
                     </button>
-                    <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" title="Stop" aria-label="Stop" data-testid="stop" @click="stop"><span aria-hidden="true">■</span></button>
+                    <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" title="Stop" aria-label="Stop" data-testid="stop" @click="stop"><span aria-hidden="true">■︎</span></button>
                   </template>
               </div>
               <div class="mt-1 h-5" data-testid="progress-slot">
