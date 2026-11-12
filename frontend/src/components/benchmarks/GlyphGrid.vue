@@ -1,7 +1,7 @@
 <script setup>
 import { computed, ref } from 'vue'
 import '../analysis/linearA.css'
-import { BUCKET_LABELS, BUCKET_ORDER, accuracyColor, pct, signAccuracy, sortSigns } from './benchmarkData'
+import { BUCKET_LABELS, BUCKET_ORDER, accuracyColor, pct, signAccuracy, sortSigns, textRgb } from './benchmarkData'
 
 const props = defineProps({
   signs: { type: Array, required: true },
@@ -33,6 +33,13 @@ function describe(s) {
   const conf = s.confused_with?.length ? `; most often confused with ${s.confused_with.map((c) => `${c.sign} (${c.count})`).join(', ')}` : ''
   return `${s.sign}: ${acc}${conf}`
 }
+// Signs with no Unicode character show a drawing from the corpus (black ink on white), served by
+// the app; it blends into the tile: darkened on light fills, inverted on dark ones. If the
+// drawing cannot load (no corpus on this server), the sign ID is shown as before.
+const drawingUrl = (d) => `/api/tablets/${encodeURIComponent(d.tablet)}/signs/${d.position}.png`
+const lightInk = (s) => textRgb(s.rate).every((v) => v > 200)
+const broken = ref(new Set())
+const markBroken = (sign) => { broken.value = new Set([...broken.value, sign]) }
 const tileStyle = (s) => {
   const c = accuracyColor(s.rate)
   return { backgroundColor: c.bg, color: c.fg }
@@ -79,6 +86,16 @@ const tileStyle = (s) => {
           @blur="active = null"
         >
           <span v-if="s.glyph" class="linear-a text-xl" aria-hidden="true">{{ s.glyph }}</span>
+          <img
+            v-else-if="s.drawing && !broken.has(s.sign)"
+            :src="drawingUrl(s.drawing)"
+            alt=""
+            class="sign-drawing h-6 w-6 object-contain"
+            :class="lightInk(s) ? 'light-ink' : 'dark-ink'"
+            loading="lazy"
+            data-testid="sign-drawing"
+            @error="markBroken(s.sign)"
+          >
           <span v-else :class="s.sign === 'unidentified' ? 'text-base font-bold' : 'text-[0.55rem] font-semibold'" aria-hidden="true">{{ s.sign === 'unidentified' ? '?' : s.sign }}</span>
         </button>
       </li>
@@ -109,5 +126,7 @@ const tileStyle = (s) => {
 <style scoped>
 .glyph-tile { transition: background-color 0.6s ease, color 0.6s ease; }
 .glyph-tile.no-motion { transition: none; }
+.sign-drawing.dark-ink { mix-blend-mode: multiply; }
+.sign-drawing.light-ink { filter: invert(1); mix-blend-mode: screen; }
 @media (prefers-reduced-motion: reduce) { .glyph-tile { transition: none; } }
 </style>
