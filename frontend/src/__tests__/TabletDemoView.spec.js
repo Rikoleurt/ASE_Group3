@@ -26,8 +26,9 @@ describe('HT13 demo', () => {
     expect(image.attributes('src')).toBe('/api/tablet-demo/ht13?annotated=false')
     expect(wrapper.get('main > section').classes()).toContain('md:w-1/3')
     await image.trigger('load')
-    const box = wrapper.get('[data-testid="prediction-box"]')
-    expect(box.attributes('style')).toContain('left: 10%; top: 20%; width: 30%; height: 40%;')
+    const box = wrapper.get('[data-testid="sign-box"]')
+    expect([box.attributes('x'), box.attributes('y'), box.attributes('width'), box.attributes('height')].map(Number))
+      .toEqual([10, 20, 30, 40].map((v) => expect.closeTo(v, 5)))
     const right = wrapper.findAll('main > section')[1]
     expect(right.findAll('li')).toHaveLength(6)
     expect(right.findAll('li').map((card) => card.get('p').text())).toEqual([
@@ -45,7 +46,7 @@ describe('HT13 demo', () => {
     expect(status.text()).toBe('No detections found on HT13.')
     expect(status.element.previousElementSibling.contains(left.get('img').element)).toBe(true)
     expect(right.text()).not.toContain('No detections found')
-    expect(wrapper.findAll('[data-testid="prediction-box"]')).toHaveLength(0)
+    expect(wrapper.findAll('[data-testid="sign-box"]')).toHaveLength(0)
     expect(wrapper.findAll('li')).toHaveLength(6)
   })
 
@@ -68,7 +69,7 @@ describe('HT13 demo', () => {
     await flushPromises()
     expect(wrapper.find('[role="alert"]').exists()).toBe(false)
     await wrapper.get('img').trigger('load')
-    expect(wrapper.findAll('[data-testid="prediction-box"]')).toHaveLength(1)
+    expect(wrapper.findAll('[data-testid="sign-box"]')).toHaveLength(1)
   })
 
   it('handles network errors', async () => {
@@ -80,7 +81,7 @@ describe('HT13 demo', () => {
     await render()
     await wrapper.get('img').trigger('error')
     expect(wrapper.get('[role="alert"]').text()).toContain('issue loading the tablet image')
-    expect(wrapper.find('[data-testid="prediction-box"]').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="sign-box"]').exists()).toBe(false)
     expect(wrapper.get('li').text()).toContain('issue loading the symbol image')
   })
 
@@ -95,7 +96,7 @@ describe('HT13 demo', () => {
     await render(fetch)
     await wrapper.get('img').trigger('load')
     expect(wrapper.find('[data-testid="glyph-pane"]').exists()).toBe(false)
-    const box = wrapper.get('[data-testid="prediction-box"]')
+    const box = wrapper.get('[data-testid="sign-box"]')
     expect(box.attributes('role')).toBe('button')
     await box.trigger('keydown', { key: 'Enter' })
     await flushPromises()
@@ -109,7 +110,26 @@ describe('HT13 demo', () => {
   it('does not open the pane for a box the reader could not name', async () => {
     await render()
     await wrapper.get('img').trigger('load')
-    await wrapper.get('[data-testid="prediction-box"]').trigger('click')
+    await wrapper.get('[data-testid="sign-box"]').trigger('click')
     expect(wrapper.find('[data-testid="glyph-pane"]').exists()).toBe(false)
+  })
+
+  it('colours boxes by sign role and shows the hover card, as on the Analysis page', async () => {
+    const named = [{ ...predictions[0], label: 'A707', candidates: [
+      { sign: 'A707', label: 'A707 (J)', roles: ['fraction'], probability: 80 },
+      { sign: 'AB01', label: 'AB01 (da)', roles: ['syllabogram'], probability: 15 },
+    ] }]
+    const fetch = vi.fn(async (url) => (url.includes('/glyphs/characters')
+      ? { ok: true, json: async () => ({ A707: 'X' }) }
+      : response(named)))
+    await render(fetch)
+    await wrapper.get('img').trigger('load')
+    const box = wrapper.get('[data-testid="sign-box"]')
+    expect(box.attributes('data-role')).toBe('fraction')
+    await box.trigger('mouseenter')
+    const card = wrapper.get('[data-testid="sign-card"]')
+    expect(card.text()).toContain('J')
+    expect(card.get('[data-testid="sign-glyph"]').text()).toBe('X')
+    expect(card.text()).toContain('AB01 (da) (15%)')
   })
 })

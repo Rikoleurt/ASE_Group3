@@ -33,6 +33,7 @@ const CALLS = [
   { method: 'get', path: '/glyphs/{sign}/occurrences', source: glyphPane, snippet: '/api/glyphs/${sign}/occurrences?${query}' },
   { method: 'post', path: '/glyphs/{sign}/occurrences/search', source: glyphPane, snippet: '/api/glyphs/${sign}/occurrences/search' },
   { method: 'get', path: '/glyphs/characters', source: glyphPane, snippet: '/api/glyphs/characters?signs=' },
+  { method: 'get', path: '/glyphs/characters', source: tabletDemoView, snippet: '/api/glyphs/characters?signs=' },
   { method: 'get', path: '/glyphs/{sign}/annotations', source: glyphPane, snippet: '/api/glyphs/${sign}/annotations' },
   { method: 'post', path: '/glyphs/{sign}/annotations', source: glyphPane, snippet: '/api/glyphs/${sign}/annotations' },
   { method: 'delete', path: '/glyphs/annotations/{annotation_id}', source: glyphPane, snippet: '/api/glyphs/annotations/${comment.id}' },

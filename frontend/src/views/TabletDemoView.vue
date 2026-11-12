@@ -1,5 +1,6 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
+import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 
 const tablet = ref({ imageUrl: '/api/tablet-demo/ht13?annotated=false' })
@@ -28,6 +29,38 @@ function select(symbol) {
   activeId.value = symbol.id
 }
 
+// The predictions as the Analysis page's overlay draws them: one box per sign, coloured by
+// role, with the hover card (glyph, reading, confidence, runner-up readings).
+const characters = ref({})
+const ROLE_ORDER = ['fraction', 'syllabogram', 'logogram']
+const overlaySigns = computed(() => predictions.value.map((symbol) => {
+  const top = symbol.candidates?.[0] ?? null
+  const roles = top?.roles ?? []
+  const reading = /\(([^)]+)\)$/.exec(top?.label ?? '')?.[1] ?? null
+  return {
+    id: symbol.id,
+    box: symbol.box,
+    sign: top?.sign ?? null,
+    label: symbol.label,
+    reading,
+    role: ROLE_ORDER.find((role) => roles.includes(role)) ?? roles[0] ?? 'other',
+    glyph: top ? characters.value[top.sign] ?? null : null,
+    confidence: symbol.confidence,
+    candidates: symbol.candidates ?? [],
+  }
+}))
+
+async function loadCharacters() {
+  const signs = [...new Set(predictions.value.map((symbol) => symbol.candidates?.[0]?.sign).filter(Boolean))]
+  if (!signs.length) return
+  try {
+    const response = await fetch(`/api/glyphs/characters?signs=${signs.join(',')}`)
+    if (response.ok) characters.value = await response.json()
+  } catch {
+    // The glyphs are decoration: the boxes and readings stand without them.
+  }
+}
+
 async function loadPredictions() {
   if (loading.value) return
   loading.value = true
@@ -42,6 +75,7 @@ async function loadPredictions() {
     predictions.value = data.predictions.map((symbol) => ({
       ...symbol, confidence: Number(symbol.confidence.toFixed(1)),
     }))
+    loadCharacters()
   } catch {
     error.value = 'Unable to reach the server. Check your connection and try again.'
   } finally {
@@ -67,14 +101,21 @@ onMounted(loadPredictions)
     
     <section class="md:w-1/3 md:overflow-y-auto">
       <div class="relative">
-        <img
+        <TabletOverlay
           v-if="tablet.imageUrl"
-          :src="tablet.imageUrl"
-          alt="HT13 tablet"
-          @load="imageLoaded = true"
-          @error="tablet.imageUrl = ''; imageLoaded = false"
-          class="block w-full"
-        />
+          :signs="imageLoaded ? overlaySigns : []"
+          :formulas="[]"
+          :selected-id="activeId"
+          @select="select"
+        >
+          <img
+            :src="tablet.imageUrl"
+            alt="HT13 tablet"
+            @load="imageLoaded = true"
+            @error="tablet.imageUrl = ''; imageLoaded = false"
+            class="block w-full"
+          />
+        </TabletOverlay>
         <div
           v-else
           role="alert"
@@ -83,32 +124,6 @@ onMounted(loadPredictions)
           There was an issue loading the tablet image.
         </div>
 
-        <template v-if="tablet.imageUrl && imageLoaded">
-          <div
-            v-for="symbol in predictions"
-            :key="symbol.id"
-            data-testid="prediction-box"
-            class="absolute cursor-pointer"
-            role="button"
-            tabindex="0"
-            :aria-label="`${symbol.label}: show other tablets with this sign`"
-            :aria-pressed="activeId === symbol.id"
-            @click="select(symbol)"
-            @keydown.enter.prevent="select(symbol)"
-            @keydown.space.prevent="select(symbol)"
-            :class="
-              activeId === symbol.id
-                ? 'border-2 border-accent bg-accent/30'
-                : 'border border-red-500'
-            "
-            :style="{
-              left: symbol.box.x * 100 + '%',
-              top: symbol.box.y * 100 + '%',
-              width: symbol.box.w * 100 + '%',
-              height: symbol.box.h * 100 + '%',
-            }"
-          />
-        </template>
       </div>
       <p v-if="loading" role="status">Loading predictions…</p>
       <template v-else-if="error">
