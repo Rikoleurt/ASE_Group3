@@ -14,6 +14,8 @@ import '../analysis/linearA.css'
 
 const props = defineProps({
   selection: { type: Object, default: null },
+  // Tighter spacing and smaller images, for a narrow column that must fit one screen.
+  compact: { type: Boolean, default: false },
 })
 
 const PAGE = 30
@@ -295,7 +297,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
 </script>
 
 <template>
-  <section v-if="tabs.length" ref="root" class="rounded-3xl bg-card p-4 sm:p-6" aria-labelledby="glyph-pane-title" data-testid="glyph-pane">
+  <section v-if="tabs.length" ref="root" class="rounded-3xl bg-card p-4 sm:p-6" :class="{ compact }" aria-labelledby="glyph-pane-title" data-testid="glyph-pane">
     <h2 id="glyph-pane-title" class="text-xl font-bold">Other tablets with this sign</h2>
 
     <div
@@ -306,13 +308,13 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
     >
       <h3 id="glyph-selected-title" class="sr-only">Selected glyph</h3>
       <!-- The clicked crop; when there is none but a Unicode character is shown, the empty box is left out. -->
-      <div v-if="clickedImage || !activeCharacter" class="flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white">
+      <div v-if="clickedImage || !activeCharacter" class="picked-box flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white">
         <img v-if="clickedImage" :src="clickedImage" :alt="`The glyph you selected, read as ${active}`" class="max-h-full max-w-full" data-testid="glyph-selected-crop" />
         <span v-else class="px-1 text-center text-xs text-ink/70">No image of the glyph</span>
       </div>
       <div
         v-if="activeCharacter"
-        class="linear-a flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white text-7xl"
+        class="picked-box linear-a flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white text-7xl"
         role="img"
         :aria-label="`Unicode character for ${active}`"
         data-testid="glyph-selected-character"
@@ -387,7 +389,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
             />
             {{ item.title }} <span class="font-normal text-ink/70">#{{ item.position }}</span>
           </label>
-          <div class="mt-2 flex h-24 items-center justify-center rounded bg-white">
+          <div class="card-crop mt-2 flex h-24 items-center justify-center rounded bg-white">
             <img
               v-if="item.crop_url"
               :src="apiUrl(item.crop_url)"
@@ -403,7 +405,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
             :alt="`${item.title}, with the sign outlined`"
             loading="lazy"
             decoding="async"
-            class="mt-2 h-32 w-full rounded bg-white object-contain"
+            class="card-thumb mt-2 h-32 w-full rounded bg-white object-contain"
           />
           <p class="mt-2">
             <span v-if="item.similarity !== null">Similarity {{ item.similarity.toFixed(2) }}</span>
@@ -487,3 +489,14 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
     </p>
   </section>
 </template>
+
+<style scoped>
+/* Compact: about 170 px shorter, so the whole pane fits beside the Benchmarks sign grid. */
+.compact { padding: 0.75rem; }
+.compact #glyph-pane-title { font-size: 1rem; }
+.compact :where(.mt-4) { margin-top: 0.5rem; }
+.compact :where(.mt-3) { margin-top: 0.375rem; }
+.compact .picked-box { height: 4rem; width: 4rem; font-size: 3rem; }
+.compact .card-crop { height: 4rem; }
+.compact .card-thumb { height: 5rem; }
+</style>
