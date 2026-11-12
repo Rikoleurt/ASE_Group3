@@ -2,6 +2,32 @@
   "schema": 1,
   "versions": [
     {
+      "version": "cls-s-tta-knn-comparer",
+      "description": "Shipped reader with the larger classifier (yolo26s-cls, imgsz 160) in place of signs-v1's; neighbour bank from its own features",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261112T085859Z",
+      "read_top1": 0.641,
+      "id_top1": 0.694
+    },
+    {
+      "version": "det-s-tta-knn-comparer",
+      "description": "Shipped reader with the larger detector (yolo26s, 100 epochs) in place of signs-v1's",
+      "kind": "two_stage",
+      "split": "val",
+      "stages": {
+        "detection": true,
+        "identification": true
+      },
+      "scored": "20261112T085859Z",
+      "read_top1": 0.644,
+      "id_top1": 0.693
+    },
+    {
       "version": "identity-baseline",
       "description": "361-class detector that finds and names signs at once (stopped at epoch 44, out of GPU memory)",
       "kind": "one_stage",
