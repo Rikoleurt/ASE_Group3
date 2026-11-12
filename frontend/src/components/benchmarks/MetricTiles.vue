@@ -39,7 +39,7 @@ const tiles = computed(() =>
 <template>
   <!-- Small squares: the value and its change vs the reference; the full wording (interval,
        verdict) is in the tooltip and read out to screen readers. -->
-  <ul class="flex flex-wrap gap-2" aria-label="Headline results">
+  <ul class="flex flex-wrap gap-2 lg:flex-nowrap" aria-label="Headline results">
     <li
       v-for="tile in tiles"
       :key="tile.key"

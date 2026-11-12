@@ -95,6 +95,7 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
 .tick { position: absolute; transform: translateX(-50%); color: rgb(0 0 0 / 0.65); }
 .compact { --label: 8rem; }
 .compact .row { min-height: 1.3rem; }
+.compact ul { min-height: calc(5 * 1.3rem); } /* room for 5 categories, so charts below do not move */
 .compact .plot { height: 1.3rem; margin-right: 2.25rem; }
 .compact .bar { top: 0.25rem; height: 0.8rem; }
 .compact .axis { min-height: 0.9rem; }

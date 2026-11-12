@@ -167,9 +167,14 @@ function stop() {
 // legend and sort controls sit above it: measure the difference and pad by it.
 const gridsRow = ref(null)
 const tabletPad = ref(0)
+// The grids row keeps the tallest height it has had (versions differ in sign count), so the
+// page below it does not jump while switching or playing; a window resize starts over.
+const rowMin = ref(0)
 let resizer = null
+function onWindowResize() { rowMin.value = 0 }
 function alignGrids() {
   const row = gridsRow.value
+  if (row) rowMin.value = Math.max(rowMin.value, Math.round(row.getBoundingClientRect().height))
   const glyphs = row?.querySelector('[data-testid="glyph-grid"]')
   const tablets = row?.querySelector('[data-testid="tablet-grid"]')
   if (!glyphs || !tablets) return
@@ -191,6 +196,7 @@ onMounted(() => {
     motionQuery.addEventListener?.('change', onMotionChange)
   }
   if (typeof ResizeObserver !== 'undefined') resizer = new ResizeObserver(() => alignGrids())
+  window.addEventListener?.('resize', onWindowResize)
   loadIndex()
 })
 onBeforeUnmount(() => {
@@ -198,6 +204,7 @@ onBeforeUnmount(() => {
   clearTimer()
   motionQuery?.removeEventListener?.('change', onMotionChange)
   resizer?.disconnect()
+  window.removeEventListener?.('resize', onWindowResize)
 })
 
 const scoreText = (entry) => {
@@ -250,54 +257,63 @@ const cost = computed(() => {
     <p v-else-if="!versions.length" class="rounded-2xl bg-card p-4">No benchmark results have been published yet.</p>
 
     <template v-else>
-      <section class="flex flex-wrap items-end gap-x-3 gap-y-2" aria-label="Version and playback">
-        <label class="flex min-w-0 flex-col text-xs font-semibold">Model version
-          <select
-            :value="selected"
-            class="mt-0.5 max-w-full rounded border border-ink/30 bg-page px-2 py-1 text-sm font-normal"
-            data-testid="version-select"
-            @change="onPick($event.target.value)"
-          >
-            <optgroup v-if="tiers.endToEnd.length" label="Read end to end (played)">
-              <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
-            </optgroup>
-            <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable, not played)">
-              <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
-            </optgroup>
-            <optgroup v-if="tiers.unscored.length" label="No score (not played)">
-              <option v-for="v in tiers.unscored" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
-            </optgroup>
-          </select>
-        </label>
-        <div class="flex flex-wrap items-center gap-2">
-          <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="play" @click="play">
-            Play worst → best
-          </button>
-          <template v-else>
-            <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" @click="togglePause">
-              {{ mode === 'paused' ? 'Resume' : 'Pause' }}
-            </button>
-            <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="stop" @click="stop">Stop</button>
-          </template>
+      <!-- Fixed slots, so switching or playing versions never moves the page: controls and
+           progress | description (clamped) | metric squares (fixed size). -->
+      <section class="grid items-start gap-x-4 gap-y-2 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)_auto]" aria-label="Version and playback">
+        <div class="min-w-0">
+          <label class="block text-xs font-semibold" for="version-select">Model version</label>
+          <div class="mt-0.5 flex items-center gap-2">
+              <select
+                :value="selected"
+                id="version-select" class="min-w-0 flex-1 rounded border border-ink/30 bg-page px-2 py-1 text-sm font-normal"
+                data-testid="version-select"
+                @change="onPick($event.target.value)"
+              >
+                <optgroup v-if="tiers.endToEnd.length" label="Read end to end (played)">
+                  <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+                </optgroup>
+                <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable, not played)">
+                  <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+                </optgroup>
+                <optgroup v-if="tiers.unscored.length" label="No score (not played)">
+                  <option v-for="v in tiers.unscored" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+                </optgroup>
+              </select>
+              <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="play" @click="play">
+                Play worst → best
+              </button>
+              <template v-else>
+                <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" @click="togglePause">
+                  {{ mode === 'paused' ? 'Resume' : 'Pause' }}
+                </button>
+                <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="stop" @click="stop">Stop</button>
+              </template>
+          </div>
+          <div class="mt-1 h-5" data-testid="progress-slot">
+            <div v-if="showProgress" class="flex min-w-0 items-center gap-2" data-testid="progress">
+              <progress class="h-2 w-24" :value="Math.max(step + 1, 0)" :max="order.length" aria-label="Progress through the versions" />
+              <p role="status" class="min-w-0 truncate text-xs">
+                <template v-if="progressEntry">
+                  <strong>Version {{ step + 1 }} of {{ order.length }}: {{ progressEntry.version }}</strong>, {{ scoreText(progressEntry) }}
+                  <span v-if="mode === 'paused'"> (paused)</span>
+                  <span v-if="finished"> (done, best version)</span>
+                </template>
+                <template v-else>Loading all versions…</template>
+              </p>
+            </div>
+          </div>
         </div>
-        <div v-if="showProgress" class="flex min-w-48 items-center gap-2" data-testid="progress">
-          <progress class="h-2 w-24" :value="Math.max(step + 1, 0)" :max="order.length" aria-label="Progress through the versions" />
-          <p role="status" class="text-xs">
-            <template v-if="progressEntry">
-              <strong>Version {{ step + 1 }} of {{ order.length }}: {{ progressEntry.version }}</strong>, {{ scoreText(progressEntry) }}
-              <span v-if="mode === 'paused'"> (paused)</span>
-              <span v-if="finished"> (done, best version)</span>
-            </template>
-            <template v-else>Loading all versions…</template>
+        <div class="min-w-0 lg:h-[5.5rem]">
+          <p v-if="current" class="line-clamp-4 text-xs text-ink/80" data-testid="meta" aria-label="About this version">
+            <strong class="text-ink">{{ current.version }}</strong>: {{ current.description }}
+            · {{ current.split }} split · {{ current.tablets }} tablets · vs {{ current.reference }}
+            <template v-if="current.stages && !current.stages.detection"> · identification only</template>
+            <template v-else-if="current.stages && !current.stages.identification && current.kind !== 'one_stage'"> · detection only</template>
           </p>
         </div>
-        <p v-if="current" class="line-clamp-3 min-w-0 flex-1 basis-64 self-center text-xs text-ink/80" data-testid="meta" aria-label="About this version">
-          <strong class="text-ink">{{ current.version }}</strong>: {{ current.description }}
-          · {{ current.split }} split · {{ current.tablets }} tablets · vs {{ current.reference }}
-          <template v-if="current.stages && !current.stages.detection"> · identification only</template>
-          <template v-else-if="current.stages && !current.stages.identification && current.kind !== 'one_stage'"> · detection only</template>
-        </p>
-        <MetricTiles v-if="current" :version="current" />
+        <div class="lg:h-[5.5rem] lg:w-[23.5rem]">
+          <MetricTiles v-if="current" :version="current" />
+        </div>
       </section>
 
       <p v-if="skipped.length" role="status" class="mt-1 text-xs" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
@@ -305,7 +321,7 @@ const cost = computed(() => {
 
       <template v-if="current">
 
-        <div ref="gridsRow" class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        <div ref="gridsRow" class="mt-3 grid content-start gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" :style="rowMin ? { minHeight: `${rowMin}px` } : null">
           <section aria-labelledby="glyphs-h" class="min-w-0">
             <h2 id="glyphs-h" class="text-sm font-bold">Every sign</h2>
             <p v-if="!grids" class="mt-1 rounded-2xl bg-card p-3 text-sm" data-testid="grid-note">Not measured: this version finds signs but does not name them, so there is no per-sign result.</p>
