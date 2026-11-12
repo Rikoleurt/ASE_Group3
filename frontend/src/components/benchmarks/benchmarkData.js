@@ -67,6 +67,8 @@ const STOPS = [
 export const NO_DATA = { bg: 'rgb(217, 212, 196)', fg: 'rgb(77, 42, 0)' }
 export const GRADIENT = `linear-gradient(to right, ${STOPS.map(([p, c]) => `rgb(${c.join(',')}) ${p * 100}%`).join(', ')})`
 export const BAR_FILL = 'rgb(47, 120, 179)'
+// Groups too small to compare (see ColumnBars minCount): a neutral grey, no hue.
+export const FEW_FILL = '#a8a29e'
 
 const TEXT_CHOICES = [[77, 42, 0], [255, 255, 255], [0, 0, 0]]
 const channel = (v) => { const c = v / 255; return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4 }

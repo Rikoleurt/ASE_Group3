@@ -234,8 +234,12 @@ const bucketBars = computed(() => {
 const roleBars = computed(() => {
   const d = current.value
   if (!d) return []
-  const counts = {}
-  for (const s of d.signs ?? []) counts[s.role] = (counts[s.role] ?? 0) + (s.n ?? 0)
+  // True signs per role as published (role_counts); older files fall back to summing per-sign counts.
+  let counts = d.role_counts
+  if (!counts || !Object.keys(counts).length) {
+    counts = {}
+    for (const s of d.signs ?? []) counts[s.role] = (counts[s.role] ?? 0) + (s.n ?? 0)
+  }
   return Object.keys(d.by_role ?? {}).sort().map((k) => ({ key: k, label: k, value: d.by_role[k], count: counts[k] }))
 })
 const cost = computed(() => {
