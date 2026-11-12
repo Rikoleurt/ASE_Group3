@@ -13,7 +13,7 @@ classifier's crops are only cropped gently: a sign cut in half is another sign.
 import argparse
 from pathlib import Path
 
-from ultralytics import YOLO
+from ultralytics import RTDETR, YOLO
 
 
 ROOT = Path(__file__).resolve().parent
@@ -21,7 +21,8 @@ DATA = ROOT / "fraction-solver" / "out"
 
 
 def detect(args: argparse.Namespace) -> None:
-    model = YOLO(args.model or str(ROOT / "yolo26n.pt"))
+    weights = args.model or str(ROOT / "yolo26n.pt")
+    model = (RTDETR if "rtdetr" in Path(weights).name else YOLO)(weights)
     model.train(
         data=str(args.data or DATA / "yolo_signs" / "data.yaml"),
         epochs=args.epochs or 150,
