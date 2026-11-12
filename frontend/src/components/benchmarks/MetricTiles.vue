@@ -7,6 +7,8 @@ const props = defineProps({ version: { type: Object, required: true } })
 const isReference = computed(() => props.version.version === props.version.reference)
 // The arrow shows which way the number moved; the verdict word says whether that is good
 // (for calibration error, lower is better, so a fall is shown as "▼ … better").
+// Green for better, red for worse (the word says it too, so colour is never the only cue).
+const verdictClass = { better: 'text-better', worse: 'text-worse' }
 const directionMark = (vs) => (vs.verdict === 'tie' || vs.diff === 0 ? '＝' : vs.diff > 0 ? '▲' : '▼')
 
 const tiles = computed(() =>
@@ -50,7 +52,7 @@ const tiles = computed(() =>
       <h3 class="text-[11px] leading-tight font-semibold" aria-hidden="true">{{ tile.short }}</h3>
       <p class="text-lg leading-none font-bold tabular-nums" aria-hidden="true">{{ tile.present ? tile.value : '—' }}</p>
       <p class="text-[11px] leading-tight tabular-nums" aria-hidden="true" data-testid="delta">
-        <template v-if="tile.present && tile.vs"><span>{{ tile.mark }}</span> {{ tile.delta }} <span class="text-ink/70">{{ tile.vs.verdict }}</span></template>
+        <span v-if="tile.present && tile.vs" :class="verdictClass[tile.vs.verdict]" :data-verdict="tile.vs.verdict"><span>{{ tile.mark }}</span> {{ tile.delta }} <span :class="tile.vs.verdict === 'tie' ? 'text-ink/70' : 'font-semibold'">{{ tile.vs.verdict }}</span></span>
         <template v-else-if="tile.present && isReference"><span class="text-ink/70">reference</span></template>
         <template v-else-if="!tile.present"><span class="text-ink/70">n/a</span></template>
       </p>

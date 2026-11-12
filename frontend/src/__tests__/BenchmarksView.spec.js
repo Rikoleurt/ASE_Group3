@@ -137,6 +137,8 @@ describe('Benchmarks page', () => {
     stubFetch()
     await render()
     expect(tile('read_top1').get('[data-testid="delta"]').text()).toContain('▲ +10.0')
+    expect(tile('read_top1').get('[data-verdict="better"]').classes()).toContain('text-better')
+    expect(tile('recall').find('[data-verdict]').exists()).toBe(false) // no comparison: no colour
   })
 
   it('reports a failed index load and retries', async () => {
