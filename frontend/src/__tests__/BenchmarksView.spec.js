@@ -78,6 +78,8 @@ describe('Benchmarks page', () => {
     expect(select().element.value).toBe('beta')
     expect(wrapper.get('[data-testid="meta"]').text()).toContain('val split')
     expect(wrapper.get('[data-testid="meta"]').text()).toContain('131 tablets')
+    expect(select().attributes('title')).toContain('131 tablets')
+    expect(select().findAll('option').every((o) => o.attributes('title'))).toBe(true)
     expect(wrapper.text()).toContain('beta description')
     expect(tile('read_top1').text()).toContain('70.0%')
     expect(tile('read_top1').text()).toContain('95% interval 40% to 60%')

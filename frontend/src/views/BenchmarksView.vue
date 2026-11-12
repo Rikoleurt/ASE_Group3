@@ -214,6 +214,13 @@ const scoreText = (entry) => {
   const h = headline(entry)
   return h.value == null ? 'no score' : `${pct(h.value)} ${h.fallback ? 'named' : 'read'}`
 }
+const aboutVersion = computed(() => {
+  const c = current.value
+  if (!c) return ''
+  const only = c.stages && !c.stages.detection ? ' · identification only'
+    : c.stages && !c.stages.identification && c.kind !== 'one_stage' ? ' · detection only' : ''
+  return `${c.version}: ${c.description} · ${c.split} split · ${c.tablets} tablets · vs ${c.reference}${only}`
+})
 const optionText = (entry) => `${entry.version} — ${scoreText(entry)}${headline(entry).fallback && headline(entry).value != null ? ' (identification only)' : ''}`
 
 const grids = computed(() => gridMode(data.value))
@@ -265,25 +272,25 @@ const cost = computed(() => {
 
     <template v-else>
       <!-- Fixed slots, so switching or playing versions never moves the page: controls and
-           progress | description (clamped) | metric squares (fixed size). -->
-      <section class="grid items-start gap-x-4 gap-y-2 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)_auto]" aria-label="Version and playback">
+           progress | metric squares (fixed size). -->
+      <section class="grid items-start gap-x-4 gap-y-2 lg:grid-cols-[minmax(0,30rem)_auto] lg:justify-between" aria-label="Version and playback">
         <div class="min-w-0">
           <label class="block text-xs font-semibold" for="version-select">Model version</label>
           <div class="mt-0.5 flex items-center gap-2">
               <select
                 :value="selected"
-                id="version-select" class="min-w-0 flex-1 rounded border border-ink/30 bg-page px-2 py-1 text-sm font-normal"
+                id="version-select" :title="aboutVersion || null" aria-describedby="version-about" class="min-w-0 flex-1 rounded border border-ink/30 bg-page px-2 py-1 text-sm font-normal"
                 data-testid="version-select"
                 @change="onPick($event.target.value)"
               >
                 <optgroup v-if="tiers.endToEnd.length" label="Read end to end (played)">
-                  <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+                  <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
                 </optgroup>
                 <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable, not played)">
-                  <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+                  <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
                 </optgroup>
                 <optgroup v-if="tiers.unscored.length" label="No score (not played)">
-                  <option v-for="v in tiers.unscored" :key="v.version" :value="v.version">{{ optionText(v) }}</option>
+                  <option v-for="v in tiers.unscored" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
                 </optgroup>
               </select>
               <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="play" @click="play">
@@ -310,14 +317,8 @@ const cost = computed(() => {
             </div>
           </div>
         </div>
-        <div class="min-w-0 lg:h-[5.5rem]">
-          <p v-if="current" class="line-clamp-4 text-xs text-ink/80" data-testid="meta" aria-label="About this version">
-            <strong class="text-ink">{{ current.version }}</strong>: {{ current.description }}
-            · {{ current.split }} split · {{ current.tablets }} tablets · vs {{ current.reference }}
-            <template v-if="current.stages && !current.stages.detection"> · identification only</template>
-            <template v-else-if="current.stages && !current.stages.identification && current.kind !== 'one_stage'"> · detection only</template>
-          </p>
-        </div>
+        <!-- The description is hover text on the dropdown (and each option); kept here for screen readers. -->
+        <p id="version-about" class="sr-only" data-testid="meta">{{ aboutVersion }}</p>
         <div class="lg:h-[5.5rem] lg:w-[23.5rem]">
           <MetricTiles v-if="current" :version="current" />
         </div>
