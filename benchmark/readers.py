@@ -108,22 +108,28 @@ class TwoStage(_Detector):
     Options (see `la.reader`): `tta: true` averages the classifier over shifted
     and rescaled boxes; `knn: {backbone, weight, temperature}` blends in a vote
     from the nearest real training crops of the dataset's train split;
-    `prior: alpha` restores some of the true sign frequencies (`reader.prior_correction`).
+    `prior: alpha` restores some of the true sign frequencies (`reader.prior_correction`);
+    `comparer: {weights, weight, k, zero_shot, temperature, propose_k}` blends in a sign
+    comparer (`la.comparer`): similarity to each candidate's reference drawings and font
+    render; `zero_shot: true` also lets it propose signs the classifier never learned.
     """
     identifies = True
 
     def __init__(self, name: str, detector: str, classifier: str, tta: bool = False,
-                 knn: dict | None = None, prior: float = 0.0, dataset: Path | None = None, **kw):
+                 knn: dict | None = None, prior: float = 0.0, comparer: dict | None = None,
+                 dataset: Path | None = None, **kw):
         super().__init__(name, detector, **kw)
         self.classifier_path = Path(classifier)
         self.classifier = _yolo(classifier)
         self.tta = tta
         self.bank = _train_bank(Path(dataset), self.classifier, **knn) if knn else None
+        self.comparer_path = Path(comparer["weights"]) if comparer else None
+        self.comparer = _load_comparer(comparer, self.device) if comparer else None
         self.prior = prior
         self.real_counts = _real_counts(Path(dataset)) if prior else {}
 
     def weights(self):
-        return [self.detector_path, self.classifier_path]
+        return [self.detector_path, self.classifier_path] + ([self.comparer_path] if self.comparer_path else [])
 
     def detect(self, image):
         _, boxes, confs = self._raw(image)
@@ -136,9 +142,15 @@ class TwoStage(_Detector):
     def identify(self, ink, boxes):
         if not boxes:
             return []
-        names, probs = reader.boxed_probabilities(self.classifier, ink, boxes, self.device, self.tta, self.bank)
+        names, probs = reader.boxed_probabilities(self.classifier, ink, boxes, self.device, self.tta, self.bank, self.comparer)
         probs = reader.prior_correction(names, probs, self.real_counts, self.prior)
         return reader.top_labels(names, probs, TOP)
+
+
+def _load_comparer(options: dict, device: str):
+    from la.comparer import Comparer
+    options = dict(options)
+    return Comparer.load(Path(options.pop("weights")), device=device, **options)
 
 
 def _real_counts(dataset: Path) -> dict[str, int]:
@@ -233,6 +245,9 @@ def build(entry: dict, root: Path, dataset: Path, device: str = "cpu") -> Reader
     kind = entry.pop("kind")
     if kind not in KINDS:
         raise ValueError(f"unknown reader kind {kind!r}; known: {sorted(KINDS)}")
+    if "comparer" in entry:
+        path = Path(entry["comparer"]["weights"])
+        entry["comparer"] = {**entry["comparer"], "weights": str(path if path.is_absolute() else root / path)}
     for key in ("detector", "classifier"):
         if key in entry:
             path = Path(entry[key])

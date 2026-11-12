@@ -1,6 +1,7 @@
 # Readers compared by `python -m benchmark.run`. Weight paths are relative to the repo root.
 # kind: generic | one_stage | two_stage | shape_knn  (see benchmark/readers.py)
-# two_stage options: tta, knn {backbone, weight, temperature}, prior (see TwoStage)
+# two_stage options: tta, knn {backbone, weight, temperature}, prior,
+# comparer {weights, weight, temperature, k, zero_shot, propose_k} (see TwoStage)
 # A model whose weights are missing is listed as skipped, not an error.
 # train_run (optional): Ultralytics run folder(s), summed for training time.
 models:
@@ -44,6 +45,16 @@ models:
     knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
     prior: 0.25
 
+  # Sign comparer (issue #66): train with scripts/train_comparer.py, tune weight/k/zero_shot with
+  # python -m benchmark.tune_hybrid --comparer <comparer.pt> (val, 11 Nov: k 3, zero-shot on, w 0.5, T 0.05). Skipped until the weights exist.
+  - name: signs-v1-comparer
+    kind: two_stage
+    description: signs-v1 + sign comparer (metric-learning embedding vs reference drawings and font renders)
+    detector: models/linear_a_signs.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/sign_detector, runs/classify/sign_classifier]
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
+
   # Jason's model: put its weights under models/ and uncomment.
   # - name: jason
   #   kind: two_stage
@@ -59,3 +70,37 @@ models:
     tta: true
     knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
     prior: 0.25
+
+  - name: signs-v1-tta-knn-comparer
+    kind: two_stage
+    description: signs-v1-tta-knn plus the sign comparer at its classifier-only tuned blend (combination not tuned jointly)
+    detector: models/linear_a_signs.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/sign_detector, runs/classify/sign_classifier]
+    tta: true
+    knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
+    prior: 0.25
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
+
+  # Larger models (12 Nov), each swapped into the shipped reader (signs-v1-tta-knn-comparer) one at a time.
+  - name: det-s-tta-knn-comparer
+    kind: two_stage
+    description: Shipped reader with the larger detector (yolo26s, 100 epochs) in place of signs-v1's
+    detector: runs/detect/det_s/weights/best.pt
+    classifier: models/linear_a_classifier.pt
+    train_run: [runs/detect/det_s, runs/classify/sign_classifier]
+    tta: true
+    knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
+    prior: 0.25
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
+
+  - name: cls-s-tta-knn-comparer
+    kind: two_stage
+    description: Shipped reader with the larger classifier (yolo26s-cls, imgsz 160) in place of signs-v1's; neighbour bank from its own features
+    detector: models/linear_a_signs.pt
+    classifier: runs/classify/cls_s/weights/best.pt
+    train_run: [runs/detect/sign_detector, runs/classify/cls_s]
+    tta: true
+    knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
+    prior: 0.25
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
