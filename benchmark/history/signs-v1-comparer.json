@@ -313,6 +313,10 @@
   {
    "sign": "A1000",
    "glyph": null,
+   "drawing": {
+    "tablet": "PH-31a",
+    "position": 14
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -329,6 +333,10 @@
   {
    "sign": "A1001",
    "glyph": null,
+   "drawing": {
+    "tablet": "PH-31b",
+    "position": 19
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -345,6 +353,7 @@
   {
    "sign": "A301",
    "glyph": "𐙕",
+   "drawing": null,
    "n": 12,
    "id_correct": 9,
    "e2e_n": 12,
@@ -369,6 +378,7 @@
   {
    "sign": "A303",
    "glyph": "𐙗",
+   "drawing": null,
    "n": 4,
    "id_correct": 3,
    "e2e_n": 4,
@@ -385,6 +395,7 @@
   {
    "sign": "A304",
    "glyph": "𐙘",
+   "drawing": null,
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -396,6 +407,7 @@
   {
    "sign": "A305",
    "glyph": "𐙙",
+   "drawing": null,
    "n": 4,
    "id_correct": 3,
    "e2e_n": 4,
@@ -412,6 +424,7 @@
   {
    "sign": "A306",
    "glyph": "𐙚",
+   "drawing": null,
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -423,6 +436,7 @@
   {
    "sign": "A308",
    "glyph": "𐙜",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -434,6 +448,7 @@
   {
    "sign": "A309a",
    "glyph": "𐙝",
+   "drawing": null,
    "n": 5,
    "id_correct": 0,
    "e2e_n": 5,
@@ -454,6 +469,7 @@
   {
    "sign": "A309b",
    "glyph": "𐙞",
+   "drawing": null,
    "n": 5,
    "id_correct": 1,
    "e2e_n": 5,
@@ -478,6 +494,7 @@
   {
    "sign": "A309c",
    "glyph": "𐙟",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -494,6 +511,7 @@
   {
    "sign": "A310",
    "glyph": "𐙠",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -510,6 +528,7 @@
   {
    "sign": "A312",
    "glyph": "𐙢",
+   "drawing": null,
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -521,6 +540,7 @@
   {
    "sign": "A314",
    "glyph": "𐙦",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -537,6 +557,7 @@
   {
    "sign": "A317",
    "glyph": "𐙩",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -553,6 +574,7 @@
   {
    "sign": "A320",
    "glyph": "𐙬",
+   "drawing": null,
    "n": 2,
    "id_correct": 1,
    "e2e_n": 2,
@@ -569,6 +591,7 @@
   {
    "sign": "A321",
    "glyph": "𐙭",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -585,6 +608,7 @@
   {
    "sign": "A323",
    "glyph": "𐙯",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -601,6 +625,7 @@
   {
    "sign": "A325",
    "glyph": "𐙱",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -621,6 +646,7 @@
   {
    "sign": "A328",
    "glyph": "𐙴",
+   "drawing": null,
    "n": 2,
    "id_correct": 1,
    "e2e_n": 2,
@@ -637,6 +663,7 @@
   {
    "sign": "A329",
    "glyph": "𐙵",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -653,6 +680,7 @@
   {
    "sign": "A331",
    "glyph": "𐙷",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -669,6 +697,7 @@
   {
    "sign": "A334",
    "glyph": "𐙺",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -680,6 +709,7 @@
   {
    "sign": "A339",
    "glyph": "𐙿",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -696,6 +726,7 @@
   {
    "sign": "A341",
    "glyph": "𐚁",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -707,6 +738,7 @@
   {
    "sign": "A347",
    "glyph": "𐚇",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -723,6 +755,7 @@
   {
    "sign": "A351",
    "glyph": "𐚋",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -739,6 +772,7 @@
   {
    "sign": "A357",
    "glyph": "𐚑",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -755,6 +789,7 @@
   {
    "sign": "A358",
    "glyph": "𐚒",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -771,6 +806,7 @@
   {
    "sign": "A361",
    "glyph": "𐚕",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -782,6 +818,7 @@
   {
    "sign": "A364",
    "glyph": "𐚘",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -798,6 +835,7 @@
   {
    "sign": "A402",
    "glyph": "𐚢",
+   "drawing": null,
    "n": 4,
    "id_correct": 0,
    "e2e_n": 4,
@@ -818,6 +856,7 @@
   {
    "sign": "A408",
    "glyph": "𐚨",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -829,6 +868,7 @@
   {
    "sign": "A409",
    "glyph": "𐚩",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -845,6 +885,7 @@
   {
    "sign": "A410",
    "glyph": "𐚪",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -861,6 +902,10 @@
   {
    "sign": "A411b",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2008",
+    "position": 1
+   },
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -872,6 +917,10 @@
   {
    "sign": "A411c",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2013",
+    "position": 1
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -888,6 +937,7 @@
   {
    "sign": "A415",
    "glyph": "𐚯",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -904,6 +954,7 @@
   {
    "sign": "A416",
    "glyph": "𐚰",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -920,6 +971,7 @@
   {
    "sign": "A417",
    "glyph": "𐚱",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -936,6 +988,10 @@
   {
    "sign": "A507",
    "glyph": null,
+   "drawing": {
+    "tablet": "ZA-15a",
+    "position": 14
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -952,6 +1008,7 @@
   {
    "sign": "A508",
    "glyph": "𐚹",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -963,6 +1020,7 @@
   {
    "sign": "A509",
    "glyph": "𐚺",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -979,6 +1037,7 @@
   {
    "sign": "A512",
    "glyph": "𐚽",
+   "drawing": null,
    "n": 3,
    "id_correct": 0,
    "e2e_n": 3,
@@ -1003,6 +1062,7 @@
   {
    "sign": "A513",
    "glyph": "𐚾",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -1023,6 +1083,7 @@
   {
    "sign": "A516",
    "glyph": "𐛀",
+   "drawing": null,
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -1034,6 +1095,10 @@
   {
    "sign": "A517",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-120",
+    "position": 13
+   },
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1045,6 +1110,10 @@
   {
    "sign": "A518",
    "glyph": null,
+   "drawing": {
+    "tablet": "ZA-11b",
+    "position": 9
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1061,6 +1130,7 @@
   {
    "sign": "A526",
    "glyph": "𐛆",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1077,6 +1147,7 @@
   {
    "sign": "A531",
    "glyph": "𐛋",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1093,6 +1164,7 @@
   {
    "sign": "A537",
    "glyph": "𐛐",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1104,6 +1176,7 @@
   {
    "sign": "A539",
    "glyph": "𐛒",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1120,6 +1193,10 @@
   {
    "sign": "A546",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-24a",
+    "position": 5
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1136,6 +1213,7 @@
   {
    "sign": "A552",
    "glyph": "𐛜",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1152,6 +1230,7 @@
   {
    "sign": "A555",
    "glyph": "𐛟",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1168,6 +1247,10 @@
   {
    "sign": "A560",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-24a",
+    "position": 20
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1184,6 +1267,10 @@
   {
    "sign": "A561",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-24a",
+    "position": 6
+   },
    "n": 3,
    "id_correct": 0,
    "e2e_n": 3,
@@ -1204,6 +1291,7 @@
   {
    "sign": "A568",
    "glyph": "𐛧",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1215,6 +1303,7 @@
   {
    "sign": "A571",
    "glyph": "𐛪",
+   "drawing": null,
    "n": 3,
    "id_correct": 0,
    "e2e_n": 3,
@@ -1235,6 +1324,7 @@
   {
    "sign": "A574",
    "glyph": "𐛭",
+   "drawing": null,
    "n": 7,
    "id_correct": 4,
    "e2e_n": 7,
@@ -1255,6 +1345,7 @@
   {
    "sign": "A578",
    "glyph": "𐛱",
+   "drawing": null,
    "n": 3,
    "id_correct": 3,
    "e2e_n": 3,
@@ -1266,6 +1357,7 @@
   {
    "sign": "A580",
    "glyph": "𐛳",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1282,6 +1374,7 @@
   {
    "sign": "A581",
    "glyph": "𐛴",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1293,6 +1386,7 @@
   {
    "sign": "A584",
    "glyph": "𐛷",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1309,6 +1403,7 @@
   {
    "sign": "A594",
    "glyph": "𐛿",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1325,6 +1420,10 @@
   {
    "sign": "A599",
    "glyph": null,
+   "drawing": {
+    "tablet": "MA-6c",
+    "position": 2
+   },
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -1345,6 +1444,7 @@
   {
    "sign": "A600",
    "glyph": "𐜃",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1361,6 +1461,7 @@
   {
    "sign": "A601",
    "glyph": "𐜄",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1377,6 +1478,7 @@
   {
    "sign": "A602",
    "glyph": "𐜅",
+   "drawing": null,
    "n": 3,
    "id_correct": 0,
    "e2e_n": 3,
@@ -1401,6 +1503,7 @@
   {
    "sign": "A603",
    "glyph": "𐜆",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1417,6 +1520,7 @@
   {
    "sign": "A604",
    "glyph": "𐜇",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1433,6 +1537,10 @@
   {
    "sign": "A605",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-74",
+    "position": 7
+   },
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1444,6 +1552,7 @@
   {
    "sign": "A606",
    "glyph": "𐜈",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1455,6 +1564,10 @@
   {
    "sign": "A607",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2065",
+    "position": 1
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1471,6 +1584,7 @@
   {
    "sign": "A608",
    "glyph": "𐜉",
+   "drawing": null,
    "n": 5,
    "id_correct": 2,
    "e2e_n": 5,
@@ -1495,6 +1609,7 @@
   {
    "sign": "A610",
    "glyph": "𐜋",
+   "drawing": null,
    "n": 4,
    "id_correct": 3,
    "e2e_n": 4,
@@ -1511,6 +1626,7 @@
   {
    "sign": "A611",
    "glyph": "𐜌",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -1527,6 +1643,7 @@
   {
    "sign": "A612",
    "glyph": "𐜍",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1543,6 +1660,7 @@
   {
    "sign": "A615",
    "glyph": "𐜐",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1559,6 +1677,7 @@
   {
    "sign": "A618",
    "glyph": "𐜓",
+   "drawing": null,
    "n": 5,
    "id_correct": 5,
    "e2e_n": 5,
@@ -1570,6 +1689,7 @@
   {
    "sign": "A619",
    "glyph": "𐜔",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1586,6 +1706,7 @@
   {
    "sign": "A620",
    "glyph": "𐜕",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1602,6 +1723,7 @@
   {
    "sign": "A621",
    "glyph": "𐜖",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -1622,6 +1744,7 @@
   {
    "sign": "A622",
    "glyph": "𐜗",
+   "drawing": null,
    "n": 5,
    "id_correct": 3,
    "e2e_n": 5,
@@ -1642,6 +1765,7 @@
   {
    "sign": "A624",
    "glyph": "𐜙",
+   "drawing": null,
    "n": 14,
    "id_correct": 11,
    "e2e_n": 14,
@@ -1662,6 +1786,7 @@
   {
    "sign": "A626",
    "glyph": "𐜚",
+   "drawing": null,
    "n": 3,
    "id_correct": 1,
    "e2e_n": 3,
@@ -1682,6 +1807,7 @@
   {
    "sign": "A627",
    "glyph": "𐜛",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1698,6 +1824,7 @@
   {
    "sign": "A629",
    "glyph": "𐜝",
+   "drawing": null,
    "n": 3,
    "id_correct": 2,
    "e2e_n": 3,
@@ -1714,6 +1841,10 @@
   {
    "sign": "A632",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-13",
+    "position": 5
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1730,6 +1861,7 @@
   {
    "sign": "A637",
    "glyph": "𐜟",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1741,6 +1873,7 @@
   {
    "sign": "A638",
    "glyph": "𐜠",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1757,6 +1890,10 @@
   {
    "sign": "A641",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-7a",
+    "position": 2
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1773,6 +1910,7 @@
   {
    "sign": "A644",
    "glyph": "𐜤",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1789,6 +1927,7 @@
   {
    "sign": "A646",
    "glyph": "𐜦",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1800,6 +1939,7 @@
   {
    "sign": "A651",
    "glyph": "𐜩",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1816,6 +1956,7 @@
   {
    "sign": "A653",
    "glyph": "𐜫",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -1827,6 +1968,10 @@
   {
    "sign": "A684",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-20",
+    "position": 21
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1843,6 +1988,7 @@
   {
    "sign": "A701",
    "glyph": "𐝀",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1859,6 +2005,7 @@
   {
    "sign": "A702",
    "glyph": "𐝁",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1875,6 +2022,7 @@
   {
    "sign": "A703",
    "glyph": "𐝂",
+   "drawing": null,
    "n": 4,
    "id_correct": 2,
    "e2e_n": 4,
@@ -1895,6 +2043,7 @@
   {
    "sign": "A704",
    "glyph": "𐝃",
+   "drawing": null,
    "n": 11,
    "id_correct": 9,
    "e2e_n": 11,
@@ -1915,6 +2064,7 @@
   {
    "sign": "A705",
    "glyph": "𐝄",
+   "drawing": null,
    "n": 5,
    "id_correct": 4,
    "e2e_n": 5,
@@ -1931,6 +2081,7 @@
   {
    "sign": "A707",
    "glyph": "𐝆",
+   "drawing": null,
    "n": 17,
    "id_correct": 17,
    "e2e_n": 17,
@@ -1942,6 +2093,7 @@
   {
    "sign": "A708",
    "glyph": "𐝇",
+   "drawing": null,
    "n": 3,
    "id_correct": 2,
    "e2e_n": 3,
@@ -1958,6 +2110,7 @@
   {
    "sign": "A7092",
    "glyph": "𐝉",
+   "drawing": null,
    "n": 3,
    "id_correct": 2,
    "e2e_n": 3,
@@ -1974,6 +2127,7 @@
   {
    "sign": "A7094",
    "glyph": "𐝋",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -1990,6 +2144,7 @@
   {
    "sign": "AB01",
    "glyph": "𐘀",
+   "drawing": null,
    "n": 26,
    "id_correct": 26,
    "e2e_n": 26,
@@ -2001,6 +2156,7 @@
   {
    "sign": "AB02",
    "glyph": "𐘁",
+   "drawing": null,
    "n": 10,
    "id_correct": 10,
    "e2e_n": 10,
@@ -2012,6 +2168,7 @@
   {
    "sign": "AB03",
    "glyph": "𐘂",
+   "drawing": null,
    "n": 17,
    "id_correct": 11,
    "e2e_n": 17,
@@ -2036,6 +2193,7 @@
   {
    "sign": "AB04",
    "glyph": "𐘃",
+   "drawing": null,
    "n": 14,
    "id_correct": 13,
    "e2e_n": 14,
@@ -2052,6 +2210,7 @@
   {
    "sign": "AB05",
    "glyph": "𐘄",
+   "drawing": null,
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -2063,6 +2222,7 @@
   {
    "sign": "AB06",
    "glyph": "𐘅",
+   "drawing": null,
    "n": 17,
    "id_correct": 14,
    "e2e_n": 17,
@@ -2087,6 +2247,7 @@
   {
    "sign": "AB07",
    "glyph": "𐘆",
+   "drawing": null,
    "n": 15,
    "id_correct": 14,
    "e2e_n": 15,
@@ -2103,6 +2264,7 @@
   {
    "sign": "AB08",
    "glyph": "𐘇",
+   "drawing": null,
    "n": 27,
    "id_correct": 24,
    "e2e_n": 27,
@@ -2127,6 +2289,7 @@
   {
    "sign": "AB09",
    "glyph": "𐘈",
+   "drawing": null,
    "n": 12,
    "id_correct": 10,
    "e2e_n": 12,
@@ -2147,6 +2310,7 @@
   {
    "sign": "AB10",
    "glyph": "𐘉",
+   "drawing": null,
    "n": 10,
    "id_correct": 8,
    "e2e_n": 10,
@@ -2167,6 +2331,10 @@
   {
    "sign": "AB100",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-102",
+    "position": 10
+   },
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -2178,6 +2346,7 @@
   {
    "sign": "AB11",
    "glyph": "𐘊",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -2198,6 +2367,7 @@
   {
    "sign": "AB118",
    "glyph": "𐙈",
+   "drawing": null,
    "n": 3,
    "id_correct": 1,
    "e2e_n": 3,
@@ -2218,6 +2388,7 @@
   {
    "sign": "AB120",
    "glyph": "𐙉",
+   "drawing": null,
    "n": 10,
    "id_correct": 6,
    "e2e_n": 10,
@@ -2242,6 +2413,10 @@
   {
    "sign": "AB120b",
    "glyph": null,
+   "drawing": {
+    "tablet": "ARKH-3a",
+    "position": 3
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2258,6 +2433,7 @@
   {
    "sign": "AB122",
    "glyph": "𐙋",
+   "drawing": null,
    "n": 3,
    "id_correct": 1,
    "e2e_n": 3,
@@ -2278,6 +2454,7 @@
   {
    "sign": "AB123",
    "glyph": "𐙌",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2294,6 +2471,7 @@
   {
    "sign": "AB13",
    "glyph": "𐘋",
+   "drawing": null,
    "n": 4,
    "id_correct": 2,
    "e2e_n": 4,
@@ -2314,6 +2492,10 @@
   {
    "sign": "AB130",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-61",
+    "position": 7
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2330,6 +2512,7 @@
   {
    "sign": "AB131a",
    "glyph": "𐙍",
+   "drawing": null,
    "n": 11,
    "id_correct": 8,
    "e2e_n": 11,
@@ -2354,6 +2537,7 @@
   {
    "sign": "AB131b",
    "glyph": "𐙎",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -2365,6 +2549,10 @@
   {
    "sign": "AB131c",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-18",
+    "position": 5
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2381,6 +2569,7 @@
   {
    "sign": "AB16",
    "glyph": "𐘌",
+   "drawing": null,
    "n": 3,
    "id_correct": 2,
    "e2e_n": 3,
@@ -2397,6 +2586,10 @@
   {
    "sign": "AB164a",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-17",
+    "position": 2
+   },
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -2408,6 +2601,10 @@
   {
    "sign": "AB164c",
    "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2041",
+    "position": 1
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2424,6 +2621,7 @@
   {
    "sign": "AB17",
    "glyph": "𐘍",
+   "drawing": null,
    "n": 11,
    "id_correct": 6,
    "e2e_n": 11,
@@ -2448,6 +2646,7 @@
   {
    "sign": "AB180",
    "glyph": "𐙒",
+   "drawing": null,
    "n": 5,
    "id_correct": 1,
    "e2e_n": 5,
@@ -2472,6 +2671,7 @@
   {
    "sign": "AB21",
    "glyph": "𐘏",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2488,6 +2688,7 @@
   {
    "sign": "AB21f",
    "glyph": "𐘐",
+   "drawing": null,
    "n": 9,
    "id_correct": 7,
    "e2e_n": 9,
@@ -2508,6 +2709,7 @@
   {
    "sign": "AB21m",
    "glyph": "𐘑",
+   "drawing": null,
    "n": 5,
    "id_correct": 3,
    "e2e_n": 5,
@@ -2528,6 +2730,7 @@
   {
    "sign": "AB22f",
    "glyph": "𐘓",
+   "drawing": null,
    "n": 2,
    "id_correct": 0,
    "e2e_n": 2,
@@ -2548,6 +2751,7 @@
   {
    "sign": "AB22m",
    "glyph": "𐘔",
+   "drawing": null,
    "n": 4,
    "id_correct": 0,
    "e2e_n": 4,
@@ -2572,6 +2776,7 @@
   {
    "sign": "AB23",
    "glyph": "𐘕",
+   "drawing": null,
    "n": 4,
    "id_correct": 1,
    "e2e_n": 4,
@@ -2596,6 +2801,7 @@
   {
    "sign": "AB24",
    "glyph": "𐘗",
+   "drawing": null,
    "n": 9,
    "id_correct": 7,
    "e2e_n": 9,
@@ -2616,6 +2822,7 @@
   {
    "sign": "AB26",
    "glyph": "𐘘",
+   "drawing": null,
    "n": 17,
    "id_correct": 16,
    "e2e_n": 17,
@@ -2632,6 +2839,7 @@
   {
    "sign": "AB27",
    "glyph": "𐘙",
+   "drawing": null,
    "n": 21,
    "id_correct": 19,
    "e2e_n": 21,
@@ -2652,6 +2860,7 @@
   {
    "sign": "AB28",
    "glyph": "𐘚",
+   "drawing": null,
    "n": 18,
    "id_correct": 16,
    "e2e_n": 18,
@@ -2672,6 +2881,10 @@
   {
    "sign": "AB28b",
    "glyph": null,
+   "drawing": {
+    "tablet": "ZA-15a",
+    "position": 18
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2688,6 +2901,7 @@
   {
    "sign": "AB30",
    "glyph": "𐘝",
+   "drawing": null,
    "n": 11,
    "id_correct": 11,
    "e2e_n": 11,
@@ -2699,6 +2913,10 @@
   {
    "sign": "AB302",
    "glyph": null,
+   "drawing": {
+    "tablet": "ARKH-3b",
+    "position": 8
+   },
    "n": 4,
    "id_correct": 3,
    "e2e_n": 4,
@@ -2715,6 +2933,7 @@
   {
    "sign": "AB31",
    "glyph": "𐘞",
+   "drawing": null,
    "n": 20,
    "id_correct": 20,
    "e2e_n": 20,
@@ -2726,6 +2945,7 @@
   {
    "sign": "AB34",
    "glyph": "𐘟",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2742,6 +2962,7 @@
   {
    "sign": "AB37",
    "glyph": "𐘠",
+   "drawing": null,
    "n": 12,
    "id_correct": 12,
    "e2e_n": 12,
@@ -2753,6 +2974,7 @@
   {
    "sign": "AB38",
    "glyph": "𐘡",
+   "drawing": null,
    "n": 6,
    "id_correct": 5,
    "e2e_n": 6,
@@ -2769,6 +2991,7 @@
   {
    "sign": "AB39",
    "glyph": "𐘢",
+   "drawing": null,
    "n": 9,
    "id_correct": 7,
    "e2e_n": 9,
@@ -2789,6 +3012,7 @@
   {
    "sign": "AB40",
    "glyph": "𐘣",
+   "drawing": null,
    "n": 4,
    "id_correct": 3,
    "e2e_n": 4,
@@ -2805,6 +3029,7 @@
   {
    "sign": "AB41",
    "glyph": "𐘤",
+   "drawing": null,
    "n": 22,
    "id_correct": 21,
    "e2e_n": 22,
@@ -2821,6 +3046,10 @@
   {
    "sign": "AB43",
    "glyph": null,
+   "drawing": {
+    "tablet": "MY-Zf-2",
+    "position": 1
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2837,6 +3066,7 @@
   {
    "sign": "AB44",
    "glyph": "𐘥",
+   "drawing": null,
    "n": 2,
    "id_correct": 1,
    "e2e_n": 2,
@@ -2853,6 +3083,7 @@
   {
    "sign": "AB45",
    "glyph": "𐘦",
+   "drawing": null,
    "n": 2,
    "id_correct": 2,
    "e2e_n": 2,
@@ -2864,6 +3095,7 @@
   {
    "sign": "AB46",
    "glyph": "𐘧",
+   "drawing": null,
    "n": 3,
    "id_correct": 3,
    "e2e_n": 3,
@@ -2875,6 +3107,7 @@
   {
    "sign": "AB47",
    "glyph": "𐘨",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -2886,6 +3119,7 @@
   {
    "sign": "AB48",
    "glyph": "𐘩",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -2902,6 +3136,7 @@
   {
    "sign": "AB49",
    "glyph": "𐘪",
+   "drawing": null,
    "n": 1,
    "id_correct": 1,
    "e2e_n": 1,
@@ -2913,6 +3148,7 @@
   {
    "sign": "AB50",
    "glyph": "𐘫",
+   "drawing": null,
    "n": 7,
    "id_correct": 4,
    "e2e_n": 7,
@@ -2937,6 +3173,7 @@
   {
    "sign": "AB51",
    "glyph": "𐘬",
+   "drawing": null,
    "n": 9,
    "id_correct": 6,
    "e2e_n": 9,
@@ -2957,6 +3194,7 @@
   {
    "sign": "AB53",
    "glyph": "𐘭",
+   "drawing": null,
    "n": 21,
    "id_correct": 12,
    "e2e_n": 21,
@@ -2981,6 +3219,7 @@
   {
    "sign": "AB54",
    "glyph": "𐘮",
+   "drawing": null,
    "n": 7,
    "id_correct": 2,
    "e2e_n": 7,
@@ -3005,6 +3244,7 @@
   {
    "sign": "AB55",
    "glyph": "𐘯",
+   "drawing": null,
    "n": 10,
    "id_correct": 9,
    "e2e_n": 10,
@@ -3021,6 +3261,7 @@
   {
    "sign": "AB56",
    "glyph": "𐘰",
+   "drawing": null,
    "n": 9,
    "id_correct": 6,
    "e2e_n": 9,
@@ -3041,6 +3282,7 @@
   {
    "sign": "AB57",
    "glyph": "𐘱",
+   "drawing": null,
    "n": 23,
    "id_correct": 22,
    "e2e_n": 23,
@@ -3057,6 +3299,7 @@
   {
    "sign": "AB58",
    "glyph": "𐘲",
+   "drawing": null,
    "n": 9,
    "id_correct": 9,
    "e2e_n": 9,
@@ -3068,6 +3311,7 @@
   {
    "sign": "AB59",
    "glyph": "𐘳",
+   "drawing": null,
    "n": 21,
    "id_correct": 17,
    "e2e_n": 21,
@@ -3092,6 +3336,7 @@
   {
    "sign": "AB60",
    "glyph": "𐘴",
+   "drawing": null,
    "n": 15,
    "id_correct": 14,
    "e2e_n": 15,
@@ -3108,6 +3353,7 @@
   {
    "sign": "AB61",
    "glyph": "𐘵",
+   "drawing": null,
    "n": 7,
    "id_correct": 6,
    "e2e_n": 7,
@@ -3124,6 +3370,7 @@
   {
    "sign": "AB65",
    "glyph": "𐘶",
+   "drawing": null,
    "n": 12,
    "id_correct": 7,
    "e2e_n": 12,
@@ -3148,6 +3395,7 @@
   {
    "sign": "AB66",
    "glyph": "𐘷",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -3164,6 +3412,7 @@
   {
    "sign": "AB67",
    "glyph": "𐘸",
+   "drawing": null,
    "n": 17,
    "id_correct": 14,
    "e2e_n": 17,
@@ -3188,6 +3437,7 @@
   {
    "sign": "AB69",
    "glyph": "𐘹",
+   "drawing": null,
    "n": 11,
    "id_correct": 11,
    "e2e_n": 11,
@@ -3199,6 +3449,7 @@
   {
    "sign": "AB70",
    "glyph": "𐘺",
+   "drawing": null,
    "n": 7,
    "id_correct": 2,
    "e2e_n": 7,
@@ -3223,6 +3474,10 @@
   {
    "sign": "AB72",
    "glyph": null,
+   "drawing": {
+    "tablet": "HT-28a",
+    "position": 15
+   },
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -3239,6 +3494,7 @@
   {
    "sign": "AB73",
    "glyph": "𐘻",
+   "drawing": null,
    "n": 14,
    "id_correct": 10,
    "e2e_n": 14,
@@ -3263,6 +3519,7 @@
   {
    "sign": "AB74",
    "glyph": "𐘼",
+   "drawing": null,
    "n": 6,
    "id_correct": 4,
    "e2e_n": 6,
@@ -3283,6 +3540,7 @@
   {
    "sign": "AB76",
    "glyph": "𐘽",
+   "drawing": null,
    "n": 8,
    "id_correct": 7,
    "e2e_n": 8,
@@ -3299,6 +3557,7 @@
   {
    "sign": "AB77",
    "glyph": "𐘾",
+   "drawing": null,
    "n": 17,
    "id_correct": 17,
    "e2e_n": 17,
@@ -3310,6 +3569,7 @@
   {
    "sign": "AB78",
    "glyph": "𐘿",
+   "drawing": null,
    "n": 7,
    "id_correct": 7,
    "e2e_n": 7,
@@ -3321,6 +3581,7 @@
   {
    "sign": "AB79",
    "glyph": "𐙀",
+   "drawing": null,
    "n": 3,
    "id_correct": 1,
    "e2e_n": 3,
@@ -3341,6 +3602,7 @@
   {
    "sign": "AB80",
    "glyph": "𐙁",
+   "drawing": null,
    "n": 19,
    "id_correct": 17,
    "e2e_n": 19,
@@ -3361,6 +3623,7 @@
   {
    "sign": "AB81",
    "glyph": "𐙂",
+   "drawing": null,
    "n": 36,
    "id_correct": 35,
    "e2e_n": 36,
@@ -3377,6 +3640,7 @@
   {
    "sign": "AB85",
    "glyph": "𐙄",
+   "drawing": null,
    "n": 1,
    "id_correct": 0,
    "e2e_n": 1,
@@ -3393,6 +3657,7 @@
   {
    "sign": "unidentified",
    "glyph": null,
+   "drawing": null,
    "n": 67,
    "id_correct": 30,
    "e2e_n": 67,

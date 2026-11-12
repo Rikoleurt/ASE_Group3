@@ -23,6 +23,7 @@ import math
 import sys
 from collections import Counter, defaultdict
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,6 +44,36 @@ def _glyph(sign: str) -> str | None:
         return glyph(sign)
     except Exception:  # noqa: BLE001 - the glyph is decoration; publishing must not fail on it
         return None
+
+
+@lru_cache(maxsize=1)
+def _drawings() -> dict[str, dict]:
+    """Sign ID -> one corpus example with a cached drawing: {"tablet": slug, "position": n}.
+
+    Only a reference is published (the app serves the drawing from its own corpus
+    cache, GET /tablets/{slug}/signs/{position}.png), never the image itself.
+    The first example in document and position order, so republishing is stable.
+    """
+    try:
+        from la import fetch, signboxes
+        docs = fetch.load_cached()
+    except Exception:  # noqa: BLE001 - decoration only, like the glyph
+        return {}
+    out: dict[str, dict] = {}
+    for doc_id in sorted(docs):
+        doc = docs[doc_id]
+        for s in sorted(doc.get("signs") or [], key=lambda s: s.get("position") or 0):
+            sign = s.get("sign")
+            if not sign or sign in out or not s.get("image"):
+                continue
+            if signboxes.image_path(doc, s["image"]).exists():
+                out[sign] = {"tablet": signboxes.slug(doc), "position": s["position"]}
+    return out
+
+
+def drawing(sign: str) -> dict | None:
+    """A corpus drawing to show for a sign that has no Unicode character."""
+    return None if _glyph(sign) else _drawings().get(sign)
 
 
 def _num(x):
@@ -78,7 +109,7 @@ def per_sign(records: list[M.TabletRecord]) -> list[dict]:
     rows = []
     for sign, s in sorted(out.items()):
         confusions = sorted(s.pop("confusions").items(), key=lambda kv: -kv[1])[:3]
-        rows.append({"sign": sign, "glyph": _glyph(sign), **s,
+        rows.append({"sign": sign, "glyph": _glyph(sign), "drawing": drawing(sign), **s,
                      "confused_with": [{"sign": c, "count": n} for c, n in confusions]})
     return rows
 
