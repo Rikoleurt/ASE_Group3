@@ -2,7 +2,8 @@
 // Draws the reader's boxes over whatever image is put in the slot: one box per
 // sign, coloured by role and settling on in reading order, then a dashed box
 // around each fraction formula, coloured by its verdict. Box coordinates are
-// fractions of the image size. Hovering or focusing a box shows its SignCard.
+// fractions of the image size. Hovering or focusing a box shows its SignCard;
+// clicking it, or pressing Enter or Space on it, emits `select` with the sign.
 import { computed, ref } from 'vue'
 import { ROLES, formulaColor, prefersStill, roleKey } from './colors.js'
 import SignCard from './SignCard.vue'
@@ -10,7 +11,10 @@ import SignCard from './SignCard.vue'
 const props = defineProps({
   signs: { type: Array, default: () => [] },
   formulas: { type: Array, default: () => [] },
+  selectedId: { type: [Number, String], default: null },
 })
+
+const emit = defineEmits(['select'])
 
 const SHOWN = ref(true)
 const STILL = prefersStill()
@@ -80,9 +84,11 @@ function describe(sign) {
         :width="percent(sign.box.w)"
         :height="percent(sign.box.h)"
         :stroke="ROLES[roleKey(sign, MARKERS)].color"
-        :class="{ active: ACTIVE === sign.id }"
+        :class="{ active: ACTIVE === sign.id, selected: selectedId === sign.id }"
         :style="{ animationDelay: `${index * 60}ms` }"
         :aria-label="describe(sign)"
+        :aria-pressed="selectedId === sign.id"
+        role="button"
         tabindex="0"
         fill="none"
         pointer-events="all"
@@ -90,6 +96,9 @@ function describe(sign) {
         @mouseleave="ACTIVE = null"
         @focus="ACTIVE = sign.id"
         @blur="ACTIVE = null"
+        @click="emit('select', sign)"
+        @keydown.enter.prevent="emit('select', sign)"
+        @keydown.space.prevent="emit('select', sign)"
       />
     </svg>
     <SignCard
@@ -126,12 +135,22 @@ rect {
 .sign {
   stroke-width: 2.5;
   opacity: 0;
-  cursor: help;
+  cursor: pointer;
   outline: none;
   animation: settle 0.45s ease-out forwards;
 }
 
 .sign.active {
+  stroke-width: 5;
+}
+
+/* The glyph the pane below is showing: a thick outline plus a faint fill. */
+.sign.selected {
+  stroke-width: 6;
+  fill: rgba(204, 111, 0, 0.2);
+}
+
+.sign:focus-visible {
   stroke-width: 5;
 }
 
