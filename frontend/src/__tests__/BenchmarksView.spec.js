@@ -133,6 +133,12 @@ describe('Benchmarks page', () => {
     expect(wrapper.find('[data-testid="coverage"]').exists()).toBe(true)
   })
 
+  it('points the arrow the way the number moved, with the verdict beside it', async () => {
+    stubFetch()
+    await render()
+    expect(tile('read_top1').get('[data-testid="delta"]').text()).toContain('▲ +10.0')
+  })
+
   it('reports a failed index load and retries', async () => {
     stubFetch({ '/api/benchmarks': { ok: false, status: 503, json: async () => ({ detail: 'Benchmark results are not available on this server.' }) } })
     await render()

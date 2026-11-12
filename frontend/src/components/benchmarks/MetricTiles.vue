@@ -5,7 +5,9 @@ import { HEADLINE_TILES, missingNote, pct, readsEndToEnd } from './benchmarkData
 const props = defineProps({ version: { type: Object, required: true } })
 
 const isReference = computed(() => props.version.version === props.version.reference)
-const verdictMark = { better: '▲', worse: '▼', tie: '＝' }
+// The arrow shows which way the number moved; the verdict word says whether that is good
+// (for calibration error, lower is better, so a fall is shown as "▼ … better").
+const directionMark = (vs) => (vs.verdict === 'tie' || vs.diff === 0 ? '＝' : vs.diff > 0 ? '▲' : '▼')
 
 const tiles = computed(() =>
   HEADLINE_TILES.map((tile) => {
@@ -24,7 +26,7 @@ const tiles = computed(() =>
       vs,
       points,
       delta,
-      mark: vs ? (verdictMark[vs.verdict] ?? '') : '',
+      mark: vs ? directionMark(vs) : '',
       note: present ? null : missingNote(tile, props.version.stages),
       tooltip: [tile.title, tile.hint, present && ci?.length === 2 && ci[0] != null ? `95% interval ${pct(ci[0], 0)} to ${pct(ci[1], 0)}` : null,
         vs ? `${delta} points vs ${props.version.reference}: ${vs.verdict} (${(vs.lo * 100).toFixed(1)} to ${(vs.hi * 100).toFixed(1)})` : null]
