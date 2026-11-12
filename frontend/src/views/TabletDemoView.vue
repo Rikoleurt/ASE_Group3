@@ -1,5 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 
 const tablet = ref({ imageUrl: '/api/tablet-demo/ht13?annotated=false' })
 const symbols = ref([
@@ -15,6 +16,17 @@ const activeId = ref(null)
 const loading = ref(false)
 const error = ref('')
 const imageLoaded = ref(false)
+
+// Clicking a detected box opens the other-tablets pane for the sign the reader chose.
+const selection = computed(() => {
+  const symbol = predictions.value.find((item) => item.id === activeId.value)
+  const sign = symbol?.candidates?.[0]?.sign
+  return sign ? { sign, candidates: symbol.candidates, crop: symbol.imageUrl || null } : null
+})
+
+function select(symbol) {
+  activeId.value = symbol.id
+}
 
 async function loadPredictions() {
   if (loading.value) return
@@ -76,7 +88,14 @@ onMounted(loadPredictions)
             v-for="symbol in predictions"
             :key="symbol.id"
             data-testid="prediction-box"
-            class="pointer-events-none absolute"
+            class="absolute cursor-pointer"
+            role="button"
+            tabindex="0"
+            :aria-label="`${symbol.label}: show other tablets with this sign`"
+            :aria-pressed="activeId === symbol.id"
+            @click="select(symbol)"
+            @keydown.enter.prevent="select(symbol)"
+            @keydown.space.prevent="select(symbol)"
             :class="
               activeId === symbol.id
                 ? 'border-2 border-accent bg-accent/30'
@@ -140,4 +159,5 @@ onMounted(loadPredictions)
       </ul>
     </section>
   </main>
+  <GlyphOccurrencesPane :selection="selection" class="mx-6 mb-6" />
 </template>

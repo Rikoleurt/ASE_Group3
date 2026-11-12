@@ -10,6 +10,7 @@ import tabletDemoView from '../views/TabletDemoView.vue?raw'
 import connectionTest from '../components/ConnectionTest.vue?raw'
 import tabletReadingView from '../views/TabletReadingView.vue?raw'
 import benchmarksView from '../views/BenchmarksView.vue?raw'
+import glyphPane from '../components/glyphs/GlyphOccurrencesPane.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -29,6 +30,14 @@ const CALLS = [
   { method: 'get', path: '/tablet-demo/ht13', source: tabletReadingView, snippet: '/api/tablet-demo/ht13?annotated=false' },
   { method: 'get', path: '/benchmarks', source: benchmarksView, snippet: "'/api/benchmarks'" },
   { method: 'get', path: '/benchmarks/{version}', source: benchmarksView, snippet: '/api/benchmarks/${encodeURIComponent(name)}' },
+  { method: 'get', path: '/glyphs/{sign}/occurrences', source: glyphPane, snippet: '/api/glyphs/${sign}/occurrences?${query}' },
+  { method: 'post', path: '/glyphs/{sign}/occurrences/search', source: glyphPane, snippet: '/api/glyphs/${sign}/occurrences/search' },
+  { method: 'get', path: '/glyphs/characters', source: glyphPane, snippet: '/api/glyphs/characters?signs=' },
+  { method: 'get', path: '/glyphs/{sign}/annotations', source: glyphPane, snippet: '/api/glyphs/${sign}/annotations' },
+  { method: 'post', path: '/glyphs/{sign}/annotations', source: glyphPane, snippet: '/api/glyphs/${sign}/annotations' },
+  { method: 'delete', path: '/glyphs/annotations/{annotation_id}', source: glyphPane, snippet: '/api/glyphs/annotations/${comment.id}' },
+  { method: 'get', path: '/tablets/{slug}/thumbnail.png', source: glyphPane, snippet: 'apiUrl(item.thumbnail_url)' },
+  { method: 'get', path: '/tablets/{slug}/signs/{position}.png', source: glyphPane, snippet: 'apiUrl(item.crop_url)' },
 ]
 
 function resolve(schema) {
@@ -79,5 +88,17 @@ describe('API contract', () => {
     expect(ANALYSIS_FIELDS).toEqual(expect.arrayContaining(['summary', 'signs', 'formulas']))
     const returned = responseFields('post', '/analysis', '200')
     expect(ANALYSIS_FIELDS.filter((field) => !returned.includes(field))).toEqual([])
+  })
+
+  // The pane only reads fields the API declares.
+  it.each([
+    ['item', 'GlyphOccurrence'],
+    ['comment', 'Annotation'],
+    ['page', 'GlyphOccurrencePage', 'AnnotationPage'],
+  ])('GlyphOccurrencesPane reads only fields of %s', (root, ...schemas) => {
+    const declared = schemas.flatMap((schema) => Object.keys(contract.components.schemas[schema].properties))
+    const used = [...glyphPane.matchAll(new RegExp(root + '\\.(\\w+)', 'g'))].map((m) => m[1])
+    expect(used.length).toBeGreaterThan(0)
+    expect(used.filter((field) => !declared.includes(field))).toEqual([])
   })
 })

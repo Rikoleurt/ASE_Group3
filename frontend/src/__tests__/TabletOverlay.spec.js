@@ -99,4 +99,27 @@ describe('Tablet overlay', () => {
     render()
     expect(wrapper.get('svg').classes()).toContain('still')
   })
+
+  it('selects a sign on click, Enter or Space, and marks the selected one', async () => {
+    render()
+    await boxes()[1].trigger('click')
+    await boxes()[2].trigger('keydown', { key: 'Enter' })
+    await boxes()[3].trigger('keydown', { key: ' ' })
+    await boxes()[4].trigger('keydown', { key: 'a' })
+    expect(wrapper.emitted('select').map(([sign]) => sign.id)).toEqual([2, 3, 4])
+    expect(wrapper.emitted('select')[0][0]).toEqual(signs[1])
+    expect(boxes()[0].attributes('role')).toBe('button')
+    expect(boxes().map((box) => box.attributes('aria-pressed'))).toEqual(Array(8).fill('false'))
+    await wrapper.setProps({ selectedId: 3 })
+    expect(boxes()[2].classes()).toContain('selected')
+    expect(boxes()[2].attributes('aria-pressed')).toBe('true')
+    expect(boxes()[1].classes()).not.toContain('selected')
+  })
+
+  it('still shows the hover card while selecting', async () => {
+    render()
+    await boxes()[2].trigger('mouseenter')
+    await boxes()[2].trigger('click')
+    expect(wrapper.find('[data-testid="sign-card"]').exists()).toBe(true)
+  })
 })
