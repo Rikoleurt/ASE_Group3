@@ -377,7 +377,7 @@ const cost = computed(() => {
               </button>
             </div>
             <div class="mt-1 overflow-y-auto" :style="{ maxHeight: paneMax }">
-              <GlyphOccurrencesPane :selection="selection" />
+              <GlyphOccurrencesPane compact :selection="selection" />
             </div>
           </section>
           <section v-show="!picked" aria-labelledby="tablets-h" class="min-w-0" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null">
