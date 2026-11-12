@@ -191,8 +191,11 @@ Stop the application with `Ctrl+C`. Stop the Docker database with:
 docker compose stop mysql
 ```
 
-The trained Linear A sign reader (a sign detector and a classifier) ships as
-assets of the `signs-v1` GitHub release, not in git. Download it into `models/`:
+The trained Linear A sign reader ships as assets of the `reader-v2` GitHub release, not in
+git: the sign detector and classifier (unchanged since `signs-v1`), the reader refinements the
+app applies when they are present (test-time augmentation, train-crop neighbours, frequency
+prior and the sign comparer: `linear_a_reader.json`, `linear_a_bank.npz`, `linear_a_comparer.pt`)
+and the glyph pane's similarity embeddings (`glyph_embeddings.npz`). Download them into `models/`:
 
 ```bash
 uv run --project backend --no-sync python scripts/fetch_models.py
