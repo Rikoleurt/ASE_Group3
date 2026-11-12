@@ -32,6 +32,8 @@ for run in "${runs[@]}"; do
         --epochs 100 --workers 0 --name det_synth ;;
     det_synth_resume)
       queue det_synth 4500 4500 -- "$PY" "$ROOT/train.py" detect --resume "$ROOT/runs/detect/det_synth" ;;
+    det_s_resume)
+      queue det_s 5200 4500 -- "$PY" "$ROOT/train.py" detect --resume "$ROOT/runs/detect/det_s" ;;
     det_s)
       queue det_s 5200 4500 -- "$PY" "$ROOT/train.py" detect --model yolo26s.pt --batch 4 \
         --epochs 100 --workers 0 --name det_s ;;
