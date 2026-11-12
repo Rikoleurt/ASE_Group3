@@ -120,7 +120,10 @@ class TwoStage(_Detector):
                  dataset: Path | None = None, **kw):
         super().__init__(name, detector, **kw)
         self.classifier_path = Path(classifier)
-        self.classifier = _yolo(classifier)
+        from la.classifiers import (
+            load_classifier,  # Ultralytics or torchvision (PR #67), by checkpoint contents
+        )
+        self.classifier = load_classifier(classifier)
         self.tta = tta
         self.bank = _train_bank(Path(dataset), self.classifier, **knn) if knn else None
         self.comparer_path = Path(comparer["weights"]) if comparer else None

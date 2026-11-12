@@ -104,3 +104,44 @@ models:
     knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
     prior: 0.25
     comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
+
+  # Classifiers from the model benchmark in PR #67 (ahmad-rafee), trained with his recipe; weights from him,
+  # copied to models/pr67/ (not in git). Torchvision networks have no YOLO features for the neighbour
+  # bank, so they get TTA + the comparer but no kNN. Skipped until the weights are there.
+  - name: pr67-convnext-tiny
+    kind: two_stage
+    description: "PR #67: signs-v1 detector + ConvNeXt-Tiny classifier (Ahmed's best on test), as he ran it"
+    detector: models/linear_a_signs.pt
+    classifier: models/pr67/tv-convnext_tiny.pt
+
+  - name: pr67-convnext-tiny-tta-comparer
+    kind: two_stage
+    description: "PR #67 ConvNeXt-Tiny classifier inside our reader: TTA + sign comparer"
+    detector: models/linear_a_signs.pt
+    classifier: models/pr67/tv-convnext_tiny.pt
+    tta: true
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
+
+  - name: pr67-efficientnet-b0
+    kind: two_stage
+    description: "PR #67: signs-v1 detector + EfficientNet-B0 classifier (ties ConvNeXt at a sixth of the size)"
+    detector: models/linear_a_signs.pt
+    classifier: models/pr67/tv-efficientnet_b0.pt
+
+  - name: pr67-efficientnet-b0-tta-comparer
+    kind: two_stage
+    description: "PR #67 EfficientNet-B0 classifier inside our reader: TTA + sign comparer"
+    detector: models/linear_a_signs.pt
+    classifier: models/pr67/tv-efficientnet_b0.pt
+    tta: true
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
+
+  - name: pr67-yolo11n-cls-tta-knn-comparer
+    kind: two_stage
+    description: "PR #67 yolo11n-cls classifier (his best YOLO) inside our full reader: TTA + kNN + prior + comparer"
+    detector: models/linear_a_signs.pt
+    classifier: models/pr67/yolo11n-cls.pt
+    tta: true
+    knn: {backbone: yolo, weight: 0.35, temperature: 0.02}
+    prior: 0.25
+    comparer: {weights: runs/comparer/comparer/comparer.pt, weight: 0.5, temperature: 0.05, k: 3, zero_shot: true}
