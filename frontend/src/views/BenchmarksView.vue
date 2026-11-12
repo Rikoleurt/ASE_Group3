@@ -232,7 +232,7 @@ const selection = computed(() => {
   return { sign: s.sign, candidates, ...(s.drawing ? { reference: s.drawing } : {}) }
 })
 // The pane scrolls inside the column rather than lengthening the page.
-const paneMax = computed(() => (rowMin.value ? `${Math.max(rowMin.value - 40, 320)}px` : '70vh'))
+const paneMax = 'max(20rem, calc(100vh - 13rem))' // the window below the header, minus the pane title
 function onKey(e) { if (e.key === 'Escape' && picked.value) unpick() }
 const aboutVersion = computed(() => {
   const c = current.value
