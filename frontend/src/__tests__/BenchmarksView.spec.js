@@ -272,7 +272,7 @@ describe('Play worst to best', () => {
     await wrapper.get('[data-testid="play"]').trigger('click')
     await tick(0)
     await wrapper.get('[data-testid="pause"]').trigger('click')
-    expect(wrapper.get('[data-testid="pause"]').text()).toBe('Resume')
+    expect(wrapper.get('[data-testid="pause"]').attributes('aria-label')).toBe('Resume')
     await tick(10000)
     expect(select().element.value).toBe('alpha')
     await wrapper.get('[data-testid="pause"]').trigger('click')

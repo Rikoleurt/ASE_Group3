@@ -164,10 +164,11 @@ function stop() {
   if (restore) select(restore)
 }
 
-// Side by side, the tablet grid starts at the same height as the glyph grid, whose
-// legend and sort controls sit above it: measure the difference and pad by it.
+// Side by side, the tablet grid starts at the same height as the glyph grid: measure where
+// each would start and pad the higher one (usually the tablet grid, below the bar charts).
 const gridsRow = ref(null)
 const tabletPad = ref(0)
+const glyphPad = ref(0)
 // The grids row keeps the tallest height it has had (versions differ in sign count), so the
 // page below it does not jump while switching or playing; a window resize starts over.
 const rowMin = ref(0)
@@ -183,8 +184,10 @@ function alignGrids() {
   const tablets = row?.querySelector('[data-testid="tablet-grid"]')
   if (!glyphs || !tablets) return
   const sideBySide = glyphs.getBoundingClientRect().left < tablets.getBoundingClientRect().left - 1
-  const diff = glyphs.getBoundingClientRect().top - (tablets.getBoundingClientRect().top - tabletPad.value)
+  // Where each grid would start unpadded; pad the higher one down to the other.
+  const diff = (glyphs.getBoundingClientRect().top - glyphPad.value) - (tablets.getBoundingClientRect().top - tabletPad.value)
   tabletPad.value = sideBySide ? Math.max(0, Math.round(diff)) : 0
+  glyphPad.value = sideBySide ? Math.max(0, Math.round(-diff)) : 0
 }
 
 // The row appears once a version has loaded; observe it from then on, and re-align on every version.
@@ -298,7 +301,7 @@ const cost = computed(() => {
               <!-- Fixed slots, so switching or playing versions never moves the page: controls and
                    progress, then the metric squares (fixed size) beside them. -->
               <section class="flex flex-wrap items-start gap-x-4 gap-y-2" aria-label="Version and playback">
-            <div class="w-full min-w-0 sm:w-[34rem]">
+            <div class="w-full min-w-0 sm:w-[27rem]">
               <label class="block text-xs font-semibold" for="version-select">Model version</label>
               <div class="mt-0.5 flex items-center gap-2">
                   <select
@@ -317,14 +320,14 @@ const cost = computed(() => {
                       <option v-for="v in tiers.unscored" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
                     </optgroup>
                   </select>
-                  <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="play" @click="play">
-                    Play worst → best
+                  <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" title="Play every version, worst to best" aria-label="Play worst to best" data-testid="play" @click="play">
+                    <span aria-hidden="true">▶</span>
                   </button>
                   <template v-else>
-                    <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" @click="togglePause">
-                      {{ mode === 'paused' ? 'Resume' : 'Pause' }}
+                    <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" :title="mode === 'paused' ? 'Resume' : 'Pause'" :aria-label="mode === 'paused' ? 'Resume' : 'Pause'" @click="togglePause">
+                      <span aria-hidden="true">{{ mode === 'paused' ? '▶' : '⏸' }}</span>
                     </button>
-                    <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="stop" @click="stop">Stop</button>
+                    <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" title="Stop" aria-label="Stop" data-testid="stop" @click="stop"><span aria-hidden="true">■</span></button>
                   </template>
               </div>
               <div class="mt-1 h-5" data-testid="progress-slot">
@@ -351,7 +354,7 @@ const cost = computed(() => {
           <p v-if="skipped.length" role="status" class="mt-1 text-xs" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
           <p v-if="detailError" role="alert" class="mt-2 rounded-2xl bg-card p-3">{{ detailError }}</p>
 
-          <section v-if="current" aria-labelledby="glyphs-h" class="mt-3 min-w-0">
+          <section v-if="current" aria-labelledby="glyphs-h" class="mt-3 min-w-0" :style="glyphPad ? { paddingTop: `${glyphPad}px` } : null">
             <h2 id="glyphs-h" class="text-sm font-bold">Every sign</h2>
             <p v-if="!grids" class="mt-1 rounded-2xl bg-card p-3 text-sm" data-testid="grid-note">Not measured: this version finds signs but does not name them, so there is no per-sign result.</p>
             <template v-else>
@@ -380,18 +383,24 @@ const cost = computed(() => {
               <GlyphOccurrencesPane compact :selection="selection" />
             </div>
           </section>
-          <section v-show="!picked" aria-labelledby="tablets-h" class="min-w-0" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null">
-            <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
-            <div data-testid="tablet-block" :style="tabletMin ? { minHeight: `${tabletMin}px` } : null">
-            <template v-if="grids">
-              <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
-              <div class="mt-1" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
-            </template>
-            <p v-else class="rounded-2xl bg-card p-3 text-sm" data-testid="tablet-note">Not measured: no per-tablet result without sign names.</p>
-            </div>
-            <div class="mt-3 grid gap-x-4 gap-y-3 sm:grid-cols-2" data-testid="side-charts">
+          <!-- From the top: the two bar charts, then the tablet grid level with the sign grid
+               (alignGrids pads whichever side is higher), then the coverage chart and cost. -->
+          <section v-show="!picked" aria-labelledby="tablets-h" class="min-w-0">
+            <div class="grid gap-x-4 gap-y-3 sm:grid-cols-2" data-testid="side-charts">
               <ColumnBars compact title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
               <ColumnBars compact title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+            </div>
+            <div class="mt-2" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null">
+              <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
+              <div data-testid="tablet-block" :style="tabletMin ? { minHeight: `${tabletMin}px` } : null">
+              <template v-if="grids">
+                <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
+                <div class="mt-1" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+              </template>
+              <p v-else class="rounded-2xl bg-card p-3 text-sm" data-testid="tablet-note">Not measured: no per-tablet result without sign names.</p>
+              </div>
+            </div>
+            <div class="mt-3 grid gap-x-4 gap-y-3 sm:grid-cols-2" data-testid="side-extra">
               <CoverageChart v-if="current.coverage_curve?.length" compact :points="current.coverage_curve" />
               <figure v-else class="m-0 sm:min-h-[12.5rem]" data-testid="coverage-empty">
                 <figcaption class="text-sm leading-tight font-semibold">Accuracy when answering only the most confident signs</figcaption>
