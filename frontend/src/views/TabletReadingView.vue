@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 
 // One tablet for now: HT 13 is the tablet the demo image shows.
 const slug = 'HT-13'
@@ -10,6 +11,20 @@ const reading = ref(null)
 const fractionSigns = ref(null)
 const loading = ref(true)
 const error = ref('')
+const picked = ref(null)
+
+// A fraction sign on this tablet: its transcribed sign ID first, then the shape matcher's guesses.
+// The sign's own drawing is the reference the other tablets are ordered by.
+const selection = computed(() => {
+  const sign = picked.value
+  if (!sign?.transcribed?.sign) return null
+  const guesses = (sign.guesses ?? []).filter((guess) => guess.sign).map((guess) => ({ sign: guess.sign, label: guess.label }))
+  return {
+    sign: sign.transcribed.sign,
+    candidates: [{ sign: sign.transcribed.sign, label: sign.transcribed.label }, ...guesses],
+    reference: { tablet: slug, position: sign.position },
+  }
+})
 
 const VERDICTS = {
   BALANCED: { text: 'Balances', class: 'text-confidence-high' },
@@ -202,6 +217,15 @@ onMounted(load)
                 </span>
               </p>
               <p class="text-ink/70">Next: {{ sign.guesses.slice(1).map((g) => g.label).join(', ') }}</p>
+              <button
+                v-if="sign.transcribed.sign"
+                type="button"
+                class="mt-1 cursor-pointer font-bold underline hover:text-accent"
+                :aria-pressed="picked === sign"
+                @click="picked = sign"
+              >
+                Find on other tablets
+              </button>
             </li>
           </ul>
         </section>
@@ -213,4 +237,5 @@ onMounted(load)
       </template>
     </section>
   </main>
+  <GlyphOccurrencesPane :selection="selection" class="mx-6 mb-6" />
 </template>
