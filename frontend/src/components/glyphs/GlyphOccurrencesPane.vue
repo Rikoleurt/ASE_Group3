@@ -298,11 +298,13 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
 
 <template>
   <section v-if="tabs.length" ref="root" class="rounded-3xl bg-card p-4 sm:p-6" :class="{ compact }" aria-labelledby="glyph-pane-title" data-testid="glyph-pane">
+    <!-- Compact: the selected glyph sits on the title row instead of in its own block. -->
+    <div :class="{ 'pane-head': compact }">
     <h2 id="glyph-pane-title" class="text-xl font-bold">Other tablets with this sign</h2>
 
     <div
       v-if="active"
-      class="mt-3 flex flex-wrap items-center gap-4 rounded-xl bg-page p-3"
+      class="picked-row mt-3 flex flex-wrap items-center gap-4 rounded-xl bg-page p-3"
       data-testid="glyph-selected"
       aria-labelledby="glyph-selected-title"
     >
@@ -326,6 +328,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
         <p v-if="activeTab?.probability !== undefined" class="text-sm">The reader's confidence: {{ percent(activeTab.probability) }}</p>
         <p v-if="charactersKnown && !activeCharacter" class="text-sm text-ink/70" data-testid="glyph-selected-no-character">This sign has no Unicode character.</p>
       </div>
+    </div>
     </div>
 
     <div role="tablist" aria-label="The reader's best guesses for this sign" class="mt-3 flex flex-wrap gap-2">
@@ -496,7 +499,10 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
 .compact #glyph-pane-title { font-size: 1rem; }
 .compact :where(.mt-4) { margin-top: 0.5rem; }
 .compact :where(.mt-3) { margin-top: 0.375rem; }
-.compact .picked-box { height: 4rem; width: 4rem; font-size: 3rem; }
+.compact .picked-box { height: 3rem; width: 3rem; font-size: 2.25rem; }
+.compact .pane-head { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+.compact .pane-head .picked-row { margin-top: 0; padding: 0.25rem 0.5rem; gap: 0.5rem; }
+.compact .pane-head [data-testid='glyph-selected-sign'] { font-size: 1rem; }
 .compact .card-crop { height: 4rem; }
 .compact .card-thumb { height: 5rem; }
 </style>
