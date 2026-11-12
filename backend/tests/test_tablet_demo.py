@@ -1,3 +1,4 @@
+import json
 from base64 import b64decode
 from io import BytesIO
 from pathlib import Path
@@ -210,6 +211,7 @@ def two_stage(monkeypatch, tmp_path):
     monkeypatch.setattr("backend.app.tablet_demo.SIGN_WEIGHTS", detector)
     monkeypatch.setattr("backend.app.tablet_demo.CLASSIFIER_WEIGHTS", classifier)
     monkeypatch.setattr("backend.app.tablet_demo._model", lambda weights: object())
+    monkeypatch.setattr("backend.app.tablet_demo.READER_CONFIG", tmp_path / "linear_a_reader.json")  # none: plain
     image = np.full((200, 100, 3), 255, dtype=np.uint8)
     image[50:90, 20:30] = 0
     return Results(image, path=str(HT13_IMAGE), names={0: "sign"},
@@ -278,3 +280,29 @@ def test_a_failed_warm_up_does_not_stop_the_app(capsys):
     with patch.object(tablet_demo, "ht13_predictions", side_effect=FileNotFoundError("weights")):
         tablet_demo.warm_up()
     assert "warm-up skipped" in capsys.readouterr().err
+
+
+def test_the_installed_reader_refinements_are_passed_to_the_classifier(two_stage, tmp_path):
+    from backend.app import tablet_demo
+
+    np.savez(tmp_path / "linear_a_bank.npz", signs=np.array(["A707", "A707", "AB01"]), vectors=np.eye(3, 4))
+    (tmp_path / "linear_a_reader.json").write_text(json.dumps({
+        "version": "test", "tta": True, "prior": 0.25,
+        "knn": {"bank": "linear_a_bank.npz", "backbone": "yolo", "weight": 0.35, "temperature": 0.02},
+        "comparer": {"weights": "missing_comparer.pt", "weight": 0.5}}), encoding="utf-8")
+    tablet_demo._load_refinements.cache_clear()
+    with patch("la.embeddings.embedder", return_value=lambda crops: np.zeros((len(crops), 4))),          patch("la.reader.name_boxes", return_value=[[("A707", 0.8)], [("AB01", 0.6)]]) as name_boxes:
+        tablet_demo.name_signs(two_stage)
+    options = name_boxes.call_args.kwargs
+    assert options["tta"] is True and options["prior"] == 0.25
+    assert options["real_counts"] == {"A707": 2, "AB01": 1}
+    assert options["bank"].weight == 0.35 and len(options["bank"].signs) == 3
+    assert options["comparer"] is None  # its file is missing: skipped, not an error
+
+
+def test_without_a_reader_config_the_plain_classifier_names(two_stage):
+    from backend.app import tablet_demo
+
+    with patch("la.reader.name_boxes", return_value=[[("A707", 0.8)], [("AB01", 0.6)]]) as name_boxes:
+        tablet_demo.name_signs(two_stage)
+    assert not {"tta", "bank", "comparer", "prior"} & set(name_boxes.call_args.kwargs)

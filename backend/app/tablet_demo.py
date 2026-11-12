@@ -27,6 +27,9 @@ YOLO_WEIGHTS = ROOT / "yolo26n.pt"
 SIGN_WEIGHTS = Path(os.getenv("SIGN_DETECTOR_WEIGHTS", ROOT / "models" / "linear_a_signs.pt"))
 # Sign names and roles travel beside the weights, as `<weights>.json` (out/sign_crops/classes.json).
 CLASSIFIER_WEIGHTS = Path(os.getenv("SIGN_CLASSIFIER_WEIGHTS", ROOT / "models" / "linear_a_classifier.pt"))
+# Optional refinements of the classifier's naming, chosen with the benchmark (benchmark/models.yaml,
+# signs-v1-tta-knn-comparer): written by scripts/build_reader.py. Without the file the plain classifier names.
+READER_CONFIG = Path(os.getenv("SIGN_READER_CONFIG", ROOT / "models" / "linear_a_reader.json"))
 
 SIGN_IMGSZ = 1024
 CANDIDATES = 3
@@ -112,11 +115,56 @@ def name_signs(result) -> list[list[dict]] | None:
     catalogue = sign_catalogue(weights)
     with INFERENCE_LOCK:
         torch.set_num_threads(INFERENCE_THREADS)
+        extra = refinements(weights)
+        options = {} if extra is None else {"tta": extra["tta"], "bank": extra["bank"], "comparer": extra["comparer"],
+                                            "real_counts": extra["counts"], "prior": extra["prior"]}
         named = reader.name_boxes(_model(weights), reader.ink_of(result.orig_img), boxes,
-                                  top=CANDIDATES, device="cpu")
+                                  top=CANDIDATES, device="cpu", **options)
     return [[{"sign": sign, "label": catalogue.get(sign, {}).get("name", sign),
               "roles": catalogue.get(sign, {}).get("roles", []), "probability": probability * 100}
              for sign, probability in top] for top in named]
+
+
+@lru_cache(maxsize=2)
+def _load_refinements(config_path: str, modified_ns: int, classifier_path: str) -> dict:
+    """TTA flag, neighbour bank, comparer and frequency prior from `READER_CONFIG`.
+
+    A refinement whose file is missing is left out (with a warning), so the
+    reader degrades to what is installed instead of failing.
+    """
+    from collections import Counter
+
+    from la import embeddings, reader
+
+    config = json.loads(Path(config_path).read_text(encoding="utf-8"))
+    folder = Path(config_path).parent
+    out = {"version": config.get("version"), "tta": bool(config.get("tta")), "bank": None,
+           "comparer": None, "prior": 0.0, "counts": {}}
+    knn = config.get("knn")
+    if knn and (folder / knn["bank"]).is_file():
+        data = np.load(folder / knn["bank"], allow_pickle=False)
+        embed = embeddings.embedder(knn.get("backbone", "yolo"), _model(Path(classifier_path)))
+        out["bank"] = reader.NeighbourBank(embed, data["signs"], data["vectors"],
+                                           weight=knn["weight"], temperature=knn["temperature"])
+        if config.get("prior"):
+            out["prior"], out["counts"] = float(config["prior"]), Counter(data["signs"].tolist())
+    elif knn:
+        print(f"Reader: neighbour bank {knn['bank']} missing, skipped", file=sys.stderr)
+    comparer = config.get("comparer")
+    if comparer and (folder / comparer["weights"]).is_file():
+        from la.comparer import Comparer
+        options = {k: v for k, v in comparer.items() if k != "weights"}
+        out["comparer"] = Comparer.load(folder / comparer["weights"], device="cpu", **options)
+    elif comparer:
+        print(f"Reader: comparer {comparer['weights']} missing, skipped", file=sys.stderr)
+    return out
+
+
+def refinements(classifier: Path) -> dict | None:
+    """The installed naming refinements, or None for the plain classifier."""
+    if not READER_CONFIG.is_file():
+        return None
+    return _load_refinements(str(READER_CONFIG), READER_CONFIG.stat().st_mtime_ns, str(classifier.resolve()))
 
 
 def annotate_ht13(image_path: Path = HT13_IMAGE, confidence: float = 0.25) -> bytes:

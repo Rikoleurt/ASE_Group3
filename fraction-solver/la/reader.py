@@ -77,11 +77,16 @@ def top_labels(names: list[str], probs: np.ndarray, top: int = TOP_LABELS) -> li
 
 def name_boxes(classifier, ink: np.ndarray, boxes: list[tuple[float, float, float, float]],
                top: int = TOP_LABELS, device: str | None = None, tta: bool = False,
-               bank: NeighbourBank | None = None, comparer=None) -> list[list[tuple[str, float]]]:
-    """For each box, the classifier's `top` (sign ID, probability) pairs, best first."""
+               bank: NeighbourBank | None = None, comparer=None, real_counts: dict[str, int] | None = None,
+               prior: float = 0.0) -> list[list[tuple[str, float]]]:
+    """For each box, the classifier's `top` (sign ID, probability) pairs, best first.
+
+    With `prior`, the frequency prior (`prior_correction`) is applied after the other refinements.
+    """
     if not boxes:
         return []
     names, probs = boxed_probabilities(classifier, ink, boxes, device=device, tta=tta, bank=bank, comparer=comparer)
+    probs = prior_correction(names, probs, real_counts or {}, prior)
     return top_labels(names, probs, top)
 
 
