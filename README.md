@@ -422,7 +422,39 @@ correctly 69.7% of the time. On HT 13, the demo tablet, 26 of its 27 signs are
 found and 24 are read correctly. The test labels miss some signs (see
 self-training above), so some correct detections still count as false positives.
 
-### Benchmark alternative models
+### Benchmarks
+
+Two complementary benchmarks. **Architectures** (`benchmark.py`, PR #67) trains alternative detectors and
+classifiers and compares them; **readers** (`benchmark/`, below) compares ways of using the trained models
+(test-time augmentation, neighbour votes, the sign comparer…) and publishes them to the app's Benchmarks page.
+
+#### Compare readers (`benchmark/`)
+
+```bash
+python -m benchmark.run                         # every reader in benchmark/models.yaml, val split
+python -m benchmark.report runs/benchmark/<stamp>-val
+```
+
+`benchmark/models.yaml` lists the readers; one with missing weights is skipped.
+Each is scored on the same tablets in up to three stages, so errors can be traced
+to finding or to naming signs:
+
+| Stage | What is measured |
+|---|---|
+| Detection | precision, recall and AP50 (IoU 0.5), across a sweep of detection thresholds |
+| Naming on the true boxes | top-1/3/5, per-sign (macro) top-1, top-1 by number of training examples and by role, calibration error, accuracy when answering only for the most confident signs |
+| End to end | the `evaluate.py` rates, at the app's threshold of 0.25 |
+
+It also records CPU latency per tablet (2 threads, as in the app), weight size and
+training time. Every rate has a 95% interval from resampling whole tablets, and each
+model is compared with `signs-v1` on the *same* resampled tablets: a difference whose
+interval excludes zero is reported as `better` or `worse`, otherwise `tie`.
+
+`report` writes `report.md` (tables, best first) and charts. Choose models on `val`;
+`--split test --final` is for final candidates and every test run is logged in
+`runs/benchmark/test_runs.csv`. `benchmark/benchmark.ipynb` runs both steps.
+
+#### Benchmark alternative models (`benchmark.py`)
 
 `benchmark.py` trains several detectors and classifiers with the same recipe and
 scores them on the same test tablets (`python benchmark.py detect|classify|end2end|report`).
