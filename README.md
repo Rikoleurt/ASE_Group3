@@ -422,6 +422,13 @@ correctly 69.7% of the time. On HT 13, the demo tablet, 26 of its 27 signs are
 found and 24 are read correctly. The test labels miss some signs (see
 self-training above), so some correct detections still count as false positives.
 
+### Benchmark alternative models
+
+`benchmark.py` trains several detectors and classifiers with the same recipe and
+scores them on the same test tablets (`python benchmark.py detect|classify|end2end|report`).
+Results, charts and conclusions are in [research/benchmarking](research/benchmarking/README.md);
+`benchmark.ipynb` there runs the same thing on Colab.
+
 ### Use the models in the application
 
 `python scripts/fetch_models.py` installs the released models. To use models you
