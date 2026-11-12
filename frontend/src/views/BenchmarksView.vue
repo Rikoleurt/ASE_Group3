@@ -336,14 +336,21 @@ const cost = computed(() => {
             </template>
           </section>
 
-          <section v-if="grids" aria-labelledby="tablets-h" class="min-w-0">
+          <section aria-labelledby="tablets-h" class="min-w-0">
             <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
-            <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
-            <div class="mt-1" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+            <template v-if="grids">
+              <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
+              <div class="mt-1" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+            </template>
+            <p v-else class="mt-1 rounded-2xl bg-card p-3 text-sm" data-testid="tablet-note">Not measured: no per-tablet result without sign names.</p>
             <div class="mt-3 grid gap-x-4 gap-y-3 sm:grid-cols-2" data-testid="side-charts">
               <ColumnBars compact title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
               <ColumnBars compact title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
               <CoverageChart v-if="current.coverage_curve?.length" compact :points="current.coverage_curve" />
+              <figure v-else class="m-0 sm:min-h-[13rem]" data-testid="coverage-empty">
+                <figcaption class="text-sm leading-tight font-semibold">Accuracy when answering only the most confident signs</figcaption>
+                <p class="mt-2 text-sm text-ink/80">— Not measured for this version.</p>
+              </figure>
               <section aria-labelledby="cost-h">
                 <h2 id="cost-h" class="text-sm font-semibold">Cost</h2>
                 <dl class="mt-1 grid gap-y-1 text-sm" data-testid="cost">
@@ -357,23 +364,6 @@ const cost = computed(() => {
           </section>
         </div>
 
-        <template v-if="!grids">
-          <section class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="More detail">
-            <ColumnBars title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
-            <ColumnBars title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
-            <CoverageChart v-if="current.coverage_curve?.length" :points="current.coverage_curve" />
-          </section>
-
-          <section class="mt-3" aria-labelledby="cost-h">
-            <h2 id="cost-h" class="sr-only">Cost</h2>
-            <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm" data-testid="cost">
-              <div v-for="c in cost" :key="c.key" class="flex gap-1">
-                <dt class="text-ink/80">{{ c.label }}:</dt>
-                <dd class="font-semibold tabular-nums">{{ c.value ?? '—' }}</dd>
-              </div>
-            </dl>
-          </section>
-        </template>
       </template>
       <p v-else-if="!detailError" role="status" class="mt-4">Loading {{ selected }}…</p>
     </template>
