@@ -124,9 +124,9 @@ describe('Benchmarks page', () => {
   it('shows buckets with counts, roles, cost and the coverage chart', async () => {
     stubFetch()
     await render()
-    expect(wrapper.get('[data-bar="5+"]').text()).toContain('n = 10')
+    expect(wrapper.get('[data-bar="5+"]').text()).toContain('(10)')
     expect(wrapper.get('[data-bar="unseen"]').text()).toContain('Never seen')
-    expect(wrapper.get('[data-bar="logogram"]').text()).toContain('n = 2')
+    expect(wrapper.get('[data-bar="logogram"]').text()).toContain('(2)')
     expect(wrapper.get('[data-testid="cost"]').text()).toContain('0.62 s')
     expect(wrapper.get('[data-testid="cost"]').text()).toContain('9.4 MB')
     expect(wrapper.get('[data-testid="cost"]').text()).toContain('128 min')

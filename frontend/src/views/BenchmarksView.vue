@@ -5,7 +5,7 @@ import CoverageChart from '../components/benchmarks/CoverageChart.vue'
 import GlyphGrid from '../components/benchmarks/GlyphGrid.vue'
 import MetricTiles from '../components/benchmarks/MetricTiles.vue'
 import TabletGrid from '../components/benchmarks/TabletGrid.vue'
-import { BUCKET_LABELS, BUCKET_ORDER, GRADIENT, NO_DATA, bestVersion, gridMode, headline, pct, rankVersions, worstToBest } from '../components/benchmarks/benchmarkData'
+import { BUCKET_LABELS, BUCKET_ORDER, BUCKET_SHORT, GRADIENT, NO_DATA, bestVersion, gridMode, headline, pct, rankVersions, worstToBest } from '../components/benchmarks/benchmarkData'
 
 const STEP_MS = 1500
 
@@ -219,7 +219,7 @@ const bucketBars = computed(() => {
   if (!d) return []
   const keys = Object.keys(d.by_bucket ?? {})
   const sorted = [...BUCKET_ORDER.filter((k) => keys.includes(k)), ...keys.filter((k) => !BUCKET_ORDER.includes(k))]
-  return sorted.map((k) => ({ key: k, label: BUCKET_LABELS[k] ?? k, value: d.by_bucket[k], count: d.bucket_counts?.[k] }))
+  return sorted.map((k) => ({ key: k, label: BUCKET_LABELS[k] ?? k, short: BUCKET_SHORT[k], value: d.by_bucket[k], count: d.bucket_counts?.[k] }))
 })
 const roleBars = computed(() => {
   const d = current.value
@@ -291,19 +291,19 @@ const cost = computed(() => {
             <template v-else>Loading all versions…</template>
           </p>
         </div>
-        <p v-if="current" class="min-w-0 flex-1 basis-64 text-xs text-ink/80" data-testid="meta" aria-label="About this version">
+        <p v-if="current" class="line-clamp-3 min-w-0 flex-1 basis-64 self-center text-xs text-ink/80" data-testid="meta" aria-label="About this version">
           <strong class="text-ink">{{ current.version }}</strong>: {{ current.description }}
           · {{ current.split }} split · {{ current.tablets }} tablets · vs {{ current.reference }}
           <template v-if="current.stages && !current.stages.detection"> · identification only</template>
           <template v-else-if="current.stages && !current.stages.identification && current.kind !== 'one_stage'"> · detection only</template>
         </p>
+        <MetricTiles v-if="current" :version="current" />
       </section>
 
       <p v-if="skipped.length" role="status" class="mt-1 text-xs" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
       <p v-if="detailError" role="alert" class="mt-2 rounded-2xl bg-card p-3">{{ detailError }}</p>
 
       <template v-if="current">
-        <div class="mt-2"><MetricTiles :version="current" /></div>
 
         <div ref="gridsRow" class="mt-3 grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
           <section aria-labelledby="glyphs-h" class="min-w-0">
@@ -324,30 +324,40 @@ const cost = computed(() => {
             <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
             <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
             <div class="mt-1" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
-            <div class="mt-4 grid gap-4" data-testid="side-charts">
-              <ColumnBars title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
-              <ColumnBars title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+            <div class="mt-3 grid gap-x-4 gap-y-3 sm:grid-cols-2" data-testid="side-charts">
+              <ColumnBars compact title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+              <ColumnBars compact title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
+              <CoverageChart v-if="current.coverage_curve?.length" compact :points="current.coverage_curve" />
+              <section aria-labelledby="cost-h">
+                <h2 id="cost-h" class="text-sm font-semibold">Cost</h2>
+                <dl class="mt-1 grid gap-y-1 text-sm" data-testid="cost">
+                  <div v-for="c in cost" :key="c.key" class="flex gap-1">
+                    <dt class="text-ink/80">{{ c.label }}:</dt>
+                    <dd class="font-semibold tabular-nums">{{ c.value ?? '—' }}</dd>
+                  </div>
+                </dl>
+              </section>
             </div>
           </section>
         </div>
 
-        <section class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="More detail">
-          <template v-if="!grids">
+        <template v-if="!grids">
+          <section class="mt-4 grid gap-4 md:grid-cols-2 xl:grid-cols-3" aria-label="More detail">
             <ColumnBars title="Named correctly, by training examples" :bars="bucketBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
             <ColumnBars title="Named correctly, by sign role" :bars="roleBars" :reduce-motion="reduceMotion" empty="This version does not identify signs." />
-          </template>
-          <CoverageChart v-if="current.coverage_curve?.length" :points="current.coverage_curve" />
-        </section>
+            <CoverageChart v-if="current.coverage_curve?.length" :points="current.coverage_curve" />
+          </section>
 
-        <section class="mt-3" aria-labelledby="cost-h">
-          <h2 id="cost-h" class="sr-only">Cost</h2>
-          <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm" data-testid="cost">
-            <div v-for="c in cost" :key="c.key" class="flex gap-1">
-              <dt class="text-ink/80">{{ c.label }}:</dt>
-              <dd class="font-semibold tabular-nums">{{ c.value ?? '—' }}</dd>
-            </div>
-          </dl>
-        </section>
+          <section class="mt-3" aria-labelledby="cost-h">
+            <h2 id="cost-h" class="sr-only">Cost</h2>
+            <dl class="flex flex-wrap gap-x-6 gap-y-1 text-sm" data-testid="cost">
+              <div v-for="c in cost" :key="c.key" class="flex gap-1">
+                <dt class="text-ink/80">{{ c.label }}:</dt>
+                <dd class="font-semibold tabular-nums">{{ c.value ?? '—' }}</dd>
+              </div>
+            </dl>
+          </section>
+        </template>
       </template>
       <p v-else-if="!detailError" role="status" class="mt-4">Loading {{ selected }}…</p>
     </template>

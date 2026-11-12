@@ -2,8 +2,9 @@
 import { computed } from 'vue'
 import { BAR_FILL, pct } from './benchmarkData'
 
-const props = defineProps({ points: { type: Array, required: true } })
-const W = 320, H = 180, L = 36, R = 10, T = 10, B = 28
+const props = defineProps({ points: { type: Array, required: true }, compact: { type: Boolean, default: false } })
+const W = 320, L = 36, R = 10, T = 10, B = 28
+const H = props.compact ? 150 : 180
 const pts = computed(() =>
   props.points
     .filter((p) => p.coverage != null && p.id_top1 != null)
@@ -16,8 +17,8 @@ const summary = computed(() => pts.value.map((p) => `${pct(p.coverage, 0)} answe
 
 <template>
   <figure class="m-0">
-    <figcaption class="text-sm font-semibold">Accuracy when answering only the most confident signs</figcaption>
-    <svg :viewBox="`0 0 ${W} ${H}`" class="mt-2 w-full max-w-md" role="img" :aria-label="`Accuracy against the share of signs answered. ${summary}`" data-testid="coverage">
+    <figcaption class="text-sm font-semibold" :class="{ 'leading-tight': compact }">Accuracy when answering only the most confident signs</figcaption>
+    <svg :viewBox="`0 0 ${W} ${H}`" :class="compact ? 'mt-1 w-full max-w-sm' : 'mt-2 w-full max-w-md'" role="img" :aria-label="`Accuracy against the share of signs answered. ${summary}`" data-testid="coverage">
       <g stroke="currentColor" stroke-opacity="0.15">
         <line v-for="t in ticks" :key="`y${t}`" :x1="L" :x2="W - R" :y1="T + (1 - t) * (H - T - B)" :y2="T + (1 - t) * (H - T - B)" />
       </g>

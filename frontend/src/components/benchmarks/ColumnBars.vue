@@ -1,7 +1,7 @@
 <script setup>
 import { BAR_FILL, pct } from './benchmarkData'
 
-// bars: [{ key, label, value (0..1 or null), count (number of signs, optional) }]
+// bars: [{ key, label, short (optional, used when compact), value (0..1 or null), count (number of signs, optional) }]
 // One horizontal bar chart: categories down the left, every bar from the same
 // zero line on a shared 0-100% scale with gridlines, the value at the bar's end.
 defineProps({
@@ -10,6 +10,8 @@ defineProps({
   countLabel: { type: String, default: 'signs' },
   reduceMotion: { type: Boolean, default: false },
   empty: { type: String, default: 'Not available for this version.' },
+  // One line per category (label and n side by side), thinner rows: for narrow side columns.
+  compact: { type: Boolean, default: false },
 })
 const TICKS = [0, 25, 50, 75, 100]
 const label = (b, countLabel) => `${b.label}: ${pct(b.value, 0)}${b.count != null ? `, ${b.count} ${countLabel}` : ''}`
@@ -20,12 +22,12 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
   <figure class="m-0">
     <figcaption class="text-sm font-semibold">{{ title }}</figcaption>
     <p v-if="!bars.length" class="mt-2 text-sm text-ink/80">— {{ empty }}</p>
-    <div v-else class="chart mt-2 text-xs">
+    <div v-else class="chart mt-2 text-xs" :class="{ compact }">
       <ul class="m-0 list-none p-0" :aria-label="title">
         <li v-for="b in bars" :key="b.key" class="row" :data-bar="b.key">
           <span class="cat">
-            <span class="leading-tight">{{ b.label }}</span>
-            <span v-if="b.count != null" class="text-ink/70 tabular-nums">n = {{ b.count }}</span>
+            <span class="leading-tight">{{ compact ? (b.short ?? b.label) : b.label }}<template v-if="compact && b.count != null"> <span class="text-ink/70 tabular-nums">({{ b.count }})</span></template></span>
+            <span v-if="!compact && b.count != null" class="text-ink/70 tabular-nums">n = {{ b.count }}</span>
           </span>
           <span class="plot" role="img" :aria-label="label(b, countLabel)" :title="label(b, countLabel)">
             <span
@@ -91,6 +93,12 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
 .axis { min-height: 1rem; }
 .ticks { height: 1rem; background: none; }
 .tick { position: absolute; transform: translateX(-50%); color: rgb(0 0 0 / 0.65); }
+.compact { --label: 8rem; }
+.compact .row { min-height: 1.3rem; }
+.compact .plot { height: 1.3rem; margin-right: 2.25rem; }
+.compact .bar { top: 0.25rem; height: 0.8rem; }
+.compact .axis { min-height: 0.9rem; }
+.compact .ticks { height: 0.9rem; }
 .no-motion { transition: none; }
 @media (prefers-reduced-motion: reduce) { .bar, .value { transition: none; } }
 </style>

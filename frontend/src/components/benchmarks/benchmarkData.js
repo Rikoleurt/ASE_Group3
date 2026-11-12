@@ -98,6 +98,7 @@ export function accuracyColor(rate) {
 
 export const BUCKET_ORDER = ['unseen', '1', '2-4', '5+']
 export const BUCKET_LABELS = { unseen: 'Never seen in training', 1: '1 training example', '2-4': '2–4 examples', '5+': '5 or more examples' }
+export const BUCKET_SHORT = { unseen: 'Never seen', 1: '1 example', '2-4': '2–4 examples', '5+': '5+ examples' }
 
 export function naturalSignCompare(a, b) {
   return a.localeCompare(b, 'en', { numeric: true })
@@ -113,10 +114,10 @@ export function sortSigns(rows, how) {
 }
 
 export const HEADLINE_TILES = [
-  { key: 'read_top1', title: 'Signs read correctly', hint: 'found and named correctly, end to end', needs: 'detection and identification' },
-  { key: 'id_top1', title: 'Named correctly on true boxes', hint: 'given the right box, is the sign right', needs: 'identification' },
-  { key: 'recall', title: 'Signs found', hint: 'detection recall', needs: 'detection' },
-  { key: 'id_ece', title: 'Calibration error', hint: 'lower is better; confidence vs how often right', needs: 'identification' },
+  { key: 'read_top1', short: 'Read', title: 'Signs read correctly', hint: 'found and named correctly, end to end', needs: 'detection and identification' },
+  { key: 'id_top1', short: 'Named', title: 'Named correctly on true boxes', hint: 'given the right box, is the sign right', needs: 'identification' },
+  { key: 'recall', short: 'Found', title: 'Signs found', hint: 'detection recall', needs: 'detection' },
+  { key: 'id_ece', short: 'Calib. error', title: 'Calibration error', hint: 'lower is better; confidence vs how often right', needs: 'identification' },
 ]
 
 export function missingNote(tile, stages) {
