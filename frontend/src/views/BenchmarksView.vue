@@ -232,7 +232,7 @@ const selection = computed(() => {
   return { sign: s.sign, candidates, ...(s.drawing ? { reference: s.drawing } : {}) }
 })
 // The pane scrolls inside the column rather than lengthening the page.
-const paneMax = 'max(20rem, calc(100vh - 13rem))' // the window below the header, minus the pane title
+const paneMax = 'max(20rem, calc(100vh - 8.5rem))' // the window below the header, minus the pane title
 function onKey(e) { if (e.key === 'Escape' && picked.value) unpick() }
 const aboutVersion = computed(() => {
   const c = current.value
@@ -291,66 +291,67 @@ const cost = computed(() => {
     <p v-else-if="!versions.length" class="rounded-2xl bg-card p-4">No benchmark results have been published yet.</p>
 
     <template v-else>
-      <!-- Fixed slots, so switching or playing versions never moves the page: controls and
-           progress | metric squares (fixed size). -->
-      <section class="grid items-start gap-x-4 gap-y-2 lg:grid-cols-[minmax(0,30rem)_auto] lg:justify-between" aria-label="Version and playback">
+      <!-- Two columns from the top: header and sign grid on the left; on the right the tablet grid
+           and charts (aligned with the sign grid), or a picked sign's pane at full height. -->
+      <div ref="gridsRow" class="grid content-start gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" :style="rowMin ? { minHeight: `${rowMin}px` } : null">
         <div class="min-w-0">
-          <label class="block text-xs font-semibold" for="version-select">Model version</label>
-          <div class="mt-0.5 flex items-center gap-2">
-              <select
-                :value="selected"
-                id="version-select" :title="aboutVersion || null" aria-describedby="version-about" class="min-w-0 flex-1 rounded border border-ink/30 bg-page px-2 py-1 text-sm font-normal"
-                data-testid="version-select"
-                @change="onPick($event.target.value)"
-              >
-                <optgroup v-if="tiers.endToEnd.length" label="Read end to end (played)">
-                  <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
-                </optgroup>
-                <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable, not played)">
-                  <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
-                </optgroup>
-                <optgroup v-if="tiers.unscored.length" label="No score (not played)">
-                  <option v-for="v in tiers.unscored" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
-                </optgroup>
-              </select>
-              <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="play" @click="play">
-                Play worst → best
-              </button>
-              <template v-else>
-                <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" @click="togglePause">
-                  {{ mode === 'paused' ? 'Resume' : 'Pause' }}
-                </button>
-                <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="stop" @click="stop">Stop</button>
-              </template>
-          </div>
-          <div class="mt-1 h-5" data-testid="progress-slot">
-            <div v-if="showProgress" class="flex min-w-0 items-center gap-2" data-testid="progress">
-              <progress class="h-2 w-24" :value="Math.max(step + 1, 0)" :max="order.length" aria-label="Progress through the versions" />
-              <p role="status" class="min-w-0 truncate text-xs">
-                <template v-if="progressEntry">
-                  <strong>Version {{ step + 1 }} of {{ order.length }}: {{ progressEntry.version }}</strong>, {{ scoreText(progressEntry) }}
-                  <span v-if="mode === 'paused'"> (paused)</span>
-                  <span v-if="finished"> (done, best version)</span>
-                </template>
-                <template v-else>Loading all versions…</template>
-              </p>
+              <!-- Fixed slots, so switching or playing versions never moves the page: controls and
+                   progress, then the metric squares (fixed size) beside them. -->
+              <section class="flex flex-wrap items-start gap-x-4 gap-y-2" aria-label="Version and playback">
+            <div class="w-full min-w-0 sm:w-[34rem]">
+              <label class="block text-xs font-semibold" for="version-select">Model version</label>
+              <div class="mt-0.5 flex items-center gap-2">
+                  <select
+                    :value="selected"
+                    id="version-select" :title="aboutVersion || null" aria-describedby="version-about" class="min-w-0 flex-1 rounded border border-ink/30 bg-page px-2 py-1 text-sm font-normal"
+                    data-testid="version-select"
+                    @change="onPick($event.target.value)"
+                  >
+                    <optgroup v-if="tiers.endToEnd.length" label="Read end to end (played)">
+                      <option v-for="v in tiers.endToEnd" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
+                    </optgroup>
+                    <optgroup v-if="tiers.idOnly.length" label="Named on true boxes only (not comparable, not played)">
+                      <option v-for="v in tiers.idOnly" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
+                    </optgroup>
+                    <optgroup v-if="tiers.unscored.length" label="No score (not played)">
+                      <option v-for="v in tiers.unscored" :key="v.version" :value="v.version" :title="v.description || null">{{ optionText(v) }}</option>
+                    </optgroup>
+                  </select>
+                  <button v-if="!playing" type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="play" @click="play">
+                    Play worst → best
+                  </button>
+                  <template v-else>
+                    <button type="button" class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="pause" @click="togglePause">
+                      {{ mode === 'paused' ? 'Resume' : 'Pause' }}
+                    </button>
+                    <button type="button" class="cursor-pointer rounded bg-card px-3 py-1 text-sm font-semibold hover:brightness-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink" data-testid="stop" @click="stop">Stop</button>
+                  </template>
+              </div>
+              <div class="mt-1 h-5" data-testid="progress-slot">
+                <div v-if="showProgress" class="flex min-w-0 items-center gap-2" data-testid="progress">
+                  <progress class="h-2 w-24" :value="Math.max(step + 1, 0)" :max="order.length" aria-label="Progress through the versions" />
+                  <p role="status" class="min-w-0 truncate text-xs">
+                    <template v-if="progressEntry">
+                      <strong>Version {{ step + 1 }} of {{ order.length }}: {{ progressEntry.version }}</strong>, {{ scoreText(progressEntry) }}
+                      <span v-if="mode === 'paused'"> (paused)</span>
+                      <span v-if="finished"> (done, best version)</span>
+                    </template>
+                    <template v-else>Loading all versions…</template>
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <!-- The description is hover text on the dropdown (and each option); kept here for screen readers. -->
-        <p id="version-about" class="sr-only" data-testid="meta">{{ aboutVersion }}</p>
-        <div class="lg:h-[5.5rem] lg:w-[23.5rem]">
-          <MetricTiles v-if="current" :version="current" />
-        </div>
-      </section>
+            <!-- The description is hover text on the dropdown (and each option); kept here for screen readers. -->
+            <p id="version-about" class="sr-only" data-testid="meta">{{ aboutVersion }}</p>
+            <div class="sm:h-[5.5rem]">
+              <MetricTiles v-if="current" :version="current" />
+            </div>
+          </section>
 
-      <p v-if="skipped.length" role="status" class="mt-1 text-xs" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
-      <p v-if="detailError" role="alert" class="mt-2 rounded-2xl bg-card p-3">{{ detailError }}</p>
+          <p v-if="skipped.length" role="status" class="mt-1 text-xs" data-testid="skipped">Skipped in playback (could not be loaded): {{ skipped.join(', ') }}</p>
+          <p v-if="detailError" role="alert" class="mt-2 rounded-2xl bg-card p-3">{{ detailError }}</p>
 
-      <template v-if="current">
-
-        <div ref="gridsRow" class="mt-3 grid content-start gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]" :style="rowMin ? { minHeight: `${rowMin}px` } : null">
-          <section aria-labelledby="glyphs-h" class="min-w-0">
+          <section v-if="current" aria-labelledby="glyphs-h" class="mt-3 min-w-0">
             <h2 id="glyphs-h" class="text-sm font-bold">Every sign</h2>
             <p v-if="!grids" class="mt-1 rounded-2xl bg-card p-3 text-sm" data-testid="grid-note">Not measured: this version finds signs but does not name them, so there is no per-sign result.</p>
             <template v-else>
@@ -363,7 +364,9 @@ const cost = computed(() => {
               <div class="mt-1"><GlyphGrid :signs="current.signs ?? []" :mode="grids" :reduce-motion="reduceMotion" :picked="picked?.sign ?? null" @pick="pick" /></div>
             </template>
           </section>
-
+          <p v-if="!current && !detailError" role="status" class="mt-4">Loading {{ selected }}…</p>
+        </div>
+        <div v-if="current" class="min-w-0">
           <!-- A picked sign's corpus occurrences and shared comments take the place of the
                tablet grid and charts, so the page still fits on one screen. -->
           <section v-if="picked" aria-label="Occurrences of the picked sign" class="min-w-0" data-testid="picked-pane">
@@ -377,12 +380,12 @@ const cost = computed(() => {
               <GlyphOccurrencesPane :selection="selection" />
             </div>
           </section>
-          <section v-show="!picked" aria-labelledby="tablets-h" class="min-w-0">
+          <section v-show="!picked" aria-labelledby="tablets-h" class="min-w-0" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null">
             <h2 id="tablets-h" class="text-sm font-bold">Every tablet</h2>
             <div data-testid="tablet-block" :style="tabletMin ? { minHeight: `${tabletMin}px` } : null">
             <template v-if="grids">
               <p class="text-xs text-ink/80">Share of its signs {{ grids === 'id' ? 'named correctly' : 'read correctly' }}, same scale. Hover for counts.</p>
-              <div class="mt-1" :style="tabletPad ? { paddingTop: `${tabletPad}px` } : null" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
+              <div class="mt-1" data-testid="tablet-grid-wrap"><TabletGrid :tablets="current.tablet_results ?? []" :mode="grids" :reduce-motion="reduceMotion" /></div>
             </template>
             <p v-else class="rounded-2xl bg-card p-3 text-sm" data-testid="tablet-note">Not measured: no per-tablet result without sign names.</p>
             </div>
@@ -406,9 +409,7 @@ const cost = computed(() => {
             </div>
           </section>
         </div>
-
-      </template>
-      <p v-else-if="!detailError" role="status" class="mt-4">Loading {{ selected }}…</p>
+      </div>
     </template>
   </main>
 </template>
