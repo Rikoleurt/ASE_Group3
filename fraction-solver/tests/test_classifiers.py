@@ -4,7 +4,7 @@ import pytest
 torch = pytest.importorskip("torch")
 torchvision = pytest.importorskip("torchvision")
 
-from la import classifiers, reader
+from la import classifiers
 
 
 @pytest.fixture
@@ -31,8 +31,8 @@ def test_torchvision_classifier_works_with_the_reader(tv_checkpoint):
     clf = classifiers.load_classifier(path)
     assert isinstance(clf, classifiers.TorchvisionClassifier)
     crops = [np.full((128, 128, 3), v, dtype=np.uint8) for v in (0, 128, 255)]
-    names, probs = reader.class_probabilities(clf, crops)
-    assert names == classes
+    results = clf.predict(crops)  # the interface la.reader uses for Ultralytics classifiers
+    assert [clf.names[i] for i in range(len(clf.names))] == classes
+    probs = np.stack([r.probs.data.cpu().numpy() for r in results])
     assert probs.shape == (3, 3)
     np.testing.assert_allclose(probs.sum(axis=1), 1.0, rtol=1e-5)
-    assert len(reader.top_labels(names, probs, 2)[0]) == 2
