@@ -305,7 +305,8 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
       aria-labelledby="glyph-selected-title"
     >
       <h3 id="glyph-selected-title" class="sr-only">Selected glyph</h3>
-      <div class="flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white">
+      <!-- The clicked crop; when there is none but a Unicode character is shown, the empty box is left out. -->
+      <div v-if="clickedImage || !activeCharacter" class="flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white">
         <img v-if="clickedImage" :src="clickedImage" :alt="`The glyph you selected, read as ${active}`" class="max-h-full max-w-full" data-testid="glyph-selected-crop" />
         <span v-else class="px-1 text-center text-xs text-ink/70">No image of the glyph</span>
       </div>
