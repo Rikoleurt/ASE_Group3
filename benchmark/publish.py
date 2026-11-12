@@ -21,7 +21,7 @@ import argparse
 import json
 import math
 import sys
-from collections import defaultdict
+from collections import Counter, defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -47,6 +47,11 @@ def _glyph(sign: str) -> str | None:
 
 def _num(x):
     return None if x is None or math.isnan(float(x)) else round(float(x), 4)
+
+
+def role_counts(records: list[M.TabletRecord]) -> dict[str, int]:
+    """True signs per role (a sign's role on that tablet), the n behind `by_role`."""
+    return dict(sorted(Counter(i.role for i in M._idents(records)).items()))
 
 
 def per_sign(records: list[M.TabletRecord]) -> list[dict]:
@@ -109,6 +114,7 @@ def version_document(name: str, result: dict, records: list[M.TabletRecord], run
                          for k, d in result.get("vs_reference", {}).items() if k in HEADLINE},
         "by_role": groups["role"], "by_bucket": groups["bucket"],
         "bucket_counts": {b: result["counts"].get(f"bucket_{b}", 0) for b in M.BUCKETS},
+        "role_counts": role_counts(records),
         "cost": {"latency_s": _num(result.get("latency_s_median")), "weights_mb": result.get("weights_mb"),
                  "train_minutes": _num((result.get("train_seconds") or 0) / 60) if result.get("train_seconds") else None},
         "coverage_curve": [{k: _num(v) for k, v in p.items()} for p in result.get("coverage_curve", [])],

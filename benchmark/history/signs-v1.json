@@ -4617,5 +4617,12 @@
    "identified": 7,
    "id_correct": 5
   }
- ]
+ ],
+ "role_counts": {
+  "fraction": 46,
+  "logogram": 258,
+  "syllabogram": 691,
+  "transaction": 3,
+  "unknown": 2
+ }
 }
