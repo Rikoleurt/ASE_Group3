@@ -194,7 +194,7 @@ def test_identity_export_preserves_readings_and_links_boxes_to_sources(corpus, t
     catalogue = json.loads((out / "classes.json").read_text())
     assert [c["name"] for c in catalogue] == ["A707", "AB01 (da)"]
     assert catalogue[1]["reading"] == "da"
-    assert config["path"] == str(out.resolve())
+    assert config["path"] == out.resolve().as_posix()  # forward slashes on every OS, as data.yaml is written
     annotations = json.loads((out / "annotations.json").read_text())
     for tablet in annotations:
         rows = (out / tablet["labels"]).read_text().splitlines()
