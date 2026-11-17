@@ -269,9 +269,10 @@ def test_login_prefers_email_when_both_identifiers_are_given(client, connection)
     }
     response = client.post("/users/login", json={"email": "dev@ase3.com", "username": "other", "password": "dev"})
     assert response.status_code == 200
-    sql, parameters = connection.cursor.return_value.execute.call_args.args
-    assert "WHERE email = %s" in sql
-    assert parameters == ("dev@ase3.com",)
+    # Login also opens a session (#65), so find the user lookup among the statements.
+    lookups = [call.args for call in connection.cursor.return_value.execute.call_args_list
+               if call.args[0].lstrip().startswith("SELECT") and "password" in call.args[0]]
+    assert [(("WHERE email = %s" in sql), parameters) for sql, parameters in lookups] == [(True, ("dev@ase3.com",))]
 
 
 def test_registration_accepts_maximum_lengths(client, connection):
