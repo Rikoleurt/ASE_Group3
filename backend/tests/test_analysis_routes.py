@@ -6,6 +6,8 @@ Uploading needs a logged-in user (with a CSRF token) since the history feature
 user and mock the save; the login itself is tested at the end."""
 
 from datetime import datetime, timezone
+import struct
+import zlib
 from io import BytesIO
 from unittest.mock import patch
 
@@ -97,13 +99,33 @@ def test_reading_an_upload_needs_no_database_besides_the_history_save(client, mo
     assert upload(client, image_bytes("PNG")).status_code == 200
 
 
-@pytest.mark.xfail(reason="Known bug #27: DecompressionBombError is not caught and becomes a 500")
 def test_decompression_bomb_is_rejected_not_a_server_error(client, monkeypatch):
     # Pillow raises DecompressionBombError above 2 x MAX_IMAGE_PIXELS. Lowering the
     # limit gives the same error as a real bomb without building a huge file.
     monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 100)
     response = upload(client, image_bytes("PNG", size=(20, 20)))
-    assert response.status_code in {413, 422}
+    assert response.status_code == 422
+    assert response.json() == {"detail": "The image dimensions are too large."}
+
+
+@pytest.mark.filterwarnings("ignore::PIL.Image.DecompressionBombWarning")
+def test_image_between_one_and_two_pixel_limits_is_rejected_before_decoding(client, monkeypatch):
+    # Pillow only warns here and would decode the whole image.
+    monkeypatch.setattr(Image, "MAX_IMAGE_PIXELS", 300)
+    response = upload(client, image_bytes("PNG", size=(20, 20)))
+    assert response.status_code == 422
+    assert response.json() == {"detail": "The image dimensions are too large."}
+
+
+def test_tiny_file_declaring_huge_dimensions_is_rejected(client):
+    content = bytearray(image_bytes("PNG", size=(1, 1)))
+    header = struct.pack(">II", 20_000, 20_000) + content[24:29]
+    content[16:29] = header
+    content[29:33] = struct.pack(">I", zlib.crc32(b"IHDR" + header))
+    response = upload(client, bytes(content))
+    assert response.status_code == 422
+    # The route's 40-megapixel check (#65) catches 400 megapixels before the reader's own check (#64).
+    assert response.json() == {"detail": "The image exceeds the 40 megapixel limit."}
 
 
 def test_upload_without_login_is_refused(anonymous, monkeypatch):
