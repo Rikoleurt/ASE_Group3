@@ -13,6 +13,9 @@
   --color-confidence-high: #15803d;
   --color-confidence-mid: #d97706;
   --color-confidence-low: #dc2626;
+  /* Benchmark verdicts as text on cards: darker than the confidence colours for >= 4.5:1 contrast on --color-card. */
+  --color-better: #166534;
+  --color-worse: #991b1b;
 }
 
 @layer base {

@@ -62,4 +62,28 @@ describe('Analysis page', () => {
 
     expect(wrapper.get('[role="alert"]').text()).toBe('The sign reader is unavailable.')
   })
+
+  it('opens the other-tablets pane when a sign box is clicked', async () => {
+    const withCrop = { ...analysis, signs: analysis.signs.map((sign) => ({ ...sign, crop: 'data:image/png;base64,iVBORw0KGgo=' })) }
+    const calls = []
+    const fetch = vi.fn((url, options) => {
+      calls.push([url, options])
+      if (url === '/api/users/me') return Promise.resolve({ ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) })
+      if (url.includes('/occurrences/search')) return Promise.resolve({ ok: true, json: async () => ({ sign: 'AB59', total: 0, limit: 30, offset: 0, ranked_by: 'glyph', items: [], credit: null }) })
+      if (url.includes('/annotations')) return Promise.resolve({ ok: true, json: async () => ({ items: [], next_before: null }) })
+      return Promise.resolve({ ok: true, json: async () => withCrop })
+    })
+    vi.stubGlobal('fetch', fetch)
+    wrapper = mount(AnalysisView)
+    const input = wrapper.get('input[type="file"]')
+    Object.defineProperty(input.element, 'files', { value: [new File(['png'], 'tablet.png', { type: 'image/png' })] })
+    await input.trigger('change')
+    await flushPromises()
+    expect(wrapper.find('[data-testid="glyph-pane"]').exists()).toBe(false)
+    await wrapper.findAll('[data-testid="sign-box"]')[0].trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[data-testid="glyph-pane"]').text()).toContain('Other tablets with this sign')
+    expect(calls.some(([url]) => url === '/api/glyphs/AB59/occurrences/search')).toBe(true)
+    expect(wrapper.findAll('[data-testid="sign-box"]')[0].attributes('aria-pressed')).toBe('true')
+  })
 })

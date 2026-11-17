@@ -1,10 +1,11 @@
 <script setup>
-import { ref, onBeforeUnmount } from 'vue'
+import { computed, ref, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { sessionFetch } from '../state/session'
 const router = useRouter()
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -13,6 +14,13 @@ const FILENAME = ref('')
 const PREVIEW_URL = ref('')
 const ANALYSIS = ref(null)
 const IS_DRAGGING = ref(false)
+const SELECTED = ref(null)
+// The box the reader clicked: its sign, the reader's other guesses and the crop to compare with the corpus.
+const SELECTION = computed(() => SELECTED.value?.sign ? {
+    sign: SELECTED.value.sign,
+    candidates: SELECTED.value.candidates,
+    crop: SELECTED.value.crop || null,
+} : null)
 
 // ROUTE
 
@@ -83,6 +91,7 @@ function onInputChange(event) {
 function reset() {
     revokePreview()
     ANALYSIS.value = null
+    SELECTED.value = null
     FILENAME.value = ''
     ERROR_MESSAGE.value = ''
     STATUS.value = 'idle'
@@ -149,7 +158,7 @@ onBeforeUnmount(revokePreview)
 
     <section v-else-if="STATUS === 'result'" class="flex flex-col gap-8 md:flex-row">
         <div class="md:w-1/2">
-            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas">
+            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas" :selected-id="SELECTED?.id ?? null" @select="SELECTED = $event">
                 <img :src="PREVIEW_URL" :alt="FILENAME" class="w-full rounded-lg bg-white" />
             </TabletOverlay>
         </div>
@@ -187,5 +196,6 @@ onBeforeUnmount(revokePreview)
     </section>
 
     <FractionCheck v-if="STATUS === 'result'" :analysis="ANALYSIS" class="mt-8" />
+    <GlyphOccurrencesPane v-if="STATUS === 'result'" :selection="SELECTION" class="mt-8" />
 </main>
 </template>

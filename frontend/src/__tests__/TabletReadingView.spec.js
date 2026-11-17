@@ -130,4 +130,38 @@ describe('Tablet reading', () => {
     await flushPromises()
     expect(router.currentRoute.value.path).toBe('/tablet-demo')
   })
+
+  it('finds a fraction sign on other tablets, ordered by its own drawing', async () => {
+    const withIds = {
+      ...fractionSigns,
+      signs: fractionSigns.signs.map((sign) => ({
+        ...sign, transcribed: { sign: 'A707', label: 'J' },
+        guesses: sign.guesses.map((guess) => ({ ...guess, sign: guess.label === 'J' ? 'A707' : `A70${guess.label}` })),
+      })),
+    }
+    const base = api({ fractions: withIds })
+    const fetch = vi.fn(async (url, options) => {
+      if (url.includes('/glyphs/')) {
+        return url.includes('/occurrences')
+          ? { ok: true, json: async () => ({ sign: 'A707', total: 0, limit: 30, offset: 0, ranked_by: 'glyph', items: [], credit: null }) }
+          : { ok: true, json: async () => ({ items: [], next_before: null }) }
+      }
+      if (url === '/api/users/me') return { ok: false, status: 401, json: async () => ({}) }
+      return base(url, options)
+    })
+    vi.stubGlobal('fetch', fetch)
+    await render()
+    expect(wrapper.find('[data-testid="glyph-pane"]').exists()).toBe(false)
+    await wrapper.findAll('[data-testid="fraction-sign"] button')[1].trigger('click')
+    await flushPromises()
+    const url = fetch.mock.calls.find(([u]) => u.includes('/occurrences'))[0]
+    expect(url).toBe('/api/glyphs/A707/occurrences?limit=30&offset=0&ref_tablet=HT-13&ref_position=14')
+    expect(wrapper.findAll('[data-testid="glyph-tab"]').map((tab) => tab.text())).toEqual(['A707 (J)', 'A70D (D)', 'A70B (B)'].slice(0, 2))
+  })
+
+  it('offers no sign search when the signs have no IDs', async () => {
+    vi.stubGlobal('fetch', api())
+    await render()
+    expect(wrapper.find('[data-testid="fraction-sign"] button').exists()).toBe(false)
+  })
 })
