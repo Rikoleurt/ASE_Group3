@@ -1,0 +1,3671 @@
+{
+ "schema": 1,
+ "version": "identity-baseline",
+ "description": "361-class detector that finds and names signs at once (stopped at epoch 44, out of GPU memory)",
+ "kind": "one_stage",
+ "stages": {
+  "detection": true,
+  "identification": false
+ },
+ "split": "val",
+ "tablets": 131,
+ "run": "baseline-val",
+ "scored": "20261111T112430Z",
+ "published": "2026-11-11T12:44:33Z",
+ "reference": "signs-v1",
+ "metrics": {
+  "read_top1": 0.006,
+  "read_top3": 0.006,
+  "precision": 0.803,
+  "recall": 0.053,
+  "ap50": 0.4037
+ },
+ "ci95": {
+  "read_top1": [
+   0.0013,
+   0.0107
+  ],
+  "read_top3": [
+   0.0013,
+   0.0107
+  ],
+  "precision": [
+   0.6665,
+   0.9231
+  ],
+  "recall": [
+   0.038,
+   0.0672
+  ],
+  "ap50": [
+   0.3616,
+   0.4463
+  ]
+ },
+ "vs_reference": {
+  "precision": {
+   "diff": -0.0656,
+   "lo": -0.1928,
+   "hi": 0.0521,
+   "verdict": "tie"
+  },
+  "read_top3": {
+   "diff": -0.699,
+   "lo": -0.7627,
+   "hi": -0.6305,
+   "verdict": "worse"
+  },
+  "recall": {
+   "diff": -0.833,
+   "lo": -0.8763,
+   "hi": -0.7883,
+   "verdict": "worse"
+  },
+  "ap50": {
+   "diff": -0.497,
+   "lo": -0.5353,
+   "hi": -0.4614,
+   "verdict": "worse"
+  },
+  "read_top1": {
+   "diff": -0.602,
+   "lo": -0.6647,
+   "hi": -0.5389,
+   "verdict": "worse"
+  }
+ },
+ "by_role": {},
+ "by_bucket": {},
+ "bucket_counts": {
+  "unseen": 0,
+  "1": 0,
+  "2-4": 0,
+  "5+": 0
+ },
+ "cost": {
+  "latency_s": 0.2488,
+  "weights_mb": 22.44,
+  "train_minutes": 72.6928
+ },
+ "coverage_curve": [],
+ "sweep": [
+  {
+   "conf": 0.05,
+   "precision": 0.5006,
+   "recall": 0.431,
+   "read_top1": 0.015,
+   "read_top3": 0.015,
+   "read_top1_learnable": 0.0163,
+   "named_given_found": 0.0348
+  },
+  {
+   "conf": 0.1,
+   "precision": 0.66,
+   "recall": 0.231,
+   "read_top1": 0.012,
+   "read_top3": 0.012,
+   "read_top1_learnable": 0.013,
+   "named_given_found": 0.0519
+  },
+  {
+   "conf": 0.15,
+   "precision": 0.7283,
+   "recall": 0.134,
+   "read_top1": 0.01,
+   "read_top3": 0.01,
+   "read_top1_learnable": 0.0109,
+   "named_given_found": 0.0746
+  },
+  {
+   "conf": 0.25,
+   "precision": 0.803,
+   "recall": 0.053,
+   "read_top1": 0.006,
+   "read_top3": 0.006,
+   "read_top1_learnable": 0.0065,
+   "named_given_found": 0.1132
+  },
+  {
+   "conf": 0.35,
+   "precision": 0.7778,
+   "recall": 0.028,
+   "read_top1": 0.003,
+   "read_top3": 0.003,
+   "read_top1_learnable": 0.0033,
+   "named_given_found": 0.1071
+  },
+  {
+   "conf": 0.5,
+   "precision": 1.0,
+   "recall": 0.009,
+   "read_top1": 0.002,
+   "read_top3": 0.002,
+   "read_top1_learnable": 0.0022,
+   "named_given_found": 0.2222
+  },
+  {
+   "conf": 0.65,
+   "precision": 1.0,
+   "recall": 0.001,
+   "read_top1": 0.0,
+   "read_top3": 0.0,
+   "read_top1_learnable": 0.0,
+   "named_given_found": 0.0
+  },
+  {
+   "conf": 0.8,
+   "precision": null,
+   "recall": 0.0,
+   "read_top1": 0.0,
+   "read_top3": 0.0,
+   "read_top1_learnable": 0.0,
+   "named_given_found": null
+  }
+ ],
+ "signs": [
+  {
+   "sign": "A1000",
+   "glyph": null,
+   "drawing": {
+    "tablet": "PH-31a",
+    "position": 14
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A1001",
+   "glyph": null,
+   "drawing": {
+    "tablet": "PH-31b",
+    "position": 19
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A301",
+   "glyph": "𐙕",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 12,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A303",
+   "glyph": "𐙗",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A304",
+   "glyph": "𐙘",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A305",
+   "glyph": "𐙙",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A306",
+   "glyph": "𐙚",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A308",
+   "glyph": "𐙜",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A309a",
+   "glyph": "𐙝",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A309b",
+   "glyph": "𐙞",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A309c",
+   "glyph": "𐙟",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A310",
+   "glyph": "𐙠",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A312",
+   "glyph": "𐙢",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A314",
+   "glyph": "𐙦",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A317",
+   "glyph": "𐙩",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A320",
+   "glyph": "𐙬",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A321",
+   "glyph": "𐙭",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A323",
+   "glyph": "𐙯",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A325",
+   "glyph": "𐙱",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A328",
+   "glyph": "𐙴",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A329",
+   "glyph": "𐙵",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A331",
+   "glyph": "𐙷",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A334",
+   "glyph": "𐙺",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A339",
+   "glyph": "𐙿",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A341",
+   "glyph": "𐚁",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A347",
+   "glyph": "𐚇",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A351",
+   "glyph": "𐚋",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A357",
+   "glyph": "𐚑",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A358",
+   "glyph": "𐚒",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A361",
+   "glyph": "𐚕",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A364",
+   "glyph": "𐚘",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A402",
+   "glyph": "𐚢",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A408",
+   "glyph": "𐚨",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A409",
+   "glyph": "𐚩",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A410",
+   "glyph": "𐚪",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A411b",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2008",
+    "position": 1
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A411c",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2013",
+    "position": 1
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A415",
+   "glyph": "𐚯",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A416",
+   "glyph": "𐚰",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A417",
+   "glyph": "𐚱",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A507",
+   "glyph": null,
+   "drawing": {
+    "tablet": "ZA-15a",
+    "position": 14
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A508",
+   "glyph": "𐚹",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A509",
+   "glyph": "𐚺",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A512",
+   "glyph": "𐚽",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A513",
+   "glyph": "𐚾",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A516",
+   "glyph": "𐛀",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A517",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-120",
+    "position": 13
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A518",
+   "glyph": null,
+   "drawing": {
+    "tablet": "ZA-11b",
+    "position": 9
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A526",
+   "glyph": "𐛆",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A531",
+   "glyph": "𐛋",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A537",
+   "glyph": "𐛐",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A539",
+   "glyph": "𐛒",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A546",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-24a",
+    "position": 5
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A552",
+   "glyph": "𐛜",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A555",
+   "glyph": "𐛟",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A560",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-24a",
+    "position": 20
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A561",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-24a",
+    "position": 6
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A568",
+   "glyph": "𐛧",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A571",
+   "glyph": "𐛪",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A574",
+   "glyph": "𐛭",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 7,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A578",
+   "glyph": "𐛱",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A580",
+   "glyph": "𐛳",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A581",
+   "glyph": "𐛴",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A584",
+   "glyph": "𐛷",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A594",
+   "glyph": "𐛿",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A599",
+   "glyph": null,
+   "drawing": {
+    "tablet": "MA-6c",
+    "position": 2
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A600",
+   "glyph": "𐜃",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A601",
+   "glyph": "𐜄",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A602",
+   "glyph": "𐜅",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A603",
+   "glyph": "𐜆",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A604",
+   "glyph": "𐜇",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A605",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-74",
+    "position": 7
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A606",
+   "glyph": "𐜈",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A607",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2065",
+    "position": 1
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A608",
+   "glyph": "𐜉",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A610",
+   "glyph": "𐜋",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A611",
+   "glyph": "𐜌",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A612",
+   "glyph": "𐜍",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A615",
+   "glyph": "𐜐",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A618",
+   "glyph": "𐜓",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A619",
+   "glyph": "𐜔",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A620",
+   "glyph": "𐜕",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A621",
+   "glyph": "𐜖",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A622",
+   "glyph": "𐜗",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A624",
+   "glyph": "𐜙",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 14,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A626",
+   "glyph": "𐜚",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A627",
+   "glyph": "𐜛",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A629",
+   "glyph": "𐜝",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A632",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-13",
+    "position": 5
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A637",
+   "glyph": "𐜟",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A638",
+   "glyph": "𐜠",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A641",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-7a",
+    "position": 2
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A644",
+   "glyph": "𐜤",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A646",
+   "glyph": "𐜦",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A651",
+   "glyph": "𐜩",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A653",
+   "glyph": "𐜫",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A684",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-20",
+    "position": 21
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A701",
+   "glyph": "𐝀",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A702",
+   "glyph": "𐝁",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A703",
+   "glyph": "𐝂",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A704",
+   "glyph": "𐝃",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 11,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A705",
+   "glyph": "𐝄",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A707",
+   "glyph": "𐝆",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 17,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A708",
+   "glyph": "𐝇",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A7092",
+   "glyph": "𐝉",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "A7094",
+   "glyph": "𐝋",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB01",
+   "glyph": "𐘀",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 26,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB02",
+   "glyph": "𐘁",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 10,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB03",
+   "glyph": "𐘂",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 17,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB04",
+   "glyph": "𐘃",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 14,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB05",
+   "glyph": "𐘄",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB06",
+   "glyph": "𐘅",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 17,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB07",
+   "glyph": "𐘆",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 15,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB08",
+   "glyph": "𐘇",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 27,
+   "e2e_correct": 2,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB09",
+   "glyph": "𐘈",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 12,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB10",
+   "glyph": "𐘉",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 10,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB100",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-102",
+    "position": 10
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB11",
+   "glyph": "𐘊",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB118",
+   "glyph": "𐙈",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB120",
+   "glyph": "𐙉",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 10,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB120b",
+   "glyph": null,
+   "drawing": {
+    "tablet": "ARKH-3a",
+    "position": 3
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB122",
+   "glyph": "𐙋",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB123",
+   "glyph": "𐙌",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB13",
+   "glyph": "𐘋",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB130",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-61",
+    "position": 7
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB131a",
+   "glyph": "𐙍",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 11,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB131b",
+   "glyph": "𐙎",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB131c",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-18",
+    "position": 5
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB16",
+   "glyph": "𐘌",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB164a",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-17",
+    "position": 2
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB164c",
+   "glyph": null,
+   "drawing": {
+    "tablet": "KH-Wc-2041",
+    "position": 1
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB17",
+   "glyph": "𐘍",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 11,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB180",
+   "glyph": "𐙒",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB21",
+   "glyph": "𐘏",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB21f",
+   "glyph": "𐘐",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 9,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB21m",
+   "glyph": "𐘑",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 5,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB22f",
+   "glyph": "𐘓",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB22m",
+   "glyph": "𐘔",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB23",
+   "glyph": "𐘕",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB24",
+   "glyph": "𐘗",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 9,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB26",
+   "glyph": "𐘘",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 17,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB27",
+   "glyph": "𐘙",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 21,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB28",
+   "glyph": "𐘚",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 18,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB28b",
+   "glyph": null,
+   "drawing": {
+    "tablet": "ZA-15a",
+    "position": 18
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB30",
+   "glyph": "𐘝",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 11,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB302",
+   "glyph": null,
+   "drawing": {
+    "tablet": "ARKH-3b",
+    "position": 8
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB31",
+   "glyph": "𐘞",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 20,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB34",
+   "glyph": "𐘟",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB37",
+   "glyph": "𐘠",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 12,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB38",
+   "glyph": "𐘡",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 6,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB39",
+   "glyph": "𐘢",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 9,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB40",
+   "glyph": "𐘣",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 4,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB41",
+   "glyph": "𐘤",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 22,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB43",
+   "glyph": null,
+   "drawing": {
+    "tablet": "MY-Zf-2",
+    "position": 1
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB44",
+   "glyph": "𐘥",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB45",
+   "glyph": "𐘦",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 2,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB46",
+   "glyph": "𐘧",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB47",
+   "glyph": "𐘨",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB48",
+   "glyph": "𐘩",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB49",
+   "glyph": "𐘪",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB50",
+   "glyph": "𐘫",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 7,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB51",
+   "glyph": "𐘬",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 9,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB53",
+   "glyph": "𐘭",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 21,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB54",
+   "glyph": "𐘮",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 7,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB55",
+   "glyph": "𐘯",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 10,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB56",
+   "glyph": "𐘰",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 9,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB57",
+   "glyph": "𐘱",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 23,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB58",
+   "glyph": "𐘲",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 9,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB59",
+   "glyph": "𐘳",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 21,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB60",
+   "glyph": "𐘴",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 15,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB61",
+   "glyph": "𐘵",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 7,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB65",
+   "glyph": "𐘶",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 12,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB66",
+   "glyph": "𐘷",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB67",
+   "glyph": "𐘸",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 17,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB69",
+   "glyph": "𐘹",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 11,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB70",
+   "glyph": "𐘺",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 7,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB72",
+   "glyph": null,
+   "drawing": {
+    "tablet": "HT-28a",
+    "position": 15
+   },
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB73",
+   "glyph": "𐘻",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 14,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB74",
+   "glyph": "𐘼",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 6,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB76",
+   "glyph": "𐘽",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 8,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB77",
+   "glyph": "𐘾",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 17,
+   "e2e_correct": 4,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB78",
+   "glyph": "𐘿",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 7,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB79",
+   "glyph": "𐙀",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 3,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB80",
+   "glyph": "𐙁",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 19,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB81",
+   "glyph": "𐙂",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 36,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "AB85",
+   "glyph": "𐙄",
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 1,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  },
+  {
+   "sign": "unidentified",
+   "glyph": null,
+   "drawing": null,
+   "n": 0,
+   "id_correct": 0,
+   "e2e_n": 67,
+   "e2e_correct": 0,
+   "role": "unknown",
+   "bucket": null,
+   "confused_with": []
+  }
+ ],
+ "tablet_results": [
+  {
+   "tablet": "ARKH 3a",
+   "truths": 12,
+   "found": 0,
+   "named": 12,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ARKH 3b",
+   "truths": 9,
+   "found": 0,
+   "named": 9,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ARKH 7",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 10a",
+   "truths": 24,
+   "found": 1,
+   "named": 24,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 10b",
+   "truths": 17,
+   "found": 3,
+   "named": 17,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 117a",
+   "truths": 61,
+   "found": 5,
+   "named": 61,
+   "read_top1": 1,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 117b",
+   "truths": 9,
+   "found": 0,
+   "named": 9,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 120",
+   "truths": 23,
+   "found": 1,
+   "named": 23,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 139",
+   "truths": 9,
+   "found": 0,
+   "named": 9,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 141",
+   "truths": 5,
+   "found": 0,
+   "named": 5,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 144",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 16",
+   "truths": 16,
+   "found": 0,
+   "named": 16,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 18",
+   "truths": 9,
+   "found": 1,
+   "named": 9,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 20",
+   "truths": 22,
+   "found": 1,
+   "named": 22,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 24a",
+   "truths": 17,
+   "found": 2,
+   "named": 17,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 24b",
+   "truths": 9,
+   "found": 0,
+   "named": 9,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 28a",
+   "truths": 31,
+   "found": 3,
+   "named": 31,
+   "read_top1": 2,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 28b",
+   "truths": 27,
+   "found": 2,
+   "named": 27,
+   "read_top1": 1,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 31",
+   "truths": 33,
+   "found": 2,
+   "named": 33,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 33",
+   "truths": 18,
+   "found": 0,
+   "named": 18,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 36",
+   "truths": 9,
+   "found": 1,
+   "named": 9,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 40",
+   "truths": 12,
+   "found": 0,
+   "named": 12,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 55a",
+   "truths": 10,
+   "found": 0,
+   "named": 10,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 55b",
+   "truths": 5,
+   "found": 1,
+   "named": 5,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 57a",
+   "truths": 5,
+   "found": 0,
+   "named": 5,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 57b",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 65",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 75",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 7a",
+   "truths": 15,
+   "found": 1,
+   "named": 15,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT 7b",
+   "truths": 6,
+   "found": 1,
+   "named": 6,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1007",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1009",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1010",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1015",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1128",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1148",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1150",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1255",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1282",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1293",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1308",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1451",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1481",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1490",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1533",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1544",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1559",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1579",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1612",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1624",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1625",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1753",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1766",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wa 1809",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wc 3016a",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wc 3016b",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Wc 3019",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "HT Zb 159",
+   "truths": 6,
+   "found": 1,
+   "named": 6,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 13",
+   "truths": 8,
+   "found": 0,
+   "named": 8,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 20",
+   "truths": 10,
+   "found": 0,
+   "named": 10,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 24",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 33",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 42",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 6",
+   "truths": 31,
+   "found": 2,
+   "named": 31,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 61",
+   "truths": 6,
+   "found": 0,
+   "named": 6,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 73",
+   "truths": 7,
+   "found": 1,
+   "named": 7,
+   "read_top1": 1,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 74",
+   "truths": 7,
+   "found": 0,
+   "named": 7,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 7a",
+   "truths": 29,
+   "found": 4,
+   "named": 29,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 7b",
+   "truths": 12,
+   "found": 1,
+   "named": 12,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 84",
+   "truths": 6,
+   "found": 0,
+   "named": 6,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH 94",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wa 1008",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wa 1009",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wa 1012",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2001",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2006",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2013",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2015",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2018",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2025",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2035",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2041",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2043",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2048",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2065",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2101",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2102",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2103",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KH Wc 2104",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN 22a",
+   "truths": 6,
+   "found": 0,
+   "named": 6,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN 22b",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN 22c",
+   "truths": 6,
+   "found": 0,
+   "named": 6,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Wb 33a",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Wb 33b",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Wc <24a>",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Wc <25>",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Zb 35",
+   "truths": 5,
+   "found": 0,
+   "named": 5,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Ze 16",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "KN Zf 13",
+   "truths": 19,
+   "found": 0,
+   "named": 19,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 4a",
+   "truths": 5,
+   "found": 0,
+   "named": 5,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 4b",
+   "truths": 4,
+   "found": 0,
+   "named": 4,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 6a",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 6b",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 6c",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA 6d",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MA Wc <5b>",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "MY Zf 2",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 15a",
+   "truths": 4,
+   "found": 0,
+   "named": 4,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 15b",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 16a",
+   "truths": 7,
+   "found": 0,
+   "named": 7,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 16b",
+   "truths": 6,
+   "found": 0,
+   "named": 6,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 19",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 31a",
+   "truths": 22,
+   "found": 4,
+   "named": 22,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH 31b",
+   "truths": 25,
+   "found": 4,
+   "named": 25,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wb 34",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc 42",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc 45",
+   "truths": 3,
+   "found": 0,
+   "named": 3,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc 46",
+   "truths": 2,
+   "found": 0,
+   "named": 2,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "PH Wc <47>",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "SY Za 4",
+   "truths": 13,
+   "found": 3,
+   "named": 13,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "TY 2",
+   "truths": 46,
+   "found": 2,
+   "named": 46,
+   "read_top1": 1,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "TY 3a",
+   "truths": 37,
+   "found": 1,
+   "named": 37,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "TY 3b",
+   "truths": 14,
+   "found": 1,
+   "named": 14,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 11a",
+   "truths": 24,
+   "found": 0,
+   "named": 24,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 11b",
+   "truths": 15,
+   "found": 1,
+   "named": 15,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 15a",
+   "truths": 34,
+   "found": 1,
+   "named": 34,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 15b",
+   "truths": 7,
+   "found": 1,
+   "named": 7,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 20",
+   "truths": 21,
+   "found": 0,
+   "named": 21,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 28",
+   "truths": 1,
+   "found": 0,
+   "named": 1,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA 9",
+   "truths": 28,
+   "found": 1,
+   "named": 28,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  },
+  {
+   "tablet": "ZA Wc 2",
+   "truths": 7,
+   "found": 0,
+   "named": 7,
+   "read_top1": 0,
+   "identified": 0,
+   "id_correct": 0
+  }
+ ],
+ "role_counts": {}
+}

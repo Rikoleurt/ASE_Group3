@@ -1,7 +1,7 @@
 """Download the trained sign reader into models/ from its GitHub release.
 
-    python scripts/fetch_models.py            # release signs-v1
-    python scripts/fetch_models.py --tag signs-v2 --force
+    python scripts/fetch_models.py                  # release reader-v2
+    python scripts/fetch_models.py --tag signs-v1   # the first release (detector + classifier only)
 
 The repository is private, so a token is needed: GITHUB_TOKEN or GH_TOKEN, or
 the GitHub login git already has saved (read from `git credential fill`, never
@@ -19,6 +19,9 @@ from pathlib import Path
 
 REPO = "Rikoleurt/ASE_Group3"
 ASSETS = ("linear_a_signs.pt", "linear_a_classifier.pt", "linear_a_classifier.json")
+# Downloaded when the release has them: the reader refinements the app uses when present
+# (scripts/build_reader.py) and the glyph pane's similarity embeddings (scripts/build_glyph_embeddings.py).
+OPTIONAL = ("linear_a_reader.json", "linear_a_bank.npz", "linear_a_comparer.pt", "glyph_embeddings.npz")
 MODELS = Path(__file__).resolve().parents[1] / "models"
 
 
@@ -45,7 +48,7 @@ def request(url: str, auth: str | None, accept: str) -> urllib.request.Request:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--tag", default="signs-v1", help="release tag (default: signs-v1)")
+    parser.add_argument("--tag", default="reader-v2", help="release tag (default: reader-v2)")
     parser.add_argument("--force", action="store_true", help="download files that are already present")
     args = parser.parse_args()
 
@@ -67,7 +70,7 @@ def main() -> int:
         return 1
 
     MODELS.mkdir(exist_ok=True)
-    for name in ASSETS:
+    for name in ASSETS + tuple(name for name in OPTIONAL if name in assets):
         target = MODELS / name
         if target.is_file() and not args.force:
             print(f"kept       {target.relative_to(MODELS.parent)}")
