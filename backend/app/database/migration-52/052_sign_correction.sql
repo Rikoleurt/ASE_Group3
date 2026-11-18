@@ -1,0 +1,30 @@
+-- Additive, rerunnable migration. Select the application database before running.
+
+CREATE TABLE IF NOT EXISTS sign_correction (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    analysis_id BIGINT UNSIGNED NOT NULL,
+    author_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    sign_id INT UNSIGNED NOT NULL,
+    box_x DOUBLE NOT NULL,
+    box_y DOUBLE NOT NULL,
+    box_w DOUBLE NOT NULL,
+    box_h DOUBLE NOT NULL,
+    original_sign VARCHAR(32) NULL,
+    original_label VARCHAR(64) NOT NULL,
+    original_confidence DOUBLE NOT NULL,
+    model_version VARCHAR(255) NOT NULL,
+    image_width INT UNSIGNED NOT NULL,
+    image_height INT UNSIGNED NOT NULL,
+    proposed_sign VARCHAR(32) NULL,
+    uncertain BOOLEAN NOT NULL DEFAULT FALSE,
+    note VARCHAR(500) NULL,
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    reviewer_id BIGINT UNSIGNED NULL,
+    reviewed_at DATETIME(6) NULL,
+    INDEX ix_correction_status_date (status, created_at, id),
+    INDEX ix_correction_analysis_sign (analysis_id, sign_id),
+    FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewer_id) REFERENCES `user`(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

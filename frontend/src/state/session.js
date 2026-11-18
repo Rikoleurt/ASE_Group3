@@ -3,17 +3,21 @@ import { clearCurrentUserId, rememberUserId } from './currentUser'
 
 let csrfToken = null
 export const sessionUser = ref(null)
+// Whether the user may review sign corrections; the server enforces it either way.
+export const sessionReviewer = ref(false)
 
 export function acceptSession(data) {
   csrfToken = data.csrf_token
   rememberUserId(data.user.id)
   sessionUser.value = data.user
+  sessionReviewer.value = data.reviewer === true
   return data.user
 }
 
 export function forgetSession() {
   csrfToken = null
   sessionUser.value = null
+  sessionReviewer.value = false
   clearCurrentUserId()
 }
 

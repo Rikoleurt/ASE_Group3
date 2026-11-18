@@ -124,6 +124,7 @@ class AnalysisDataController(DataController):
             width=read["width"],
             height=read["height"],
             trained=trained,
+            model_version=tablet_demo.model_version(),
             signs=[sign for line in grouped for sign in line],
             lines=lines,
             formulas=[_formula(formula, by_id) for formula in formulas],

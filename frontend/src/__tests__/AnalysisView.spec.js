@@ -57,6 +57,33 @@ describe('Analysis page', () => {
     expect(wrapper.find('[data-testid="formula"]').exists()).toBe(false)
   })
 
+  it('opens the correction form for a clicked sign, with the sign catalogue', async () => {
+    const fetch = await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12, trained: true }) })
+    fetch.mockImplementation((url) => Promise.resolve(url === '/api/corrections/catalogue'
+      ? { ok: true, json: async () => [{ sign: 'AB81', name: 'AB81 (ku)', glyph: null }] }
+      : { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }))
+    expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
+
+    await wrapper.findAll('[data-testid="sign-box"]')[2].trigger('click')
+    await flushPromises()
+
+    expect(fetch).toHaveBeenCalledWith('/api/corrections/catalogue')
+    const form = wrapper.get('[data-testid="sign-correction"]')
+    expect(form.get('[data-testid="correction-original"]').text()).toContain('VIN')
+    expect(form.findAll('datalist option').map((option) => option.attributes('value'))).toEqual(['AB81'])
+    await form.findAll('button').find((button) => button.text() === 'Close').trigger('click')
+    expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
+  })
+
+  it('offers no correction for the generic fallback model', async () => {
+    await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12, trained: false }) })
+    await wrapper.findAll('[data-testid="sign-box"]')[2].trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Click its box to correct it')
+  })
+
   it('shows the server message when the reader is unavailable', async () => {
     await upload({ ok: false, status: 503, json: async () => ({ detail: 'The sign reader is unavailable.' }) })
 

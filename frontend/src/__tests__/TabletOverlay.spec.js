@@ -94,6 +94,26 @@ describe('Tablet overlay', () => {
     expect(wrapper.get('img').exists()).toBe(true)
   })
 
+  it('selects nothing unless selecting is turned on', async () => {
+    render()
+    await boxes()[2].trigger('click')
+    await boxes()[2].trigger('keydown', { key: 'Enter' })
+    expect(wrapper.emitted('select')).toBeUndefined()
+    expect(boxes()[2].classes()).not.toContain('selectable')
+  })
+
+  it('selects a sign by click or by keyboard, and marks the selected box', async () => {
+    render({ signs, formulas: [mismatch], selectable: true })
+    expect(boxes()[2].classes()).toContain('selectable')
+    await boxes()[2].trigger('click')
+    await boxes()[4].trigger('keydown', { key: 'Enter' })
+    await boxes()[6].trigger('keydown', { key: ' ' })
+    expect(wrapper.emitted('select').map(([sign]) => sign.id)).toEqual([3, 5, 7])
+    await wrapper.setProps({ selected: 5 })
+    expect(boxes()[4].classes()).toContain('selected')
+    expect(boxes()[2].classes()).not.toContain('selected')
+  })
+
   it('skips the drawing animation for viewers who prefer less motion', () => {
     vi.stubGlobal('matchMedia', (query) => ({ matches: query === '(prefers-reduced-motion: reduce)' }))
     render()

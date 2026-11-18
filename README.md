@@ -169,6 +169,13 @@ Use `SESSION_COOKIE_SECURE=1` in production over HTTPS. See the
 [history API and setup guide](docs/history-api.md) for the migration command,
 session behavior and request specifications. Images and sign crops are not stored.
 
+On the Analysis page, clicking a sign's box opens a form to propose the correct
+sign or flag the reading as uncertain. Corrections are kept for review and never
+change the saved analysis or the model. For an existing database, apply
+[052_sign_correction.sql](backend/app/database/migration-52/052_sign_correction.sql)
+and add `SIGN_REVIEWERS=dev` to `.env`; reviewers decide on the **Review** page. See the
+[sign corrections guide](docs/corrections.md) for the review and export API.
+
 To use an existing MySQL server instead, run `init.sql` as an administrator,
 create a database user with access to `ase3`, and set `MYSQL_HOST`, `MYSQL_PORT`,
 `MYSQL_USER` and `MYSQL_PASSWORD` in `.env`. `MYSQL_ROOT_PASSWORD` is only used

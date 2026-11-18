@@ -50,6 +50,7 @@ class RegistrationConflict(BaseModel):
 class SessionUser(BaseModel):
     user: UserPublic
     csrf_token: str
+    reviewer: bool = False  # may review sign corrections (SIGN_REVIEWERS)
 
 
 class LoginResponse(SessionUser):
