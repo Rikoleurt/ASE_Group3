@@ -2,6 +2,7 @@
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
+import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import { sessionFetch } from '../state/session'
 
 const route = useRoute()
@@ -9,12 +10,15 @@ const router = useRouter()
 const detail = ref(null)
 const loading = ref(false)
 const error = ref('')
+// The kept image failed to load (e.g. removed from the server): fall back to the results alone.
+const imageMissing = ref(false)
 let requestId = 0
 
 async function load() {
   const request = ++requestId
   loading.value = true
   detail.value = null
+  imageMissing.value = false
   error.value = ''
   try {
     const response = await sessionFetch(`/api/users/me/analyses/${encodeURIComponent(route.params.id)}`)
@@ -47,13 +51,19 @@ watch(() => route.params.id, load, { immediate: true })
       <section class="mt-6 rounded-3xl bg-card p-6">
         <h2 class="break-all text-xl font-bold">{{ detail.filename }}</h2>
         <p class="mt-2 text-ink/70"><time :datetime="detail.created_at">{{ new Date(detail.created_at).toLocaleString() }}</time> · {{ detail.format }} · {{ (detail.size_bytes / 1024).toFixed(1) }} KiB</p>
-        <p class="mt-4 text-sm text-ink/70">The original image is not retained. These are the results saved at the time of analysis.</p>
+        <p v-if="!detail.has_image" class="mt-4 text-sm text-ink/70">The original image was not kept for this analysis. These are the results saved at the time of analysis.</p>
+        <p v-else-if="imageMissing" role="alert" class="mt-4 text-sm text-ink/70">The image could not be loaded. These are the results saved at the time of analysis.</p>
         <p class="mt-6">{{ detail.result.summary }}</p>
         <dl class="mt-4 divide-y divide-ink/10">
           <div class="flex justify-between gap-4 py-3"><dt>Interpretation</dt><dd>{{ detail.result.symbol_interpretation }}</dd></div>
           <div class="flex justify-between gap-4 py-3"><dt>Confidence</dt><dd>{{ detail.result.confidence }}%</dd></div>
           <div class="flex justify-between gap-4 py-3"><dt>Processing time</dt><dd>{{ detail.result.time_taken }} s</dd></div>
         </dl>
+      </section>
+      <section v-if="detail.has_image && !imageMissing" class="mt-6" data-testid="history-image">
+        <TabletOverlay :signs="detail.result.signs" :formulas="detail.result.formulas">
+          <img :src="`/api/analysis/${detail.id}/image`" :alt="detail.filename" class="w-full rounded-lg bg-white" @error="imageMissing = true" />
+        </TabletOverlay>
       </section>
       <section v-if="detail.result.signs.length" class="mt-6 rounded-3xl bg-card p-6">
         <h2 class="text-xl font-bold">Recognized signs</h2>

@@ -54,6 +54,7 @@ const CALLS = [
   { method: 'get', path: '/corrections/export', source: reviewView, snippet: "'/api/corrections/export'" },
   { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
   { method: 'get', path: '/admin/users', source: adminView, snippet: '/api/admin/users?${query}' },
+  { method: 'get', path: '/analysis/{analysis_id}/image', source: historyDetailView, snippet: '/api/analysis/${detail.id}/image' },
   { method: 'patch', path: '/admin/users/{user_id}', source: adminView, snippet: '/api/admin/users/${user.id}' },
 ]
 
@@ -114,6 +115,11 @@ describe('API contract', () => {
       expect(responseFields('get', '/users/me', '200')).toContain(role)
       expect(responseFields('post', '/users/login', '200')).toContain(role)
     }
+  })
+
+  it('history says whether the image was kept, which the detail page reads', () => {
+    expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toContain('has_image')
+    expect(historyDetailView).toContain('detail.has_image')
   })
 
   it('the admin page sends and reads only declared role fields', () => {
