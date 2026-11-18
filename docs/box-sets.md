@@ -14,6 +14,7 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-60/061-community.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-83/083_box_sets.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-84/084_box_set_sharing.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-86/086_box_comments.sql
 ```
 
 ## Tables
@@ -119,6 +120,29 @@ carries `permission` (your level) and `everyone`.
 A shared upload's image is reached through the copy (`/box-sets/{id}/image`), so revoking access
 to the copy also revokes it to the image. The **Shared with me** page lists your shared copies;
 the editor is read only below Edit, and owners and managers get a **Share** button.
+
+## History and comments (#86)
+
+The editor's **History** panel lists every saved change, newest first, one group per save, with
+who made it and when ("Renamed AB81 (ku) to AB02 (ro)", "Moved and resized …", "Drew a box",
+"Undid change 12"). Selecting a change selects its box and outlines, dashed, where the box was
+before. People with Edit access can **Undo** a change (`POST …/changes/{id}/revert`); undone
+changes are struck through. Undo saves at once, so it waits until unsaved edits are saved or
+discarded. The panel filters by person and by the selected box.
+
+**Comments** sit beside it: the selected box's thread, or the whole copy's thread when no box is
+selected. Anyone who can see the copy reads them; Comment access writes them. Plain text, 1 to
+2000 characters after trimming. Authors delete their own; the owner and managers can delete any.
+
+| Route | Who | Does |
+|---|---|---|
+| `GET /box-sets/{id}/comments?box_id=` | view | oldest first; `box_id` for one box's thread |
+| `POST /box-sets/{id}/comments` `{box_id?, body}` | comment | `box_id` must be a box on the copy, or null for the copy |
+| `DELETE /box-sets/{id}/comments/{comment}` | author, or manage | 403 for someone else's comment |
+
+Comments live in `box_comment` (migration-86). Deleting a copy deletes its comments; deleting an
+account keeps that person's comments, shown as by "Deleted account". #74's tablet and symbol discussions had
+not landed, so these are separate; they can move onto #74's threads later.
 
 ## The reading
 

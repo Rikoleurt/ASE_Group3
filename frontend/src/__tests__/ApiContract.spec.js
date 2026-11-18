@@ -23,6 +23,8 @@ import useBoxSet from '../composables/useBoxSet.js?raw'
 import tabletsView from '../views/TabletsView.vue?raw'
 import shareDialog from '../components/boxes/ShareDialog.vue?raw'
 import sharedView from '../views/SharedView.vue?raw'
+import historyPanel from '../components/boxes/HistoryPanel.vue?raw'
+import boxComments from '../components/boxes/BoxComments.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -80,6 +82,11 @@ const CALLS = [
   { method: 'put', path: '/box-sets/{set_id}/everyone', source: shareDialog, snippet: '/api/box-sets/${props.setId}/everyone' },
   { method: 'get', path: '/users/search', source: shareDialog, snippet: '/api/users/search?q=${encodeURIComponent(query)}' },
   { method: 'get', path: '/users/me/shared-copies', source: sharedView, snippet: "'/api/users/me/shared-copies'" },
+  { method: 'get', path: '/box-sets/{set_id}/changes', source: historyPanel, snippet: '/api/box-sets/${props.setId}/changes?${query}' },
+  { method: 'post', path: '/box-sets/{set_id}/changes/{change_id}/revert', source: historyPanel, snippet: '/api/box-sets/${props.setId}/changes/${change.id}/revert' },
+  { method: 'get', path: '/box-sets/{set_id}/comments', source: boxComments, snippet: '/api/box-sets/${props.setId}/comments' },
+  { method: 'post', path: '/box-sets/{set_id}/comments', source: boxComments, snippet: '/api/box-sets/${props.setId}/comments' },
+  { method: 'delete', path: '/box-sets/{set_id}/comments/{comment_id}', source: boxComments, snippet: '/api/box-sets/${props.setId}/comments/${comment.id}' },
   { method: 'get', path: '/tablets/{slug}/boxes', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(SLUG.value)}/boxes?source=${SOURCE.value}' },
   { method: 'get', path: '/tablets/{slug}/box-set', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(slug)}/box-set' },
   { method: 'post', path: '/box-sets', source: tabletsView, snippet: "'/api/box-sets'" },
@@ -190,6 +197,14 @@ describe('API contract', () => {
     expect(requestFields('put', '/box-sets/{set_id}/everyone')).toEqual(['permission'])
     expect(responseFields('get', '/box-sets/{set_id}/shares', '200').sort()).toEqual(['everyone', 'shares'])
     expect(responseFields('get', '/box-sets/{set_id}', '200')).toEqual(expect.arrayContaining(['permission', 'everyone', 'owner']))
+  })
+
+  it('history and comments read the declared fields', () => {
+    expect(responseFields('get', '/box-sets/{set_id}/changes', '200').sort()).toEqual(['items', 'next_before'])
+    expect(requestFields('post', '/box-sets/{set_id}/comments').sort()).toEqual(['body', 'box_id'])
+    expect(responseFields('post', '/box-sets/{set_id}/comments', '201')).toEqual(
+      expect.arrayContaining(['id', 'box_id', 'author', 'body', 'created_at', 'can_delete']),
+    )
   })
 
   it('the admin page sends and reads only declared role fields', () => {

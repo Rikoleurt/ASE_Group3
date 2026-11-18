@@ -17,6 +17,7 @@ const props = defineProps({
   selectedId: { type: Number, default: null },
   mode: { type: String, default: 'select' }, // select | draw
   readOnly: { type: Boolean, default: false },
+  ghost: { type: Object, default: null }, // where a box was before a change picked in the history (#86)
 })
 const emit = defineEmits(['select', 'begin', 'place', 'end', 'draw', 'remove', 'nudge', 'image-error'])
 
@@ -187,6 +188,17 @@ const pct = (value) => value * 100
         @pointerdown="startMove($event, box)"
       />
       <rect
+        v-if="ghost"
+        class="ghost"
+        data-testid="ghost-box"
+        :x="pct(ghost.x)"
+        :y="pct(ghost.y)"
+        :width="pct(ghost.w)"
+        :height="pct(ghost.h)"
+        fill="none"
+        pointer-events="none"
+      />
+      <rect
         v-if="DRAFT"
         class="draft"
         data-testid="draft-box"
@@ -248,6 +260,12 @@ rect {
 .box.selected {
   stroke-width: 4;
   fill: rgba(204, 111, 0, 0.15);
+}
+
+.ghost {
+  stroke: #444;
+  stroke-width: 2;
+  stroke-dasharray: 2 3;
 }
 
 .draft {

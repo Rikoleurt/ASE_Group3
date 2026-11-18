@@ -157,7 +157,10 @@ describe('Correct the boxes page', () => {
     const fetch = vi.fn((url, options = {}) => {
       const key = `${options.method ?? 'GET'} ${url}`
       if (url === '/api/users/me') return json(SESSION)
-      if (url === '/api/corrections/catalogue') return json(CATALOGUE)
+      // The history and comment panels (#86) start empty unless a test says otherwise.
+    if (!routes[`${options.method ?? 'GET'} ${url}`] && /\/api\/box-sets\/\d+\/comments$/.test(url)) return json([])
+    if (!routes[`${options.method ?? 'GET'} ${url}`] && /\/api\/box-sets\/\d+\/changes\?/.test(url)) return json({ items: [], next_before: null })
+    if (url === '/api/corrections/catalogue') return json(CATALOGUE)
       return routes[key] ? routes[key](options) : json({ detail: `unexpected ${key}` }, 500)
     })
     vi.stubGlobal('fetch', fetch)

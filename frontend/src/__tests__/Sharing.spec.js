@@ -36,6 +36,9 @@ function stubServer(routes) {
   const fetch = vi.fn((url, options = {}) => {
     const key = `${options.method ?? 'GET'} ${url}`
     if (url === '/api/users/me') return json(SESSION)
+    // The history and comment panels (#86) start empty unless a test says otherwise.
+    if (!routes[`${options.method ?? 'GET'} ${url}`] && /\/api\/box-sets\/\d+\/comments$/.test(url)) return json([])
+    if (!routes[`${options.method ?? 'GET'} ${url}`] && /\/api\/box-sets\/\d+\/changes\?/.test(url)) return json({ items: [], next_before: null })
     if (url === '/api/corrections/catalogue') return json([])
     return routes[key] ? routes[key](options) : json({ detail: `unexpected ${key}` }, 500)
   })
