@@ -15,10 +15,13 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+// Clicking a box also opens the other-tablets pane; it gets an empty page unless a test says otherwise.
+const NO_OCCURRENCES = { ok: true, status: 200, json: async () => ({ sign: 'AB131a', total: 0, limit: 30, offset: 0, ranked_by: 'corpus', items: [], credit: null }) }
+
 async function upload(response) {
   const fetch = vi.fn((url) => Promise.resolve(url === '/api/users/me'
     ? { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }
-    : response))
+    : url.startsWith('/api/glyphs/') ? NO_OCCURRENCES : response))
   vi.stubGlobal('fetch', fetch)
   wrapper = mount(AnalysisView)
   const input = wrapper.get('input[type="file"]')
@@ -61,7 +64,8 @@ describe('Analysis page', () => {
     const fetch = await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12, trained: true }) })
     fetch.mockImplementation((url) => Promise.resolve(url === '/api/corrections/catalogue'
       ? { ok: true, json: async () => [{ sign: 'AB81', name: 'AB81 (ku)', glyph: null }] }
-      : { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }))
+      : url.startsWith('/api/glyphs/') ? NO_OCCURRENCES
+        : { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }))
     expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
 
     await wrapper.findAll('[data-testid="sign-box"]')[2].trigger('click')
