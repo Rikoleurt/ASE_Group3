@@ -82,6 +82,11 @@
             "title": "Format",
             "type": "string"
           },
+          "has_image": {
+            "default": false,
+            "title": "Has Image",
+            "type": "boolean"
+          },
           "id": {
             "title": "Id",
             "type": "integer"
@@ -155,6 +160,11 @@
             ],
             "title": "Format",
             "type": "string"
+          },
+          "has_image": {
+            "default": false,
+            "title": "Has Image",
+            "type": "boolean"
           },
           "id": {
             "title": "Id",
@@ -2249,6 +2259,83 @@
         "summary": "Submit",
         "tags": [
           "corrections"
+        ]
+      }
+    },
+    "/analysis/{analysis_id}/image": {
+      "get": {
+        "description": "The image of one of the user's own saved analyses.",
+        "operationId": "analysis_image_analysis__analysis_id__image_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Analysis Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {},
+              "image/png": {}
+            },
+            "description": "The uploaded image"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Analysis Image",
+        "tags": [
+          "analysis"
         ]
       }
     },

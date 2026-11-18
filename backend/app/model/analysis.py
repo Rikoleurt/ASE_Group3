@@ -100,6 +100,7 @@ class AnalysisMetadata(BaseModel):
     format: Literal["PNG", "JPEG"]
     size_bytes: int
     result_schema_version: int = 1
+    has_image: bool = False  # the uploaded image is kept (#81); False for analyses saved before
 
 
 class AnalysisHistoryDetail(AnalysisMetadata):

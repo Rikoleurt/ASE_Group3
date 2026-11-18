@@ -134,11 +134,12 @@ def test_persisted_snapshot_excludes_pixels_and_is_parameterized(monkeypatch):
     monkeypatch.setattr("mysql.connector.connect", lambda **kwargs: connection)
     saved = AnalysisDataController().save_analysis(7, "'; DROP TABLE analysis; --.png", "PNG", 80, result())
     sql, params = connection.cursor.return_value.execute.call_args.args
+    snapshot = params[5]  # result_json; the image link follows it (#81)
     assert saved.id == 12
     assert "DROP TABLE" not in sql
-    assert "PRIVATE_PIXELS" not in params[-1]
-    assert '"crop"' not in params[-1]
-    assert '"reading": "ku"' in params[-1]
+    assert "PRIVATE_PIXELS" not in snapshot
+    assert '"crop"' not in snapshot
+    assert '"reading": "ku"' in snapshot
     connection.commit.assert_called_once()
 
 

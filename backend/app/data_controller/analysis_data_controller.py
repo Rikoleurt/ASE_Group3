@@ -9,6 +9,7 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 
 from backend.app import tablet_demo
+from backend.app.image_store import StoredImage
 from backend.app.data_controller.data_controller import DataController
 from backend.app.model.analysis import (AnalysisResult, AnalysisMetadata, AnalysisHistoryDetail,
                                         Box, DetectedSign, FractionTerm, Line)
@@ -29,23 +30,51 @@ class ImageTooLargeError(ValueError):
 
 class AnalysisDataController(DataController):
     def save_analysis(self, user_id: int, filename: str, format: str, size_bytes: int,
-                      result: AnalysisResult) -> AnalysisMetadata:
-        """Store an immutable result snapshot, excluding uploaded pixel data."""
+                      result: AnalysisResult, image: StoredImage | None = None) -> AnalysisMetadata:
+        """Store an immutable result snapshot, and the stored image's record when there is one.
+
+        The snapshot leaves out the sign crops; the image itself is on disk (image_store),
+        so both rows are written in one transaction and neither exists without the other.
+        """
         created_at = datetime.now(timezone.utc)
+        stamp = created_at.replace(tzinfo=None)
         snapshot = result.model_dump(mode="json", exclude={"signs": {"__all__": {"crop"}}})
         with self.connection() as connection:
             cursor = connection.cursor()
             try:
+                image_id = None
+                if image is not None:
+                    cursor.execute(
+                        "INSERT INTO uploaded_image (owner_id, storage_key, sha256, format, size_bytes, width, height, "
+                        "created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+                        (user_id, image.key, image.sha256, image.format, image.size_bytes, result.width, result.height,
+                         stamp),
+                    )
+                    image_id = cursor.lastrowid
                 cursor.execute(
-                    "INSERT INTO analysis (user_id, created_at, filename, format, size_bytes, result_json) "
-                    "VALUES (%s, %s, %s, %s, %s, %s)",
-                    (user_id, created_at.replace(tzinfo=None), filename, format, size_bytes, json.dumps(snapshot)),
+                    "INSERT INTO analysis (user_id, created_at, filename, format, size_bytes, result_json, image_id) "
+                    "VALUES (%s, %s, %s, %s, %s, %s, %s)",
+                    (user_id, stamp, filename, format, size_bytes, json.dumps(snapshot), image_id),
                 )
                 analysis_id = cursor.lastrowid
             finally:
                 cursor.close()
         return AnalysisMetadata(id=analysis_id, created_at=created_at, filename=filename,
-                                format=format, size_bytes=size_bytes)
+                                format=format, size_bytes=size_bytes, has_image=image is not None)
+
+    def stored_image(self, user_id: int, analysis_id: int) -> tuple[str, str] | None:
+        """The storage key and format of the image of the user's own analysis, or None."""
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    "SELECT i.storage_key, i.format FROM analysis a JOIN uploaded_image i ON i.id = a.image_id "
+                    "WHERE a.user_id = %s AND a.id = %s", (user_id, analysis_id),
+                )
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
+        return (row["storage_key"], row["format"]) if row else None
 
     def list_analyses(self, user_id: int, limit: int,
                       before: tuple[datetime, int] | None = None) -> list[AnalysisMetadata]:
@@ -60,14 +89,14 @@ class AnalysisDataController(DataController):
             cursor = connection.cursor(dictionary=True)
             try:
                 cursor.execute(
-                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version "
-                    "FROM analysis WHERE user_id = %s" + clause +
+                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version, "
+                    "image_id IS NOT NULL AS has_image FROM analysis WHERE user_id = %s" + clause +
                     " ORDER BY created_at DESC, id DESC LIMIT %s", tuple(params),
                 )
                 rows = cursor.fetchall()
             finally:
                 cursor.close()
-        return [AnalysisMetadata(**{**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc)}) for row in rows]
+        return [AnalysisMetadata(**_metadata(row)) for row in rows]
 
     def get_analysis(self, user_id: int, analysis_id: int) -> AnalysisHistoryDetail | None:
         """A foreign record is indistinguishable from a missing record."""
@@ -75,8 +104,9 @@ class AnalysisDataController(DataController):
             cursor = connection.cursor(dictionary=True)
             try:
                 cursor.execute(
-                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version, result_json "
-                    "FROM analysis WHERE user_id = %s AND id = %s", (user_id, analysis_id),
+                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version, result_json, "
+                    "image_id IS NOT NULL AS has_image FROM analysis WHERE user_id = %s AND id = %s",
+                    (user_id, analysis_id),
                 )
                 row = cursor.fetchone()
             finally:
@@ -84,7 +114,7 @@ class AnalysisDataController(DataController):
         if row is None:
             return None
         result = json.loads(row.pop("result_json"))
-        return AnalysisHistoryDetail(**{**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc)}, result=result)
+        return AnalysisHistoryDetail(**_metadata(row), result=result)
 
     def analyze(self, image_bytes: bytes, filename: str | None = None) -> AnalysisResult | None:
         """Read the signs on an uploaded image; None if it is not an image.
@@ -140,6 +170,11 @@ class AnalysisDataController(DataController):
             lines=lines,
             formulas=[_formula(formula, by_id) for formula in formulas],
         )
+
+
+def _metadata(row: dict) -> dict:
+    """A history row as AnalysisMetadata fields: UTC time, and MySQL's 0/1 as a bool."""
+    return {**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc), "has_image": bool(row.get("has_image"))}
 
 
 def _fallback(signs: list[DetectedSign]) -> str:
