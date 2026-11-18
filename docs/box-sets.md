@@ -144,6 +144,10 @@ Comments live in `box_comment` (migration-86). Deleting a copy deletes its comme
 account keeps that person's comments, shown as by "Deleted account". #74's tablet and symbol discussions had
 not landed, so these are separate; they can move onto #74's threads later.
 
+## Training export (#87)
+
+Admins export every copy's boxes for training: see [roles](roles.md#training-export-87).
+
 ## The reading
 
 Every response carries `reading`: the lines, transliteration and fraction formulas worked

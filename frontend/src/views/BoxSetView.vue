@@ -346,6 +346,10 @@ watch(() => route.params.id, load, { immediate: true })
       <p class="mt-1 text-ink/70">{{ dirty ? 'Save to update the reading with your latest changes.' : copy.reading.summary }}</p>
       <p class="mt-2"><span class="text-ink/70">Transliteration:</span> {{ copy.reading.symbol_interpretation }}</p>
       <FractionCheck :analysis="READING" class="mt-6" />
+      <p class="mt-8 text-sm text-ink/70" data-testid="training-note">
+        Corrected boxes may be used to train the sign reader. They are exported by the site's admins, with the copy's
+        owner shown by account number only.
+      </p>
     </section>
   </main>
 </template>

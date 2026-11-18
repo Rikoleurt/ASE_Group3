@@ -132,6 +132,39 @@ describe('Admin page', () => {
   })
 })
 
+describe('Training export', () => {
+  it('downloads the corrections as JSON and as a YOLO zip', async () => {
+    const fetch = stubServer({
+      [`GET ${LIST}`]: () => json({ items: USERS, total: 3 }),
+      'GET /api/admin/export/corrections': () => json({ copies: [{ copy_id: 1 }], label_corrections: [] }),
+      'GET /api/admin/export/corrections.zip': () => Promise.resolve({ ok: true, status: 200, blob: async () => new Blob(['zip']) }),
+    })
+    URL.createObjectURL = vi.fn(() => 'blob:export')
+    URL.revokeObjectURL = vi.fn()
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {})
+    await render()
+    await wrapper.get('[data-testid="export-json"]').trigger('click')
+    await flushPromises()
+    await wrapper.get('[data-testid="export-zip"]').trigger('click')
+    await flushPromises()
+    expect(fetch.mock.calls.map(([url]) => url)).toEqual(expect.arrayContaining(['/api/admin/export/corrections', '/api/admin/export/corrections.zip']))
+    expect(click).toHaveBeenCalledTimes(2)
+    expect(URL.revokeObjectURL).toHaveBeenCalledTimes(2)
+    click.mockRestore()
+  })
+
+  it('shows why an export failed', async () => {
+    stubServer({
+      [`GET ${LIST}`]: () => json({ items: USERS, total: 3 }),
+      'GET /api/admin/export/corrections': () => json({ detail: 'Correction storage is unavailable.' }, 503),
+    })
+    await render()
+    await wrapper.get('[data-testid="export-json"]').trigger('click')
+    await flushPromises()
+    expect(wrapper.get('[role="alert"]').text()).toBe('Correction storage is unavailable.')
+  })
+})
+
 describe('Top bar', () => {
   it('links to the admin page for admins only', async () => {
     stubServer({}, ADMIN)

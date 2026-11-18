@@ -4,7 +4,7 @@ Two roles sit on each account, both off by default:
 
 | Role | Lets the user | Set by |
 |---|---|---|
-| Admin | open the **Admin** page, grant and remove roles | another admin, or SQL for the first one |
+| Admin | open the **Admin** page, grant and remove roles, export corrections for training (#87) | another admin, or SQL for the first one |
 | Reviewer | approve or reject sign corrections on the **Review** page | an admin, or `SIGN_REVIEWERS` in `.env` |
 
 The seeded `dev` account is both. The API checks the role on every request; the
@@ -48,3 +48,19 @@ user; the user object itself is unchanged.
 Errors: 401 when logged out, 403 for non-admins or a missing CSRF token, 404 for an
 unknown user, 409 when removing your own admin role, 422 for a body with no role,
 503 when the database is unavailable.
+
+## Training export (#87)
+
+The **Admin** page's *Training data* section downloads every user's corrected boxes (#83), with
+the sign corrections reviewers approved (#52), to train the reader on:
+
+| Route | Gives |
+|---|---|
+| `GET /admin/export/corrections` | JSON in the training annotations' shape: per copy its image size and each box's sign, pixel `xyxy`, where it came from (`model`, `scholar`, `user`), whether the user changed it, and the original sign; then `label_corrections`, #52's approved export |
+| `GET /admin/export/corrections.zip` | a YOLO dataset: `images/copy-<id>.png\|jpg`, `labels/copy-<id>.txt` (`class cx cy w h`), `classes.txt` and the JSON as `corrections.json` |
+
+Both are admins only (403 for everyone else). Deleted boxes are left out. Boxes with no sign stay
+in the JSON (sign null) but cannot be YOLO labels; the zip counts them in
+`corrections.json` (`unnamed_boxes_left_out`). A copy whose image is missing on the server is
+listed under `missing_images` and left out of the zip's images and labels. Owners appear only as
+account numbers. The editor tells users that corrections may be used for training.

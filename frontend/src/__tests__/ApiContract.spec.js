@@ -72,6 +72,8 @@ const CALLS = [
   { method: 'get', path: '/corrections/export', source: reviewView, snippet: "'/api/corrections/export'" },
   { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
   { method: 'get', path: '/admin/users', source: adminView, snippet: '/api/admin/users?${query}' },
+  { method: 'get', path: '/admin/export/corrections', source: adminView, snippet: "'/api/admin/export/corrections'" },
+  { method: 'get', path: '/admin/export/corrections.zip', source: adminView, snippet: "'/api/admin/export/corrections.zip'" },
   { method: 'post', path: '/box-sets', source: useBoxSet, snippet: "'/api/box-sets'" },
   { method: 'get', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${encodeURIComponent(id)}' },
   { method: 'patch', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${copy.value.id}' },

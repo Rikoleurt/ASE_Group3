@@ -101,6 +101,29 @@ async function toggle(user, role, event) {
   }
 }
 
+// Training export (#87): every corrected copy, plus approved label corrections.
+const EXPORTING = ref('')
+
+async function download(kind) {
+  EXPORTING.value = kind
+  ERROR.value = ''
+  try {
+    const response = await sessionFetch(kind === 'zip' ? '/api/admin/export/corrections.zip' : '/api/admin/export/corrections')
+    if (!response.ok) throw new Error(await detail(response, 'The export failed. Please try again.'))
+    const blob = kind === 'zip' ? await response.blob() : new Blob([JSON.stringify(await response.json(), null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = kind === 'zip' ? 'corrections-yolo.zip' : 'corrections.json'
+    link.click()
+    URL.revokeObjectURL(url)
+  } catch (error) {
+    ERROR.value = failure(error)
+  } finally {
+    EXPORTING.value = ''
+  }
+}
+
 onMounted(async () => {
   // The router guard usually loaded the session already; the page needs it to mark your own row.
   if (!sessionUser.value) await loadSession().catch(() => {})
@@ -118,6 +141,22 @@ onMounted(async () => {
       <p class="mt-2 text-ink/70">
         Admins manage roles. Reviewers approve or reject sign corrections before they become training labels.
       </p>
+
+      <section class="mt-6 rounded-2xl bg-card p-5" aria-labelledby="export-h">
+        <h2 id="export-h" class="text-xl font-bold">Training data</h2>
+        <p class="mt-1 text-sm text-ink/70">
+          Every user's corrected boxes, with approved sign corrections, to train the reader on.
+          JSON follows the training annotations; the YOLO zip has images, labels and classes.
+        </p>
+        <div class="mt-3 flex flex-wrap gap-3">
+          <button type="button" class="cursor-pointer rounded border border-ink/30 px-4 py-2 hover:bg-ink/5 disabled:opacity-60" :disabled="EXPORTING !== ''" data-testid="export-json" @click="download('json')">
+            {{ EXPORTING === 'json' ? 'Exporting…' : 'Export corrections (JSON)' }}
+          </button>
+          <button type="button" class="cursor-pointer rounded border border-ink/30 px-4 py-2 hover:bg-ink/5 disabled:opacity-60" :disabled="EXPORTING !== ''" data-testid="export-zip" @click="download('zip')">
+            {{ EXPORTING === 'zip' ? 'Exporting…' : 'Export as YOLO dataset (zip)' }}
+          </button>
+        </div>
+      </section>
 
       <form class="mt-6 flex flex-wrap items-end gap-3" role="search" @submit.prevent="search">
         <label class="flex flex-col gap-1 text-sm font-semibold" for="user-search">
