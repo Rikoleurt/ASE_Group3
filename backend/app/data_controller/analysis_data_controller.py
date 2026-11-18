@@ -141,35 +141,17 @@ class AnalysisDataController(DataController):
         catalogue = tablet_demo.sign_catalogue(classifier) if classifier else {}
         signs = [_sign(prediction, catalogue) for prediction in read["predictions"]]
         trained = read["trained"]
-        # Reading order, transliteration and fractions only mean something for Linear A signs.
-        grouped = group_lines(signs) if trained else [signs] if signs else []
-        for number, line in enumerate(grouped):
-            for position, sign in enumerate(line):
-                sign.line, sign.order = number, position
-        lines = [_line(number, line) for number, line in enumerate(grouped)] if trained else []
-        formulas = find_formulas(grouped) if trained else []
-        by_id = {sign.id: sign for sign in signs}
-        if trained:
-            for sign in signs:
-                sign.meaning = meaning(sign)
-            for formula in formulas:
-                word = "grand total (PO-TO-KU-RO)" if formula.kind == "grand_total" else "total (KU-RO)"
-                for sign_id in formula.marker_ids:
-                    by_id[sign_id].meaning = word
         return AnalysisResult(
-            symbol_interpretation=" / ".join(line.text for line in lines) or _fallback(signs),
+            **read_signs(signs, trained),
             confidence=round(sum(sign.confidence for sign in signs) / len(signs)) if signs else 0,
             time_taken=round(time.perf_counter() - started, 2),
-            summary=_summary(signs, trained, formulas),
             width=read["width"],
             height=read["height"],
             trained=trained,
             model_version=tablet_demo.model_version(),
-            signs=[sign for line in grouped for sign in line],
-            lines=lines,
-            formulas=[_formula(formula, by_id) for formula in formulas],
         )
-    
+
+
     def _owns_analysis(self, cursor, user_id: int, analysis_id: int) -> bool:
         cursor.execute("SELECT 1 FROM analysis WHERE id = %s AND user_id = %s", (analysis_id, user_id))
         return cursor.fetchone() is not None
@@ -217,6 +199,44 @@ class AnalysisDataController(DataController):
             finally:
                 cursor.close()
         return deleted
+
+
+def read_signs(signs: list[DetectedSign], trained: bool = True) -> dict:
+    """Reading order, lines, transliteration and fraction formulas for a tablet's signs.
+
+    Used for the model's signs and for corrected boxes (#83). Fills in each sign's line,
+    order and meaning, and returns the AnalysisResult fields that depend on the signs."""
+    # Reading order, transliteration and fractions only mean something for Linear A signs.
+    grouped = group_lines(signs) if trained else [signs] if signs else []
+    for number, line in enumerate(grouped):
+        for position, sign in enumerate(line):
+            sign.line, sign.order = number, position
+    lines = [_line(number, line) for number, line in enumerate(grouped)] if trained else []
+    formulas = find_formulas(grouped) if trained else []
+    by_id = {sign.id: sign for sign in signs}
+    if trained:
+        for sign in signs:
+            sign.meaning = meaning(sign)
+        for formula in formulas:
+            word = "grand total (PO-TO-KU-RO)" if formula.kind == "grand_total" else "total (KU-RO)"
+            for sign_id in formula.marker_ids:
+                by_id[sign_id].meaning = word
+    return dict(
+        symbol_interpretation=" / ".join(line.text for line in lines) or _fallback(signs),
+        summary=_summary(signs, trained, formulas),
+        signs=[sign for line in grouped for sign in line],
+        lines=lines,
+        formulas=[_formula(formula, by_id) for formula in formulas],
+    )
+
+
+def describe_sign(sign: str | None, catalogue: dict) -> dict:
+    """Label, reading, role and glyph of a sign ID, as the reader names it; for corrected boxes."""
+    if sign is None:
+        return dict(sign=None, label="Unnamed sign", reading=None, role="unknown", glyph=None)
+    entry = catalogue.get(sign, {})
+    return dict(sign=sign, label=entry.get("name") or sign, reading=entry.get("reading"),
+                role=role_of(sign, entry.get("reading"), entry.get("roles") or []), glyph=glyph(sign))
 
 
 def _fallback(signs: list[DetectedSign]) -> str:

@@ -1,6 +1,37 @@
 {
   "components": {
     "schemas": {
+      "AddBox": {
+        "properties": {
+          "box": {
+            "$ref": "#/components/schemas/EditBox"
+          },
+          "op": {
+            "const": "add",
+            "title": "Op",
+            "type": "string"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          }
+        },
+        "required": [
+          "op",
+          "box"
+        ],
+        "title": "AddBox",
+        "type": "object"
+      },
       "AdminUser": {
         "description": "A row on the admin page.",
         "properties": {
@@ -460,6 +491,38 @@
         "title": "ApiError",
         "type": "object"
       },
+      "Author": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Id"
+          },
+          "username": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Username"
+          }
+        },
+        "required": [
+          "id",
+          "username"
+        ],
+        "title": "Author",
+        "type": "object"
+      },
       "Body_analyze_analysis_post": {
         "properties": {
           "file": {
@@ -529,6 +592,348 @@
           "h"
         ],
         "title": "Box",
+        "type": "object"
+      },
+      "BoxChange": {
+        "properties": {
+          "action": {
+            "enum": [
+              "add",
+              "update",
+              "delete",
+              "revert"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "after": {
+            "$ref": "#/components/schemas/BoxState"
+          },
+          "author": {
+            "$ref": "#/components/schemas/Author"
+          },
+          "before": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoxState"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "box_id": {
+            "title": "Box Id",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "reverted_by": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverted By"
+          },
+          "reverts": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reverts"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "author",
+          "created_at",
+          "version",
+          "action",
+          "box_id",
+          "before",
+          "after",
+          "reverts",
+          "reverted_by"
+        ],
+        "title": "BoxChange",
+        "type": "object"
+      },
+      "BoxChangePage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BoxChange"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_before": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Before"
+          }
+        },
+        "required": [
+          "items",
+          "next_before"
+        ],
+        "title": "BoxChangePage",
+        "type": "object"
+      },
+      "BoxSet": {
+        "properties": {
+          "boxes": {
+            "items": {
+              "$ref": "#/components/schemas/EditedBox"
+            },
+            "title": "Boxes",
+            "type": "array"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "image_url": {
+            "title": "Image Url",
+            "type": "string"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "reading": {
+            "$ref": "#/components/schemas/Reading"
+          },
+          "source": {
+            "$ref": "#/components/schemas/BoxSetSource"
+          },
+          "start": {
+            "enum": [
+              "model",
+              "scholar"
+            ],
+            "title": "Start",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "owner",
+          "source",
+          "start",
+          "version",
+          "width",
+          "height",
+          "image_url",
+          "created_at",
+          "updated_at",
+          "boxes",
+          "reading"
+        ],
+        "title": "BoxSet",
+        "type": "object"
+      },
+      "BoxSetConflict": {
+        "properties": {
+          "current": {
+            "$ref": "#/components/schemas/BoxSet"
+          },
+          "detail": {
+            "title": "Detail",
+            "type": "string"
+          }
+        },
+        "required": [
+          "detail",
+          "current"
+        ],
+        "title": "BoxSetConflict",
+        "type": "object"
+      },
+      "BoxSetCreate": {
+        "description": "Start a corrected copy. Uploads start from the model's boxes; corpus tablets come in #82.",
+        "properties": {
+          "analysis_id": {
+            "exclusiveMinimum": 0.0,
+            "maximum": 1.8446744073709552e+19,
+            "title": "Analysis Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "analysis_id"
+        ],
+        "title": "BoxSetCreate",
+        "type": "object"
+      },
+      "BoxSetEdit": {
+        "description": "One save from the editor: the version it started from, and its changes in order.",
+        "properties": {
+          "changes": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "add": "#/components/schemas/AddBox",
+                  "delete": "#/components/schemas/DeleteBox",
+                  "update": "#/components/schemas/UpdateBox"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AddBox"
+                },
+                {
+                  "$ref": "#/components/schemas/UpdateBox"
+                },
+                {
+                  "$ref": "#/components/schemas/DeleteBox"
+                }
+              ]
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Changes",
+            "type": "array"
+          },
+          "version": {
+            "minimum": 0.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version",
+          "changes"
+        ],
+        "title": "BoxSetEdit",
+        "type": "object"
+      },
+      "BoxSetSource": {
+        "properties": {
+          "analysis_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Id"
+          },
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Filename"
+          },
+          "kind": {
+            "enum": [
+              "analysis",
+              "tablet"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "tablet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tablet"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "BoxSetSource",
+        "type": "object"
+      },
+      "BoxState": {
+        "description": "A box as one change left it.",
+        "properties": {
+          "box": {
+            "$ref": "#/components/schemas/Box"
+          },
+          "deleted": {
+            "default": false,
+            "title": "Deleted",
+            "type": "boolean"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          }
+        },
+        "required": [
+          "box",
+          "sign"
+        ],
+        "title": "BoxState",
         "type": "object"
       },
       "Candidate": {
@@ -769,6 +1174,26 @@
           "decision"
         ],
         "title": "CorrectionReview",
+        "type": "object"
+      },
+      "DeleteBox": {
+        "properties": {
+          "box_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Box Id",
+            "type": "integer"
+          },
+          "op": {
+            "const": "delete",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op",
+          "box_id"
+        ],
+        "title": "DeleteBox",
         "type": "object"
       },
       "DetectedSign": {
@@ -1109,6 +1534,111 @@
           "field"
         ],
         "title": "DuplicateUserDetail",
+        "type": "object"
+      },
+      "EditBox": {
+        "description": "A box from the editor: inside the image (a hair of rounding allowed) and not degenerate.",
+        "properties": {
+          "h": {
+            "title": "H",
+            "type": "number"
+          },
+          "w": {
+            "title": "W",
+            "type": "number"
+          },
+          "x": {
+            "title": "X",
+            "type": "number"
+          },
+          "y": {
+            "title": "Y",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x",
+          "y",
+          "w",
+          "h"
+        ],
+        "title": "EditBox",
+        "type": "object"
+      },
+      "EditedBox": {
+        "properties": {
+          "box": {
+            "$ref": "#/components/schemas/Box"
+          },
+          "candidates": {
+            "items": {
+              "$ref": "#/components/schemas/Candidate"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "changed": {
+            "title": "Changed",
+            "type": "boolean"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "model_confidence": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Confidence"
+          },
+          "model_sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Sign"
+          },
+          "origin": {
+            "enum": [
+              "model",
+              "scholar",
+              "user"
+            ],
+            "title": "Origin",
+            "type": "string"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          }
+        },
+        "required": [
+          "id",
+          "box",
+          "sign",
+          "origin",
+          "model_sign",
+          "model_confidence",
+          "candidates",
+          "changed"
+        ],
+        "title": "EditedBox",
         "type": "object"
       },
       "Formula": {
@@ -1561,6 +2091,49 @@
         "title": "LoginResponse",
         "type": "object"
       },
+      "Reading": {
+        "description": "The reading worked out from the corrected boxes, in the same shape as an analysis.",
+        "properties": {
+          "formulas": {
+            "items": {
+              "$ref": "#/components/schemas/Formula"
+            },
+            "title": "Formulas",
+            "type": "array"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/Line"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "signs": {
+            "items": {
+              "$ref": "#/components/schemas/DetectedSign"
+            },
+            "title": "Signs",
+            "type": "array"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "symbol_interpretation": {
+            "title": "Symbol Interpretation",
+            "type": "string"
+          }
+        },
+        "required": [
+          "symbol_interpretation",
+          "summary",
+          "signs",
+          "lines",
+          "formulas"
+        ],
+        "title": "Reading",
+        "type": "object"
+      },
       "RegistrationConflict": {
         "properties": {
           "detail": {
@@ -1571,6 +2144,20 @@
           "detail"
         ],
         "title": "RegistrationConflict",
+        "type": "object"
+      },
+      "Revert": {
+        "properties": {
+          "version": {
+            "minimum": 0.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "Revert",
         "type": "object"
       },
       "RoleUpdate": {
@@ -1815,6 +2402,50 @@
           "status"
         ],
         "title": "SignCorrection",
+        "type": "object"
+      },
+      "UpdateBox": {
+        "description": "Move or resize a box, and/or set its sign. A field left out stays as it is; sign: null clears it.",
+        "properties": {
+          "box": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/EditBox"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "box_id": {
+            "exclusiveMinimum": 0.0,
+            "title": "Box Id",
+            "type": "integer"
+          },
+          "op": {
+            "const": "update",
+            "title": "Op",
+            "type": "string"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "maxLength": 32,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          }
+        },
+        "required": [
+          "op",
+          "box_id"
+        ],
+        "title": "UpdateBox",
         "type": "object"
       },
       "UserCreate": {
@@ -2327,6 +2958,96 @@
         ]
       }
     },
+    "/analysis/{analysis_id}/box-set": {
+      "get": {
+        "description": "Your corrected copy of an analysis, if you made one (404 otherwise).",
+        "operationId": "analysis_box_set_analysis__analysis_id__box_set_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "analysis_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Analysis Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Analysis Box Set",
+        "tags": [
+          "box sets"
+        ]
+      }
+    },
     "/analysis/{analysis_id}/corrections": {
       "get": {
         "operationId": "my_corrections_analysis__analysis_id__corrections_get",
@@ -2649,6 +3370,775 @@
         "summary": "Benchmark Version",
         "tags": [
           "benchmarks"
+        ]
+      }
+    },
+    "/box-sets": {
+      "post": {
+        "description": "Open your corrected copy of one of your analyses, making it from the model's boxes the first time.",
+        "operationId": "create_box_set_box_sets_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoxSetCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "The copy already existed"
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Create Box Set",
+        "tags": [
+          "box sets"
+        ]
+      }
+    },
+    "/box-sets/{set_id}": {
+      "delete": {
+        "description": "Throw the copy away, with its history. The analysis itself stays.",
+        "operationId": "delete_box_set_box_sets__set_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Set Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Delete Box Set",
+        "tags": [
+          "box sets"
+        ]
+      },
+      "get": {
+        "operationId": "get_box_set_box_sets__set_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Set Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Get Box Set",
+        "tags": [
+          "box sets"
+        ]
+      },
+      "patch": {
+        "description": "Apply one save: add, move, resize, relabel and delete boxes. All or nothing.",
+        "operationId": "edit_box_set_box_sets__set_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Set Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BoxSetEdit"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSetConflict"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Edit Box Set",
+        "tags": [
+          "box sets"
+        ]
+      }
+    },
+    "/box-sets/{set_id}/changes": {
+      "get": {
+        "description": "Every change to the copy, newest first.",
+        "operationId": "box_set_changes_box_sets__set_id__changes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Set Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "before",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "exclusiveMinimum": 0,
+                  "maximum": 18446744073709551615,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Before"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxChangePage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Box Set Changes",
+        "tags": [
+          "box sets"
+        ]
+      }
+    },
+    "/box-sets/{set_id}/changes/{change_id}/revert": {
+      "post": {
+        "description": "Undo one change. Refused if the box was changed again since, or the change was already undone.",
+        "operationId": "revert_change_box_sets__set_id__changes__change_id__revert_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Set Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "change_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Change Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Revert"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSetConflict"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Revert Change",
+        "tags": [
+          "box sets"
+        ]
+      }
+    },
+    "/box-sets/{set_id}/image": {
+      "get": {
+        "description": "The image the copy's boxes are drawn on.",
+        "operationId": "box_set_image_box_sets__set_id__image_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "set_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Set Id",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {},
+              "image/png": {}
+            },
+            "description": "The tablet image"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Box Set Image",
+        "tags": [
+          "box sets"
         ]
       }
     },
