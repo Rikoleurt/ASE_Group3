@@ -167,7 +167,13 @@ For an existing database, apply
 `SESSION_COOKIE_SECURE=0` to your existing `.env` for local HTTP development.
 Use `SESSION_COOKIE_SECURE=1` in production over HTTPS. See the
 [history API and setup guide](docs/history-api.md) for the migration command,
-session behavior and request specifications. Images and sign crops are not stored.
+session behavior and request specifications. Sign crops are not stored.
+
+Uploaded images are kept with their analysis (#81), so a saved analysis shows the
+tablet with its boxes again. Files go to `UPLOAD_DIR` (default `var/uploads`, ignored
+by git; a deployment mounts a volume there). For an existing database, apply
+[081_uploaded_image.sql](backend/app/database/migration-81/081_uploaded_image.sql).
+See [kept uploads](docs/uploads.md).
 
 On the Analysis page, clicking a sign's box opens a form to propose the correct
 sign or flag the reading as uncertain. Corrections are kept for review and never
