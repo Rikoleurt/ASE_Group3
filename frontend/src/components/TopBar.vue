@@ -36,8 +36,8 @@ const pageLinks = [
 ]
 
 const userLinks = [
-    {to: '/login', label: 'Login'},
-    {to: '/signup', label: 'Signup'}
+    {to: '/login', label: 'Log in'},
+    {to: '/signup', label: 'Sign up'}
 ]
 
 const linkClass = 'inline-flex items-center gap-2 text-[1.05rem] hover:underline focus-visible:underline'
@@ -123,7 +123,7 @@ const activeClass = 'font-bold underline'
                 Shared with me
             </RouterLink>
             <RouterLink v-if="sessionUser && sessionReviewer" to="/review" :class="linkClass" :exact-active-class="activeClass">
-                Review
+                Review corrections
             </RouterLink>
             <RouterLink v-if="sessionUser && sessionAdmin" to="/admin" :class="linkClass" :exact-active-class="activeClass">
                 Admin

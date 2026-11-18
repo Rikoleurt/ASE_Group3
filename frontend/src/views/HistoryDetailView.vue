@@ -25,7 +25,7 @@ async function correct() {
   try {
     await router.push(`/box-sets/${await openCopy(detail.value.id)}`)
   } catch (failure) {
-    openError.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+    openError.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
     opening.value = false
   }
@@ -65,7 +65,7 @@ watch(() => route.params.id, load, { immediate: true })
       <h1 class="mt-6 text-3xl font-bold">Saved analysis</h1>
       <p v-if="loading" role="status" class="mt-6">Loading analysis…</p>
       <p v-if="error" role="alert" class="mt-6">{{ error }}</p>
-      <button v-if="error" class="mt-4 rounded bg-bar px-6 py-2" @click="load">Try again</button>
+      <button v-if="error && error !== 'Analysis not found.'" class="mt-4 rounded bg-bar px-6 py-2" @click="load">Try again</button>
       <template v-if="detail">
         <section class="mt-6 rounded-3xl bg-card p-6">
           <h2 class="break-all text-xl font-bold">{{ detail.filename }}</h2>
@@ -84,7 +84,7 @@ watch(() => route.params.id, load, { immediate: true })
           <ShareAnalysis v-if="detail.image_url" :analysis-id="detail.id" :filename="detail.filename" :discussion-id="detail.discussion_id" />
           <p class="mt-6">{{ detail.result.summary }}</p>
           <dl class="mt-4 divide-y divide-ink/10">
-            <div class="flex justify-between gap-4 py-3"><dt>Interpretation</dt><dd>{{ detail.result.symbol_interpretation }}</dd></div>
+            <div class="flex justify-between gap-4 py-3"><dt>Transliteration</dt><dd>{{ detail.result.symbol_interpretation }}</dd></div>
             <div class="flex justify-between gap-4 py-3"><dt>Confidence</dt><dd>{{ detail.result.confidence }}%</dd></div>
             <div class="flex justify-between gap-4 py-3"><dt>Processing time</dt><dd>{{ detail.result.time_taken }} s</dd></div>
           </dl>

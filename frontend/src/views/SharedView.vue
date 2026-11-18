@@ -22,7 +22,7 @@ async function load() {
     if (!response.ok) throw new Error('The shared copies could not be loaded. Please try again.')
     COPIES.value = await response.json()
   } catch (failure) {
-    ERROR.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+    ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
     LOADING.value = false
   }

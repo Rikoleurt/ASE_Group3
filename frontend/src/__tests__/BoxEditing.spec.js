@@ -209,7 +209,7 @@ describe('Correct the boxes page', () => {
     await wrapper.get('[data-testid="sign-matches"] button').trigger('click')
     expect(wrapper.get('[data-testid="selected-sign"]').text()).toBe('J')
     await wrapper.get('[data-testid="clear-sign"]').trigger('click')
-    expect(wrapper.get('[data-testid="selected-sign"]').text()).toBe('Unnamed')
+    expect(wrapper.get('[data-testid="selected-sign"]').text()).toBe('No sign yet')
     await wrapper.get('[data-testid="delete-box"]').trigger('click')
     expect(rows()).toHaveLength(1)
     expect(wrapper.get('[data-testid="save-state"]').text()).toBe('1 unsaved change')
@@ -230,7 +230,7 @@ describe('Correct the boxes page', () => {
     await pointer(surface, 'pointerup', 700, 500)
     expect(rows()).toHaveLength(3)
     expect(rows()[2].text()).toContain('new')
-    expect(wrapper.get('[data-testid="selected-sign"]').text()).toBe('Unnamed')
+    expect(wrapper.get('[data-testid="selected-sign"]').text()).toBe('No sign yet')
     expect(wrapper.get('[data-testid="mode-select"]').attributes('aria-pressed')).toBe('true')
   })
 

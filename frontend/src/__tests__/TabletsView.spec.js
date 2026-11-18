@@ -53,7 +53,7 @@ describe('Tablets page', () => {
   it('lists tablets and shows the scholars\' boxes with the credit', async () => {
     stubServer({ 'GET /api/tablets/HT-13/boxes?source=scholar': () => json(boxes('scholar')) })
     await render()
-    expect(wrapper.findAll('[data-testid="tablet-list"] button').map((b) => b.text())).toEqual(['HT 1327', 'HT 1309'])
+    expect(wrapper.findAll('[data-testid="tablet-list"] button').map((b) => b.text())).toEqual(['HT 1327 signs', 'HT 1309 signs'])
     expect(wrapper.get('img').attributes('src')).toBe('/api/tablets/HT-13/image')
     expect(wrapper.findAll('[data-testid="sign-box"]')).toHaveLength(1)
     expect(wrapper.get('[data-testid="credit"]').text()).toContain('CC BY-NC-SA 4.0')
