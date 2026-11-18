@@ -11,7 +11,8 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, st
 from fastapi.responses import FileResponse, JSONResponse
 from mysql.connector import Error as DatabaseError
 
-from backend.app import image_store, tablet_demo
+from backend.app import tablet_demo
+from backend.app.routes.community_routes import tablet_response
 from backend.app.auth import AuthenticatedWrite, CurrentUser
 from backend.app.box_edits import GEOMETRY, EditError, same, state
 from backend.app.data_controller.analysis_data_controller import describe_sign, read_signs
@@ -216,7 +217,5 @@ def box_set_image(set_id: Identifier, user: CurrentUser, controller: Controller)
         stored = controller.image(set_id)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
-    path = image_store.find(*stored) if stored else None
-    if path is None:
-        raise HTTPException(404, "Image not found.")
-    return FileResponse(path, media_type=image_store.MEDIA_TYPES[stored[1]], headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+    # #93's image storage: the kept upload, never cached, served as the type it was checked to be.
+    return tablet_response(stored)

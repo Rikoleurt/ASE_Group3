@@ -62,11 +62,18 @@ Repository-relative MP4 links do not produce an inline README player. -->
 | FastAPI backend | Validates requests, runs inference, groups signs into lines, and returns analysis results |
 | Sign detector + classifier | Locates signs, then proposes their identities and readings |
 | Fraction and reading code | Interprets quantities and compares entries with totals |
-| MySQL | Stores user accounts; image analysis does not require the database |
+| MySQL | Stores accounts, sessions, saved analyses, community discussions and comments |
 
 The upload flow is: **image → FastAPI → detector → classifier → line/formula
 analysis → Vue result view**. The corpus-based Tablet Reading view also uses
 transcriptions from lineara.eu.
+
+After analysis, users can publish their tablet and model result to **Community**.
+Discussions and images are publicly readable; commenting requires login. Images
+are retained privately on disk until shared. For existing databases, apply the
+scripts in `backend/app/database/migration-60/` before using this feature. See
+the [community setup guide](docs/community.md) for migration commands, persistent
+image storage, and API details.
 
 ### Code map and checks
 
@@ -167,13 +174,7 @@ For an existing database, apply
 `SESSION_COOKIE_SECURE=0` to your existing `.env` for local HTTP development.
 Use `SESSION_COOKIE_SECURE=1` in production over HTTPS. See the
 [history API and setup guide](docs/history-api.md) for the migration command,
-session behavior and request specifications. Sign crops are not stored.
-
-Uploaded images are kept with their analysis (#81), so a saved analysis shows the
-tablet with its boxes again. Files go to `UPLOAD_DIR` (default `var/uploads`, ignored
-by git; a deployment mounts a volume there). For an existing database, apply
-[081_uploaded_image.sql](backend/app/database/migration-81/081_uploaded_image.sql).
-See [kept uploads](docs/uploads.md).
+session behavior and request specifications. Images and sign crops are not stored.
 
 On the Analysis page, clicking a sign's box opens a form to propose the correct
 sign or flag the reading as uncertain. Corrections are kept for review and never
