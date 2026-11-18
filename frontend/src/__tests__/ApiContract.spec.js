@@ -11,6 +11,9 @@ import historyDetailView from '../views/HistoryDetailView.vue?raw'
 import tabletDemoView from '../views/TabletDemoView.vue?raw'
 import connectionTest from '../components/ConnectionTest.vue?raw'
 import tabletReadingView from '../views/TabletReadingView.vue?raw'
+import shareAnalysis from '../components/ShareAnalysis.vue?raw'
+import communityView from '../views/CommunityView.vue?raw'
+import discussionView from '../views/DiscussionView.vue?raw'
 import benchmarksView from '../views/BenchmarksView.vue?raw'
 import glyphPane from '../components/glyphs/GlyphOccurrencesPane.vue?raw'
 import signCorrection from '../components/analysis/SignCorrection.vue?raw'
@@ -22,6 +25,11 @@ import tabletsView from '../views/TabletsView.vue?raw'
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
 const CALLS = [
+  { method: 'post', path: '/community/discussions', source: shareAnalysis, snippet: "communityApi('/discussions'" },
+  { method: 'get', path: '/community/discussions', source: communityView, snippet: '/discussions?limit=20' },
+  { method: 'get', path: '/community/discussions/{discussion_id}', source: discussionView, snippet: 'communityApi(`/discussions/${id}`)' },
+  { method: 'get', path: '/community/discussions/{discussion_id}/comments', source: discussionView, snippet: 'communityApi(`/discussions/${id}/comments`)' },
+  { method: 'post', path: '/community/discussions/{discussion_id}/comments', source: discussionView, snippet: 'communityApi(`/discussions/${id}/comments`, {' },
   { method: 'post', path: '/users/register', source: authForm, snippet: '/api/users/${props.mode}' },
   { method: 'post', path: '/users/login', source: authForm, snippet: '/api/users/${props.mode}' },
   { method: 'post', path: '/users/register', source: useAuth, snippet: '/api/users/${mode}' },
@@ -30,6 +38,10 @@ const CALLS = [
   { method: 'get', path: '/users/me', source: session, snippet: "'/api/users/me'" },
   { method: 'post', path: '/users/logout', source: session, snippet: "'/api/users/logout'" },
   { method: 'get', path: '/users/me/analyses', source: historyView, snippet: '/api/users/me/analyses?limit=20' },
+  { method: 'get', path: '/users/me/analyses/{analysis_id}', source: historyDetailView, snippet: '/api/users/me/analyses/${encodeURIComponent(route.params.id)}' },
+  { method: 'get', path: '/users/me', source: session, snippet: "'/api/users/me'" },
+  { method: 'post', path: '/users/logout', source: session, snippet: "'/api/users/logout'" },
+  { method: 'get', path: '/users/me/analyses', source: historyView, snippet: '/api/users/me/analyses?limit=20${query}' },
   { method: 'get', path: '/users/me/analyses/{analysis_id}', source: historyDetailView, snippet: '/api/users/me/analyses/${encodeURIComponent(route.params.id)}' },
   { method: 'get', path: '/tablet-demo/ht13', source: tabletDemoView, snippet: '/api/tablet-demo/ht13?annotated=false' },
   { method: 'get', path: '/tablet-demo/ht13/predictions', source: tabletDemoView, snippet: '/api/tablet-demo/ht13/predictions' },
@@ -56,7 +68,6 @@ const CALLS = [
   { method: 'get', path: '/corrections/export', source: reviewView, snippet: "'/api/corrections/export'" },
   { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
   { method: 'get', path: '/admin/users', source: adminView, snippet: '/api/admin/users?${query}' },
-  { method: 'get', path: '/analysis/{analysis_id}/image', source: historyDetailView, snippet: '/api/analysis/${detail.id}/image' },
   { method: 'post', path: '/box-sets', source: useBoxSet, snippet: "'/api/box-sets'" },
   { method: 'get', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${encodeURIComponent(id)}' },
   { method: 'patch', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${copy.value.id}' },
@@ -89,7 +100,22 @@ const ANALYSIS_TEMPLATE = analysisView.slice(analysisView.indexOf('<template>'))
 const ANALYSIS_FIELDS = [...new Set([...ANALYSIS_TEMPLATE.matchAll(/ANALYSIS\.(\w+)/g)].map((m) => m[1]))]
 
 describe('API contract', () => {
-  it.each(CALLS)('$method $path is called by the frontend and exists in the API', ({ method, path, source, snippet }) => {
+  it('provides the community author, image and analysis without requiring a session to read', () => {
+    expect(responseFields('get', '/community/discussions/{discussion_id}', '200')).toEqual(
+      expect.arrayContaining(['id', 'title', 'author_username', 'created_at', 'image_url', 'result']),
+    )
+    const operation = contract.paths['/community/discussions/{discussion_id}'].get
+    expect(operation.security).toBeUndefined()
+    expect(contract.paths['/community/discussions'].post.security).toEqual([{APIKeyCookie: []}])
+    expect(requestFields('post', '/community/discussions')).toEqual(expect.arrayContaining(['analysis_id', 'title']))
+    expect(requestFields('post', '/community/discussions/{discussion_id}/comments')).toEqual(['body'])
+  })
+  it.each(CALLS)('$method $path is called by the frontend and exists in the API', ({
+                                                                                     method,
+                                                                                     path,
+                                                                                     source,
+                                                                                     snippet
+                                                                                   }) => {
     expect(source).toContain(snippet)
     expect(contract.paths[path]?.[method]).toBeDefined()
   })
@@ -100,7 +126,7 @@ describe('API contract', () => {
   })
 
   it('login returns the authenticated flag and user id and email the frontend reads', () => {
-    expect(responseFields('post', '/users/login', '200')).toEqual(expect.arrayContaining(['authenticated', 'user']))
+    expect(responseFields('post', '/users/login', '200')).toEqual(expect.arrayContaining(['authenticated', 'user', 'csrf_token']))
     const user = resolve(resolve(contract.components.schemas.LoginResponse).properties.user)
     expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'email', 'username']))
   })
@@ -108,6 +134,21 @@ describe('API contract', () => {
   it('the session returns the user and the CSRF token the frontend reads', () => {
     expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['user', 'csrf_token']))
     expect(session).toContain('csrf_token')
+    const user = resolve(contract.components.schemas.SessionUser.properties.user)
+    expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'username', 'email']))
+  })
+
+  it('history returns pagination, metadata and the saved analysis', () => {
+    expect(responseFields('get', '/users/me/analyses', '200')).toEqual(expect.arrayContaining(['items', 'next_cursor']))
+    const metadata = resolve(contract.components.schemas.AnalysisHistoryPage.properties.items.items)
+    expect(Object.keys(metadata.properties)).toEqual(expect.arrayContaining(['id', 'filename', 'created_at']))
+    expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toEqual(
+      expect.arrayContaining(['filename', 'created_at', 'format', 'size_bytes', 'result']),
+    )
+    const result = resolve(contract.components.schemas.AnalysisHistoryDetail.properties.result)
+    expect(Object.keys(result.properties)).toEqual(
+      expect.arrayContaining(['summary', 'symbol_interpretation', 'confidence', 'time_taken', 'signs', 'formulas']),
+    )
   })
 
   it('corrections accept what the correction form sends and return what it shows', () => {
@@ -124,11 +165,6 @@ describe('API contract', () => {
       expect(responseFields('get', '/users/me', '200')).toContain(role)
       expect(responseFields('post', '/users/login', '200')).toContain(role)
     }
-  })
-
-  it('history says whether the image was kept, which the detail page reads', () => {
-    expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toContain('has_image')
-    expect(historyDetailView).toContain('detail.has_image')
   })
 
   it('the box editor sends the change shapes the API declares and reads the copy it returns', () => {
@@ -150,8 +186,8 @@ describe('API contract', () => {
   })
 
   // Guards against #30 coming back: the page rendered a field the API never returned.
-  it('AnalysisView renders only fields of AnalysisResult', () => {
-    expect(ANALYSIS_FIELDS).toEqual(expect.arrayContaining(['summary', 'signs', 'formulas']))
+  it('AnalysisView renders only fields of SavedAnalysisResult', () => {
+    expect(ANALYSIS_FIELDS).toEqual(expect.arrayContaining(['summary', 'signs', 'formulas', 'analysis_id']))
     const returned = responseFields('post', '/analysis', '200')
     expect(ANALYSIS_FIELDS.filter((field) => !returned.includes(field))).toEqual([])
   })
