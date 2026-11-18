@@ -6,14 +6,14 @@ from datetime import datetime, timedelta, timezone
 import secrets
 from mysql.connector import Error as DatabaseError
 from backend.app.auth import (CurrentUser, AuthenticatedWrite, COOKIE_NAME, SESSION_SECONDS,
-                              cookie_secure, csrf_token, is_reviewer, token_hash, require_ajax)
+                              cookie_secure, csrf_token, is_admin, is_reviewer, token_hash, require_ajax)
 from backend.app.model.user import SessionUser
 from backend.app.model.analysis import AnalysisHistoryDetail, AnalysisHistoryPage, ApiError
 from backend.app.data_controller.analysis_data_controller import AnalysisDataController
 
 from backend.app.data_controller.user_data_controller import DuplicateUserError, UserDataController
 from backend.app.model.user import (
-    LoginResponse, RegistrationConflict, UserCreate, UserEmail, UserLogin, UserPublic, UserUsername,
+    Account, LoginResponse, RegistrationConflict, UserCreate, UserEmail, UserLogin, UserPublic, UserUsername,
 )
 
 
@@ -90,18 +90,22 @@ def login(payload: UserLogin, user_data_controller: UserController, request: Req
     response.set_cookie(COOKIE_NAME, token, max_age=SESSION_SECONDS, httponly=True,
                         secure=cookie_secure(), samesite="lax", path="/")
     response.headers["Cache-Control"] = "no-store"
-    public = UserPublic(id=user.id, email=user.email, username=user.username)
+    account = Account(id=user.id, email=user.email, username=user.username,
+                      is_admin=user.is_admin, is_reviewer=user.is_reviewer)
     return LoginResponse(
         csrf_token=csrf_token(token),
         authenticated=True,
-        user=public,
-        reviewer=is_reviewer(public),
+        user=UserPublic(**account.model_dump(include=set(UserPublic.model_fields))),
+        reviewer=is_reviewer(account),
+        admin=is_admin(account),
     )
 
 
 @router.get("/me", response_model=SessionUser, responses={401: {"model": ApiError}, 503: {"model": ApiError}})
 def me(request: Request, user: CurrentUser):
-    return SessionUser(user=user, csrf_token=csrf_token(request.cookies[COOKIE_NAME]), reviewer=is_reviewer(user))
+    return SessionUser(user=UserPublic(**user.model_dump(include=set(UserPublic.model_fields))),
+                       csrf_token=csrf_token(request.cookies[COOKIE_NAME]),
+                       reviewer=is_reviewer(user), admin=is_admin(user))
 
 
 @router.post("/logout", status_code=204, responses={401: {"model": ApiError}, 403: {"model": ApiError}, 503: {"model": ApiError}})

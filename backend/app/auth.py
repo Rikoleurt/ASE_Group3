@@ -50,10 +50,20 @@ def current_user(response: Response, token: Annotated[str | None, Depends(sessio
 CurrentUser = Annotated[UserPublic, Depends(current_user)]
 
 
-def is_reviewer(user: UserPublic) -> bool:
-    """Reviewers of sign corrections: the usernames listed in SIGN_REVIEWERS (comma-separated)."""
+def reviewer_from_env(username: str) -> bool:
+    """Named in SIGN_REVIEWERS (comma-separated, case-insensitive), the setting #52 started with."""
     reviewers = {name.strip().casefold() for name in os.getenv("SIGN_REVIEWERS", "").split(",") if name.strip()}
-    return user.username.casefold() in reviewers
+    return username.casefold() in reviewers
+
+
+def is_reviewer(user: UserPublic) -> bool:
+    """Reviewers of sign corrections: the reviewer role, or a username in SIGN_REVIEWERS."""
+    return bool(getattr(user, "is_reviewer", False)) or reviewer_from_env(user.username)
+
+
+def is_admin(user: UserPublic) -> bool:
+    """Admins manage roles and export corrections; only the admin role grants it."""
+    return bool(getattr(user, "is_admin", False))
 
 
 def require_csrf(request: Request, user: CurrentUser,
@@ -65,3 +75,17 @@ def require_csrf(request: Request, user: CurrentUser,
 
 
 AuthenticatedWrite = Annotated[UserPublic, Depends(require_csrf)]
+
+
+def require_admin(user: CurrentUser) -> UserPublic:
+    if not is_admin(user):
+        raise HTTPException(403, "Only admins can do this.")
+    return user
+
+
+def require_admin_write(user: AuthenticatedWrite) -> UserPublic:
+    return require_admin(user)
+
+
+Admin = Annotated[UserPublic, Depends(require_admin)]
+AdminWrite = Annotated[UserPublic, Depends(require_admin_write)]
