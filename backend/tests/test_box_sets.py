@@ -10,7 +10,7 @@ from mysql.connector import Error as DatabaseError
 from mysql.connector.errorcode import ER_DUP_ENTRY
 from mysql.connector.errors import IntegrityError
 
-from backend.app import image_store
+from backend.app.image_storage import store_image
 from backend.app.auth import COOKIE_NAME, csrf_token, token_hash
 from backend.app.box_edits import plan, plan_revert, state
 from backend.app.data_controller.box_set_data_controller import (BoxSetDataController, MissingChange, NotEditable,
@@ -36,7 +36,7 @@ class FakeController:
 
     def __init__(self):
         self.sets, self.boxes, self.log = {}, {}, {}
-        self.analyses = {12: {"owner": 7, "trained": True, "image": ("a" * 32, "PNG")}}
+        self.analyses = {12: {"owner": 7, "trained": True, "image": ("a" * 32 + ".png", "PNG")}}
         self.share_rows = {}  # (set_id, user_id) -> permission (#84)
         self.usernames = {7: "owner", 8: "u8", 9: "u9"}
 
@@ -284,11 +284,10 @@ def test_the_change_log_pages_backwards(owner, copy):
 
 
 def test_the_image_comes_from_the_kept_upload(owner, copy, fake):
-    stored = image_store.save(png(), "PNG")
-    fake.analyses[12]["image"] = (stored.key, "PNG")
+    fake.analyses[12]["image"] = (store_image(png(), "PNG"), "PNG")
     response = owner.get("/box-sets/1/image")
     assert (response.status_code, response.content, response.headers["cache-control"]) == (200, png(), "no-store")
-    fake.analyses[12]["image"] = ("f" * 32, "PNG")  # the file is gone
+    fake.analyses[12]["image"] = ("f" * 32 + ".png", "PNG")  # the file is gone
     assert owner.get("/box-sets/1/image").status_code == 404
 
 
@@ -342,17 +341,17 @@ def sql_controller(monkeypatch, rows=()):
 
 
 def test_controller_refuses_generic_and_imageless_analyses(monkeypatch):
-    controller, _, _ = sql_controller(monkeypatch, [[], [{"result_json": json.dumps({"trained": False}), "image_id": 3}]])
+    controller, _, _ = sql_controller(monkeypatch, [[], [{"result_json": json.dumps({"trained": False}), "image_key": "k"}]])
     with pytest.raises(NotEditable, match="generic model"):
         controller.create_from_analysis(7, 12)
-    controller, _, _ = sql_controller(monkeypatch, [[], [{"result_json": json.dumps({"trained": True}), "image_id": None}]])
+    controller, _, _ = sql_controller(monkeypatch, [[], [{"result_json": json.dumps({"trained": True}), "image_key": None}]])
     with pytest.raises(NotEditable, match="before images were kept"):
         controller.create_from_analysis(7, 12)
 
 
 def test_controller_copies_the_model_boxes(monkeypatch):
     result = {"trained": True, "width": 1000, "height": 800, "signs": MODEL_SIGNS}
-    controller, connection, cursor = sql_controller(monkeypatch, [[], [{"result_json": json.dumps(result), "image_id": 3}]])
+    controller, connection, cursor = sql_controller(monkeypatch, [[], [{"result_json": json.dumps(result), "image_key": "k"}]])
     cursor.lastrowid = 5
     assert controller.create_from_analysis(7, 12) == (5, True)
     sql, params = cursor.execute.call_args.args
@@ -365,7 +364,7 @@ def test_controller_copies_the_model_boxes(monkeypatch):
 def test_a_copy_made_at_the_same_moment_elsewhere_is_reused(monkeypatch):
     result = {"trained": True, "width": 10, "height": 10, "signs": []}
     controller, connection, cursor = sql_controller(
-        monkeypatch, [[], [{"result_json": json.dumps(result), "image_id": 3}], [{"id": 9}]])
+        monkeypatch, [[], [{"result_json": json.dumps(result), "image_key": "k"}], [{"id": 9}]])
     cursor.execute.side_effect = [None, None, IntegrityError(errno=ER_DUP_ENTRY), None]
     assert controller.create_from_analysis(7, 12) == (9, False)
 

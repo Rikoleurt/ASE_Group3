@@ -17,6 +17,7 @@ from backend.app.routes.admin_routes import router as admin_router
 from backend.app.routes.box_set_routes import router as box_set_router
 from backend.app.routes.corpus_routes import router as corpus_router
 from backend.app.routes.share_routes import router as share_router
+from backend.app.routes.community_routes import router as community_router
 
 
 
@@ -42,17 +43,18 @@ app.include_router(correction_router)
 app.include_router(admin_router)
 app.include_router(box_set_router)
 app.include_router(corpus_router)
+app.include_router(community_router)
 
 @app.exception_handler(DatabaseError)
 async def database_unavailable(_request, _error):
-    return JSONResponse(status_code=503, content={"detail": "Account storage is unavailable."},
+    return JSONResponse(status_code=503, content={"detail": "Storage is unavailable. Please try again."},
                         headers={"Cache-Control": "no-store"})
 
 
 @app.middleware("http")
 async def private_responses(request, call_next):
     response = await call_next(request)
-    if request.url.path.startswith(("/users", "/analysis", "/corrections")):
+    if request.url.path.startswith(("/users", "/analysis", "/corrections", "/community")):
         response.headers["Cache-Control"] = "no-store"
     return response
 

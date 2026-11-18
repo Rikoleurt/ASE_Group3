@@ -39,23 +39,6 @@ CREATE TABLE IF NOT EXISTS user_session (
     FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- An uploaded image kept on disk (#81): the file is UPLOAD_DIR/<key[:2]>/<key>.<png|jpg>,
--- named by a random key, never the user's filename. Deleting the row does not delete the file.
-CREATE TABLE IF NOT EXISTS uploaded_image (
-    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    owner_id BIGINT UNSIGNED NOT NULL,
-    storage_key CHAR(32) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-    sha256 CHAR(64) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-    format VARCHAR(4) NOT NULL,
-    size_bytes BIGINT UNSIGNED NOT NULL,
-    width INT UNSIGNED NOT NULL,
-    height INT UNSIGNED NOT NULL,
-    created_at DATETIME(6) NOT NULL,
-    CONSTRAINT uq_uploaded_image_key UNIQUE (storage_key),
-    INDEX ix_uploaded_image_owner (owner_id, created_at),
-    FOREIGN KEY (owner_id) REFERENCES `user`(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
 CREATE TABLE IF NOT EXISTS analysis (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     user_id BIGINT UNSIGNED NOT NULL,
@@ -65,10 +48,8 @@ CREATE TABLE IF NOT EXISTS analysis (
     size_bytes BIGINT UNSIGNED NOT NULL,
     result_schema_version SMALLINT UNSIGNED NOT NULL DEFAULT 1,
     result_json JSON NOT NULL,
-    image_id BIGINT UNSIGNED NULL,  -- NULL for analyses saved before images were kept
     INDEX ix_analysis_user_date (user_id, created_at, id),
-    FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE,
-    CONSTRAINT fk_analysis_image FOREIGN KEY (image_id) REFERENCES uploaded_image(id) ON DELETE SET NULL
+    FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Corrected copies of a tablet's boxes (#83): one per user per upload or corpus tablet.
@@ -202,3 +183,47 @@ CREATE TABLE IF NOT EXISTS sign_correction (
     FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE,
     FOREIGN KEY (reviewer_id) REFERENCES `user`(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS analysis_comment (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    analysis_id BIGINT UNSIGNED NOT NULL,
+    author_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    body TEXT NOT NULL,
+    INDEX ix_comment_analysis_date (analysis_id, created_at, id),
+    INDEX ix_comment_author (author_id),
+    FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+USE ase3;
+
+-- Existing analyses have no row here: their original pixels cannot be recovered.
+CREATE TABLE IF NOT EXISTS analysis_image (
+    analysis_id BIGINT UNSIGNED NOT NULL PRIMARY KEY,
+    storage_key VARCHAR(36) CHARACTER SET ascii COLLATE ascii_bin NOT NULL UNIQUE,
+    FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS community_discussion (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    analysis_id BIGINT UNSIGNED NOT NULL UNIQUE,
+    author_id BIGINT UNSIGNED NOT NULL,
+    title VARCHAR(160) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS community_comment (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    discussion_id BIGINT UNSIGNED NOT NULL,
+    author_id BIGINT UNSIGNED NOT NULL,
+    body TEXT NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    INDEX ix_community_comment_date (discussion_id, created_at, id),
+    FOREIGN KEY (discussion_id) REFERENCES community_discussion(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- analysis_comment remains private. Do not copy it into community_comment.
