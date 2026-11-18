@@ -17,6 +17,7 @@ from backend.app.routes.box_set_routes import UNAVAILABLE, Controller, access
 from backend.app.sharing import EveryoneLevel, ShareLevel, allows, rank
 
 router = APIRouter(tags=["sharing"])
+OWNER_ONLY_MANAGE = "Only the owner can give, change or take away Manage access."
 Identifier = Annotated[int, Path(gt=0, le=2**64 - 1)]
 ERRORS = {code: {"model": ApiError} for code in (401, 403, 404, 503)}
 
@@ -99,6 +100,8 @@ def share(set_id: Identifier, user_id: Identifier, request: ShareRequest, user: 
     if user_id == user.id:
         raise HTTPException(409, "You cannot change your own access.")
     try:
+        if record["permission"] != "owner" and "manage" in (request.permission, controller.share_of(set_id, user_id)):
+            raise HTTPException(403, OWNER_ONLY_MANAGE)
         if not controller.set_share(set_id, user_id, request.permission, user.id):
             raise HTTPException(404, "User not found.")
     except DatabaseError as error:
@@ -109,8 +112,10 @@ def share(set_id: Identifier, user_id: Identifier, request: ShareRequest, user: 
 @router.delete("/box-sets/{set_id}/shares/{user_id}", status_code=status.HTTP_204_NO_CONTENT, responses=ERRORS)
 def unshare(set_id: Identifier, user_id: Identifier, user: AuthenticatedWrite, controller: Controller) -> Response:
     """Stop sharing the copy with someone. Anyone may also remove their own access."""
-    access(controller, set_id, user, "view" if user_id == user.id else "manage")
+    record = access(controller, set_id, user, "view" if user_id == user.id else "manage")
     try:
+        if user_id != user.id and record["permission"] != "owner" and controller.share_of(set_id, user_id) == "manage":
+            raise HTTPException(403, OWNER_ONLY_MANAGE)
         controller.remove_share(set_id, user_id)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error

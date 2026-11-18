@@ -16,7 +16,12 @@ MAX_BOXES = 2000
 
 
 class EditBox(Box):
-    """A box from the editor: inside the image (a hair of rounding allowed) and not degenerate."""
+    """A box from the editor: inside the image (a hair of rounding allowed) and not degenerate.
+    NaN would pass every comparison below, so it is refused outright (#98)."""
+    x: float = Field(allow_inf_nan=False)
+    y: float = Field(allow_inf_nan=False)
+    w: float = Field(allow_inf_nan=False)
+    h: float = Field(allow_inf_nan=False)
 
     @model_validator(mode="after")
     def inside_the_image(self):

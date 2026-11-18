@@ -227,8 +227,20 @@ def test_health_and_openapi_import_without_mysql():
     assert "post" in paths["/users/login"]
 
 
+@pytest.fixture
+def as_42(monkeypatch, client):
+    """The client logged in as user 42 (the session lookup is stubbed; the field query is real)."""
+    from backend.app.auth import COOKIE_NAME
+    from backend.app.model.user import Account
+    monkeypatch.setattr(UserDataController, "get_session_user", lambda self, digest:
+                        Account(id=42, email="dev@ase3.com", username="Developer"))
+    client.cookies.set(COOKIE_NAME, "c" * 43)
+    return client
+
+
 @pytest.mark.parametrize("field,value", [("email", "dev@ase3.com"), ("username", "Developer")])
-def test_profile_field_returns_selected_value_without_password(client, connection, field, value):
+def test_profile_field_returns_selected_value_without_password(as_42, connection, field, value):
+    client = as_42
     cursor = connection.cursor.return_value
     cursor.execute.return_value = None
     cursor.fetchone.return_value = {field: value}
@@ -245,18 +257,29 @@ def test_profile_field_returns_selected_value_without_password(client, connectio
 
 
 @pytest.mark.parametrize("field", ["email", "username"])
-def test_profile_field_returns_not_found(client, connection, field):
+def test_profile_field_returns_not_found(as_42, connection, field):
     connection.cursor.return_value.fetchone.return_value = None
-    response = client.get(f"/users/42/{field}")
+    response = as_42.get(f"/users/42/{field}")
     assert response.status_code == 404
     assert response.json() == {"detail": "User not found."}
 
 
 @pytest.mark.parametrize("field", ["email", "username"])
 @pytest.mark.parametrize("user_id", ["0", "-1", "invalid"])
-def test_profile_field_rejects_invalid_id(client, connection, field, user_id):
-    assert client.get(f"/users/{user_id}/{field}").status_code == 422
+def test_profile_field_rejects_invalid_id(as_42, connection, field, user_id):
+    assert as_42.get(f"/users/{user_id}/{field}").status_code == 422
     connection.cursor.assert_not_called()
+
+
+@pytest.mark.parametrize("field", ["email", "username"])
+def test_profile_fields_are_private(client, as_42, connection, field):
+    """Nobody can list other accounts' emails or usernames by counting ids (#98)."""
+    connection.cursor.return_value.fetchone.return_value = {field: "someone@else.com"}
+    response = as_42.get(f"/users/43/{field}")
+    assert (response.status_code, response.json()) == (404, {"detail": "User not found."})
+    connection.cursor.return_value.execute.assert_not_called()
+    as_42.cookies.clear()
+    assert as_42.get(f"/users/42/{field}").status_code == 401
 
 
 @pytest.mark.parametrize("username", ["dev", "  dev\t"])

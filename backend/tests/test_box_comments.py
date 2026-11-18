@@ -98,7 +98,8 @@ def test_comment_queries_are_scoped_to_the_copy(monkeypatch):
     controller = BoxSetDataController()
     controller.comments(1, 2)
     sql, params = connection.cursor.return_value.execute.call_args.args
-    assert "WHERE c.set_id = %s AND c.box_id = %s" in sql and params == (1, 2)
+    assert "WHERE c.set_id = %s AND c.box_id = %s" in sql and params == (1, 2, 500)
+    assert "ORDER BY c.id DESC LIMIT %s" in sql  # the newest page, shown oldest first
     controller.comment(1, 5)
     sql, params = connection.cursor.return_value.execute.call_args.args
     assert "id = %s AND set_id = %s" in sql and params == (5, 1)

@@ -1,14 +1,17 @@
 """Admin page: find users and grant or remove the admin and reviewer roles, and export corrections (#87)."""
+import os
 from datetime import datetime, timezone
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from fastapi.responses import FileResponse
+from starlette.background import BackgroundTask
 from mysql.connector import Error as DatabaseError
 
 from backend.app import training_export
 from backend.app.auth import Admin, AdminWrite, reviewer_from_env
 from backend.app.data_controller.correction_data_controller import CorrectionDataController
-from backend.app.data_controller.user_data_controller import UserDataController
+from backend.app.data_controller.user_data_controller import LastAdmin, UserDataController
 from backend.app.training_export import ExportDataController
 from backend.app.model.analysis import ApiError
 from backend.app.model.user import AdminUser, AdminUserPage, RoleUpdate
@@ -50,6 +53,8 @@ def set_roles(user_id: Identifier, roles: RoleUpdate, admin: AdminWrite, control
         raise HTTPException(409, "You cannot remove your own admin role.")
     try:
         row = controller.set_roles(user_id, roles.admin, roles.reviewer)
+    except LastAdmin as error:
+        raise HTTPException(409, "The site needs at least one admin.") from error
     except DatabaseError as error:
         raise HTTPException(503, "User storage is unavailable.") from error
     if row is None:
@@ -71,24 +76,27 @@ Exports = Annotated[ExportDataController, Depends(get_export_data_controller)]
 Corrections = Annotated[CorrectionDataController, Depends(get_correction_controller)]
 
 
-def _export_data(exports: ExportDataController, corrections: CorrectionDataController) -> tuple[list, list]:
+def _export_data(exports: ExportDataController, corrections: CorrectionDataController,
+                 everyone: bool) -> tuple[list, list]:
     try:
-        return exports.copies(), corrections.export_approved()
+        return exports.copies(everyone), corrections.export_approved()
     except DatabaseError as error:
         raise HTTPException(503, "Correction storage is unavailable.") from error
 
 
 @router.get("/export/corrections", responses=DENIED)
-def export_corrections(_admin: Admin, exports: Exports, corrections: Corrections) -> dict:
-    """Every corrected copy's boxes in the training annotations' shape, and the approved label corrections."""
-    return training_export.corrections(*_export_data(exports, corrections))
+def export_corrections(_admin: Admin, exports: Exports, corrections: Corrections, everyone: bool = False) -> dict:
+    """Corrected copies' boxes in the training annotations' shape, and the approved label corrections.
+    Copies by admins and reviewers only, unless `everyone` (anyone can register and edit)."""
+    return training_export.corrections(*_export_data(exports, corrections, everyone))
 
 
-@router.get("/export/corrections.zip", response_class=Response,
+@router.get("/export/corrections.zip", response_class=FileResponse,
             responses={**DENIED, 200: {"content": {"application/zip": {}}, "description": "YOLO images, labels and classes"}})
-def export_corrections_zip(_admin: Admin, exports: Exports, corrections: Corrections) -> Response:
-    """The same as a YOLO dataset: images/, labels/, classes.txt and corrections.json."""
-    archive = training_export.yolo_zip(*_export_data(exports, corrections))
+def export_corrections_zip(_admin: Admin, exports: Exports, corrections: Corrections,
+                           everyone: bool = False) -> FileResponse:
+    """The same as a YOLO dataset: images/, labels/, classes.txt and corrections.json, streamed from disk."""
+    path = training_export.yolo_zip(*_export_data(exports, corrections, everyone))
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
-    return Response(archive, media_type="application/zip", headers={
-        "Content-Disposition": f'attachment; filename="corrections-{stamp}.zip"', "Cache-Control": "no-store"})
+    return FileResponse(path, media_type="application/zip", filename=f"corrections-{stamp}.zip",
+                        headers={"Cache-Control": "no-store"}, background=BackgroundTask(os.remove, path))

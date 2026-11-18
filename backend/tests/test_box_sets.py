@@ -42,9 +42,10 @@ class FakeController:
         self.comment_rows = {}  # (#86)
 
     # Comments (#86).
-    def comments(self, set_id, box_id=None):
-        return [dict(c) for c in self.comment_rows.values()
+    def comments(self, set_id, box_id=None, limit=500):
+        rows = [dict(c) for c in self.comment_rows.values()
                 if c["set"] == set_id and (box_id is None or c["box_id"] == box_id)]
+        return rows[-limit:]
 
     def comment(self, set_id, comment_id):
         found = self.comment_rows.get(comment_id)
@@ -141,16 +142,20 @@ class FakeController:
         steps = plan(changes, current, known_sign)
         return self._write(set_id, author_id, steps) if steps else version
 
-    def revert(self, set_id, author_id, change_id, version):
+    def revert(self, set_id, author_id, change_id, version, known_sign=None):
         self._lock(set_id, version)
         row = self.log.get(change_id)
         if row is None or row["set"] != set_id:
             raise MissingChange()
         target = self.boxes[row["box_id"]]
+        live = sum(1 for b in self.boxes.values() if b["set"] == set_id and not b["deleted"])
         step = plan_revert({"id": row["id"], "box_id": row["box_id"], "reverted_by": row["reverted_by_id"],
                             "before": row["before_state"], "after": row["after_state"]},
-                           state(target, target["sign"], target["deleted"]))
-        return self._write(set_id, author_id, [step])
+                           state(target, target["sign"], target["deleted"]), live, known_sign)
+        version = self._write(set_id, author_id, [step])
+        if row["action"] == "revert" and row["reverts_id"]:
+            self.log[row["reverts_id"]]["reverted_by_id"] = None  # redo: the undone change is in effect again
+        return version
 
     def changes(self, set_id, limit, before=None):
         rows = sorted((r for r in self.log.values() if r["set"] == set_id and (before is None or r["id"] < before)),

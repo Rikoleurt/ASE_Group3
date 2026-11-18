@@ -6,10 +6,11 @@ Public, like the other corpus routes: the drawings and transcriptions are publis
 from pathlib import Path as FilePath
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi import APIRouter, HTTPException, Path, Query, Request, Response
 from fastapi.responses import FileResponse
 
 from backend.app import corpus, glyph_index, reading
+from backend.app.auth import COOKIE_NAME, current_user
 from backend.app.data_controller.analysis_data_controller import read_signs
 from backend.app.model.analysis import ApiError
 from backend.app.model.corpus import Credit, Source, TabletBoxes, TabletItem, TabletPage
@@ -48,8 +49,11 @@ def tablet_image(slug: Slug, index: Index) -> FileResponse:
 
 
 @router.get("/{slug}/boxes", response_model=TabletBoxes, responses=ERRORS)
-def tablet_boxes(slug: Slug, index: Index, source: Source = "scholar") -> TabletBoxes:
-    """The tablet's boxes from the scholars' published transcription, or as the reader finds them."""
+def tablet_boxes(slug: Slug, index: Index, request: Request, source: Source = "scholar") -> TabletBoxes:
+    """The tablet's boxes from the scholars' published transcription, or as the reader finds them.
+    The reader's need a login: reading a tablet runs the model, as an upload does (#98)."""
+    if source == "model":
+        current_user(Response(), request.cookies.get(COOKIE_NAME))
     if slug not in index.slugs:
         raise HTTPException(404, "Tablet not found.")
     path = tracing(slug)
@@ -58,7 +62,7 @@ def tablet_boxes(slug: Slug, index: Index, source: Source = "scholar") -> Tablet
     else:
         try:
             signs = corpus.model_signs(slug, path)
-        except corpus.ReaderMissing as error:
+        except (corpus.ReaderMissing, corpus.ReaderBusy) as error:
             raise HTTPException(503, str(error)) from error
         except (FileNotFoundError, RuntimeError) as error:
             raise HTTPException(503, "The sign reader is unavailable.") from error
