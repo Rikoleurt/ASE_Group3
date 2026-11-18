@@ -7,11 +7,12 @@ everyone else gets 404, as with history.
 
 ## Setup
 
-For a database created before this feature, apply the migrations in order (both can be
-run again safely):
+For a database created before this feature, apply the migrations in order (#93's 060/061 keep
+the uploaded images; all can be run again safely):
 
 ```bash
-mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-81/081_uploaded_image.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-60/060-migration.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-60/061-community.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-83/083_box_sets.sql
 ```
 

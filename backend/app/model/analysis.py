@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
+from typing import Annotated
 
 
 class Box(BaseModel):
@@ -100,11 +101,12 @@ class AnalysisMetadata(BaseModel):
     format: Literal["PNG", "JPEG"]
     size_bytes: int
     result_schema_version: int = 1
-    has_image: bool = False  # the uploaded image is kept (#81); False for analyses saved before
 
 
 class AnalysisHistoryDetail(AnalysisMetadata):
     result: AnalysisResult
+    image_url: str | None = None
+    discussion_id: int | None = None
 
 
 class AnalysisHistoryPage(BaseModel):
@@ -114,3 +116,13 @@ class AnalysisHistoryPage(BaseModel):
 
 class ApiError(BaseModel):
     detail: str
+
+class CommentCreate(BaseModel):
+    body: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+
+class AnalysisComment(BaseModel):
+    id: int
+    analysis_id: int
+    author_id: int
+    created_at: datetime
+    body: str

@@ -9,11 +9,11 @@ import numpy as np
 from PIL import Image, UnidentifiedImageError
 
 from backend.app import tablet_demo
-from backend.app.image_store import StoredImage
 from backend.app.data_controller.data_controller import DataController
+from backend.app.image_storage import store_image, remove_image
 from backend.app.model.analysis import (AnalysisResult, AnalysisMetadata, AnalysisHistoryDetail,
                                         Box, DetectedSign, FractionTerm, Line)
-from backend.app.model.analysis import Formula as FormulaModel
+from backend.app.model.analysis import Formula as FormulaModel, AnalysisComment
 from backend.app.reading_pipeline.formula import Formula, Term, find_formulas, fmt
 from backend.app.reading_pipeline.glyphs import glyph
 from backend.app.reading_pipeline.lines import group_lines
@@ -30,51 +30,32 @@ class ImageTooLargeError(ValueError):
 
 class AnalysisDataController(DataController):
     def save_analysis(self, user_id: int, filename: str, format: str, size_bytes: int,
-                      result: AnalysisResult, image: StoredImage | None = None) -> AnalysisMetadata:
-        """Store an immutable result snapshot, and the stored image's record when there is one.
-
-        The snapshot leaves out the sign crops; the image itself is on disk (image_store),
-        so both rows are written in one transaction and neither exists without the other.
-        """
+                      result: AnalysisResult, *, image_bytes: bytes | None = None) -> AnalysisMetadata:
+        """Save the snapshot and private image reference in one SQL transaction."""
         created_at = datetime.now(timezone.utc)
-        stamp = created_at.replace(tzinfo=None)
         snapshot = result.model_dump(mode="json", exclude={"signs": {"__all__": {"crop"}}})
-        with self.connection() as connection:
-            cursor = connection.cursor()
-            try:
-                image_id = None
-                if image is not None:
+        key = store_image(image_bytes, format) if image_bytes is not None else None
+        try:
+            with self.connection() as connection:
+                cursor = connection.cursor()
+                try:
                     cursor.execute(
-                        "INSERT INTO uploaded_image (owner_id, storage_key, sha256, format, size_bytes, width, height, "
-                        "created_at) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
-                        (user_id, image.key, image.sha256, image.format, image.size_bytes, result.width, result.height,
-                         stamp),
+                        "INSERT INTO analysis (user_id, created_at, filename, format, size_bytes, result_json) "
+                        "VALUES (%s, %s, %s, %s, %s, %s)",
+                        (user_id, created_at.replace(tzinfo=None), filename, format, size_bytes, json.dumps(snapshot)),
                     )
-                    image_id = cursor.lastrowid
-                cursor.execute(
-                    "INSERT INTO analysis (user_id, created_at, filename, format, size_bytes, result_json, image_id) "
-                    "VALUES (%s, %s, %s, %s, %s, %s, %s)",
-                    (user_id, stamp, filename, format, size_bytes, json.dumps(snapshot), image_id),
-                )
-                analysis_id = cursor.lastrowid
-            finally:
-                cursor.close()
+                    analysis_id = cursor.lastrowid
+                    if key:
+                        cursor.execute("INSERT INTO analysis_image (analysis_id, storage_key) VALUES (%s, %s)",
+                                       (analysis_id, key))
+                finally:
+                    cursor.close()
+        except Exception:
+            if key:
+                remove_image(key)
+            raise
         return AnalysisMetadata(id=analysis_id, created_at=created_at, filename=filename,
-                                format=format, size_bytes=size_bytes, has_image=image is not None)
-
-    def stored_image(self, user_id: int, analysis_id: int) -> tuple[str, str] | None:
-        """The storage key and format of the image of the user's own analysis, or None."""
-        with self.connection() as connection:
-            cursor = connection.cursor(dictionary=True)
-            try:
-                cursor.execute(
-                    "SELECT i.storage_key, i.format FROM analysis a JOIN uploaded_image i ON i.id = a.image_id "
-                    "WHERE a.user_id = %s AND a.id = %s", (user_id, analysis_id),
-                )
-                row = cursor.fetchone()
-            finally:
-                cursor.close()
-        return (row["storage_key"], row["format"]) if row else None
+                                format=format, size_bytes=size_bytes)
 
     def list_analyses(self, user_id: int, limit: int,
                       before: tuple[datetime, int] | None = None) -> list[AnalysisMetadata]:
@@ -89,14 +70,14 @@ class AnalysisDataController(DataController):
             cursor = connection.cursor(dictionary=True)
             try:
                 cursor.execute(
-                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version, "
-                    "image_id IS NOT NULL AS has_image FROM analysis WHERE user_id = %s" + clause +
+                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version "
+                    "FROM analysis WHERE user_id = %s" + clause +
                     " ORDER BY created_at DESC, id DESC LIMIT %s", tuple(params),
                 )
                 rows = cursor.fetchall()
             finally:
                 cursor.close()
-        return [AnalysisMetadata(**_metadata(row)) for row in rows]
+        return [AnalysisMetadata(**{**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc)}) for row in rows]
 
     def get_analysis(self, user_id: int, analysis_id: int) -> AnalysisHistoryDetail | None:
         """A foreign record is indistinguishable from a missing record."""
@@ -104,17 +85,35 @@ class AnalysisDataController(DataController):
             cursor = connection.cursor(dictionary=True)
             try:
                 cursor.execute(
-                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version, result_json, "
-                    "image_id IS NOT NULL AS has_image FROM analysis WHERE user_id = %s AND id = %s",
-                    (user_id, analysis_id),
+                    "SELECT id, created_at, filename, format, size_bytes, result_schema_version, result_json "
+                    "FROM analysis WHERE user_id = %s AND id = %s", (user_id, analysis_id),
                 )
                 row = cursor.fetchone()
+                if row is not None:
+                    cursor.execute("SELECT i.storage_key, d.id AS discussion_id FROM analysis a "
+                                   "LEFT JOIN analysis_image i ON i.analysis_id = a.id "
+                                   "LEFT JOIN community_discussion d ON d.analysis_id = a.id WHERE a.id = %s",
+                                   (analysis_id,))
+                    shared = cursor.fetchone()
+                    row["image_url"] = f"/api/analysis/{analysis_id}/image" if shared["storage_key"] else None
+                    row["discussion_id"] = shared["discussion_id"]
             finally:
                 cursor.close()
         if row is None:
             return None
         result = json.loads(row.pop("result_json"))
-        return AnalysisHistoryDetail(**_metadata(row), result=result)
+        return AnalysisHistoryDetail(**{**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc)}, result=result)
+
+    def get_image(self, user_id: int, analysis_id: int) -> tuple[str, str] | None:
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("SELECT i.storage_key, a.format FROM analysis a "
+                               "JOIN analysis_image i ON i.analysis_id = a.id WHERE a.id = %s AND a.user_id = %s",
+                               (analysis_id, user_id))
+                return cursor.fetchone()
+            finally:
+                cursor.close()
 
     def analyze(self, image_bytes: bytes, filename: str | None = None) -> AnalysisResult | None:
         """Read the signs on an uploaded image; None if it is not an image.
@@ -153,6 +152,55 @@ class AnalysisDataController(DataController):
         )
 
 
+    def _owns_analysis(self, cursor, user_id: int, analysis_id: int) -> bool:
+        cursor.execute("SELECT 1 FROM analysis WHERE id = %s AND user_id = %s", (analysis_id, user_id))
+        return cursor.fetchone() is not None
+
+    def list_comments(self, user_id: int, analysis_id: int) -> list[AnalysisComment] | None:
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                if not self._owns_analysis(cursor, user_id, analysis_id):
+                    return None
+                cursor.execute(
+                    "SELECT id, analysis_id, author_id, created_at, body FROM analysis_comment "
+                    "WHERE analysis_id = %s ORDER BY created_at, id LIMIT 500", (analysis_id,),
+                )
+                rows = cursor.fetchall()
+            finally:
+                cursor.close()
+        return [AnalysisComment(**{**r, "created_at": r["created_at"].replace(tzinfo=timezone.utc)}) for r in rows]
+
+    def add_comment(self, user_id: int, analysis_id: int, body: str) -> AnalysisComment | None:
+        created_at = datetime.now(timezone.utc).replace(tzinfo=None)
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                if not self._owns_analysis(cursor, user_id, analysis_id):
+                    return None
+                cursor.execute(
+                    "INSERT INTO analysis_comment (analysis_id, author_id, created_at, body) VALUES (%s, %s, %s, %s)",
+                    (analysis_id, user_id, created_at, body),
+                )
+                comment_id = cursor.lastrowid
+                connection.commit()
+            finally:
+                cursor.close()
+        return AnalysisComment(id=comment_id, analysis_id=analysis_id, author_id=user_id,
+                            created_at=created_at.replace(tzinfo=timezone.utc), body=body)
+
+    def delete_comment(self, user_id: int, comment_id: int) -> bool:
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute("DELETE FROM analysis_comment WHERE id = %s AND author_id = %s", (comment_id, user_id))
+                deleted = cursor.rowcount > 0
+                connection.commit()
+            finally:
+                cursor.close()
+        return deleted
+
+
 def read_signs(signs: list[DetectedSign], trained: bool = True) -> dict:
     """Reading order, lines, transliteration and fraction formulas for a tablet's signs.
 
@@ -189,11 +237,6 @@ def describe_sign(sign: str | None, catalogue: dict) -> dict:
     entry = catalogue.get(sign, {})
     return dict(sign=sign, label=entry.get("name") or sign, reading=entry.get("reading"),
                 role=role_of(sign, entry.get("reading"), entry.get("roles") or []), glyph=glyph(sign))
-
-
-def _metadata(row: dict) -> dict:
-    """A history row as AnalysisMetadata fields: UTC time, and MySQL's 0/1 as a bool."""
-    return {**row, "created_at": row["created_at"].replace(tzinfo=timezone.utc), "has_image": bool(row.get("has_image"))}
 
 
 def _fallback(signs: list[DetectedSign]) -> str:
