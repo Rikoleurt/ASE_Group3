@@ -18,6 +18,7 @@ import benchmarksView from '../views/BenchmarksView.vue?raw'
 import glyphPane from '../components/glyphs/GlyphOccurrencesPane.vue?raw'
 import signCorrection from '../components/analysis/SignCorrection.vue?raw'
 import reviewView from '../views/ReviewView.vue?raw'
+import adminView from '../views/AdminView.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -64,6 +65,8 @@ const CALLS = [
   { method: 'post', path: '/corrections/{correction_id}/review', source: reviewView, snippet: '/api/corrections/${item.id}/review' },
   { method: 'get', path: '/corrections/export', source: reviewView, snippet: "'/api/corrections/export'" },
   { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
+  { method: 'get', path: '/admin/users', source: adminView, snippet: '/api/admin/users?${query}' },
+  { method: 'patch', path: '/admin/users/{user_id}', source: adminView, snippet: '/api/admin/users/${user.id}' },
 ]
 
 function resolve(schema) {
@@ -148,9 +151,19 @@ describe('API contract', () => {
     expect(requestFields('post', '/corrections/{correction_id}/review')).toEqual(['decision'])
   })
 
-  it('the session says whether the user reviews corrections', () => {
-    expect(responseFields('get', '/users/me', '200')).toContain('reviewer')
-    expect(responseFields('post', '/users/login', '200')).toContain('reviewer')
+  it('the session says whether the user reviews corrections and administers roles', () => {
+    for (const role of ['reviewer', 'admin']) {
+      expect(responseFields('get', '/users/me', '200')).toContain(role)
+      expect(responseFields('post', '/users/login', '200')).toContain(role)
+    }
+  })
+
+  it('the admin page sends and reads only declared role fields', () => {
+    expect(requestFields('patch', '/admin/users/{user_id}')).toEqual(['admin', 'reviewer'])
+    expect(responseFields('patch', '/admin/users/{user_id}', '200')).toEqual(
+      expect.arrayContaining(['id', 'username', 'email', 'admin', 'reviewer', 'reviewer_from_env']),
+    )
+    expect(responseFields('get', '/admin/users', '200')).toEqual(expect.arrayContaining(['items', 'total']))
   })
 
   // Guards against #30 coming back: the page rendered a field the API never returned.

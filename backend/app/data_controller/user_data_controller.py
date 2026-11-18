@@ -7,7 +7,7 @@ from mysql.connector.errors import IntegrityError
 from mysql.connector.errorcode import ER_DUP_ENTRY
 
 from backend.app.data_controller.data_controller import DataController
-from backend.app.model.user import User, UserPublic
+from backend.app.model.user import Account, User, UserPublic
 
 
 _PASSWORD_SCHEME = "pbkdf2_sha256"
@@ -36,6 +36,11 @@ def _normalize_username(username: str) -> str:
     :return: Username without surrounding whitespace
     """
     return username.strip()
+
+def like_escape(text: str) -> str:
+    """Make `text` match literally inside a LIKE pattern (MySQL's default escape is the backslash)."""
+    return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+
 
 def hash_password(password: str) -> str:
     """
@@ -101,7 +106,7 @@ class UserDataController(DataController):
             try:
                 cursor.execute(
                     """
-                    SELECT id, email, username, password
+                    SELECT id, email, username, password, is_admin, is_reviewer
                     FROM `user`
                     WHERE email = %s
                     LIMIT 1
@@ -120,6 +125,8 @@ class UserDataController(DataController):
             email=row["email"],
             username=row["username"],
             password=row["password"],
+            is_admin=bool(row.get("is_admin")),
+            is_reviewer=bool(row.get("is_reviewer")),
         )
 
     def get_by_username(self, username: str) -> User | None:
@@ -134,7 +141,7 @@ class UserDataController(DataController):
             try:
                 cursor.execute(
                     """
-                    SELECT id, email, username, password
+                    SELECT id, email, username, password, is_admin, is_reviewer
                     FROM `user`
                     WHERE username = %s
                     LIMIT 1
@@ -152,6 +159,8 @@ class UserDataController(DataController):
             email=row["email"],
             username=row["username"],
             password=row["password"],
+            is_admin=bool(row.get("is_admin")),
+            is_reviewer=bool(row.get("is_reviewer")),
         )
 
     def get_email_by_id(self, user_id: int) -> str | None:
@@ -281,12 +290,12 @@ class UserDataController(DataController):
             finally:
                 cursor.close()
 
-    def get_session_user(self, token_hash: str) -> UserPublic | None:
+    def get_session_user(self, token_hash: str) -> Account | None:
         with self.connection() as connection:
             cursor = connection.cursor(dictionary=True)
             try:
                 cursor.execute(
-                    "SELECT u.id, u.email, u.username FROM user_session s "
+                    "SELECT u.id, u.email, u.username, u.is_admin, u.is_reviewer FROM user_session s "
                     "JOIN `user` u ON u.id = s.user_id "
                     "WHERE s.token_hash = %s AND s.expires_at > UTC_TIMESTAMP(6)",
                     (token_hash,),
@@ -294,7 +303,7 @@ class UserDataController(DataController):
                 row = cursor.fetchone()
             finally:
                 cursor.close()
-        return UserPublic(**row) if row else None
+        return Account(**{**row, "is_admin": bool(row.get("is_admin")), "is_reviewer": bool(row.get("is_reviewer"))}) if row else None
 
     def delete_session(self, token_hash: str) -> None:
         with self.connection() as connection:
@@ -303,3 +312,38 @@ class UserDataController(DataController):
                 cursor.execute("DELETE FROM user_session WHERE token_hash = %s", (token_hash,))
             finally:
                 cursor.close()
+
+    def list_users(self, query: str, limit: int, offset: int) -> tuple[list[dict], int]:
+        """Users whose username or email contains `query`, by username, with the total count."""
+        pattern = "%" + like_escape(query) + "%"
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute("SELECT COUNT(*) AS total FROM `user` WHERE username LIKE %s OR email LIKE %s",
+                               (pattern, pattern))
+                total = cursor.fetchone()["total"]
+                cursor.execute(
+                    "SELECT id, username, email, is_admin, is_reviewer FROM `user` "
+                    "WHERE username LIKE %s OR email LIKE %s ORDER BY username, id LIMIT %s OFFSET %s",
+                    (pattern, pattern, limit, offset),
+                )
+                rows = cursor.fetchall()
+            finally:
+                cursor.close()
+        return rows, total
+
+    def set_roles(self, user_id: int, admin: bool | None, reviewer: bool | None) -> dict | None:
+        """Change the given roles; None when the user does not exist."""
+        changes = [(column, value) for column, value in (("is_admin", admin), ("is_reviewer", reviewer)) if value is not None]
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute(
+                    "UPDATE `user` SET " + ", ".join(f"{column} = %s" for column, _ in changes) + " WHERE id = %s",
+                    (*[value for _, value in changes], user_id),
+                )
+                cursor.execute("SELECT id, username, email, is_admin, is_reviewer FROM `user` WHERE id = %s", (user_id,))
+                row = cursor.fetchone()
+            finally:
+                cursor.close()
+        return row

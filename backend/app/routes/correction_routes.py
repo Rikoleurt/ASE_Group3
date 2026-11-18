@@ -1,7 +1,7 @@
 """Users propose corrections to the reader's signs; reviewers decide which become training labels.
 
-A correction never changes a saved analysis or the deployed model. Reviewers are the
-usernames listed in SIGN_REVIEWERS (comma-separated).
+A correction never changes a saved analysis or the deployed model. Reviewers have the
+reviewer role (set on the admin page) or are named in SIGN_REVIEWERS (comma-separated).
 """
 from typing import Annotated
 

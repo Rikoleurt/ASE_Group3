@@ -5,12 +5,15 @@ let csrfToken = null
 export const sessionUser = ref(null)
 // Whether the user may review sign corrections; the server enforces it either way.
 export const sessionReviewer = ref(false)
+// Whether the user may manage roles on the admin page; the server enforces it either way.
+export const sessionAdmin = ref(false)
 
 export function acceptSession(data) {
   csrfToken = data.csrf_token
   rememberUserId(data.user.id)
   sessionUser.value = data.user
   sessionReviewer.value = data.reviewer === true
+  sessionAdmin.value = data.admin === true
   return data.user
 }
 
@@ -18,6 +21,7 @@ export function forgetSession() {
   csrfToken = null
   sessionUser.value = null
   sessionReviewer.value = false
+  sessionAdmin.value = false
   clearCurrentUserId()
 }
 

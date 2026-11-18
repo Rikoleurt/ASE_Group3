@@ -137,7 +137,7 @@ def test_login_returns_public_user(client, connection, monkeypatch):
     response = client.post("/users/login", json={"email": "DEV@ase3.com", "password": "dev"})
     assert response.status_code == 200
     assert response.json().pop("csrf_token")
-    assert {k: v for k, v in response.json().items() if k != "csrf_token"} == {"authenticated": True, "reviewer": False, "user": {"id": 1, "email": "dev@ase3.com", "username": "dev"}}
+    assert {k: v for k, v in response.json().items() if k != "csrf_token"} == {"authenticated": True, "reviewer": False, "admin": False, "user": {"id": 1, "email": "dev@ase3.com", "username": "dev"}}
     sql, parameters = connection.cursor.return_value.execute.call_args_list[0].args
     assert "WHERE email = %s" in sql
     assert parameters == ("dev@ase3.com",)
@@ -200,9 +200,23 @@ def test_routes_support_controller_injection(monkeypatch):
         with TestClient(app, headers={"X-Requested-With": "ASE"}) as client:
             response = client.post("/users/login", json={"email": "dev@ase3.com", "password": "dev"})
         assert response.json().pop("csrf_token")
-        assert {k: v for k, v in response.json().items() if k != "csrf_token"} == {"authenticated": True, "reviewer": True, "user": {"id": 7, "email": "dev@ase3.com", "username": "dev"}}
+        assert {k: v for k, v in response.json().items() if k != "csrf_token"} == {"authenticated": True, "reviewer": True, "admin": False, "user": {"id": 7, "email": "dev@ase3.com", "username": "dev"}}
     finally:
         app.dependency_overrides.clear()
+
+
+def test_login_reports_the_roles_stored_on_the_account(client, connection, monkeypatch):
+    monkeypatch.delenv("SIGN_REVIEWERS", raising=False)
+    connection.cursor.return_value.fetchone.return_value = {
+        "id": 1, "email": "dev@ase3.com", "username": "dev", "password": hash_password("dev"),
+        "is_admin": 1, "is_reviewer": 1,
+    }
+    body = client.post("/users/login", json={"email": "dev@ase3.com", "password": "dev"}).json()
+    assert (body["admin"], body["reviewer"]) == (True, True)
+    # The roles are flags beside the user, never fields of the public user object.
+    assert body["user"] == {"id": 1, "email": "dev@ase3.com", "username": "dev"}
+    sql = connection.cursor.return_value.execute.call_args_list[0].args[0]
+    assert "is_admin" in sql and "is_reviewer" in sql
 
 
 def test_health_and_openapi_import_without_mysql():

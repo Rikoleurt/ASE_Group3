@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS `user` (
     email VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,     -- manages roles on the admin page
+    is_reviewer BOOLEAN NOT NULL DEFAULT FALSE,  -- reviews sign corrections (SIGN_REVIEWERS also grants it)
     PRIMARY KEY (id),
     CONSTRAINT uq_user_email UNIQUE (email),
     CONSTRAINT uq_user_username UNIQUE (username)
@@ -19,12 +21,14 @@ CREATE TABLE IF NOT EXISTS `user` (
 -- Development account:
 -- email: dev@ase3.com
 -- password: dev
--- The plaintext password is NOT stored.
-INSERT IGNORE INTO `user` (email, username, password)
+-- The plaintext password is NOT stored. It is an admin and a reviewer.
+INSERT IGNORE INTO `user` (email, username, password, is_admin, is_reviewer)
 VALUES (
     'dev@ase3.com',
     'dev',
-    'pbkdf2_sha256$600000$c131c210dfbcd7f1103c170d34f25f56$200b07591435d567598aecf533471cd64e06fefa58c8c1332b56822a8c740c6c'
+    'pbkdf2_sha256$600000$c131c210dfbcd7f1103c170d34f25f56$200b07591435d567598aecf533471cd64e06fefa58c8c1332b56822a8c740c6c',
+    TRUE,
+    TRUE
 );
 
 CREATE TABLE IF NOT EXISTS user_session (

@@ -183,6 +183,11 @@ change the saved analysis or the model. For an existing database, apply
 and add `SIGN_REVIEWERS=dev` to `.env`; reviewers decide on the **Review** page. See the
 [sign corrections guide](docs/corrections.md) for the review and export API.
 
+Admins grant and remove the admin and reviewer roles on the **Admin** page; the
+seeded `dev` account is both. For an existing database, apply
+[080_user_roles.sql](backend/app/database/migration-80/080_user_roles.sql). See
+[roles](docs/roles.md) for making the first admin and the admin API.
+
 To use an existing MySQL server instead, run `init.sql` as an administrator,
 create a database user with access to `ase3`, and set `MYSQL_HOST`, `MYSQL_PORT`,
 `MYSQL_USER` and `MYSQL_PASSWORD` in `.env`. `MYSQL_ROOT_PASSWORD` is only used

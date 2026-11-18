@@ -13,6 +13,7 @@ from backend.app.routes.analysis_routes import router as analysis_router
 from backend.app.routes.benchmark_routes import router as benchmark_router
 from backend.app.routes.glyph_routes import router as glyph_router
 from backend.app.routes.correction_routes import router as correction_router
+from backend.app.routes.admin_routes import router as admin_router
 from backend.app.routes.community_routes import router as community_router
 
 
@@ -35,6 +36,7 @@ app.include_router(analysis_router)
 app.include_router(benchmark_router)
 app.include_router(glyph_router)
 app.include_router(correction_router)
+app.include_router(admin_router)
 app.include_router(community_router)
 
 @app.exception_handler(DatabaseError)
