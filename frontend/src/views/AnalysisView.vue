@@ -8,6 +8,7 @@ import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import ShareAnalysis from '../components/ShareAnalysis.vue'
 import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 import SignCorrection from '../components/analysis/SignCorrection.vue'
+import { openCopy } from '../composables/useBoxSet'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -24,6 +25,20 @@ const SELECTION = computed(() => SELECTED.value?.sign ? {
     crop: SELECTED.value.crop || null,
 } : null)
 const CATALOGUE = ref([])
+const OPENING = ref(false)
+const OPEN_ERROR = ref('')
+
+async function correctBoxes() {
+    OPENING.value = true
+    OPEN_ERROR.value = ''
+    try {
+        await router.push(`/box-sets/${await openCopy(ANALYSIS.value.analysis_id)}`)
+    } catch (error) {
+        OPEN_ERROR.value = error instanceof TypeError ? 'Couldnt reach the server' : error.message
+    } finally {
+        OPENING.value = false
+    }
+}
 
 // ROUTE
 
@@ -203,6 +218,17 @@ onBeforeUnmount(revokePreview)
             </dl>
 
             <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/70">Is a sign wrong? Click its box to correct it.</p>
+            <button
+            v-if="ANALYSIS.trained && ANALYSIS.analysis_id"
+            type="button"
+            class="mt-6 block cursor-pointer rounded bg-bar px-5 py-1.5 font-semibold hover:brightness-95 disabled:opacity-60"
+            :disabled="OPENING"
+            data-testid="correct-boxes"
+            @click="correctBoxes"
+            >
+                {{ OPENING ? 'Opening…' : 'Correct the boxes' }}
+            </button>
+            <p v-if="OPEN_ERROR" role="alert" class="mt-2 text-confidence-low">{{ OPEN_ERROR }}</p>
             <RouterLink v-if="ANALYSIS.analysis_id" :to="`/profile/history/${ANALYSIS.analysis_id}`" class="mt-6 inline-block underline">Saved in your history →</RouterLink>
             <ShareAnalysis v-if="ANALYSIS.analysis_id" :analysis-id="ANALYSIS.analysis_id" :filename="FILENAME" />
             <button

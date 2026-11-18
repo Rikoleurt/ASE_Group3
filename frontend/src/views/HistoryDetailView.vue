@@ -2,10 +2,11 @@
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
+import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import { openCopy } from '../composables/useBoxSet'
 import { sessionFetch } from '../state/session'
 import AnalysisComment from "@/components/AnalysisComment.vue";
 import ShareAnalysis from '../components/ShareAnalysis.vue'
-import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import { sessionUser } from '../state/session'
 
 const route = useRoute()
@@ -15,6 +16,20 @@ const loading = ref(false)
 const error = ref('')
 // The kept image failed to load (e.g. removed from the server): show the saved results without it.
 const imageMissing = ref(false)
+const opening = ref(false)
+const openError = ref('')
+
+async function correct() {
+  opening.value = true
+  openError.value = ''
+  try {
+    await router.push(`/box-sets/${await openCopy(detail.value.id)}`)
+  } catch (failure) {
+    openError.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+  } finally {
+    opening.value = false
+  }
+}
 let requestId = 0
 
 async function load() {
@@ -60,6 +75,12 @@ watch(() => route.params.id, load, { immediate: true })
           </TabletOverlay>
           <p v-else-if="detail.image_url" role="alert" class="mt-4 text-sm text-ink/70">The image could not be loaded. These are the results saved at the time of analysis.</p>
           <p v-else class="mt-4 text-sm text-ink/70">This older analysis has no saved image. Upload and analyze the tablet again to share it.</p>
+          <div v-if="detail.image_url && detail.result.trained" class="mt-6">
+            <button type="button" class="cursor-pointer rounded bg-bar px-5 py-2 font-semibold hover:brightness-95 disabled:opacity-60" :disabled="opening" data-testid="correct-boxes" @click="correct">
+              {{ opening ? 'Opening…' : 'Correct the boxes' }}
+            </button>
+            <p v-if="openError" role="alert" class="mt-2 text-confidence-low">{{ openError }}</p>
+          </div>
           <ShareAnalysis v-if="detail.image_url" :analysis-id="detail.id" :filename="detail.filename" :discussion-id="detail.discussion_id" />
           <p class="mt-6">{{ detail.result.summary }}</p>
           <dl class="mt-4 divide-y divide-ink/10">
