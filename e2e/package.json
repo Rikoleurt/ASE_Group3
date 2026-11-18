@@ -1,0 +1,14 @@
+{
+  "name": "ase-e2e",
+  "private": true,
+  "description": "Browser end-to-end tests: the real frontend, backend and MySQL together (#55).",
+  "type": "module",
+  "scripts": {
+    "test": "playwright test",
+    "report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "mysql2": "3.24.6"
+  }
+}
