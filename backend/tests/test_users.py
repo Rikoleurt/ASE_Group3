@@ -275,6 +275,9 @@ def test_login_prefers_email_when_both_identifiers_are_given(client, connection)
     lookups = [call.args for call in connection.cursor.return_value.execute.call_args_list
                if call.args[0].lstrip().startswith("SELECT") and "password" in call.args[0]]
     assert [(("WHERE email = %s" in sql), parameters) for sql, parameters in lookups] == [(True, ("dev@ase3.com",))]
+    sql, parameters = connection.cursor.return_value.execute.call_args_list[0].args
+    assert "WHERE email = %s" in sql
+    assert parameters == ("dev@ase3.com",)
 
 
 def test_registration_accepts_maximum_lengths(client, connection):
