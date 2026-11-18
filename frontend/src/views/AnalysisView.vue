@@ -5,6 +5,7 @@ import { sessionFetch } from '../state/session'
 const router = useRouter()
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import ShareAnalysis from '../components/ShareAnalysis.vue'
 import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 import SignCorrection from '../components/analysis/SignCorrection.vue'
 
@@ -203,6 +204,7 @@ onBeforeUnmount(revokePreview)
 
             <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/70">Is a sign wrong? Click its box to correct it.</p>
             <RouterLink v-if="ANALYSIS.analysis_id" :to="`/profile/history/${ANALYSIS.analysis_id}`" class="mt-6 inline-block underline">Saved in your history →</RouterLink>
+            <ShareAnalysis v-if="ANALYSIS.analysis_id" :analysis-id="ANALYSIS.analysis_id" :filename="FILENAME" />
             <button
             type="button"
             class="mx-auto mt-8 block cursor-pointer rounded bg-bar px-6 py-1.5 hover:brightness-95"

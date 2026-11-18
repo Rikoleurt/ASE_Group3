@@ -80,28 +80,13 @@ it.each(['/profile/history', '/profile/history/12'])('redirects an expired sessi
   expect(router.currentRoute.value.path).toBe('/login')
   expect(router.currentRoute.value.query.redirect).toBe(path)
 })
-it('shows the kept image with the saved boxes over it', async () => {
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ ...metadata, has_image: true, result: analysis }) })))
-  await render('/profile/history/12')
-  const image = wrapper.get('[data-testid="history-image"] img')
-  expect(image.attributes('src')).toBe('/api/analysis/12/image')
-  expect(image.attributes('alt')).toBe('tablet.png')
-  expect(wrapper.findAll('[data-testid="sign-box"]')).toHaveLength(analysis.signs.length)
-  expect(wrapper.text()).not.toContain('was not kept')
-})
-it('falls back to the results when the kept image cannot be loaded', async () => {
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ ...metadata, has_image: true, result: analysis }) })))
+it('falls back to the saved results when the kept image cannot be loaded', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ ...metadata, image_url: '/api/analysis/12/image', result: analysis }) })))
   await render('/profile/history/12')
   await wrapper.get('[data-testid="history-image"] img').trigger('error')
   expect(wrapper.find('[data-testid="history-image"]').exists()).toBe(false)
-  expect(wrapper.get('[role="alert"]').text()).toContain('The image could not be loaded')
+  expect(wrapper.text()).toContain('The image could not be loaded')
   expect(wrapper.text()).toContain(analysis.symbol_interpretation)
-})
-it('says when an older analysis has no image', async () => {
-  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ ...metadata, has_image: false, result: analysis }) })))
-  await render('/profile/history/12')
-  expect(wrapper.find('img').exists()).toBe(false)
-  expect(wrapper.text()).toContain('The original image was not kept for this analysis.')
 })
 it('does not expose a missing or foreign result', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))

@@ -5,8 +5,8 @@ from fastapi.responses import FileResponse
 
 from backend.app.data_controller.analysis_data_controller import AnalysisDataController, ImageTooLargeError
 from backend.app.model.analysis import SavedAnalysisResult, ApiError
-from backend.app import image_store
 from backend.app.auth import AuthenticatedWrite, CurrentUser
+from backend.app.routes.community_routes import tablet_response
 from mysql.connector import Error as DatabaseError
 from PIL import Image, UnidentifiedImageError
 from PIL.PngImagePlugin import PngImageFile
@@ -69,37 +69,16 @@ def analyze(file: UploadFile, analysis_data_controller: AnalysisController, user
             detail="Something went wrong with the image analysis",
         )
 
-    # Keep the image so the analysis can be reopened and corrected later (#81). The file is
-    # written first and removed again if the database refuses the record.
-    try:
-        stored = image_store.save(image_bytes, image_format)
-    except OSError as error:
-        raise HTTPException(503, "The analysis could not be saved. Please try again.") from error
     try:
         saved = analysis_data_controller.save_analysis(user.id, filename, image_format, len(image_bytes), result,
-                                                       image=stored)
-    except BaseException as error:
-        image_store.delete(stored.key, stored.format)
-        if isinstance(error, DatabaseError):
-            raise HTTPException(503, "The analysis could not be saved. Please try again.") from error
-        raise
+                                                       image_bytes=image_bytes)
+    except (DatabaseError, OSError) as error:
+        raise HTTPException(503, "The analysis could not be saved. Please try again.") from error
     return SavedAnalysisResult(**result.model_dump(), analysis_id=saved.id, created_at=saved.created_at)
 
 
 @router.get("/{analysis_id}/image", response_class=FileResponse,
-            responses={200: {"content": {"image/png": {}, "image/jpeg": {}}, "description": "The uploaded image"},
-                       **{code: {"model": ApiError} for code in (401, 404, 503)}})
-def analysis_image(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: CurrentUser,
-                   analysis_data_controller: AnalysisController) -> FileResponse:
-    """The image of one of the user's own saved analyses."""
-    try:
-        stored = analysis_data_controller.stored_image(user.id, analysis_id)
-    except DatabaseError as error:
-        raise HTTPException(503, "History storage is unavailable.") from error
-    path = image_store.find(*stored) if stored else None
-    if path is None:
-        # Someone else's analysis, one saved before images were kept, or a file removed by hand.
-        raise HTTPException(404, "Image not found.")
-    # Never cached (current_user sets no-store): access can be revoked once sharing exists (#84).
-    return FileResponse(path, media_type=image_store.MEDIA_TYPES[stored[1]],
-                        headers={"X-Content-Type-Options": "nosniff"})
+            responses={code: {"model": ApiError} for code in (401, 404, 503)})
+def private_image(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: CurrentUser,
+                  analysis_data_controller: AnalysisController):
+    return tablet_response(analysis_data_controller.get_image(user.id, analysis_id))

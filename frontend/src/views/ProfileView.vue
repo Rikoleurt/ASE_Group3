@@ -51,12 +51,30 @@ onMounted(loadProfile)
 <template>
   <main class="px-4 pt-10 pb-10">
     <nav aria-label="Profile" class="mx-auto mb-8 flex max-w-4xl gap-4">
-      <RouterLink to="/profile" aria-current="page" class="rounded bg-bar px-4 py-2 font-bold">Profile</RouterLink>
-      <RouterLink to="/profile/history" class="rounded px-4 py-2 hover:bg-bar focus-visible:outline-2">History</RouterLink>
+      <RouterLink
+        to="/profile"
+        class="relative rounded px-4 py-2 text-center hover:bg-bar focus-visible:outline-2"
+        active-class="bg-bar font-bold"
+        exact-active-class="bg-bar font-bold"
+      >
+        <span class="invisible font-bold" aria-hidden="true">Profile</span>
+        <span class="absolute inset-0 flex items-center justify-center">
+          Profile
+        </span>
+      </RouterLink>
+
+      <RouterLink
+        to="/profile/history"
+        class="relative rounded px-4 py-2 text-center hover:bg-bar focus-visible:outline-2"
+        active-class="bg-bar font-bold"
+      >
+        <span class="invisible font-bold" aria-hidden="true">History</span>
+        <span class="absolute inset-0 flex items-center justify-center">
+          History
+        </span>
+      </RouterLink>
     </nav>
-    <section
-      class="mx-auto flex max-w-4xl flex-col items-center gap-8 rounded-3xl bg-card p-8 sm:flex-row sm:items-start sm:gap-12 sm:p-10"
-    >
+    <section class="mx-auto flex max-w-4xl flex-col items-center gap-8 rounded-3xl bg-card p-8 sm:flex-row sm:items-start sm:gap-12 sm:p-10">
    
       <div class="h-48 w-48 shrink-0 overflow-hidden rounded-full ring-4 ring-bar">
         <img
