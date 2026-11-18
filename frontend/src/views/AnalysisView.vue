@@ -5,6 +5,7 @@ import { sessionFetch } from '../state/session'
 const router = useRouter()
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import ShareAnalysis from '../components/ShareAnalysis.vue'
 import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 import SignCorrection from '../components/analysis/SignCorrection.vue'
 import { openCopy } from '../composables/useBoxSet'
@@ -229,6 +230,7 @@ onBeforeUnmount(revokePreview)
             </button>
             <p v-if="OPEN_ERROR" role="alert" class="mt-2 text-confidence-low">{{ OPEN_ERROR }}</p>
             <RouterLink v-if="ANALYSIS.analysis_id" :to="`/profile/history/${ANALYSIS.analysis_id}`" class="mt-6 inline-block underline">Saved in your history →</RouterLink>
+            <ShareAnalysis v-if="ANALYSIS.analysis_id" :analysis-id="ANALYSIS.analysis_id" :filename="FILENAME" />
             <button
             type="button"
             class="mx-auto mt-8 block cursor-pointer rounded bg-bar px-6 py-1.5 hover:brightness-95"

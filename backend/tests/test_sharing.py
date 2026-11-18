@@ -6,7 +6,7 @@ from mysql.connector import Error as DatabaseError
 from mysql.connector.errorcode import ER_NO_REFERENCED_ROW_2
 from mysql.connector.errors import IntegrityError
 
-from backend.app import image_store
+from backend.app.image_storage import store_image
 from backend.app.data_controller.box_set_data_controller import BoxSetDataController
 from backend.app.data_controller.user_data_controller import UserDataController
 from backend.app.main import app
@@ -33,8 +33,7 @@ def test_levels_combine_a_share_with_the_everyone_level():
 def fake():
     controller = FakeController()
     controller.create_from_analysis(OWNER, 12)
-    stored = image_store.save(png(), "PNG")
-    controller.analyses[12]["image"] = (stored.key, "PNG")
+    controller.analyses[12]["image"] = (store_image(png(), "PNG"), "PNG")
     app.dependency_overrides[get_box_set_data_controller] = lambda: controller
     yield controller
     app.dependency_overrides.clear()
