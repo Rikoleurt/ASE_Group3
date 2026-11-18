@@ -8,7 +8,7 @@ describe('Router', () => {
       const page = await route.components.default()
       expect(page.default, route.path).toBeTruthy()
     }
-  })
+  }, 30_000) // compiles every page on first import, which takes several seconds
 
   it('serves the Analysis upload page', () => {
     expect(router.resolve('/analysis').name).toBe('analysis')
