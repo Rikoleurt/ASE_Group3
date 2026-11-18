@@ -100,6 +100,6 @@ def analysis_image(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: 
     if path is None:
         # Someone else's analysis, one saved before images were kept, or a file removed by hand.
         raise HTTPException(404, "Image not found.")
-    # Never cached (current_user sets no-store): access can be revoked once sharing exists (#84).
+    # Never cached: access can be revoked once sharing exists (#84).
     return FileResponse(path, media_type=image_store.MEDIA_TYPES[stored[1]],
-                        headers={"X-Content-Type-Options": "nosniff"})
+                        headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
