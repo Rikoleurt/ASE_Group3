@@ -852,6 +852,11 @@
             "title": "Csrf Token",
             "type": "string"
           },
+          "reviewer": {
+            "default": false,
+            "title": "Reviewer",
+            "type": "boolean"
+          },
           "user": {
             "$ref": "#/components/schemas/UserPublic"
           }
@@ -970,6 +975,11 @@
           "csrf_token": {
             "title": "Csrf Token",
             "type": "string"
+          },
+          "reviewer": {
+            "default": false,
+            "title": "Reviewer",
+            "type": "boolean"
           },
           "user": {
             "$ref": "#/components/schemas/UserPublic"

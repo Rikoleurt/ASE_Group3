@@ -144,6 +144,13 @@ def test_database_failure_is_a_clear_503(owner, monkeypatch):
     assert response.json()["detail"] == "Corrections cannot be saved right now. Please try again."
 
 
+def test_the_session_tells_the_frontend_who_reviews(owner, monkeypatch):
+    monkeypatch.setenv("SIGN_REVIEWERS", "someone")
+    assert owner.get("/users/me").json()["reviewer"] is False
+    monkeypatch.setenv("SIGN_REVIEWERS", "someone, OWNER")
+    assert owner.get("/users/me").json()["reviewer"] is True
+
+
 def test_review_is_for_listed_reviewers_only(owner, monkeypatch):
     monkeypatch.setenv("SIGN_REVIEWERS", "reviewer")
     review = MagicMock()

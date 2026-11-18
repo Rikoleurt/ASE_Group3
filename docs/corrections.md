@@ -17,6 +17,15 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 Reviewers are the usernames listed in `SIGN_REVIEWERS` in `.env`, comma-separated
 and case-insensitive. `.env.example` makes the seeded `dev` account a reviewer.
 
+## Reviewing
+
+Reviewers see a **Review** link in the top bar. The page lists the corrections to
+review, grouped by sign, and says when users disagree on a sign. Each correction
+can be approved or rejected; the tabs show what was already decided, and **Export
+approved (JSON)** downloads the export described below. The session (`/users/me`
+and the login response) tells the frontend whether the user is a reviewer through
+its `reviewer` field; the API checks it again on every review route.
+
 ## What is stored
 
 Each submission keeps the analysis it belongs to, the detected sign's ID and box

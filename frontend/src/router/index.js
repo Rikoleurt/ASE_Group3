@@ -24,6 +24,7 @@ const routes = [
   },
   { path: '/profile/history', name: 'history', component: () => import('../views/HistoryView.vue') },
   { path: '/profile/history/:id', name: 'history-detail', component: () => import('../views/HistoryDetailView.vue') },
+  { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue') },
   {
     path: '/login',
     name: 'login',
@@ -48,7 +49,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.path === '/analysis' || to.path.startsWith('/profile')) {
+  if (to.path === '/analysis' || to.path === '/review' || to.path.startsWith('/profile')) {
     try {
       await loadSession()
     } catch (error) {

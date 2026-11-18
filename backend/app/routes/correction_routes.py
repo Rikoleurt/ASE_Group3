@@ -3,13 +3,12 @@
 A correction never changes a saved analysis or the deployed model. Reviewers are the
 usernames listed in SIGN_REVIEWERS (comma-separated).
 """
-import os
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, status
 from mysql.connector import Error as DatabaseError
 
-from backend.app.auth import AuthenticatedWrite, CurrentUser
+from backend.app.auth import AuthenticatedWrite, CurrentUser, is_reviewer
 from backend.app.data_controller.correction_data_controller import (CorrectionDataController, OwnCorrection,
                                                                     ReviewConflict, catalogue, catalogue_sign,
                                                                     sign_key)
@@ -27,11 +26,6 @@ def get_correction_data_controller() -> CorrectionDataController:
 
 
 CorrectionController = Annotated[CorrectionDataController, Depends(get_correction_data_controller)]
-
-
-def is_reviewer(user: UserPublic) -> bool:
-    reviewers = {name.strip().casefold() for name in os.getenv("SIGN_REVIEWERS", "").split(",") if name.strip()}
-    return user.username.casefold() in reviewers
 
 
 def require_reviewer(user: CurrentUser) -> UserPublic:
