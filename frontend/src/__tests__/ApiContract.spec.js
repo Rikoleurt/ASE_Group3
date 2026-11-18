@@ -16,6 +16,7 @@ import glyphPane from '../components/glyphs/GlyphOccurrencesPane.vue?raw'
 import signCorrection from '../components/analysis/SignCorrection.vue?raw'
 import reviewView from '../views/ReviewView.vue?raw'
 import adminView from '../views/AdminView.vue?raw'
+import useBoxSet from '../composables/useBoxSet.js?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -55,6 +56,9 @@ const CALLS = [
   { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
   { method: 'get', path: '/admin/users', source: adminView, snippet: '/api/admin/users?${query}' },
   { method: 'get', path: '/analysis/{analysis_id}/image', source: historyDetailView, snippet: '/api/analysis/${detail.id}/image' },
+  { method: 'post', path: '/box-sets', source: useBoxSet, snippet: "'/api/box-sets'" },
+  { method: 'get', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${encodeURIComponent(id)}' },
+  { method: 'patch', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${copy.value.id}' },
   { method: 'patch', path: '/admin/users/{user_id}', source: adminView, snippet: '/api/admin/users/${user.id}' },
 ]
 
@@ -120,6 +124,16 @@ describe('API contract', () => {
   it('history says whether the image was kept, which the detail page reads', () => {
     expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toContain('has_image')
     expect(historyDetailView).toContain('detail.has_image')
+  })
+
+  it('the box editor sends the change shapes the API declares and reads the copy it returns', () => {
+    expect(requestFields('patch', '/box-sets/{set_id}').sort()).toEqual(['changes', 'version'])
+    for (const field of ['op', 'box', 'sign', 'box_id']) expect(useBoxSet).toContain(field)
+    expect(responseFields('patch', '/box-sets/{set_id}', '200')).toEqual(
+      expect.arrayContaining(['id', 'version', 'boxes', 'reading', 'image_url', 'source']),
+    )
+    expect(responseFields('patch', '/box-sets/{set_id}', '409').sort()).toEqual(['current', 'detail'])
+    expect(requestFields('post', '/box-sets')).toEqual(['analysis_id'])
   })
 
   it('the admin page sends and reads only declared role fields', () => {

@@ -3,6 +3,7 @@ import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import { openCopy } from '../composables/useBoxSet'
 import { sessionFetch } from '../state/session'
 
 const route = useRoute()
@@ -12,6 +13,20 @@ const loading = ref(false)
 const error = ref('')
 // The kept image failed to load (e.g. removed from the server): fall back to the results alone.
 const imageMissing = ref(false)
+const opening = ref(false)
+const openError = ref('')
+
+async function correct() {
+  opening.value = true
+  openError.value = ''
+  try {
+    await router.push(`/box-sets/${await openCopy(detail.value.id)}`)
+  } catch (failure) {
+    openError.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+  } finally {
+    opening.value = false
+  }
+}
 let requestId = 0
 
 async function load() {
@@ -60,6 +75,12 @@ watch(() => route.params.id, load, { immediate: true })
           <div class="flex justify-between gap-4 py-3"><dt>Processing time</dt><dd>{{ detail.result.time_taken }} s</dd></div>
         </dl>
       </section>
+      <div v-if="detail.has_image && detail.result.trained" class="mt-6">
+        <button type="button" class="cursor-pointer rounded bg-bar px-5 py-2 font-semibold hover:brightness-95 disabled:opacity-60" :disabled="opening" data-testid="correct-boxes" @click="correct">
+          {{ opening ? 'Opening…' : 'Correct the boxes' }}
+        </button>
+        <p v-if="openError" role="alert" class="mt-2 text-confidence-low">{{ openError }}</p>
+      </div>
       <section v-if="detail.has_image && !imageMissing" class="mt-6" data-testid="history-image">
         <TabletOverlay :signs="detail.result.signs" :formulas="detail.result.formulas">
           <img :src="`/api/analysis/${detail.id}/image`" :alt="detail.filename" class="w-full rounded-lg bg-white" @error="imageMissing = true" />
