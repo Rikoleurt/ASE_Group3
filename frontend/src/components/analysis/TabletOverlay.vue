@@ -2,7 +2,8 @@
 // Draws the reader's boxes over whatever image is put in the slot: one box per
 // sign, coloured by role and settling on in reading order, then a dashed box
 // around each fraction formula, coloured by its verdict. Box coordinates are
-// fractions of the image size. Hovering or focusing a box shows its SignCard.
+// fractions of the image size. Hovering or focusing a box shows its SignCard;
+// when `selectable`, clicking it or pressing Enter selects the sign (for correction, #52).
 import { computed, ref } from 'vue'
 import { ROLES, formulaColor, prefersStill, roleKey } from './colors.js'
 import SignCard from './SignCard.vue'
@@ -10,7 +11,17 @@ import SignCard from './SignCard.vue'
 const props = defineProps({
   signs: { type: Array, default: () => [] },
   formulas: { type: Array, default: () => [] },
+  selectable: { type: Boolean, default: false },
+  selected: { type: Number, default: null },
 })
+const emit = defineEmits(['select'])
+
+// Space would scroll the page; it selects instead, like Enter, but only when selecting is on.
+function select(sign, event) {
+  if (!props.selectable) return
+  event?.preventDefault()
+  emit('select', sign)
+}
 
 const SHOWN = ref(true)
 const STILL = prefersStill()
@@ -80,7 +91,7 @@ function describe(sign) {
         :width="percent(sign.box.w)"
         :height="percent(sign.box.h)"
         :stroke="ROLES[roleKey(sign, MARKERS)].color"
-        :class="{ active: ACTIVE === sign.id }"
+        :class="{ active: ACTIVE === sign.id, selected: selected === sign.id, selectable }"
         :style="{ animationDelay: `${index * 60}ms` }"
         :aria-label="describe(sign)"
         tabindex="0"
@@ -90,6 +101,9 @@ function describe(sign) {
         @mouseleave="ACTIVE = null"
         @focus="ACTIVE = sign.id"
         @blur="ACTIVE = null"
+        @click="select(sign)"
+        @keydown.enter="select(sign, $event)"
+        @keydown.space="select(sign, $event)"
       />
     </svg>
     <SignCard
@@ -133,6 +147,15 @@ rect {
 
 .sign.active {
   stroke-width: 5;
+}
+
+.sign.selectable {
+  cursor: pointer;
+}
+
+.sign.selected {
+  stroke-width: 5;
+  stroke-dasharray: 4 2;
 }
 
 /* The formula box fades in, dashed, after the signs. */

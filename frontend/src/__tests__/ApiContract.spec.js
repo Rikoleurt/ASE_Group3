@@ -9,6 +9,7 @@ import profileView from '../views/ProfileView.vue?raw'
 import tabletDemoView from '../views/TabletDemoView.vue?raw'
 import connectionTest from '../components/ConnectionTest.vue?raw'
 import tabletReadingView from '../views/TabletReadingView.vue?raw'
+import signCorrection from '../components/analysis/SignCorrection.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -26,6 +27,8 @@ const CALLS = [
   { method: 'get', path: '/tablets/{slug}/reading', source: tabletReadingView, snippet: '/api/tablets/${slug}/reading' },
   { method: 'get', path: '/tablets/{slug}/fraction-signs', source: tabletReadingView, snippet: '/api/tablets/${slug}/fraction-signs' },
   { method: 'get', path: '/tablet-demo/ht13', source: tabletReadingView, snippet: '/api/tablet-demo/ht13?annotated=false' },
+  { method: 'get', path: '/corrections/catalogue', source: analysisView, snippet: "'/api/corrections/catalogue'" },
+  { method: 'post', path: '/analysis/{analysis_id}/corrections', source: signCorrection, snippet: '/api/analysis/${props.analysisId}/corrections' },
 ]
 
 function resolve(schema) {
@@ -69,6 +72,14 @@ describe('API contract', () => {
   it('profile endpoints return the username and email ProfileView reads', () => {
     expect(responseFields('get', '/users/{user_id}/username', '200')).toContain('username')
     expect(responseFields('get', '/users/{user_id}/email', '200')).toContain('email')
+  })
+
+  it('corrections accept what the correction form sends and return what it shows', () => {
+    expect(requestFields('post', '/analysis/{analysis_id}/corrections')).toEqual(
+      expect.arrayContaining(['sign_id', 'proposed_sign', 'uncertain', 'note']),
+    )
+    expect(responseFields('post', '/analysis/{analysis_id}/corrections', '201')).toContain('uncertain')
+    expect(responseFields('post', '/analysis', '200')).toContain('analysis_id')
   })
 
   // Guards against #30 coming back: the page rendered a field the API never returned.

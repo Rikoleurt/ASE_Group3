@@ -5,6 +5,7 @@ import { sessionFetch } from '../state/session'
 const router = useRouter()
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import SignCorrection from '../components/analysis/SignCorrection.vue'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -13,6 +14,8 @@ const FILENAME = ref('')
 const PREVIEW_URL = ref('')
 const ANALYSIS = ref(null)
 const IS_DRAGGING = ref(false)
+const SELECTED = ref(null)
+const CATALOGUE = ref([])
 
 // ROUTE
 
@@ -45,6 +48,21 @@ async function analyze(file) {
         ERROR_MESSAGE.value =
         error instanceof TypeError ? 'Couldnt reach the server' : error.message
     }
+}
+
+async function loadCatalogue() {
+    if (CATALOGUE.value.length) return
+    try {
+        const response = await fetch('/api/corrections/catalogue')
+        if (response.ok) CATALOGUE.value = await response.json()
+    } catch {
+        // The form still explains that a sign must come from the list.
+    }
+}
+
+function selectSign(sign) {
+    SELECTED.value = sign
+    loadCatalogue()
 }
 
 // COMPONENT LOGIC
@@ -83,6 +101,7 @@ function onInputChange(event) {
 function reset() {
     revokePreview()
     ANALYSIS.value = null
+    SELECTED.value = null
     FILENAME.value = ''
     ERROR_MESSAGE.value = ''
     STATUS.value = 'idle'
@@ -149,7 +168,13 @@ onBeforeUnmount(revokePreview)
 
     <section v-else-if="STATUS === 'result'" class="flex flex-col gap-8 md:flex-row">
         <div class="md:w-1/2">
-            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas">
+            <TabletOverlay
+            :signs="ANALYSIS.signs"
+            :formulas="ANALYSIS.formulas"
+            :selectable="ANALYSIS.trained"
+            :selected="SELECTED?.id ?? null"
+            @select="selectSign"
+            >
                 <img :src="PREVIEW_URL" :alt="FILENAME" class="w-full rounded-lg bg-white" />
             </TabletOverlay>
         </div>
@@ -175,6 +200,7 @@ onBeforeUnmount(revokePreview)
                 </div>
             </dl>
 
+            <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/70">Is a sign wrong? Click its box to correct it.</p>
             <RouterLink v-if="ANALYSIS.analysis_id" :to="`/profile/history/${ANALYSIS.analysis_id}`" class="mt-6 inline-block underline">Saved in your history →</RouterLink>
             <button
             type="button"
@@ -185,6 +211,15 @@ onBeforeUnmount(revokePreview)
             </button>
         </div>
     </section>
+
+    <SignCorrection
+    v-if="STATUS === 'result' && SELECTED && ANALYSIS.analysis_id"
+    :sign="SELECTED"
+    :analysis-id="ANALYSIS.analysis_id"
+    :catalogue="CATALOGUE"
+    class="mt-8"
+    @close="SELECTED = null"
+    />
 
     <FractionCheck v-if="STATUS === 'result'" :analysis="ANALYSIS" class="mt-8" />
 </main>

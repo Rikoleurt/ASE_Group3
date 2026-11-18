@@ -7,6 +7,7 @@ detect` and `train.py classify`). The classifier is used whenever its weights
 are present next to a trained detector.
 """
 
+import hashlib
 import json
 import os
 import sys
@@ -60,6 +61,22 @@ def active_weights() -> tuple[Path, int, bool]:
 def active_classifier() -> Path | None:
     """The sign classifier, only ever used behind the trained detector."""
     return CLASSIFIER_WEIGHTS if SIGN_WEIGHTS.is_file() and CLASSIFIER_WEIGHTS.is_file() else None
+
+
+@lru_cache(maxsize=8)
+def _fingerprint(path: str, modified_ns: int) -> str:
+    digest = hashlib.sha256()
+    with open(path, "rb") as file:
+        for chunk in iter(lambda: file.read(1 << 20), b""):
+            digest.update(chunk)
+    return digest.hexdigest()[:12]
+
+
+def model_version() -> str:
+    """The weight files that read a tablet, with a hash of each: "linear_a_signs.pt@3f2a9c1d07be+..."."""
+    weights, _imgsz, _trained = active_weights()
+    files = [weights] + ([classifier] if (classifier := active_classifier()) else [])
+    return "+".join(f"{path.name}@{_fingerprint(str(path.resolve()), path.stat().st_mtime_ns)}" for path in files)
 
 
 @lru_cache(maxsize=2)
