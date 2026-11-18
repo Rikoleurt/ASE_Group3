@@ -2,8 +2,7 @@
 
 A user corrects the reader's boxes on a **copy**: move, resize, draw and delete boxes, and
 name each box's sign. The analysis itself never changes. Each user has one copy per upload
-and one per corpus tablet (#82). Until sharing lands (#84) a copy is its owner's only;
-everyone else gets 404, as with history.
+and one per corpus tablet (#82). A copy is private until its owner shares it (see Sharing).
 
 ## Setup
 
@@ -14,6 +13,7 @@ the uploaded images; all can be run again safely):
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-60/060-migration.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-60/061-community.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-83/083_box_sets.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-84/084_box_set_sharing.sql
 ```
 
 ## Tables
@@ -87,6 +87,38 @@ The scholars' boxes come from the training annotations (`fraction-solver/out/yol
 loaded by the glyph index). The model's are read from the tracing the first time they are asked
 for (about 20 s on a laptop CPU) and kept in memory per tablet and model version. A scholar's box
 counts as 100% confident and has no model guesses. A tablet copy's image is the tracing.
+
+## Sharing (#84)
+
+The owner shares a copy with named people, or with everyone logged in, at a level. Each level
+includes the ones above it:
+
+| Level | May |
+|---|---|
+| View | see the copy, its change log and its image |
+| Comment | also comment on boxes (#86) |
+| Edit | also save changes and undo them |
+| Manage | also share the copy, and change or revoke others' access |
+| Owner | also delete the copy. Nobody can change the owner's access |
+
+A user's level is the higher of their own share and the copy's level for everyone logged in
+(`box_set.everyone`: none, view, comment or edit; never manage). The rules are in
+`backend/app/sharing.py`. Someone who may not see a copy gets **404**, so its existence does not
+leak; someone who may see it but not do this gets **403** with the reason. Every copy response
+carries `permission` (your level) and `everyone`.
+
+| Route | Who | Does |
+|---|---|---|
+| `GET /users/search?q=` | logged in | usernames starting with `q` (2+ characters, at most 10, never emails) |
+| `GET /box-sets/{id}/shares` | manage | the people with access, and the everyone-level |
+| `PUT /box-sets/{id}/shares/{user}` `{permission}` | manage | share with someone, or change their level (409 for the owner or yourself) |
+| `DELETE /box-sets/{id}/shares/{user}` | manage, or that user | revoke access; anyone may leave a copy shared with them |
+| `PUT /box-sets/{id}/everyone` `{permission}` | manage | the level for everyone logged in |
+| `GET /users/me/shared-copies` | logged in | other people's copies you can open, newest change first |
+
+A shared upload's image is reached through the copy (`/box-sets/{id}/image`), so revoking access
+to the copy also revokes it to the image. The **Shared with me** page lists your shared copies;
+the editor is read only below Edit, and owners and managers get a **Share** button.
 
 ## The reading
 

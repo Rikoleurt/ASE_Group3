@@ -37,6 +37,33 @@ class FakeController:
     def __init__(self):
         self.sets, self.boxes, self.log = {}, {}, {}
         self.analyses = {12: {"owner": 7, "trained": True, "image": ("a" * 32 + ".png", "PNG")}}
+        self.share_rows = {}  # (set_id, user_id) -> permission (#84)
+        self.usernames = {7: "owner", 8: "u8", 9: "u9"}
+
+    # Sharing (#84), same rules as the SQL controller.
+    def share_of(self, set_id, user_id):
+        return self.share_rows.get((set_id, user_id))
+
+    def shares(self, set_id):
+        return sorted(({"user_id": user, "username": self.usernames[user], "permission": level, "created_at": STAMP}
+                       for (copy, user), level in self.share_rows.items() if copy == set_id), key=lambda r: r["username"])
+
+    def set_share(self, set_id, user_id, permission, granted_by):
+        if user_id not in self.usernames:
+            return False
+        self.share_rows[(set_id, user_id)] = permission
+        return True
+
+    def remove_share(self, set_id, user_id):
+        self.share_rows.pop((set_id, user_id), None)
+
+    def set_everyone(self, set_id, level):
+        self.sets[set_id]["everyone"] = level
+
+    def shared_with(self, user_id, limit):
+        rows = [{**value, "share": self.share_rows.get((key, user_id)), "everyone": value.get("everyone", "none")}
+                for key, value in self.sets.items() if value["owner_id"] != user_id]
+        return [row for row in rows if row["share"] or row["everyone"] != "none"][:limit]
 
     def find_for_analysis(self, owner_id, analysis_id):
         return next((key for key, value in self.sets.items()
@@ -52,7 +79,7 @@ class FakeController:
             raise NotEditable("Boxes from the generic model are objects, not Linear A signs, so they cannot be corrected.")
         set_id = len(self.sets) + 1
         self.sets[set_id] = {"id": set_id, "owner_id": owner_id, "owner": "owner", "analysis_id": analysis_id,
-                             "tablet_slug": None, "start": "model", "version": 0, "width": 1000, "height": 800,
+                             "tablet_slug": None, "start": "model", "version": 0, "everyone": "none", "width": 1000, "height": 800,
                              "created_at": STAMP, "updated_at": STAMP, "filename": "tablet.png"}
         for sign in MODEL_SIGNS:
             box_id = len(self.boxes) + 1

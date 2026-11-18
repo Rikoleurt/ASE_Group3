@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timezone
 from typing import Callable
 
-from mysql.connector.errorcode import ER_DUP_ENTRY
+from mysql.connector.errorcode import ER_DUP_ENTRY, ER_NO_REFERENCED_ROW_2
 from mysql.connector.errors import IntegrityError
 
 from backend.app.box_edits import GEOMETRY, Step, plan, plan_revert, state
@@ -115,7 +115,7 @@ class BoxSetDataController(DataController):
     def load(self, set_id: int) -> dict | None:
         """The copy with its owner, source and every box (deleted ones too, for undo); None if missing."""
         sets = self._rows(
-            "SELECT s.id, s.owner_id, u.username AS owner, s.analysis_id, s.tablet_slug, s.start, s.version, "
+            "SELECT s.id, s.owner_id, u.username AS owner, s.analysis_id, s.tablet_slug, s.start, s.version, s.everyone, "
             "s.width, s.height, s.created_at, s.updated_at, a.filename FROM box_set s "
             "JOIN `user` u ON u.id = s.owner_id LEFT JOIN analysis a ON a.id = s.analysis_id WHERE s.id = %s",
             (set_id,))
@@ -124,6 +124,47 @@ class BoxSetDataController(DataController):
         found = sets[0]
         found["boxes"] = self._rows(f"SELECT {BOX_COLUMNS} FROM box WHERE set_id = %s ORDER BY id", (set_id,))
         return found
+
+    # Sharing (#84). The rules are in backend/app/sharing.py.
+
+    def share_of(self, set_id: int, user_id: int) -> str | None:
+        """The level this copy is shared with the user at, or None."""
+        rows = self._rows("SELECT permission FROM box_set_share WHERE set_id = %s AND user_id = %s", (set_id, user_id))
+        return rows[0]["permission"] if rows else None
+
+    def shares(self, set_id: int) -> list[dict]:
+        return self._rows(
+            "SELECT sh.user_id, u.username, sh.permission, sh.created_at FROM box_set_share sh "
+            "JOIN `user` u ON u.id = sh.user_id WHERE sh.set_id = %s ORDER BY u.username", (set_id,))
+
+    def set_share(self, set_id: int, user_id: int, permission: str, granted_by: int) -> bool:
+        """Share the copy with a user, or change their level. False when there is no such user."""
+        try:
+            self._rows(
+                "INSERT INTO box_set_share (set_id, user_id, permission, granted_by, created_at) VALUES (%s, %s, %s, %s, %s) "
+                "ON DUPLICATE KEY UPDATE permission = VALUES(permission), granted_by = VALUES(granted_by)",
+                (set_id, user_id, permission, granted_by, _now()), fetch=False)
+        except IntegrityError as error:
+            if error.errno == ER_NO_REFERENCED_ROW_2:
+                return False
+            raise
+        return True
+
+    def remove_share(self, set_id: int, user_id: int) -> None:
+        self._rows("DELETE FROM box_set_share WHERE set_id = %s AND user_id = %s", (set_id, user_id), fetch=False)
+
+    def set_everyone(self, set_id: int, level: str) -> None:
+        self._rows("UPDATE box_set SET everyone = %s WHERE id = %s", (level, set_id), fetch=False)
+
+    def shared_with(self, user_id: int, limit: int) -> list[dict]:
+        """Other people's copies the user can open: shared with them, or with everyone. Newest change first."""
+        return self._rows(
+            "SELECT s.id, u.username AS owner, s.analysis_id, s.tablet_slug, a.filename, s.everyone, "
+            "sh.permission AS share, s.updated_at FROM box_set s JOIN `user` u ON u.id = s.owner_id "
+            "LEFT JOIN analysis a ON a.id = s.analysis_id "
+            "LEFT JOIN box_set_share sh ON sh.set_id = s.id AND sh.user_id = %s "
+            "WHERE s.owner_id <> %s AND (sh.user_id IS NOT NULL OR s.everyone <> 'none') "
+            "ORDER BY s.updated_at DESC, s.id DESC LIMIT %s", (user_id, user_id, limit))
 
     def apply(self, set_id: int, author_id: int, version: int, changes: list[Change],
               known_sign: Callable[[str], str | None]) -> int:

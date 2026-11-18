@@ -5,6 +5,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import BoxEditor from '../components/boxes/BoxEditor.vue'
+import ShareDialog from '../components/boxes/ShareDialog.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import { useBoxSet } from '../composables/useBoxSet'
 import '../components/analysis/linearA.css'
@@ -19,6 +20,12 @@ const CATALOGUE = ref([])
 const QUERY = ref('')
 const IMAGE_MISSING = ref(false)
 const NOTICE = ref('')
+const SHARING = ref(false)
+const RANK = { view: 1, comment: 2, edit: 3, manage: 4, owner: 5 }
+// What you may do with this copy (#84): below edit, the page is read only.
+const CAN_EDIT = computed(() => RANK[copy.value?.permission] >= RANK.edit)
+const CAN_SHARE = computed(() => RANK[copy.value?.permission] >= RANK.manage)
+const LEVEL_TEXT = { view: 'can view', comment: 'can view and comment', edit: 'can edit', manage: 'can edit and share' }
 
 const SELECTED = computed(() => boxes.value.find((box) => box.id === SELECTED_ID.value) ?? null)
 // The reading's sign for each box whose sign has not changed since the last save; boxes
@@ -134,15 +141,25 @@ watch(() => route.params.id, load, { immediate: true })
       class="underline"
     >← Saved analysis</RouterLink>
     <RouterLink v-else-if="copy?.source.tablet" :to="`/tablets/${copy.source.tablet}`" class="underline">← {{ copy.source.tablet.replaceAll('-', ' ') }}</RouterLink>
-    <h1 class="mt-4 text-3xl font-bold">Correct the boxes</h1>
-    <p v-if="copy" class="mt-1 text-ink/70">{{ copy.source.filename || copy.source.tablet.replaceAll('-', ' ') }} · your corrected copy<template v-if="copy.source.tablet">, started from the {{ copy.start === 'scholar' ? "scholars'" : "model's" }} boxes</template></p>
+    <div class="mt-4 flex flex-wrap items-center gap-4">
+      <h1 class="text-3xl font-bold">{{ copy && !CAN_EDIT ? 'Corrected boxes' : 'Correct the boxes' }}</h1>
+      <button v-if="CAN_SHARE" type="button" class="cursor-pointer rounded border border-ink/30 px-4 py-1.5 hover:bg-ink/5" :aria-expanded="SHARING" data-testid="share" @click="SHARING = !SHARING">
+        Share{{ copy.everyone !== 'none' ? ' (everyone can ' + copy.everyone + ')' : '' }}
+      </button>
+    </div>
+    <p v-if="copy" class="mt-1 text-ink/70" data-testid="copy-owner">
+      {{ copy.source.filename || copy.source.tablet.replaceAll('-', ' ') }} ·
+      <template v-if="copy.permission === 'owner'">your corrected copy</template>
+      <template v-else>{{ copy.owner }}'s corrected copy, shared with you: you {{ LEVEL_TEXT[copy.permission] }}</template><template v-if="copy.source.tablet">, started from the {{ copy.start === 'scholar' ? "scholars'" : "model's" }} boxes</template>
+    </p>
+    <ShareDialog v-if="SHARING && copy" :set-id="copy.id" class="mt-4 max-w-xl" @close="SHARING = false" @changed="copy.everyone = $event.everyone" />
 
     <p v-if="loading" role="status" class="mt-6">Loading…</p>
     <p v-else-if="error && !copy" role="alert" class="mt-6">{{ error }}</p>
 
     <div v-if="copy" class="mt-6 flex flex-col gap-8 lg:flex-row">
       <section class="lg:w-3/5" aria-label="Tablet">
-        <div class="mb-3 flex flex-wrap items-center gap-2" role="toolbar" aria-label="Editing tools">
+        <div v-if="CAN_EDIT" class="mb-3 flex flex-wrap items-center gap-2" role="toolbar" aria-label="Editing tools">
           <button
             v-for="option in [{ value: 'select', label: 'Select and move' }, { value: 'draw', label: 'Draw a box' }]"
             :key="option.value"
@@ -173,6 +190,7 @@ watch(() => route.params.id, load, { immediate: true })
           :markers="MARKERS"
           :selected-id="SELECTED_ID"
           :mode="MODE"
+          :read-only="!CAN_EDIT"
           @select="SELECTED_ID = $event"
           @begin="set.beginGesture()"
           @place="set.place"
@@ -182,7 +200,10 @@ watch(() => route.params.id, load, { immediate: true })
           @nudge="set.setBox"
           @image-error="IMAGE_MISSING = true"
         />
-        <p class="mt-2 text-sm text-ink/70">
+        <p v-if="!CAN_EDIT" class="mt-2 text-sm text-ink/70" data-testid="read-only">
+          You can look at these boxes but not change them. Click a box to see its sign.
+        </p>
+        <p v-else class="mt-2 text-sm text-ink/70">
           Drag a box to move it and its corners to resize it. In <em>Draw a box</em> mode, drag on the tablet.
           Dashed boxes are ones you changed; grey ones have no sign yet. Arrow keys move the selected box,
           Shift with arrows resizes it, Delete removes it, Ctrl+Z undoes.
@@ -208,9 +229,9 @@ watch(() => route.params.id, load, { immediate: true })
             <p v-if="SELECTED.model_sign && SELECTED.model_sign !== SELECTED.sign" class="text-sm text-ink/70">
               The model read {{ signName(SELECTED.model_sign) }}<template v-if="SELECTED.model_confidence"> ({{ Math.round(SELECTED.model_confidence) }}%)</template>.
             </p>
-            <p v-else-if="SELECTED.origin === 'user' || SELECTED.id < 0" class="text-sm text-ink/70">You drew this box.</p>
+            <p v-else-if="SELECTED.origin === 'user' || SELECTED.id < 0" class="text-sm text-ink/70">Drawn by hand.</p>
 
-            <div v-if="SELECTED.candidates?.length" class="mt-4">
+            <div v-if="CAN_EDIT && SELECTED.candidates?.length" class="mt-4">
               <h3 class="text-sm font-semibold">The model's guesses</h3>
               <div class="mt-1 flex flex-wrap gap-2">
                 <button
@@ -229,6 +250,7 @@ watch(() => route.params.id, load, { immediate: true })
               </div>
             </div>
 
+            <template v-if="CAN_EDIT">
             <label class="mt-4 block text-sm font-semibold" for="sign-search">Find another sign</label>
             <input
               id="sign-search"
@@ -252,6 +274,7 @@ watch(() => route.params.id, load, { immediate: true })
               <button v-if="SELECTED.sign" type="button" class="cursor-pointer text-sm underline" data-testid="clear-sign" @click="pick(null)">Clear the sign</button>
               <button type="button" class="cursor-pointer text-sm text-confidence-low underline" data-testid="delete-box" @click="remove(SELECTED.id)">Delete this box</button>
             </div>
+            </template>
           </template>
         </section>
 
