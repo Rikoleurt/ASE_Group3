@@ -133,8 +133,9 @@ watch(() => route.params.id, load, { immediate: true })
       :to="`/profile/history/${copy.source.analysis_id}`"
       class="underline"
     >← Saved analysis</RouterLink>
+    <RouterLink v-else-if="copy?.source.tablet" :to="`/tablets/${copy.source.tablet}`" class="underline">← {{ copy.source.tablet.replaceAll('-', ' ') }}</RouterLink>
     <h1 class="mt-4 text-3xl font-bold">Correct the boxes</h1>
-    <p v-if="copy" class="mt-1 text-ink/70">{{ copy.source.filename || copy.source.tablet }} · your corrected copy</p>
+    <p v-if="copy" class="mt-1 text-ink/70">{{ copy.source.filename || copy.source.tablet.replaceAll('-', ' ') }} · your corrected copy<template v-if="copy.source.tablet">, started from the {{ copy.start === 'scholar' ? "scholars'" : "model's" }} boxes</template></p>
 
     <p v-if="loading" role="status" class="mt-6">Loading…</p>
     <p v-else-if="error && !copy" role="alert" class="mt-6">{{ error }}</p>

@@ -2,7 +2,7 @@
 
 A user corrects the reader's boxes on a **copy**: move, resize, draw and delete boxes, and
 name each box's sign. The analysis itself never changes. Each user has one copy per upload
-(and, from #82, per corpus tablet). Until sharing lands (#84) a copy is its owner's only;
+and one per corpus tablet (#82). Until sharing lands (#84) a copy is its owner's only;
 everyone else gets 404, as with history.
 
 ## Setup
@@ -28,7 +28,8 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 | Route | Does |
 |---|---|
 | `POST /box-sets` `{analysis_id}` | opens your copy of your analysis, making it from the model's boxes the first time (201; 200 if it existed) |
-| `GET /analysis/{id}/box-set` | your copy of that analysis, or 404 |
+| `POST /box-sets` `{tablet, start}` | the same for a corpus tablet, starting from the model's boxes (`start: "model"`, the default) or the scholars' (`"scholar"`). A later request returns the existing copy, whatever its start |
+| `GET /analysis/{id}/box-set`, `GET /tablets/{slug}/box-set` | your copy of that analysis or tablet, or 404 |
 | `GET /box-sets/{id}` | the copy, with its boxes and the reading worked out from them |
 | `PATCH /box-sets/{id}` `{version, changes}` | one save, all or nothing (see below) |
 | `GET /box-sets/{id}/changes?limit=&before=` | the change log, newest first, paged backwards |
@@ -68,6 +69,23 @@ Undoing a change puts its box back as the change found it: an added box is delet
 a deleted one comes back. It is itself recorded as a change (`revert`). It is refused with
 422 when the change was already undone, or when the box was changed again since (undo the
 later change first), since undoing it would silently throw the later change away.
+
+## Corpus tablets (#82)
+
+The **Tablets** page lists every corpus tablet with published boxes and shows its tracing with
+either set of boxes. These routes are public; the data is CC BY-NC-SA and every response
+carries the credit line.
+
+| Route | Does |
+|---|---|
+| `GET /tablets?q=&limit=&offset=` | tablets with published boxes; `q` matches the id loosely (`ht13`, `HT 13`, `HT-13`) |
+| `GET /tablets/{slug}/image` | the full tracing |
+| `GET /tablets/{slug}/boxes?source=scholar\|model` | the boxes and their reading, in an analysis's shape |
+
+The scholars' boxes come from the training annotations (`fraction-solver/out/yolo_signs/annotations.json`,
+loaded by the glyph index). The model's are read from the tracing the first time they are asked
+for (about 20 s on a laptop CPU) and kept in memory per tablet and model version. A scholar's box
+counts as 100% confident and has no model guesses. A tablet copy's image is the tracing.
 
 ## The reading
 

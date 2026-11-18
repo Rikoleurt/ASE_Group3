@@ -29,6 +29,7 @@ const pageLinks = [
     {to: '/tablet-demo', label: 'Tablet Demo', icon: 'book'},
     {to: '/tablet-reading', label: 'Tablet Reading', icon: 'chart'},
     {to: '/analysis', label: 'Analysis', icon: 'chart'},
+    {to: '/tablets', label: 'Tablets', icon: 'book'},
     {to: '/benchmarks', label: 'Benchmarks', icon: 'chart'},
 ]
 

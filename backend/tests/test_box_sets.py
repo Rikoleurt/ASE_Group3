@@ -329,10 +329,10 @@ def test_controller_copies_the_model_boxes(monkeypatch):
     cursor.lastrowid = 5
     assert controller.create_from_analysis(7, 12) == (5, True)
     sql, params = cursor.execute.call_args.args
-    assert sql.startswith("INSERT INTO box_set") and params[:4] == (7, 12, 1000, 800)
+    assert sql.startswith("INSERT INTO box_set") and params[:6] == (7, 12, None, "model", 1000, 800)
     sql, rows = cursor.executemany.call_args.args
     assert sql.startswith("INSERT INTO box ") and len(rows) == 3
-    assert rows[2][:6] == (5, 0.3, 0.1, 0.05, 0.05, "A704") and rows[2][-3:-1] == ("A704", 40.0)
+    assert rows[2][:7] == (5, 0.3, 0.1, 0.05, 0.05, "A704", "model") and rows[2][-3:-1] == ("A704", 40.0)
 
 
 def test_a_copy_made_at_the_same_moment_elsewhere_is_reused(monkeypatch):

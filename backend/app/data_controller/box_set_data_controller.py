@@ -39,6 +39,24 @@ class BoxSetDataController(DataController):
         rows = self._rows("SELECT id FROM box_set WHERE owner_id = %s AND analysis_id = %s", (owner_id, analysis_id))
         return rows[0]["id"] if rows else None
 
+    def find_for_tablet(self, owner_id: int, slug: str) -> int | None:
+        rows = self._rows("SELECT id FROM box_set WHERE owner_id = %s AND tablet_slug = %s", (owner_id, slug))
+        return rows[0]["id"] if rows else None
+
+    def create_from_tablet(self, owner_id: int, slug: str, start: str, signs: list[dict], width: int,
+                           height: int) -> tuple[int, bool]:
+        """The owner's copy of a corpus tablet, made from the given boxes (model's or scholars') if new.
+        Each sign is {"box": {...}, "sign", "confidence", "candidates"}."""
+        existing = self.find_for_tablet(owner_id, slug)
+        if existing is not None:
+            return existing, False
+        try:
+            return self._insert(owner_id, None, slug, start, width, height, signs), True
+        except IntegrityError as error:
+            if error.errno != ER_DUP_ENTRY:
+                raise
+            return self.find_for_tablet(owner_id, slug), False
+
     def create_from_analysis(self, owner_id: int, analysis_id: int) -> tuple[int, bool] | None:
         """The owner's copy of their own analysis, made from the model's boxes if it does not exist yet.
         Returns (id, created), or None when the analysis is not theirs. Raises NotEditable."""
@@ -54,35 +72,44 @@ class BoxSetDataController(DataController):
             raise NotEditable("Boxes from the generic model are objects, not Linear A signs, so they cannot be corrected.")
         if rows[0]["image_id"] is None:
             raise NotEditable("This analysis was saved before images were kept, so its boxes cannot be shown to edit.")
-        stamp = _now()
         try:
-            with self.connection() as connection:
-                cursor = connection.cursor()
-                try:
-                    cursor.execute(
-                        "INSERT INTO box_set (owner_id, analysis_id, start, version, width, height, created_at, updated_at) "
-                        "VALUES (%s, %s, 'model', 0, %s, %s, %s, %s)",
-                        (owner_id, analysis_id, result["width"], result["height"], stamp, stamp),
-                    )
-                    set_id = cursor.lastrowid
-                    boxes = [(set_id, *(sign["box"][name] for name in GEOMETRY), sign.get("sign"),
-                              *(sign["box"][name] for name in GEOMETRY), sign.get("sign"), sign.get("confidence"),
-                              json.dumps(sign.get("candidates") or []))
-                             for sign in result.get("signs", [])]
-                    if boxes:
-                        cursor.executemany(
-                            "INSERT INTO box (set_id, x, y, w, h, sign, origin, original_x, original_y, original_w, "
-                            "original_h, model_sign, model_confidence, candidates) "
-                            "VALUES (%s, %s, %s, %s, %s, %s, 'model', %s, %s, %s, %s, %s, %s, %s)", boxes,
-                        )
-                finally:
-                    cursor.close()
+            set_id = self._insert(owner_id, analysis_id, None, "model", result["width"], result["height"],
+                                  result.get("signs", []))
         except IntegrityError as error:
-            # Two tabs pressed "Edit boxes" at once: the other one made the copy.
+            # Two tabs pressed "Correct the boxes" at once: the other one made the copy.
             if error.errno != ER_DUP_ENTRY:
                 raise
             return self.find_for_analysis(owner_id, analysis_id), False
         return set_id, True
+
+    def _insert(self, owner_id: int, analysis_id: int | None, slug: str | None, start: str, width: int,
+                height: int, signs: list[dict]) -> int:
+        """A new copy and its starting boxes, in one transaction. `start` is also each box's origin."""
+        stamp = _now()
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(
+                    "INSERT INTO box_set (owner_id, analysis_id, tablet_slug, start, version, width, height, "
+                    "created_at, updated_at) VALUES (%s, %s, %s, %s, 0, %s, %s, %s, %s)",
+                    (owner_id, analysis_id, slug, start, width, height, stamp, stamp),
+                )
+                set_id = cursor.lastrowid
+                # A scholar's box carries no model confidence.
+                boxes = [(set_id, *(sign["box"][name] for name in GEOMETRY), sign.get("sign"), start,
+                          *(sign["box"][name] for name in GEOMETRY), sign.get("sign"),
+                          sign.get("confidence") if start == "model" else None,
+                          json.dumps(sign.get("candidates") or []))
+                         for sign in signs]
+                if boxes:
+                    cursor.executemany(
+                        "INSERT INTO box (set_id, x, y, w, h, sign, origin, original_x, original_y, original_w, "
+                        "original_h, model_sign, model_confidence, candidates) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", boxes,
+                    )
+            finally:
+                cursor.close()
+        return set_id
 
     def load(self, set_id: int) -> dict | None:
         """The copy with its owner, source and every box (deleted ones too, for undo); None if missing."""

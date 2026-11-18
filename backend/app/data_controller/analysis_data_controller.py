@@ -276,6 +276,10 @@ def _sign(prediction: dict, catalogue: dict) -> DetectedSign:
     )
 
 
+# Public name for reading corpus tablets with the model (#82).
+sign_from_prediction = _sign
+
+
 def role_of(sign: str | None, reading: str | None, roles: list[str]) -> str:
     """One role per sign. The catalogue lists every role a sign has had in the corpus
     (most syllabograms are also listed as logograms), so the sign itself decides."""
