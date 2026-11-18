@@ -6,6 +6,8 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import BoxEditor from '../components/boxes/BoxEditor.vue'
 import ShareDialog from '../components/boxes/ShareDialog.vue'
+import HistoryPanel from '../components/boxes/HistoryPanel.vue'
+import BoxComments from '../components/boxes/BoxComments.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import { useBoxSet } from '../composables/useBoxSet'
 import '../components/analysis/linearA.css'
@@ -25,6 +27,27 @@ const RANK = { view: 1, comment: 2, edit: 3, manage: 4, owner: 5 }
 // What you may do with this copy (#84): below edit, the page is read only.
 const CAN_EDIT = computed(() => RANK[copy.value?.permission] >= RANK.edit)
 const CAN_SHARE = computed(() => RANK[copy.value?.permission] >= RANK.manage)
+const CAN_COMMENT = computed(() => RANK[copy.value?.permission] >= RANK.comment)
+const GHOST = ref(null) // the box as it was before the change picked in the history
+
+// A change picked in the history: select its box if it is still there, and outline where it was.
+function showChange(change) {
+  if (!change) {
+    GHOST.value = null
+    return
+  }
+  const now = boxes.value.find((box) => box.id === change.box_id)
+  SELECTED_ID.value = now ? now.id : null
+  const before = change.before && !change.before.deleted ? change.before.box : null
+  const moved = before && (!now || ['x', 'y', 'w', 'h'].some((key) => Math.abs(before[key] - now.box[key]) > 1e-9))
+  GHOST.value = moved ? before : null
+}
+
+function reverted(newer) {
+  set.accept(newer)
+  GHOST.value = null
+  NOTICE.value = 'The change was undone.'
+}
 const LEVEL_TEXT = { view: 'can view', comment: 'can view and comment', edit: 'can edit', manage: 'can edit and share' }
 
 const SELECTED = computed(() => boxes.value.find((box) => box.id === SELECTED_ID.value) ?? null)
@@ -191,6 +214,7 @@ watch(() => route.params.id, load, { immediate: true })
           :selected-id="SELECTED_ID"
           :mode="MODE"
           :read-only="!CAN_EDIT"
+          :ghost="GHOST"
           @select="SELECTED_ID = $event"
           @begin="set.beginGesture()"
           @place="set.place"
@@ -298,6 +322,22 @@ watch(() => route.params.id, load, { immediate: true })
             </li>
           </ol>
         </section>
+        <BoxComments
+          :set-id="copy.id"
+          :box-id="SELECTED_ID"
+          :box-name="SELECTED ? signName(SELECTED.sign) : ''"
+          :can-comment="CAN_COMMENT"
+        />
+        <HistoryPanel
+          :set-id="copy.id"
+          :version="copy.version"
+          :can-revert="CAN_EDIT"
+          :unsaved="dirty"
+          :selected-box-id="SELECTED_ID"
+          :name="signName"
+          @select="showChange"
+          @reverted="reverted"
+        />
       </aside>
     </div>
 

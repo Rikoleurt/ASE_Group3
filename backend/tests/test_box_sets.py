@@ -39,6 +39,25 @@ class FakeController:
         self.analyses = {12: {"owner": 7, "trained": True, "image": ("a" * 32, "PNG")}}
         self.share_rows = {}  # (set_id, user_id) -> permission (#84)
         self.usernames = {7: "owner", 8: "u8", 9: "u9"}
+        self.comment_rows = {}  # (#86)
+
+    # Comments (#86).
+    def comments(self, set_id, box_id=None):
+        return [dict(c) for c in self.comment_rows.values()
+                if c["set"] == set_id and (box_id is None or c["box_id"] == box_id)]
+
+    def comment(self, set_id, comment_id):
+        found = self.comment_rows.get(comment_id)
+        return dict(found) if found and found["set"] == set_id else None
+
+    def add_comment(self, set_id, box_id, author_id, body):
+        comment_id = len(self.comment_rows) + 1
+        self.comment_rows[comment_id] = {"id": comment_id, "set": set_id, "box_id": box_id, "author_id": author_id,
+                                         "username": self.usernames.get(author_id), "body": body, "created_at": STAMP}
+        return dict(self.comment_rows[comment_id])
+
+    def delete_comment(self, comment_id):
+        self.comment_rows.pop(comment_id, None)
 
     # Sharing (#84), same rules as the SQL controller.
     def share_of(self, set_id, user_id):

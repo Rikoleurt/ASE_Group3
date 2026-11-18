@@ -165,6 +165,37 @@ class BoxSetDataController(DataController):
             "WHERE s.owner_id <> %s AND (sh.user_id IS NOT NULL OR s.everyone <> 'none') "
             "ORDER BY s.updated_at DESC, s.id DESC LIMIT %s", (user_id, user_id, limit))
 
+    # Comments (#86).
+
+    def comments(self, set_id: int, box_id: int | None = None) -> list[dict]:
+        """Oldest first; with box_id, that box's thread only."""
+        clause, params = (" AND c.box_id = %s", (set_id, box_id)) if box_id is not None else ("", (set_id,))
+        return self._rows(
+            "SELECT c.id, c.box_id, c.author_id, u.username, c.body, c.created_at FROM box_comment c "
+            "LEFT JOIN `user` u ON u.id = c.author_id WHERE c.set_id = %s" + clause + " ORDER BY c.id", params)
+
+    def comment(self, set_id: int, comment_id: int) -> dict | None:
+        rows = self._rows("SELECT id, author_id FROM box_comment WHERE id = %s AND set_id = %s", (comment_id, set_id))
+        return rows[0] if rows else None
+
+    def add_comment(self, set_id: int, box_id: int | None, author_id: int, body: str) -> dict:
+        stamp = _now()
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute("INSERT INTO box_comment (set_id, box_id, author_id, body, created_at) "
+                               "VALUES (%s, %s, %s, %s, %s)", (set_id, box_id, author_id, body, stamp))
+                comment_id = cursor.lastrowid
+                cursor.execute("SELECT username FROM `user` WHERE id = %s", (author_id,))
+                author = cursor.fetchone()
+            finally:
+                cursor.close()
+        return {"id": comment_id, "box_id": box_id, "author_id": author_id,
+                "username": author["username"] if author else None, "body": body, "created_at": stamp}
+
+    def delete_comment(self, comment_id: int) -> None:
+        self._rows("DELETE FROM box_comment WHERE id = %s", (comment_id,), fetch=False)
+
     def apply(self, set_id: int, author_id: int, version: int, changes: list[Change],
               known_sign: Callable[[str], str | None]) -> int:
         """Apply one save; returns the new version (unchanged if nothing changed).

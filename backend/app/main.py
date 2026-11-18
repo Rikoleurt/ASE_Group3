@@ -17,6 +17,7 @@ from backend.app.routes.admin_routes import router as admin_router
 from backend.app.routes.box_set_routes import router as box_set_router
 from backend.app.routes.corpus_routes import router as corpus_router
 from backend.app.routes.share_routes import router as share_router
+from backend.app.routes.comment_routes import router as comment_router
 
 
 
@@ -42,6 +43,7 @@ app.include_router(correction_router)
 app.include_router(admin_router)
 app.include_router(box_set_router)
 app.include_router(corpus_router)
+app.include_router(comment_router)
 
 @app.exception_handler(DatabaseError)
 async def database_unavailable(_request, _error):
