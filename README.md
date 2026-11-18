@@ -62,11 +62,18 @@ Repository-relative MP4 links do not produce an inline README player. -->
 | FastAPI backend | Validates requests, runs inference, groups signs into lines, and returns analysis results |
 | Sign detector + classifier | Locates signs, then proposes their identities and readings |
 | Fraction and reading code | Interprets quantities and compares entries with totals |
-| MySQL | Stores user accounts; image analysis does not require the database |
+| MySQL | Stores accounts, sessions, saved analyses, community discussions and comments |
 
 The upload flow is: **image → FastAPI → detector → classifier → line/formula
 analysis → Vue result view**. The corpus-based Tablet Reading view also uses
 transcriptions from lineara.eu.
+
+After analysis, users can publish their tablet and model result to **Community**.
+Discussions and images are publicly readable; commenting requires login. Images
+are retained privately on disk until shared. For existing databases, apply the
+scripts in `backend/app/database/migration-60/` before using this feature. See
+the [community setup guide](docs/community.md) for migration commands, persistent
+image storage, and API details.
 
 ### Code map and checks
 

@@ -8,7 +8,7 @@ from mysql.connector import Error as DatabaseError
 from backend.app.auth import (CurrentUser, AuthenticatedWrite, COOKIE_NAME, SESSION_SECONDS,
                               cookie_secure, csrf_token, token_hash, require_ajax)
 from backend.app.model.user import SessionUser
-from backend.app.model.analysis import AnalysisHistoryDetail, AnalysisHistoryPage, ApiError
+from backend.app.model.analysis import AnalysisHistoryDetail, AnalysisHistoryPage, ApiError, AnalysisComment, CommentCreate
 from backend.app.data_controller.analysis_data_controller import AnalysisDataController
 
 from backend.app.data_controller.user_data_controller import DuplicateUserError, UserDataController
@@ -172,3 +172,40 @@ def get_username(user_id: Annotated[int, Path(gt=0)], user_data_controller: User
     if username is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
     return UserUsername(username=username)
+
+@router.get("/me/analyses/{analysis_id}/comments", response_model=list[AnalysisComment],
+            responses={401: {"model": ApiError}, 404: {"model": ApiError}, 503: {"model": ApiError}})
+def list_comments(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: CurrentUser, controller: HistoryController):
+    try:
+        result = controller.list_comments(user.id, analysis_id)
+    except DatabaseError as error:
+        raise HTTPException(503, "History storage is unavailable.") from error
+    if result is None:
+        raise HTTPException(404, "Analysis not found.")
+    return result
+
+
+@router.post("/me/analyses/{analysis_id}/comments", response_model=AnalysisComment, status_code=201,
+             responses={401: {"model": ApiError}, 404: {"model": ApiError}, 422: {"description": "Invalid comment"},
+                        503: {"model": ApiError}})
+def add_comment(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], payload: CommentCreate,
+                user: CurrentUser, controller: HistoryController):
+    try:
+        result = controller.add_comment(user.id, analysis_id, payload.body)
+    except DatabaseError as error:
+        raise HTTPException(503, "History storage is unavailable.") from error
+    if result is None:
+        raise HTTPException(404, "Analysis not found.")
+    return result
+
+
+@router.delete("/me/comments/{comment_id}", status_code=204, response_class=Response,
+               responses={401: {"model": ApiError}, 404: {"model": ApiError}, 503: {"model": ApiError}})
+def delete_comment(comment_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: CurrentUser, controller: HistoryController):
+    try:
+        deleted = controller.delete_comment(user.id, comment_id)
+    except DatabaseError as error:
+        raise HTTPException(503, "History storage is unavailable.") from error
+    if not deleted:
+        raise HTTPException(404, "Comment not found.")
+    return Response(status_code=204)
