@@ -14,8 +14,9 @@ For a database created before this feature, apply the migration once:
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-52/052_sign_correction.sql
 ```
 
-Reviewers are the usernames listed in `SIGN_REVIEWERS` in `.env`, comma-separated
-and case-insensitive. `.env.example` makes the seeded `dev` account a reviewer.
+Reviewers have the reviewer role, which admins grant on the **Admin** page (see
+[roles](roles.md)), or are listed in `SIGN_REVIEWERS` in `.env`, comma-separated and
+case-insensitive. The seeded `dev` account has the role, and `.env.example` also lists it.
 
 ## Reviewing
 
