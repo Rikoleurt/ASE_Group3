@@ -63,14 +63,15 @@ class BoxSetDataController(DataController):
         existing = self.find_for_analysis(owner_id, analysis_id)
         if existing is not None:
             return existing, False
-        rows = self._rows("SELECT result_json, image_id FROM analysis WHERE user_id = %s AND id = %s",
+        rows = self._rows("SELECT a.result_json, i.storage_key AS image_key FROM analysis a "
+                          "LEFT JOIN analysis_image i ON i.analysis_id = a.id WHERE a.user_id = %s AND a.id = %s",
                           (owner_id, analysis_id))
         if not rows:
             return None
         result = json.loads(rows[0]["result_json"])
         if not result.get("trained"):
             raise NotEditable("Boxes from the generic model are objects, not Linear A signs, so they cannot be corrected.")
-        if rows[0]["image_id"] is None:
+        if rows[0]["image_key"] is None:
             raise NotEditable("This analysis was saved before images were kept, so its boxes cannot be shown to edit.")
         try:
             set_id = self._insert(owner_id, analysis_id, None, "model", result["width"], result["height"],
@@ -265,8 +266,8 @@ class BoxSetDataController(DataController):
 
     def image(self, set_id: int) -> tuple[str, str] | None:
         """Storage key and format of the copy's image (an upload's kept image)."""
-        rows = self._rows("SELECT i.storage_key, i.format FROM box_set s JOIN analysis a ON a.id = s.analysis_id "
-                          "JOIN uploaded_image i ON i.id = a.image_id WHERE s.id = %s", (set_id,))
+        rows = self._rows("SELECT i.storage_key, a.format FROM box_set s JOIN analysis a ON a.id = s.analysis_id "
+                          "JOIN analysis_image i ON i.analysis_id = a.id WHERE s.id = %s", (set_id,))
         return (rows[0]["storage_key"], rows[0]["format"]) if rows else None
 
     @staticmethod

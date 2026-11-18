@@ -15,7 +15,8 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from backend.app import glyph_index, image_store
+from backend.app import glyph_index
+from backend.app.image_storage import image_path
 from backend.app.box_edits import GEOMETRY, same, state
 from backend.app.data_controller.data_controller import DataController
 
@@ -28,8 +29,8 @@ class ExportDataController(DataController):
             try:
                 cursor.execute(
                     "SELECT s.id, s.owner_id, s.analysis_id, s.tablet_slug, s.start, s.width, s.height, s.version, "
-                    "s.updated_at, a.filename, i.storage_key, i.format FROM box_set s "
-                    "LEFT JOIN analysis a ON a.id = s.analysis_id LEFT JOIN uploaded_image i ON i.id = a.image_id "
+                    "s.updated_at, a.filename, i.storage_key, a.format FROM box_set s "
+                    "LEFT JOIN analysis a ON a.id = s.analysis_id LEFT JOIN analysis_image i ON i.analysis_id = a.id "
                     "ORDER BY s.id")
                 copies = cursor.fetchall()
                 cursor.execute(
@@ -59,7 +60,7 @@ def _changed(box: dict) -> bool:
 
 
 def _image_name(copy: dict) -> str:
-    extension = image_store.EXTENSIONS.get(copy["format"] or "", ".png")
+    extension = ".jpg" if copy["format"] == "JPEG" else ".png"  # a tablet's tracing is a PNG
     return f"copy-{copy['id']}{extension}"
 
 
@@ -98,7 +99,8 @@ def _image_path(copy: dict) -> Path | None:
             return None
     if copy["storage_key"] is None:
         return None
-    return image_store.find(copy["storage_key"], copy["format"])
+    path = image_path(copy["storage_key"])  # #93's storage; refuses keys that are not its own
+    return path if path.is_file() else None
 
 
 def yolo_zip(copies: list[dict], label_corrections: list) -> bytes:

@@ -8,7 +8,8 @@ from unittest.mock import MagicMock
 import pytest
 from mysql.connector import Error as DatabaseError
 
-from backend.app import glyph_index, image_store
+from backend.app import glyph_index
+from backend.app.image_storage import store_image
 from backend.app.main import app
 from backend.app.model.correction import CorrectionExportSign, CorrectionExportTablet
 from backend.app.routes.admin_routes import get_correction_controller, get_export_data_controller
@@ -40,12 +41,12 @@ APPROVED = [CorrectionExportTablet(analysis_id=12, filename="tablet.png", width=
 
 @pytest.fixture
 def stores(monkeypatch, tmp_path):
-    stored = image_store.save(png(), "PNG")
+    stored_key = store_image(png(), "PNG")
     tracing = tmp_path / "HT-1.png"
     tracing.write_bytes(png())
     monkeypatch.setattr(glyph_index, "tracing_path", lambda slug: tracing if slug == "HT-1" else None)
     exports, corrections = MagicMock(), MagicMock()
-    exports.copies.return_value = copies(stored.key)
+    exports.copies.return_value = copies(stored_key)
     corrections.export_approved.return_value = APPROVED
     app.dependency_overrides[get_export_data_controller] = lambda: exports
     app.dependency_overrides[get_correction_controller] = lambda: corrections
@@ -91,7 +92,7 @@ def test_yolo_zip_has_images_labels_and_classes(admin):
 
 def test_copies_whose_image_is_gone_are_listed_not_zipped(admin, stores):
     exports, _ = stores
-    exports.copies.return_value[0]["storage_key"] = "f" * 32
+    exports.copies.return_value[0]["storage_key"] = "f" * 32 + ".png"
     archive = zipfile.ZipFile(io.BytesIO(admin.get("/admin/export/corrections.zip").content))
     assert "images/copy-1.png" not in archive.namelist()
     assert json.loads(archive.read("corrections.json"))["missing_images"] == [1]
