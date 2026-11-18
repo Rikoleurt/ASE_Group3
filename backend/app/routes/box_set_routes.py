@@ -11,7 +11,7 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response, st
 from fastapi.responses import FileResponse, JSONResponse
 from mysql.connector import Error as DatabaseError
 
-from backend.app import tablet_demo
+from backend.app import corpus, glyph_index, tablet_demo
 from backend.app.routes.community_routes import tablet_response
 from backend.app.auth import AuthenticatedWrite, CurrentUser
 from backend.app.box_edits import GEOMETRY, EditError, same, state
@@ -109,7 +109,13 @@ def _conflict(controller: BoxSetDataController, set_id: int) -> JSONResponse:
                         **ERRORS})
 def create_box_set(request: BoxSetCreate, user: AuthenticatedWrite, controller: Controller,
                    response: Response) -> BoxSet:
-    """Open your corrected copy of one of your analyses, making it from the model's boxes the first time."""
+    """Open your corrected copy of one of your analyses or of a corpus tablet, making it the first time:
+    an analysis from the model's boxes, a tablet from the model's or the scholars' (`start`)."""
+    if request.tablet is not None:
+        set_id, created = _tablet_copy(request, user, controller)
+        if not created:
+            response.status_code = status.HTTP_200_OK
+        return _current(controller, set_id)
     try:
         made = controller.create_from_analysis(user.id, request.analysis_id)
     except NotEditable as error:
@@ -122,6 +128,43 @@ def create_box_set(request: BoxSetCreate, user: AuthenticatedWrite, controller: 
     if not created:
         response.status_code = status.HTTP_200_OK
     return _current(controller, set_id)
+
+
+def _tablet_copy(request: BoxSetCreate, user: UserPublic, controller: BoxSetDataController) -> tuple[int, bool]:
+    slug = request.tablet
+    try:
+        existing = controller.find_for_tablet(user.id, slug)
+        if existing is not None:
+            return existing, False
+        index = glyph_index.get_index()
+        path = glyph_index.tracing_path(slug) if slug in index.slugs else None
+        if path is None:
+            raise HTTPException(404, "Tablet not found.")
+        signs = corpus.scholar_signs(index, slug) if request.start == "scholar" else corpus.model_signs(slug, path)
+        width, height = corpus.image_size(path)
+        return controller.create_from_tablet(user.id, slug, request.start,
+                                             [sign.model_dump(mode="json") for sign in signs], width, height)
+    except glyph_index.CorpusMissing as error:
+        raise HTTPException(503, str(error)) from error
+    except corpus.ReaderMissing as error:
+        raise HTTPException(503, str(error)) from error
+    except (FileNotFoundError, RuntimeError) as error:
+        raise HTTPException(503, "The sign reader is unavailable.") from error
+    except DatabaseError as error:
+        raise HTTPException(503, UNAVAILABLE) from error
+
+
+@router.get("/tablets/{slug}/box-set", response_model=BoxSet, responses=ERRORS)
+def tablet_box_set(slug: Annotated[str, Path(pattern=r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$", max_length=64)],
+                   user: CurrentUser, controller: Controller) -> BoxSet:
+    """Your corrected copy of a corpus tablet, if you made one (404 otherwise)."""
+    try:
+        set_id = controller.find_for_tablet(user.id, slug)
+    except DatabaseError as error:
+        raise HTTPException(503, UNAVAILABLE) from error
+    if set_id is None:
+        raise HTTPException(404, "Corrected copy not found.")
+    return build(_owned(controller, set_id, user))
 
 
 @router.get("/analysis/{analysis_id}/box-set", response_model=BoxSet, responses=ERRORS)
@@ -212,7 +255,16 @@ def revert_change(set_id: Identifier, change_id: Identifier, request: Revert, us
                        **ERRORS})
 def box_set_image(set_id: Identifier, user: CurrentUser, controller: Controller) -> FileResponse:
     """The image the copy's boxes are drawn on."""
-    _owned(controller, set_id, user)
+    record = _owned(controller, set_id, user)
+    if record["tablet_slug"] is not None:
+        # A corpus tablet's published tracing.
+        try:
+            path = glyph_index.tracing_path(record["tablet_slug"])
+        except glyph_index.CorpusMissing as error:
+            raise HTTPException(503, str(error)) from error
+        if path is None:
+            raise HTTPException(404, "Image not found.")
+        return FileResponse(path, media_type="image/png", headers={"Cache-Control": "no-store"})
     try:
         stored = controller.image(set_id)
     except DatabaseError as error:

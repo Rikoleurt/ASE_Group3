@@ -798,18 +798,44 @@
         "type": "object"
       },
       "BoxSetCreate": {
-        "description": "Start a corrected copy. Uploads start from the model's boxes; corpus tablets come in #82.",
+        "description": "Start a corrected copy of one of your analyses (always from the model's boxes) or of a\ncorpus tablet (#82), from the model's boxes or the scholars'. Give analysis_id or tablet.",
         "properties": {
           "analysis_id": {
-            "exclusiveMinimum": 0.0,
-            "maximum": 1.8446744073709552e+19,
-            "title": "Analysis Id",
-            "type": "integer"
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "maximum": 1.8446744073709552e+19,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Id"
+          },
+          "start": {
+            "default": "model",
+            "enum": [
+              "model",
+              "scholar"
+            ],
+            "title": "Start",
+            "type": "string"
+          },
+          "tablet": {
+            "anyOf": [
+              {
+                "maxLength": 64,
+                "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tablet"
           }
         },
-        "required": [
-          "analysis_id"
-        ],
         "title": "BoxSetCreate",
         "type": "object"
       },
@@ -1174,6 +1200,29 @@
           "decision"
         ],
         "title": "CorrectionReview",
+        "type": "object"
+      },
+      "Credit": {
+        "properties": {
+          "licence": {
+            "title": "Licence",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "url": {
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "licence",
+          "url",
+          "text"
+        ],
+        "title": "Credit",
         "type": "object"
       },
       "DeleteBox": {
@@ -2404,6 +2453,131 @@
         "title": "SignCorrection",
         "type": "object"
       },
+      "TabletBoxes": {
+        "description": "A tablet's boxes and their reading, in the same shape as an analysis.",
+        "properties": {
+          "credit": {
+            "$ref": "#/components/schemas/Credit"
+          },
+          "formulas": {
+            "items": {
+              "$ref": "#/components/schemas/Formula"
+            },
+            "title": "Formulas",
+            "type": "array"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "image_url": {
+            "title": "Image Url",
+            "type": "string"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/components/schemas/Line"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "signs": {
+            "items": {
+              "$ref": "#/components/schemas/DetectedSign"
+            },
+            "title": "Signs",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "scholar",
+              "model"
+            ],
+            "title": "Source",
+            "type": "string"
+          },
+          "summary": {
+            "title": "Summary",
+            "type": "string"
+          },
+          "symbol_interpretation": {
+            "title": "Symbol Interpretation",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "source",
+          "width",
+          "height",
+          "image_url",
+          "symbol_interpretation",
+          "summary",
+          "signs",
+          "lines",
+          "formulas",
+          "credit"
+        ],
+        "title": "TabletBoxes",
+        "type": "object"
+      },
+      "TabletItem": {
+        "properties": {
+          "signs": {
+            "title": "Signs",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "signs"
+        ],
+        "title": "TabletItem",
+        "type": "object"
+      },
+      "TabletPage": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TabletItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ],
+        "title": "TabletPage",
+        "type": "object"
+      },
       "UpdateBox": {
         "description": "Move or resize a box, and/or set its sign. A field left out stays as it is; sign: null clears it.",
         "properties": {
@@ -3375,7 +3549,7 @@
     },
     "/box-sets": {
       "post": {
-        "description": "Open your corrected copy of one of your analyses, making it from the model's boxes the first time.",
+        "description": "Open your corrected copy of one of your analyses or of a corpus tablet, making it the first time:\nan analysis from the model's boxes, a tablet from the model's or the scholars' (`start`).",
         "operationId": "create_box_set_box_sets_post",
         "parameters": [
           {
@@ -5678,6 +5852,254 @@
         ]
       }
     },
+    "/tablets": {
+      "get": {
+        "description": "Tablets with published boxes, by corpus id; `q` matches the id (\"HT 13\", \"ht13\", \"HT-13\").",
+        "operationId": "list_tablets_tablets_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 64,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 200,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TabletPage"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "List Tablets",
+        "tags": [
+          "corpus tablets"
+        ]
+      }
+    },
+    "/tablets/{slug}/box-set": {
+      "get": {
+        "description": "Your corrected copy of a corpus tablet, if you made one (404 otherwise).",
+        "operationId": "tablet_box_set_tablets__slug__box_set_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Tablet Box Set",
+        "tags": [
+          "box sets"
+        ]
+      }
+    },
+    "/tablets/{slug}/boxes": {
+      "get": {
+        "description": "The tablet's boxes from the scholars' published transcription, or as the reader finds them.",
+        "operationId": "tablet_boxes_tablets__slug__boxes_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source",
+            "required": false,
+            "schema": {
+              "default": "scholar",
+              "enum": [
+                "scholar",
+                "model"
+              ],
+              "title": "Source",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TabletBoxes"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Tablet Boxes",
+        "tags": [
+          "corpus tablets"
+        ]
+      }
+    },
     "/tablets/{slug}/fraction-signs": {
       "get": {
         "operationId": "tablet_fraction_signs_tablets__slug__fraction_signs_get",
@@ -5719,6 +6141,67 @@
         "summary": "Tablet Fraction Signs",
         "tags": [
           "tablet-reading"
+        ]
+      }
+    },
+    "/tablets/{slug}/image": {
+      "get": {
+        "description": "The whole tablet's tracing, full size.",
+        "operationId": "tablet_image_tablets__slug__image_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Tablet Image",
+        "tags": [
+          "corpus tablets"
         ]
       }
     },

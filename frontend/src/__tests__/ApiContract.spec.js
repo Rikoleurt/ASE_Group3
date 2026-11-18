@@ -20,6 +20,7 @@ import signCorrection from '../components/analysis/SignCorrection.vue?raw'
 import reviewView from '../views/ReviewView.vue?raw'
 import adminView from '../views/AdminView.vue?raw'
 import useBoxSet from '../composables/useBoxSet.js?raw'
+import tabletsView from '../views/TabletsView.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -70,6 +71,10 @@ const CALLS = [
   { method: 'post', path: '/box-sets', source: useBoxSet, snippet: "'/api/box-sets'" },
   { method: 'get', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${encodeURIComponent(id)}' },
   { method: 'patch', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${copy.value.id}' },
+  { method: 'get', path: '/tablets', source: tabletsView, snippet: '/api/tablets?${query}' },
+  { method: 'get', path: '/tablets/{slug}/boxes', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(SLUG.value)}/boxes?source=${SOURCE.value}' },
+  { method: 'get', path: '/tablets/{slug}/box-set', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(slug)}/box-set' },
+  { method: 'post', path: '/box-sets', source: tabletsView, snippet: "'/api/box-sets'" },
   { method: 'patch', path: '/admin/users/{user_id}', source: adminView, snippet: '/api/admin/users/${user.id}' },
 ]
 
@@ -169,7 +174,7 @@ describe('API contract', () => {
       expect.arrayContaining(['id', 'version', 'boxes', 'reading', 'image_url', 'source']),
     )
     expect(responseFields('patch', '/box-sets/{set_id}', '409').sort()).toEqual(['current', 'detail'])
-    expect(requestFields('post', '/box-sets')).toEqual(['analysis_id'])
+    expect(requestFields('post', '/box-sets').sort()).toEqual(['analysis_id', 'start', 'tablet'])
   })
 
   it('the admin page sends and reads only declared role fields', () => {

@@ -30,6 +30,7 @@ const routes = [
   { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue') },
   { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
   { path: '/box-sets/:id', name: 'box-set', component: () => import('../views/BoxSetView.vue') },
+  { path: '/tablets/:slug?', name: 'tablets', component: () => import('../views/TabletsView.vue') },
   {
     path: '/login',
     name: 'login',

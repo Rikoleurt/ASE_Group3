@@ -69,8 +69,19 @@ class Revert(BaseModel):
 
 
 class BoxSetCreate(BaseModel):
-    """Start a corrected copy. Uploads start from the model's boxes; corpus tablets come in #82."""
-    analysis_id: int = Field(gt=0, le=2**64 - 1)
+    """Start a corrected copy of one of your analyses (always from the model's boxes) or of a
+    corpus tablet (#82), from the model's boxes or the scholars'. Give analysis_id or tablet."""
+    analysis_id: int | None = Field(default=None, gt=0, le=2**64 - 1)
+    tablet: str | None = Field(default=None, pattern=r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$", max_length=64)
+    start: Literal["model", "scholar"] = "model"
+
+    @model_validator(mode="after")
+    def one_source(self):
+        if (self.analysis_id is None) == (self.tablet is None):
+            raise ValueError("Give analysis_id or tablet, not both.")
+        if self.analysis_id is not None and self.start != "model":
+            raise ValueError("An upload has no scholars' boxes: start from the model.")
+        return self
 
 
 class EditedBox(BaseModel):
@@ -78,8 +89,8 @@ class EditedBox(BaseModel):
     box: Box
     sign: str | None
     origin: Origin  # where the box first came from
-    model_sign: str | None  # the model's reading when the copy was made; None for drawn boxes
-    model_confidence: float | None
+    model_sign: str | None  # the sign when the copy was made (the model's or the scholars'); None for drawn boxes
+    model_confidence: float | None  # the model's confidence; None for scholars' and drawn boxes
     candidates: list[Candidate]  # the model's top guesses, for the sign picker
     changed: bool  # moved, resized or relabelled since the copy was made (always True for drawn boxes)
 
