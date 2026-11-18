@@ -114,6 +114,8 @@ class BoxSetSource(BaseModel):
 class BoxSet(BaseModel):
     id: int
     owner: str  # username
+    permission: Literal["view", "comment", "edit", "manage", "owner"]  # what you may do with it (#84)
+    everyone: Literal["none", "view", "comment", "edit"]  # access for every logged-in user
     source: BoxSetSource
     start: Literal["model", "scholar"]
     version: int  # send it back with each edit; it goes up by one per save

@@ -16,6 +16,7 @@ from backend.app.routes.correction_routes import router as correction_router
 from backend.app.routes.admin_routes import router as admin_router
 from backend.app.routes.box_set_routes import router as box_set_router
 from backend.app.routes.corpus_routes import router as corpus_router
+from backend.app.routes.share_routes import router as share_router
 
 
 
@@ -30,6 +31,7 @@ async def lifespan(_app: FastAPI):
 
 app = FastAPI(title="ASE Backend", lifespan=lifespan)
 
+app.include_router(share_router)  # before user_router: /users/search is not /users/{user_id}
 app.include_router(user_router)
 app.include_router(tablet_demo_router)
 app.include_router(reading_router)

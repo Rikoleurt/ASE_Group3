@@ -347,3 +347,14 @@ class UserDataController(DataController):
             finally:
                 cursor.close()
         return row
+
+    def search_usernames(self, prefix: str, limit: int, exclude_id: int) -> list[dict]:
+        """Usernames starting with `prefix` (literally), for sharing (#84); never emails."""
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute("SELECT id, username FROM `user` WHERE username LIKE %s AND id <> %s "
+                               "ORDER BY username LIMIT %s", (like_escape(prefix) + "%", exclude_id, limit))
+                return cursor.fetchall()
+            finally:
+                cursor.close()

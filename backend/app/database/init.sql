@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS box_set (
     tablet_slug VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
     start ENUM('model', 'scholar') NOT NULL,
     version INT UNSIGNED NOT NULL DEFAULT 0,
+    everyone ENUM('none', 'view', 'comment', 'edit') NOT NULL DEFAULT 'none',  -- access for all logged-in users (#84)
     width INT UNSIGNED NOT NULL,
     height INT UNSIGNED NOT NULL,
     created_at DATETIME(6) NOT NULL,
@@ -113,6 +114,21 @@ CREATE TABLE IF NOT EXISTS box (
     candidates JSON NULL,
     INDEX ix_box_set (set_id, id),
     FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- People a corrected copy is shared with (#84), each at one level. The copy's level for
+-- everyone logged in is box_set.everyone; a user gets the higher of the two.
+CREATE TABLE IF NOT EXISTS box_set_share (
+    set_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    permission ENUM('view', 'comment', 'edit', 'manage') NOT NULL,
+    granted_by BIGINT UNSIGNED NULL,
+    created_at DATETIME(6) NOT NULL,
+    PRIMARY KEY (set_id, user_id),
+    INDEX ix_box_set_share_user (user_id, set_id),
+    FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE,
+    FOREIGN KEY (granted_by) REFERENCES `user`(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Every change to a copy: who, when, and the box before and after ({box, sign, deleted}).

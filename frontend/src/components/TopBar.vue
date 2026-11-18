@@ -92,6 +92,9 @@ const activeClass = 'font-bold underline'
 
         <div class="flex items-center gap-6">
             <p v-if="logoutError" role="alert">{{ logoutError }}</p>
+            <RouterLink v-if="sessionUser" to="/shared" :class="linkClass" :exact-active-class="activeClass">
+                Shared with me
+            </RouterLink>
             <RouterLink v-if="sessionUser && sessionReviewer" to="/review" :class="linkClass" :exact-active-class="activeClass">
                 Review
             </RouterLink>

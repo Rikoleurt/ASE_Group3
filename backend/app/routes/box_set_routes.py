@@ -1,7 +1,7 @@
 """Corrected copies of a tablet's boxes (#83): make one, edit it, see and undo its changes.
 
-Until sharing lands (#84) a copy is visible to its owner only; to everyone else it does not
-exist (404), as with history.
+Who may do what is decided by backend/app/sharing.py (#84). Someone who may not see a copy
+gets 404, as if it did not exist; someone who may see it but not do this gets 403.
 """
 import json
 from datetime import timezone
@@ -22,6 +22,7 @@ from backend.app.model.analysis import ApiError, DetectedSign
 from backend.app.model.box_set import (Author, BoxChange, BoxChangePage, BoxSet, BoxSetConflict, BoxSetCreate,
                                        BoxSetEdit, BoxSetSource, BoxState, EditedBox, Reading, Revert)
 from backend.app.model.user import UserPublic
+from backend.app.sharing import REFUSALS, allows, level_of
 
 router = APIRouter(tags=["box sets"])
 Identifier = Annotated[int, Path(gt=0, le=2**64 - 1)]
@@ -72,32 +73,40 @@ def build(record: dict) -> BoxSet:
     source = (BoxSetSource(kind="analysis", analysis_id=record["analysis_id"], filename=record["filename"])
               if record["analysis_id"] is not None else BoxSetSource(kind="tablet", tablet=record["tablet_slug"]))
     return BoxSet(
-        id=record["id"], owner=record["owner"], source=source, start=record["start"], version=record["version"],
+        id=record["id"], owner=record["owner"], permission=record.get("permission", "owner"),
+        everyone=record.get("everyone") or "none", source=source, start=record["start"], version=record["version"],
         width=record["width"], height=record["height"], image_url=f"/box-sets/{record['id']}/image",
         created_at=record["created_at"], updated_at=record["updated_at"], boxes=boxes, reading=_reading(boxes),
     )
 
 
-def _owned(controller: BoxSetDataController, set_id: int, user: UserPublic) -> dict:
-    """The copy if the user may see it (#84 widens this to people it is shared with), else 404."""
+def access(controller: BoxSetDataController, set_id: int, user: UserPublic, needed: str = "view") -> dict:
+    """The copy, with the user's level on it as record["permission"]; 404 if they may not see it,
+    403 if they may see it but not do what needs `needed`."""
+    try:
+        record = controller.load(set_id)
+        share = controller.share_of(set_id, user.id) if record and record["owner_id"] != user.id else None
+    except DatabaseError as error:
+        raise HTTPException(503, UNAVAILABLE) from error
+    level = level_of(record["owner_id"], record.get("everyone") or "none", user.id, share) if record else None
+    if level is None:
+        raise HTTPException(404, "Corrected copy not found.")
+    if not allows(level, needed):
+        raise HTTPException(403, REFUSALS[needed])
+    record["permission"] = level
+    return record
+
+
+def _current(controller: BoxSetDataController, set_id: int, level: str = "owner") -> BoxSet:
     try:
         record = controller.load(set_id)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
-    if record is None or record["owner_id"] != user.id:
-        raise HTTPException(404, "Corrected copy not found.")
-    return record
+    return build({**record, "permission": level})
 
 
-def _current(controller: BoxSetDataController, set_id: int) -> BoxSet:
-    try:
-        return build(controller.load(set_id))
-    except DatabaseError as error:
-        raise HTTPException(503, UNAVAILABLE) from error
-
-
-def _conflict(controller: BoxSetDataController, set_id: int) -> JSONResponse:
-    current = _current(controller, set_id)
+def _conflict(controller: BoxSetDataController, set_id: int, level: str) -> JSONResponse:
+    current = _current(controller, set_id, level)
     body = BoxSetConflict(detail="Someone else changed this copy since you opened it. Reload to see their changes.",
                           current=current)
     return JSONResponse(status_code=409, content=body.model_dump(mode="json"))
@@ -163,7 +172,7 @@ def tablet_box_set(slug: Annotated[str, Path(pattern=r"^[A-Za-z0-9]+(?:-[A-Za-z0
         raise HTTPException(503, UNAVAILABLE) from error
     if set_id is None:
         raise HTTPException(404, "Corrected copy not found.")
-    return build(_owned(controller, set_id, user))
+    return build(access(controller, set_id, user))
 
 
 @router.get("/analysis/{analysis_id}/box-set", response_model=BoxSet, responses=ERRORS)
@@ -175,34 +184,34 @@ def analysis_box_set(analysis_id: Identifier, user: CurrentUser, controller: Con
         raise HTTPException(503, UNAVAILABLE) from error
     if set_id is None:
         raise HTTPException(404, "Corrected copy not found.")
-    return build(_owned(controller, set_id, user))
+    return build(access(controller, set_id, user))
 
 
 @router.get("/box-sets/{set_id}", response_model=BoxSet, responses=ERRORS)
 def get_box_set(set_id: Identifier, user: CurrentUser, controller: Controller) -> BoxSet:
-    return build(_owned(controller, set_id, user))
+    return build(access(controller, set_id, user))
 
 
 @router.patch("/box-sets/{set_id}", response_model=BoxSet,
               responses={409: {"model": BoxSetConflict}, 422: {"model": ApiError}, **ERRORS})
 def edit_box_set(set_id: Identifier, edit: BoxSetEdit, user: AuthenticatedWrite, controller: Controller):
     """Apply one save: add, move, resize, relabel and delete boxes. All or nothing."""
-    _owned(controller, set_id, user)
+    level = access(controller, set_id, user, "edit")["permission"]
     try:
         controller.apply(set_id, user.id, edit.version, edit.changes, catalogue_sign)
     except StaleVersion:
-        return _conflict(controller, set_id)
+        return _conflict(controller, set_id, level)
     except EditError as error:
         raise HTTPException(422, str(error)) from error
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
-    return _current(controller, set_id)
+    return _current(controller, set_id, level)
 
 
 @router.delete("/box-sets/{set_id}", status_code=status.HTTP_204_NO_CONTENT, responses=ERRORS)
 def delete_box_set(set_id: Identifier, user: AuthenticatedWrite, controller: Controller) -> Response:
-    """Throw the copy away, with its history. The analysis itself stays."""
-    _owned(controller, set_id, user)
+    """Throw the copy away, with its history and shares. The analysis itself stays."""
+    access(controller, set_id, user, "owner")
     try:
         controller.delete(set_id)
     except DatabaseError as error:
@@ -215,7 +224,7 @@ def box_set_changes(set_id: Identifier, user: CurrentUser, controller: Controlle
                     limit: Annotated[int, Query(ge=1, le=200)] = 50,
                     before: Annotated[int | None, Query(gt=0, le=2**64 - 1)] = None) -> BoxChangePage:
     """Every change to the copy, newest first."""
-    _owned(controller, set_id, user)
+    access(controller, set_id, user)
     try:
         rows = controller.changes(set_id, limit, before)
     except DatabaseError as error:
@@ -235,18 +244,18 @@ def box_set_changes(set_id: Identifier, user: CurrentUser, controller: Controlle
 def revert_change(set_id: Identifier, change_id: Identifier, request: Revert, user: AuthenticatedWrite,
                   controller: Controller):
     """Undo one change. Refused if the box was changed again since, or the change was already undone."""
-    _owned(controller, set_id, user)
+    level = access(controller, set_id, user, "edit")["permission"]
     try:
         controller.revert(set_id, user.id, change_id, request.version)
     except StaleVersion:
-        return _conflict(controller, set_id)
+        return _conflict(controller, set_id, level)
     except MissingChange as error:
         raise HTTPException(404, "Change not found.") from error
     except EditError as error:
         raise HTTPException(422, str(error)) from error
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
-    return _current(controller, set_id)
+    return _current(controller, set_id, level)
 
 
 @router.get("/box-sets/{set_id}/image", response_class=FileResponse,
@@ -254,7 +263,7 @@ def revert_change(set_id: Identifier, change_id: Identifier, request: Revert, us
                        **ERRORS})
 def box_set_image(set_id: Identifier, user: CurrentUser, controller: Controller) -> FileResponse:
     """The image the copy's boxes are drawn on."""
-    record = _owned(controller, set_id, user)
+    record = access(controller, set_id, user)
     if record["tablet_slug"] is not None:
         # A corpus tablet's published tracing.
         try:

@@ -18,6 +18,8 @@ import reviewView from '../views/ReviewView.vue?raw'
 import adminView from '../views/AdminView.vue?raw'
 import useBoxSet from '../composables/useBoxSet.js?raw'
 import tabletsView from '../views/TabletsView.vue?raw'
+import shareDialog from '../components/boxes/ShareDialog.vue?raw'
+import sharedView from '../views/SharedView.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -61,6 +63,12 @@ const CALLS = [
   { method: 'get', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${encodeURIComponent(id)}' },
   { method: 'patch', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${copy.value.id}' },
   { method: 'get', path: '/tablets', source: tabletsView, snippet: '/api/tablets?${query}' },
+  { method: 'get', path: '/box-sets/{set_id}/shares', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares' },
+  { method: 'put', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
+  { method: 'delete', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
+  { method: 'put', path: '/box-sets/{set_id}/everyone', source: shareDialog, snippet: '/api/box-sets/${props.setId}/everyone' },
+  { method: 'get', path: '/users/search', source: shareDialog, snippet: '/api/users/search?q=${encodeURIComponent(query)}' },
+  { method: 'get', path: '/users/me/shared-copies', source: sharedView, snippet: "'/api/users/me/shared-copies'" },
   { method: 'get', path: '/tablets/{slug}/boxes', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(SLUG.value)}/boxes?source=${SOURCE.value}' },
   { method: 'get', path: '/tablets/{slug}/box-set', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(slug)}/box-set' },
   { method: 'post', path: '/box-sets', source: tabletsView, snippet: "'/api/box-sets'" },
@@ -139,6 +147,13 @@ describe('API contract', () => {
     )
     expect(responseFields('patch', '/box-sets/{set_id}', '409').sort()).toEqual(['current', 'detail'])
     expect(requestFields('post', '/box-sets').sort()).toEqual(['analysis_id', 'start', 'tablet'])
+  })
+
+  it('sharing sends and reads the declared fields', () => {
+    expect(requestFields('put', '/box-sets/{set_id}/shares/{user_id}')).toEqual(['permission'])
+    expect(requestFields('put', '/box-sets/{set_id}/everyone')).toEqual(['permission'])
+    expect(responseFields('get', '/box-sets/{set_id}/shares', '200').sort()).toEqual(['everyone', 'shares'])
+    expect(responseFields('get', '/box-sets/{set_id}', '200')).toEqual(expect.arrayContaining(['permission', 'everyone', 'owner']))
   })
 
   it('the admin page sends and reads only declared role fields', () => {

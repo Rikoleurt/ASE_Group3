@@ -17,7 +17,7 @@ const reading = (boxes) => ({
   signs: boxes.map((b) => ({ id: b.id, sign: b.sign, label: b.sign, role: 'syllabogram', box: b.box, confidence: 80, candidates: [] })),
 })
 const copyWith = (boxes, version = 0) => ({
-  id: 5, owner: 'dev', source: { kind: 'analysis', analysis_id: 12, tablet: null, filename: 'tablet.png' }, start: 'model',
+  id: 5, owner: 'dev', permission: 'owner', everyone: 'none', source: { kind: 'analysis', analysis_id: 12, tablet: null, filename: 'tablet.png' }, start: 'model',
   version, width: 1000, height: 800, image_url: '/box-sets/5/image', created_at: '2026-11-18T09:00:00Z',
   updated_at: '2026-11-18T09:00:00Z', boxes, reading: reading(boxes),
 })
