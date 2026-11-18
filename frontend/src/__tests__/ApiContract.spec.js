@@ -86,11 +86,16 @@ describe('API contract', () => {
     )
     const operation = contract.paths['/community/discussions/{discussion_id}'].get
     expect(operation.security).toBeUndefined()
-    expect(contract.paths['/community/discussions'].post.security).toEqual([{ APIKeyCookie: [] }])
+    expect(contract.paths['/community/discussions'].post.security).toEqual([{APIKeyCookie: []}])
     expect(requestFields('post', '/community/discussions')).toEqual(expect.arrayContaining(['analysis_id', 'title']))
     expect(requestFields('post', '/community/discussions/{discussion_id}/comments')).toEqual(['body'])
   })
-  it.each(CALLS)('$method $path is called by the frontend and exists in the API', ({ method, path, source, snippet }) => {
+  it.each(CALLS)('$method $path is called by the frontend and exists in the API', ({
+                                                                                     method,
+                                                                                     path,
+                                                                                     source,
+                                                                                     snippet
+                                                                                   }) => {
     expect(source).toContain(snippet)
     expect(contract.paths[path]?.[method]).toBeDefined()
   })
@@ -109,41 +114,41 @@ describe('API contract', () => {
   it('the session returns the user and the CSRF token the frontend reads', () => {
     expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['user', 'csrf_token']))
     expect(session).toContain('csrf_token')
-  it('the session returns the user and CSRF token used by the frontend', () => {
-    expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['user', 'csrf_token']))
-    const user = resolve(contract.components.schemas.SessionUser.properties.user)
-    expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'username', 'email']))
-  })
+    it('the session returns the user and CSRF token used by the frontend', () => {
+      expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['user', 'csrf_token']))
+      const user = resolve(contract.components.schemas.SessionUser.properties.user)
+      expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'username', 'email']))
+    })
 
-  it('history returns pagination, metadata and the saved analysis', () => {
-    expect(responseFields('get', '/users/me/analyses', '200')).toEqual(expect.arrayContaining(['items', 'next_cursor']))
-    const metadata = resolve(contract.components.schemas.AnalysisHistoryPage.properties.items.items)
-    expect(Object.keys(metadata.properties)).toEqual(expect.arrayContaining(['id', 'filename', 'created_at']))
-    expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toEqual(
-      expect.arrayContaining(['filename', 'created_at', 'format', 'size_bytes', 'result']),
-    )
-    const result = resolve(contract.components.schemas.AnalysisHistoryDetail.properties.result)
-    expect(Object.keys(result.properties)).toEqual(
-      expect.arrayContaining(['summary', 'symbol_interpretation', 'confidence', 'time_taken', 'signs', 'formulas']),
-    )
-  })
+    it('history returns pagination, metadata and the saved analysis', () => {
+      expect(responseFields('get', '/users/me/analyses', '200')).toEqual(expect.arrayContaining(['items', 'next_cursor']))
+      const metadata = resolve(contract.components.schemas.AnalysisHistoryPage.properties.items.items)
+      expect(Object.keys(metadata.properties)).toEqual(expect.arrayContaining(['id', 'filename', 'created_at']))
+      expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toEqual(
+        expect.arrayContaining(['filename', 'created_at', 'format', 'size_bytes', 'result']),
+      )
+      const result = resolve(contract.components.schemas.AnalysisHistoryDetail.properties.result)
+      expect(Object.keys(result.properties)).toEqual(
+        expect.arrayContaining(['summary', 'symbol_interpretation', 'confidence', 'time_taken', 'signs', 'formulas']),
+      )
+    })
 
-  // Guards against #30 coming back: the page rendered a field the API never returned.
-  it('AnalysisView renders only fields of SavedAnalysisResult', () => {
-    expect(ANALYSIS_FIELDS).toEqual(expect.arrayContaining(['summary', 'signs', 'formulas', 'analysis_id']))
-    const returned = responseFields('post', '/analysis', '200')
-    expect(ANALYSIS_FIELDS.filter((field) => !returned.includes(field))).toEqual([])
-  })
+    // Guards against #30 coming back: the page rendered a field the API never returned.
+    it('AnalysisView renders only fields of SavedAnalysisResult', () => {
+      expect(ANALYSIS_FIELDS).toEqual(expect.arrayContaining(['summary', 'signs', 'formulas', 'analysis_id']))
+      const returned = responseFields('post', '/analysis', '200')
+      expect(ANALYSIS_FIELDS.filter((field) => !returned.includes(field))).toEqual([])
+    })
 
-  // The pane only reads fields the API declares.
-  it.each([
-    ['item', 'GlyphOccurrence'],
-    ['comment', 'Annotation'],
-    ['page', 'GlyphOccurrencePage', 'AnnotationPage'],
-  ])('GlyphOccurrencesPane reads only fields of %s', (root, ...schemas) => {
-    const declared = schemas.flatMap((schema) => Object.keys(contract.components.schemas[schema].properties))
-    const used = [...glyphPane.matchAll(new RegExp(root + '\\.(\\w+)', 'g'))].map((m) => m[1])
-    expect(used.length).toBeGreaterThan(0)
-    expect(used.filter((field) => !declared.includes(field))).toEqual([])
+    // The pane only reads fields the API declares.
+    it.each([
+      ['item', 'GlyphOccurrence'],
+      ['comment', 'Annotation'],
+      ['page', 'GlyphOccurrencePage', 'AnnotationPage'],
+    ])('GlyphOccurrencesPane reads only fields of %s', (root, ...schemas) => {
+      const declared = schemas.flatMap((schema) => Object.keys(contract.components.schemas[schema].properties))
+      const used = [...glyphPane.matchAll(new RegExp(root + '\\.(\\w+)', 'g'))].map((m) => m[1])
+      expect(used.length).toBeGreaterThan(0)
+      expect(used.filter((field) => !declared.includes(field))).toEqual([])
   })
 })})
