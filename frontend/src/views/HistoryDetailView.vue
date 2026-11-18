@@ -13,12 +13,15 @@ const router = useRouter()
 const detail = ref(null)
 const loading = ref(false)
 const error = ref('')
+// The kept image failed to load (e.g. removed from the server): show the saved results without it.
+const imageMissing = ref(false)
 let requestId = 0
 
 async function load() {
   const request = ++requestId
   loading.value = true
   detail.value = null
+  imageMissing.value = false
   error.value = ''
   try {
     const response = await sessionFetch(`/api/users/me/analyses/${encodeURIComponent(route.params.id)}`)
@@ -52,9 +55,10 @@ watch(() => route.params.id, load, { immediate: true })
         <section class="mt-6 rounded-3xl bg-card p-6">
           <h2 class="break-all text-xl font-bold">{{ detail.filename }}</h2>
           <p class="mt-2 text-ink/70"><time :datetime="detail.created_at">{{ new Date(detail.created_at).toLocaleString() }}</time> · {{ detail.format }} · {{ (detail.size_bytes / 1024).toFixed(1) }} KiB</p>
-          <TabletOverlay v-if="detail.image_url" class="mt-6" :signs="detail.result.signs" :formulas="detail.result.formulas">
-            <img :src="detail.image_url" :alt="detail.filename" class="w-full rounded-lg bg-white" />
+          <TabletOverlay v-if="detail.image_url && !imageMissing" class="mt-6" data-testid="history-image" :signs="detail.result.signs" :formulas="detail.result.formulas">
+            <img :src="detail.image_url" :alt="detail.filename" class="w-full rounded-lg bg-white" @error="imageMissing = true" />
           </TabletOverlay>
+          <p v-else-if="detail.image_url" role="alert" class="mt-4 text-sm text-ink/70">The image could not be loaded. These are the results saved at the time of analysis.</p>
           <p v-else class="mt-4 text-sm text-ink/70">This older analysis has no saved image. Upload and analyze the tablet again to share it.</p>
           <ShareAnalysis v-if="detail.image_url" :analysis-id="detail.id" :filename="detail.filename" :discussion-id="detail.discussion_id" />
           <p class="mt-6">{{ detail.result.summary }}</p>

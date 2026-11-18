@@ -80,6 +80,14 @@ it.each(['/profile/history', '/profile/history/12'])('redirects an expired sessi
   expect(router.currentRoute.value.path).toBe('/login')
   expect(router.currentRoute.value.query.redirect).toBe(path)
 })
+it('falls back to the saved results when the kept image cannot be loaded', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ ...metadata, image_url: '/api/analysis/12/image', result: analysis }) })))
+  await render('/profile/history/12')
+  await wrapper.get('[data-testid="history-image"] img').trigger('error')
+  expect(wrapper.find('[data-testid="history-image"]').exists()).toBe(false)
+  expect(wrapper.text()).toContain('The image could not be loaded')
+  expect(wrapper.text()).toContain(analysis.symbol_interpretation)
+})
 it('does not expose a missing or foreign result', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))
   await render('/profile/history/12')
