@@ -50,6 +50,12 @@ def current_user(response: Response, token: Annotated[str | None, Depends(sessio
 CurrentUser = Annotated[UserPublic, Depends(current_user)]
 
 
+def is_reviewer(user: UserPublic) -> bool:
+    """Reviewers of sign corrections: the usernames listed in SIGN_REVIEWERS (comma-separated)."""
+    reviewers = {name.strip().casefold() for name in os.getenv("SIGN_REVIEWERS", "").split(",") if name.strip()}
+    return user.username.casefold() in reviewers
+
+
 def require_csrf(request: Request, user: CurrentUser,
                  x_csrf_token: Annotated[str | None, Header()] = None) -> UserPublic:
     expected = csrf_token(request.cookies.get(COOKIE_NAME, ""))

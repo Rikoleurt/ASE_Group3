@@ -13,6 +13,8 @@ import connectionTest from '../components/ConnectionTest.vue?raw'
 import tabletReadingView from '../views/TabletReadingView.vue?raw'
 import benchmarksView from '../views/BenchmarksView.vue?raw'
 import glyphPane from '../components/glyphs/GlyphOccurrencesPane.vue?raw'
+import signCorrection from '../components/analysis/SignCorrection.vue?raw'
+import reviewView from '../views/ReviewView.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -44,6 +46,12 @@ const CALLS = [
   { method: 'delete', path: '/glyphs/annotations/{annotation_id}', source: glyphPane, snippet: '/api/glyphs/annotations/${comment.id}' },
   { method: 'get', path: '/tablets/{slug}/thumbnail.png', source: glyphPane, snippet: 'apiUrl(item.thumbnail_url)' },
   { method: 'get', path: '/tablets/{slug}/signs/{position}.png', source: glyphPane, snippet: 'apiUrl(item.crop_url)' },
+  { method: 'get', path: '/corrections/catalogue', source: analysisView, snippet: "'/api/corrections/catalogue'" },
+  { method: 'post', path: '/analysis/{analysis_id}/corrections', source: signCorrection, snippet: '/api/analysis/${props.analysisId}/corrections' },
+  { method: 'get', path: '/corrections', source: reviewView, snippet: '/api/corrections?status=${STATUS.value}&limit=200' },
+  { method: 'post', path: '/corrections/{correction_id}/review', source: reviewView, snippet: '/api/corrections/${item.id}/review' },
+  { method: 'get', path: '/corrections/export', source: reviewView, snippet: "'/api/corrections/export'" },
+  { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
 ]
 
 function resolve(schema) {
@@ -87,6 +95,20 @@ describe('API contract', () => {
   it('the session returns the user and the CSRF token the frontend reads', () => {
     expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['user', 'csrf_token']))
     expect(session).toContain('csrf_token')
+  })
+
+  it('corrections accept what the correction form sends and return what it shows', () => {
+    expect(requestFields('post', '/analysis/{analysis_id}/corrections')).toEqual(
+      expect.arrayContaining(['sign_id', 'proposed_sign', 'uncertain', 'note']),
+    )
+    expect(responseFields('post', '/analysis/{analysis_id}/corrections', '201')).toContain('uncertain')
+    expect(responseFields('post', '/analysis', '200')).toContain('analysis_id')
+    expect(requestFields('post', '/corrections/{correction_id}/review')).toEqual(['decision'])
+  })
+
+  it('the session says whether the user reviews corrections', () => {
+    expect(responseFields('get', '/users/me', '200')).toContain('reviewer')
+    expect(responseFields('post', '/users/login', '200')).toContain('reviewer')
   })
 
   // Guards against #30 coming back: the page rendered a field the API never returned.

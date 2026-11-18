@@ -82,6 +82,7 @@ class AnalysisResult(BaseModel):
     width: int
     height: int
     trained: bool  # False: the generic yolo26n.pt ran, not the Linear A reader
+    model_version: str | None = None  # weight files and hashes; None in history saved before #52
     signs: list[DetectedSign]  # in reading order
     lines: list[Line] = []
     formulas: list[Formula] = []

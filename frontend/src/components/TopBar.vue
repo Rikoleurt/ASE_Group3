@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { loadSession, logoutSession, sessionUser } from '../state/session'
+import { loadSession, logoutSession, sessionReviewer, sessionUser } from '../state/session'
 
 const router = useRouter()
 const loggingOut = ref(false)
@@ -91,6 +91,9 @@ const activeClass = 'font-bold underline'
 
         <div class="flex items-center gap-6">
             <p v-if="logoutError" role="alert">{{ logoutError }}</p>
+            <RouterLink v-if="sessionUser && sessionReviewer" to="/review" :class="linkClass" :exact-active-class="activeClass">
+                Review
+            </RouterLink>
             <button
                 v-if="sessionUser"
                 type="button"
