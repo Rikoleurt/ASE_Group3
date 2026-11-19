@@ -8,28 +8,35 @@ Two forms, both for admins:
 
 Boxes without a sign are left out of the YOLO labels (there is no class to give them) but kept
 in the JSON, with sign null, so nothing the users drew is lost.
+
+Anyone can register and correct boxes, so by default only copies whose owner is trusted (an
+admin or a reviewer, the people who already vet sign corrections) are exported; `everyone`
+includes the rest, marked untrusted (#98).
 """
-import io
 import json
+import tempfile
 import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
 from backend.app import glyph_index
+from backend.app.auth import reviewer_from_env
 from backend.app.image_storage import image_path
 from backend.app.box_edits import GEOMETRY, same, state
 from backend.app.data_controller.data_controller import DataController
 
 
 class ExportDataController(DataController):
-    def copies(self) -> list[dict]:
-        """Every corrected copy with its image key, and its boxes that are not deleted."""
+    def copies(self, everyone: bool = False) -> list[dict]:
+        """Corrected copies with their image key and boxes that are not deleted: by trusted owners
+        (admins and reviewers) only, unless `everyone`."""
         with self.connection() as connection:
             cursor = connection.cursor(dictionary=True)
             try:
                 cursor.execute(
                     "SELECT s.id, s.owner_id, s.analysis_id, s.tablet_slug, s.start, s.width, s.height, s.version, "
-                    "s.updated_at, a.filename, i.storage_key, a.format FROM box_set s "
+                    "s.updated_at, a.filename, i.storage_key, a.format, u.username AS owner_username, u.is_admin, u.is_reviewer "
+                    "FROM box_set s JOIN `user` u ON u.id = s.owner_id "
                     "LEFT JOIN analysis a ON a.id = s.analysis_id LEFT JOIN analysis_image i ON i.analysis_id = a.id "
                     "ORDER BY s.id")
                 copies = cursor.fetchall()
@@ -39,6 +46,11 @@ class ExportDataController(DataController):
                 boxes = cursor.fetchall()
             finally:
                 cursor.close()
+        for copy in copies:
+            admin, reviewer, username = copy.pop("is_admin"), copy.pop("is_reviewer"), copy.pop("owner_username")
+            copy["owner_trusted"] = bool(admin or reviewer or reviewer_from_env(username or ""))
+        if not everyone:
+            copies = [copy for copy in copies if copy["owner_trusted"]]
         by_copy: dict[int, list[dict]] = {}
         for box in boxes:
             by_copy.setdefault(box["set_id"], []).append(box)
@@ -71,6 +83,7 @@ def corrections(copies: list[dict], label_corrections: list) -> dict:
         exported.append({
             "copy_id": copy["id"],
             "owner_id": copy["owner_id"],
+            "owner_trusted": copy.get("owner_trusted", False),
             "source": "analysis" if copy["analysis_id"] is not None else "tablet",
             "analysis_id": copy["analysis_id"],
             "filename": copy["filename"],
@@ -103,15 +116,18 @@ def _image_path(copy: dict) -> Path | None:
     return path if path.is_file() else None
 
 
-def yolo_zip(copies: list[dict], label_corrections: list) -> bytes:
-    """The YOLO zip. Copies whose image is missing on this server are listed in corrections.json
-    under "missing_images" and left out of images/ and labels/."""
+def yolo_zip(copies: list[dict], label_corrections: list) -> str:
+    """The YOLO zip, written to a temporary file whose path is returned (the caller deletes it):
+    a big export streams from disk instead of being held in memory. Copies whose image is
+    missing on this server are listed in corrections.json under "missing_images" and left out
+    of images/ and labels/."""
     data = corrections(copies, label_corrections)
     classes = sorted({box["sign"] for copy in copies for box in copy["boxes"] if box["sign"]})
     index = {sign: number for number, sign in enumerate(classes)}
     missing = []
-    buffer = io.BytesIO()
-    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+    handle = tempfile.NamedTemporaryFile(prefix="corrections-", suffix=".zip", delete=False)
+    handle.close()
+    with zipfile.ZipFile(handle.name, "w", zipfile.ZIP_DEFLATED) as archive:
         for copy in copies:
             path = _image_path(copy)
             if path is None:
@@ -126,4 +142,4 @@ def yolo_zip(copies: list[dict], label_corrections: list) -> bytes:
         data["missing_images"] = missing
         data["unnamed_boxes_left_out"] = sum(1 for copy in copies for box in copy["boxes"] if not box["sign"])
         archive.writestr("corrections.json", json.dumps(data, indent=2, ensure_ascii=False))
-    return buffer.getvalue()
+    return handle.name

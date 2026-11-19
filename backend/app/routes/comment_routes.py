@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 from backend.app.auth import AuthenticatedWrite, CurrentUser
 from backend.app.model.analysis import ApiError
 from backend.app.model.box_set import Author
+from backend.app.rate_limit import COMMENTS
 from backend.app.routes.box_set_routes import UNAVAILABLE, Controller, access
 from backend.app.sharing import allows
 
@@ -51,11 +52,12 @@ def _comment(row: dict, user_id: int, moderator: bool) -> Comment:
 
 @router.get("/box-sets/{set_id}/comments", response_model=list[Comment], responses=ERRORS)
 def list_comments(set_id: Identifier, user: CurrentUser, controller: Controller,
-                  box_id: Annotated[int | None, Query(gt=0, le=2**64 - 1)] = None) -> list[Comment]:
-    """The copy's comments, oldest first; with box_id, only that box's thread."""
+                  box_id: Annotated[int | None, Query(gt=0, le=2**64 - 1)] = None,
+                  limit: Annotated[int, Query(ge=1, le=500)] = 500) -> list[Comment]:
+    """The copy's newest comments (500 at most), oldest first; with box_id, only that box's thread."""
     record = access(controller, set_id, user)
     try:
-        rows = controller.comments(set_id, box_id)
+        rows = controller.comments(set_id, box_id, limit)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
     moderator = allows(record["permission"], "manage")
@@ -66,12 +68,14 @@ def list_comments(set_id: Identifier, user: CurrentUser, controller: Controller,
              responses={**ERRORS, 422: {"model": ApiError}})
 def add_comment(set_id: Identifier, request: CommentCreate, user: AuthenticatedWrite, controller: Controller) -> Comment:
     record = access(controller, set_id, user, "comment")
+    COMMENTS.check(f"user:{user.id}", "You are commenting very quickly. Please wait a minute.")
     if request.box_id is not None and not any(box["id"] == request.box_id and not box["deleted"] for box in record["boxes"]):
         raise HTTPException(422, f"Box {request.box_id} is not on this copy.")
     try:
         row = controller.add_comment(set_id, request.box_id, user.id, request.body)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
+    COMMENTS.record(f"user:{user.id}")
     return _comment(row, user.id, allows(record["permission"], "manage"))
 
 

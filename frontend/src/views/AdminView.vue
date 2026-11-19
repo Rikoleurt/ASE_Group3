@@ -31,19 +31,22 @@ const PAGES = computed(() => ({
 }))
 
 const isSelf = (user) => user.id === sessionUser.value?.id
-const failure = (error) => (error instanceof TypeError ? 'Couldnt reach the server' : error.message)
+const failure = (error) => (error instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : error.message)
 
 async function detail(response, fallback) {
   const body = await response.json().catch(() => null)
   return typeof body?.detail === 'string' ? body.detail : fallback
 }
 
+let loadId = 0
 async function load(offset = 0) {
+  const mine = ++loadId
   LOADING.value = true
   ERROR.value = ''
   try {
     const query = new URLSearchParams({ q: searched, limit: PAGE_SIZE, offset })
     const response = await sessionFetch(`/api/admin/users?${query}`)
+    if (mine !== loadId) return
     if (response.status === 401) {
       await router.push({ path: '/login', query: { redirect: '/admin' } })
       return
@@ -73,7 +76,7 @@ function search() {
 // Explains why a box can't be changed, or null when it can.
 function lockReason(user, role) {
   if (role === 'admin' && isSelf(user) && user.admin) return 'You cannot remove your own admin role.'
-  if (role === 'reviewer' && user.reviewer_from_env) return 'Named in SIGN_REVIEWERS, so always a reviewer.'
+  if (role === 'reviewer' && user.reviewer_from_env) return 'Always a reviewer (set in the server settings).'
   return null
 }
 
@@ -103,12 +106,15 @@ async function toggle(user, role, event) {
 
 // Training export (#87): every corrected copy, plus approved label corrections.
 const EXPORTING = ref('')
+// Anyone can register and correct boxes: by default the export takes admins' and reviewers' copies only (#98).
+const EVERYONE = ref(false)
 
 async function download(kind) {
   EXPORTING.value = kind
   ERROR.value = ''
   try {
-    const response = await sessionFetch(kind === 'zip' ? '/api/admin/export/corrections.zip' : '/api/admin/export/corrections')
+    const suffix = EVERYONE.value ? '?everyone=true' : ''
+    const response = await sessionFetch(`${kind === 'zip' ? '/api/admin/export/corrections.zip' : '/api/admin/export/corrections'}${suffix}`)
     if (!response.ok) throw new Error(await detail(response, 'The export failed. Please try again.'))
     const blob = kind === 'zip' ? await response.blob() : new Blob([JSON.stringify(await response.json(), null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -145,9 +151,13 @@ onMounted(async () => {
       <section class="mt-6 rounded-2xl bg-card p-5" aria-labelledby="export-h">
         <h2 id="export-h" class="text-xl font-bold">Training data</h2>
         <p class="mt-1 text-sm text-ink/70">
-          Every user's corrected boxes, with approved sign corrections, to train the reader on.
-          JSON follows the training annotations; the YOLO zip has images, labels and classes.
+          Corrected boxes, with approved sign corrections, to train the reader on. JSON matches the format of the
+          training set; the YOLO zip has images, labels and the class list.
         </p>
+        <label class="mt-3 flex items-center gap-2 text-sm">
+          <input v-model="EVERYONE" type="checkbox" data-testid="export-everyone" />
+          Include copies by all users, not only admins and reviewers (not reviewed)
+        </label>
         <div class="mt-3 flex flex-wrap gap-3">
           <button type="button" class="cursor-pointer rounded border border-ink/30 px-4 py-2 hover:bg-ink/5 disabled:opacity-60" :disabled="EXPORTING !== ''" data-testid="export-json" @click="download('json')">
             {{ EXPORTING === 'json' ? 'Exporting…' : 'Export corrections (JSON)' }}
@@ -204,6 +214,7 @@ onMounted(async () => {
                 :data-testid="`role-${role.key}`"
                 @change="toggle(user, role.key, $event)"
               />
+              <span v-if="lockReason(user, role.key)" class="block text-xs text-ink/60">{{ lockReason(user, role.key) }}</span>
             </td>
           </tr>
         </tbody>

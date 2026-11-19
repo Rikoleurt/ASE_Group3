@@ -34,7 +34,7 @@ async function correctBoxes() {
     try {
         await router.push(`/box-sets/${await openCopy(ANALYSIS.value.analysis_id)}`)
     } catch (error) {
-        OPEN_ERROR.value = error instanceof TypeError ? 'Couldnt reach the server' : error.message
+        OPEN_ERROR.value = error instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : error.message
     } finally {
         OPENING.value = false
     }
@@ -57,7 +57,7 @@ async function analyze(file) {
         if (!response.ok) {
             const body = await response.json().catch(() => null)
             throw new Error(
-                typeof body?.detail === 'string' ? body.detail : `Request failed (${response.status}).`,
+                typeof body?.detail === 'string' ? body.detail : 'Something went wrong on the server. Please try again.',
             )
         }
 
@@ -69,7 +69,7 @@ async function analyze(file) {
         }
         STATUS.value = 'idle'
         ERROR_MESSAGE.value =
-        error instanceof TypeError ? 'Couldnt reach the server' : error.message
+        error instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : error.message
     }
 }
 
@@ -95,7 +95,7 @@ function handleFile(file) {
     if (!file) return
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-        ERROR_MESSAGE.value = 'Only PNG or JPG allowed'
+        ERROR_MESSAGE.value = 'Only PNG or JPEG images can be analysed.'
         return
     }
 
@@ -204,7 +204,7 @@ onBeforeUnmount(revokePreview)
 
             <dl class="mt-6 divide-y divide-ink/10">
                 <div class="flex justify-between gap-4 py-2">
-                    <dt class="text-ink/70">Interpretation</dt>
+                    <dt class="text-ink/70">Transliteration</dt>
                     <dd class="font-medium">{{ ANALYSIS.symbol_interpretation }}</dd>
                 </div>
                 <div class="flex justify-between gap-4 py-2">
@@ -217,7 +217,7 @@ onBeforeUnmount(revokePreview)
                 </div>
             </dl>
 
-            <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/70">Is a sign wrong? Click its box to correct it.</p>
+            <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/70">Is a sign misread? Click its box to suggest the right sign to a reviewer.</p>
             <button
             v-if="ANALYSIS.trained && ANALYSIS.analysis_id"
             type="button"

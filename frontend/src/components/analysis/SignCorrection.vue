@@ -47,8 +47,9 @@ async function submit(uncertain) {
   }
   PENDING.value = true
   ERROR.value = ''
+  const signId = props.sign.id // the reply is for this sign, even if another is picked meanwhile
   try {
-    const payload = { sign_id: props.sign.id, note: NOTE.value.trim() || null }
+    const payload = { sign_id: signId, note: NOTE.value.trim() || null }
     if (uncertain) payload.uncertain = true
     else payload.proposed_sign = MATCH.value.sign
     const response = await sessionFetch(`/api/analysis/${props.analysisId}/corrections`, {
@@ -57,12 +58,14 @@ async function submit(uncertain) {
       body: JSON.stringify(payload),
     })
     const body = await response.json().catch(() => null)
+    if (signId !== props.sign.id) return
     if (!response.ok) {
-      throw new Error(typeof body?.detail === 'string' ? body.detail : `Request failed (${response.status}).`)
+      throw new Error(typeof body?.detail === 'string' ? body.detail : 'Something went wrong on the server. Please try again.')
     }
     SAVED.value = body
   } catch (error) {
-    ERROR.value = error instanceof TypeError ? 'Couldnt reach the server' : error.message
+    if (signId !== props.sign.id) return
+    ERROR.value = error instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : error.message
   } finally {
     PENDING.value = false
   }

@@ -33,7 +33,9 @@ let request = 0
 const SLUG = computed(() => route.params.slug || null)
 const SOURCE = computed(() => (route.query.boxes === 'model' ? 'model' : 'scholar'))
 
+let listId = 0
 async function list(more = false) {
+  const mine = ++listId
   LISTING.value = true
   LIST_ERROR.value = ''
   try {
@@ -41,12 +43,13 @@ async function list(more = false) {
     const response = await fetch(`/api/tablets?${query}`)
     if (!response.ok) throw new Error(response.status === 503 ? 'The corpus is not installed on this server.' : 'The tablets could not be loaded.')
     const page = await response.json()
+    if (mine !== listId) return
     TABLETS.value = more ? [...TABLETS.value, ...page.items] : page.items
     TOTAL.value = page.total
   } catch (failure) {
-    LIST_ERROR.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+    if (mine === listId) LIST_ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
-    LISTING.value = false
+    if (mine === listId) LISTING.value = false
   }
 }
 
@@ -70,7 +73,7 @@ async function show() {
     }
     BOXES.value = await response.json()
   } catch (failure) {
-    if (mine === request) ERROR.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+    if (mine === request) ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
     if (mine === request) LOADING.value = false
   }
@@ -114,7 +117,7 @@ async function correct() {
     if (!response.ok) throw new Error(typeof body?.detail === 'string' ? body.detail : 'The boxes could not be opened for editing.')
     await router.push(`/box-sets/${body.id}`)
   } catch (failure) {
-    OPEN_ERROR.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+    OPEN_ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
     OPENING.value = false
   }
@@ -131,14 +134,14 @@ watch([SLUG, () => sessionUser.value?.id], checkCopy, { immediate: true })
 <template>
   <main class="mx-auto max-w-6xl px-6 py-10">
     <h1 class="text-3xl font-bold">Tablets</h1>
-    <p class="mt-1 text-ink/70">Every corpus tablet with published sign boxes. Compare the scholars' boxes with the model's, and correct them.</p>
+    <p class="mt-1 text-ink/70">Every corpus tablet with the scholars' sign boxes. Compare them with the model's boxes, and correct either.</p>
 
     <div class="mt-6 flex flex-col gap-8 md:flex-row">
       <nav class="md:w-64 md:shrink-0" aria-label="Tablets">
         <form role="search" class="flex gap-2" @submit.prevent="search">
           <label class="sr-only" for="tablet-search">Find a tablet</label>
           <input id="tablet-search" v-model="QUERY" type="search" placeholder="HT 13" class="min-w-0 flex-1 rounded border border-ink/30 bg-white px-3 py-1.5" />
-          <button type="submit" class="cursor-pointer rounded bg-bar px-3 py-1.5 font-semibold hover:brightness-95">Find</button>
+          <button type="submit" class="cursor-pointer rounded bg-bar px-3 py-1.5 font-semibold hover:brightness-95">Search</button>
         </form>
         <p v-if="LIST_ERROR" role="alert" class="mt-3 text-confidence-low">{{ LIST_ERROR }}</p>
         <p class="mt-3 text-sm text-ink/70" role="status">{{ LISTING ? 'Loading…' : `${TOTAL} tablet${TOTAL === 1 ? '' : 's'}` }}</p>
@@ -151,7 +154,7 @@ watch([SLUG, () => sessionUser.value?.id], checkCopy, { immediate: true })
               :aria-current="tablet.slug === SLUG ? 'page' : undefined"
               @click="pick(tablet.slug)"
             >
-              <span>{{ tablet.tablet }}</span><span class="text-sm text-ink/60">{{ tablet.signs }}</span>
+              <span>{{ tablet.tablet }}</span><span class="text-sm text-ink/60">{{ tablet.signs }} sign{{ tablet.signs === 1 ? '' : 's' }}</span>
             </button>
           </li>
         </ul>
@@ -162,7 +165,7 @@ watch([SLUG, () => sessionUser.value?.id], checkCopy, { immediate: true })
         <p v-if="!SLUG" class="rounded-2xl bg-card p-6">Pick a tablet to see its boxes.</p>
         <template v-else>
           <div class="flex flex-wrap items-center gap-3">
-            <h2 class="text-2xl font-bold">{{ BOXES?.tablet || SLUG }}</h2>
+            <h2 class="text-2xl font-bold">{{ BOXES?.tablet || SLUG.replaceAll('-', ' ') }}</h2>
             <div class="flex gap-1" role="group" aria-label="Which boxes">
               <button
                 v-for="option in SOURCES"

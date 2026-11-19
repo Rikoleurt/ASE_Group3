@@ -1638,7 +1638,7 @@
         "type": "object"
       },
       "EditBox": {
-        "description": "A box from the editor: inside the image (a hair of rounding allowed) and not degenerate.",
+        "description": "A box from the editor: inside the image (a hair of rounding allowed) and not degenerate.\nNaN would pass every comparison below, so it is refused outright (#98).",
         "properties": {
           "h": {
             "title": "H",
@@ -3051,8 +3051,20 @@
   "paths": {
     "/admin/export/corrections": {
       "get": {
-        "description": "Every corrected copy's boxes in the training annotations' shape, and the approved label corrections.",
+        "description": "Corrected copies' boxes in the training annotations' shape, and the approved label corrections.\nCopies by admins and reviewers only, unless `everyone` (anyone can register and edit).",
         "operationId": "export_corrections_admin_export_corrections_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "everyone",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Everyone",
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3086,6 +3098,16 @@
             },
             "description": "Forbidden"
           },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          },
           "503": {
             "content": {
               "application/json": {
@@ -3110,8 +3132,20 @@
     },
     "/admin/export/corrections.zip": {
       "get": {
-        "description": "The same as a YOLO dataset: images/, labels/, classes.txt and corrections.json.",
+        "description": "The same as a YOLO dataset: images/, labels/, classes.txt and corrections.json, streamed from disk.",
         "operationId": "export_corrections_zip_admin_export_corrections_zip_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "everyone",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Everyone",
+              "type": "boolean"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -3138,6 +3172,16 @@
               }
             },
             "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           },
           "503": {
             "content": {
@@ -4592,7 +4636,7 @@
     },
     "/box-sets/{set_id}/comments": {
       "get": {
-        "description": "The copy's comments, oldest first; with box_id, only that box's thread.",
+        "description": "The copy's newest comments (500 at most), oldest first; with box_id, only that box's thread.",
         "operationId": "list_comments_box_sets__set_id__comments_get",
         "parameters": [
           {
@@ -4622,6 +4666,18 @@
                 }
               ],
               "title": "Box Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
             }
           }
         ],
@@ -7169,7 +7225,7 @@
     },
     "/tablets/{slug}/boxes": {
       "get": {
-        "description": "The tablet's boxes from the scholars' published transcription, or as the reader finds them.",
+        "description": "The tablet's boxes from the scholars' published transcription, or as the reader finds them.\nThe reader's need a login: reading a tablet runs the model, as an upload does (#98).",
         "operationId": "tablet_boxes_tablets__slug__boxes_get",
         "parameters": [
           {
@@ -7996,6 +8052,22 @@
               "title": "Analysis Id",
               "type": "integer"
             }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
           }
         ],
         "requestBody": {
@@ -8077,6 +8149,22 @@
               "maximum": 18446744073709551615,
               "title": "Comment Id",
               "type": "integer"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
             }
           }
         ],
@@ -8422,6 +8510,26 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -8433,6 +8541,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
         "summary": "Get Email",
         "tags": [
           "users"
@@ -8465,6 +8578,26 @@
             },
             "description": "Successful Response"
           },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
           "422": {
             "content": {
               "application/json": {
@@ -8476,6 +8609,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
         "summary": "Get Username",
         "tags": [
           "users"

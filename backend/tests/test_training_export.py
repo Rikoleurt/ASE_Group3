@@ -115,7 +115,7 @@ def test_the_query_leaves_deleted_boxes_out(monkeypatch):
     from backend.app.training_export import ExportDataController
     connection = MagicMock()
     cursor = connection.cursor.return_value
-    cursor.fetchall.side_effect = [[{"id": 1}], [{"set_id": 1, "id": 5}]]
+    cursor.fetchall.side_effect = [[{"id": 1, "is_admin": 0, "is_reviewer": 1, "owner_username": "rev"}], [{"set_id": 1, "id": 5}]]
     monkeypatch.setattr("mysql.connector.connect", lambda **kwargs: connection)
     (copy,) = ExportDataController().copies()
     assert copy["boxes"] == [{"set_id": 1, "id": 5}]

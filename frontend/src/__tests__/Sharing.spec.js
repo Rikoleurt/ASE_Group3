@@ -161,7 +161,7 @@ describe('A shared copy in the editor', () => {
     stubServer({ 'GET /api/box-sets/5': () => json(copy('manage', { everyone: 'view' })), 'GET /api/box-sets/5/shares': () => json({ everyone: 'view', shares: [] }) })
     await renderPage(BoxSetView, '/box-sets/5', '/box-sets/:id')
     const share = wrapper.get('[data-testid="share"]')
-    expect(share.text()).toBe('Share (everyone can view)')
+    expect(share.text()).toBe('Share · everyone logged in can view')
     await share.trigger('click')
     await flushPromises()
     expect(wrapper.find('[data-testid="share-dialog"]').exists()).toBe(true)

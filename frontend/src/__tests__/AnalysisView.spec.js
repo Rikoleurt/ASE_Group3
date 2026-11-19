@@ -38,7 +38,7 @@ describe('Analysis page', () => {
     expect(fetch).toHaveBeenCalledWith('/api/analysis', expect.objectContaining({ method: 'POST' }))
     const card = wrapper.findAll('h2').find((title) => title.text() === 'Analysis').element.parentElement
     expect(card.textContent).toContain(analysis.summary)
-    expect(card.textContent).toContain('Interpretationta J / VIN J / ku-ro J')
+    expect(card.textContent).toContain('Transliterationta J / VIN J / ku-ro J')
     expect(card.textContent).toContain('Confidence83%')
     expect(card.textContent).toContain('Processing time2.7 s')
   })

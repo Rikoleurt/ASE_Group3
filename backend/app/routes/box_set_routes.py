@@ -103,6 +103,8 @@ def _current(controller: BoxSetDataController, set_id: int, level: str = "owner"
         record = controller.load(set_id)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
+    if record is None:  # deleted while this request ran
+        raise HTTPException(404, "Corrected copy not found.")
     return build({**record, "permission": level})
 
 
@@ -155,7 +157,7 @@ def _tablet_copy(request: BoxSetCreate, user: UserPublic, controller: BoxSetData
                                              [sign.model_dump(mode="json") for sign in signs], width, height)
     except glyph_index.CorpusMissing as error:
         raise HTTPException(503, str(error)) from error
-    except corpus.ReaderMissing as error:
+    except (corpus.ReaderMissing, corpus.ReaderBusy) as error:
         raise HTTPException(503, str(error)) from error
     except (FileNotFoundError, RuntimeError) as error:
         raise HTTPException(503, "The sign reader is unavailable.") from error
@@ -247,7 +249,7 @@ def revert_change(set_id: Identifier, change_id: Identifier, request: Revert, us
     """Undo one change. Refused if the box was changed again since, or the change was already undone."""
     level = access(controller, set_id, user, "edit")["permission"]
     try:
-        controller.revert(set_id, user.id, change_id, request.version)
+        controller.revert(set_id, user.id, change_id, request.version, catalogue_sign)
     except StaleVersion:
         return _conflict(controller, set_id, level)
     except MissingChange as error:

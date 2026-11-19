@@ -69,15 +69,31 @@ def test_scholar_boxes_read_like_an_analysis(client):
     assert body["symbol_interpretation"]
 
 
-def test_model_boxes_come_from_the_reader(client, corpus_index, tracing):
-    body = client.get("/tablets/HT-1/boxes", params={"source": "model"}).json()
+def test_model_boxes_come_from_the_reader(monkeypatch, corpus_index, tracing):
+    with login(monkeypatch) as client:
+        body = client.get("/tablets/HT-1/boxes", params={"source": "model"}).json()
     assert [(s["sign"], s["confidence"]) for s in body["signs"]] == [("AB77", 70.0)]
     corpus_index.assert_called_once_with("HT-1", tracing)
 
 
-def test_missing_reader_or_tablet(client, corpus_index):
+def test_model_boxes_need_a_login(client, corpus_index):
+    """Reading a tablet runs the model, as an upload does: anonymous visitors see the scholars' boxes (#98)."""
+    assert client.get("/tablets/HT-1/boxes", params={"source": "model"}).status_code == 401
+    assert client.get("/tablets/HT-1/boxes").status_code == 200
+    corpus_index.assert_not_called()
+
+
+def test_a_busy_reader_refuses_instead_of_queueing(monkeypatch, corpus_index):
+    corpus_index.side_effect = corpus.ReaderBusy("The reader is busy with another tablet. Please try again in a moment.")
+    with login(monkeypatch) as client:
+        response = client.get("/tablets/HT-1/boxes", params={"source": "model"})
+    assert (response.status_code, response.json()["detail"]) == (503, "The reader is busy with another tablet. Please try again in a moment.")
+
+
+def test_missing_reader_or_tablet(client, corpus_index, monkeypatch):
     corpus_index.side_effect = corpus.ReaderMissing("The Linear A sign reader is not installed.")
-    assert client.get("/tablets/HT-1/boxes", params={"source": "model"}).status_code == 503
+    with login(monkeypatch) as logged_in:
+        assert logged_in.get("/tablets/HT-1/boxes", params={"source": "model"}).status_code == 503
     assert client.get("/tablets/NOPE/boxes").status_code == 404
     assert client.get("/tablets/HT-1/boxes", params={"source": "guess"}).status_code == 422
 
@@ -139,3 +155,23 @@ def test_copy_requests_are_checked(monkeypatch, corpus_index, fake):
         assert owner.get("/tablets/HT-1/box-set").status_code == 404
         corpus_index.side_effect = corpus.ReaderMissing("No reader.")
         assert owner.post("/box-sets", json={"tablet": "HT-1", "start": "model"}).status_code == 503
+
+
+def test_model_readings_are_cached_and_one_at_a_time(monkeypatch, tracing):
+    """The real model_signs: a second request for a tablet comes from memory, and a request for an
+    unread tablet while the reader is busy is refused rather than queued (#98)."""
+    corpus._MODEL_CACHE.clear()
+    reads = MagicMock(return_value=[sign.model_copy(deep=True) for sign in MODEL])
+    monkeypatch.setattr(corpus, "_read_tablet", reads)
+    monkeypatch.setattr(corpus.tablet_demo, "model_version", lambda: "v1")
+    assert [s.sign for s in corpus.model_signs("HT-1", tracing)] == ["AB77"]
+    assert [s.sign for s in corpus.model_signs("HT-1", tracing)] == ["AB77"]
+    reads.assert_called_once()
+    assert corpus._MODEL_LOCK.acquire(blocking=False)  # someone else is reading
+    try:
+        with pytest.raises(corpus.ReaderBusy):
+            corpus.model_signs("HT-2", tracing.with_name("HT-1.png"))  # same file, different tablet key
+        assert [s.sign for s in corpus.model_signs("HT-1", tracing)] == ["AB77"]  # cached: no wait
+    finally:
+        corpus._MODEL_LOCK.release()
+        corpus._MODEL_CACHE.clear()

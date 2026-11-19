@@ -54,7 +54,7 @@ describe('History panel', () => {
     expect(saves).toHaveLength(3)
     expect(saves[1].text()).toContain('anouk')
     expect(wrapper.findAll('[data-testid="history-change"]').map((c) => c.text())).toEqual([
-      'Undid change 2', 'Drew a box', 'Renamed AB81 to AB02', 'Moved AB81',
+      'Reverted an earlier change', 'Drew a box', 'Renamed AB81 to AB02', 'Moved AB81',
     ])
     // An undone change is struck through and cannot be undone again.
     expect(wrapper.findAll('[data-testid="history-change"]')[2].classes()).toContain('line-through')
@@ -78,7 +78,7 @@ describe('History panel', () => {
     })
     await render()
     await wrapper.findAll('[data-testid="history-change"]')[3].trigger('click')
-    expect(wrapper.emitted('select')[0][0].id).toBe(1)
+    expect(wrapper.emitted('select').at(-1)[0].id).toBe(1)
     await wrapper.findAll('[data-testid="history-undo"]')[2].trigger('click')
     await flushPromises()
     const [, options] = fetch.mock.calls.find(([url]) => url === '/api/box-sets/5/changes/1/revert')
@@ -97,7 +97,7 @@ describe('History panel', () => {
     expect(wrapper.get('[role="alert"]').text()).toContain('changed again later')
     await wrapper.setProps({ unsaved: true })
     expect(wrapper.findAll('[data-testid="history-undo"]').every((b) => b.attributes('disabled') !== undefined)).toBe(true)
-    expect(wrapper.text()).toContain('Save or discard your changes to undo saved ones.')
+    expect(wrapper.text()).toContain('Save or discard your changes before reverting saved ones.')
   })
 
   it('offers no undo to people who cannot edit, and loads older changes', async () => {
@@ -204,6 +204,6 @@ describe('History in the editor', () => {
     await flushPromises()
     expect(wrapper.find('[data-testid="ghost-box"]').exists()).toBe(false)
     expect(wrapper.get('[data-testid="edit-box"]').attributes('x')).toBe('10')
-    expect(wrapper.text()).toContain('The change was undone.')
+    expect(wrapper.text()).toContain('The change was reverted.')
   })
 })

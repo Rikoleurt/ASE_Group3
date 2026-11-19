@@ -4,7 +4,7 @@
 // Draw mode: drag on the image to draw a new box. Keys: arrows move the selected box
 // (Shift+arrows resize it), Delete removes it, Escape deselects or cancels a drawing.
 // Coordinates are fractions of the image, as everywhere else in the app.
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ROLES, roleKey } from '../analysis/colors.js'
 import { MIN_SIDE } from '../../composables/useBoxSet'
 
@@ -18,6 +18,7 @@ const props = defineProps({
   mode: { type: String, default: 'select' }, // select | draw
   readOnly: { type: Boolean, default: false },
   ghost: { type: Object, default: null }, // where a box was before a change picked in the history (#86)
+  name: { type: Function, default: (sign) => sign ?? 'Box with no sign' }, // a sign's name, for screen readers
 })
 const emit = defineEmits(['select', 'begin', 'place', 'end', 'draw', 'remove', 'nudge', 'image-error'])
 
@@ -41,9 +42,18 @@ function colour(box) {
 }
 
 function describe(box) {
-  const sign = props.roles[box.id]
-  return `${box.sign ? sign?.label ?? box.sign : 'Unnamed box'}${box.changed ? ', changed' : ''}`
+  return `${props.name(box.sign)}${box.changed ? ', changed' : ''}`
 }
+
+// Becoming read only mid-drag (a save started) ends the drag where it is.
+watch(() => props.readOnly, (readOnly) => {
+  if (!readOnly || !gesture) return
+  if (gesture.kind === 'draw') DRAFT.value = null
+  else emit('end')
+  gesture = null
+})
+
+defineExpose({ busy: () => gesture !== null })
 
 function point(event) {
   const rect = SURFACE.value.getBoundingClientRect()
@@ -58,7 +68,13 @@ function capture(event) {
 }
 
 function startMove(event, box) {
-  if (props.readOnly || props.mode !== 'select' || event.button !== 0) {
+  if (props.readOnly) {
+    // Selecting only; without this the click would also reach the surface and deselect (#98).
+    event.stopPropagation()
+    emit('select', box.id)
+    return
+  }
+  if (props.mode !== 'select' || event.button !== 0) {
     emit('select', box.id)
     return
   }
@@ -131,7 +147,8 @@ function onKey(event) {
     }
     return
   }
-  if (props.readOnly || !SELECTED.value) return
+  // Keys act on the selected box, never in the middle of a drag (#98).
+  if (props.readOnly || !SELECTED.value || gesture) return
   if (event.key === 'Delete' || event.key === 'Backspace') {
     event.preventDefault()
     emit('remove', SELECTED.value.id)

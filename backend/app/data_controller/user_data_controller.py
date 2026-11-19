@@ -37,6 +37,10 @@ def _normalize_username(username: str) -> str:
     """
     return username.strip()
 
+class LastAdmin(Exception):
+    """Removing this admin role would leave the site without an admin."""
+
+
 def like_escape(text: str) -> str:
     """Make `text` match literally inside a LIKE pattern (MySQL's default escape is the backslash)."""
     return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
@@ -338,6 +342,11 @@ class UserDataController(DataController):
         with self.connection() as connection:
             cursor = connection.cursor(dictionary=True)
             try:
+                if admin is False:
+                    # Lock the other admins' rows, so two admins cannot demote each other at once.
+                    cursor.execute("SELECT id FROM `user` WHERE is_admin = TRUE AND id <> %s FOR UPDATE", (user_id,))
+                    if not cursor.fetchall():
+                        raise LastAdmin()
                 cursor.execute(
                     "UPDATE `user` SET " + ", ".join(f"{column} = %s" for column, _ in changes) + " WHERE id = %s",
                     (*[value for _, value in changes], user_id),
