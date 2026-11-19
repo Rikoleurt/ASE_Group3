@@ -80,6 +80,33 @@ it.each(['/profile/history', '/profile/history/12'])('redirects an expired sessi
   expect(router.currentRoute.value.path).toBe('/login')
   expect(router.currentRoute.value.query.redirect).toBe(path)
 })
+it('falls back to the saved results when the kept image cannot be loaded', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ ...metadata, image_url: '/api/analysis/12/image', result: analysis }) })))
+  await render('/profile/history/12')
+  await wrapper.get('[data-testid="history-image"] img').trigger('error')
+  expect(wrapper.find('[data-testid="history-image"]').exists()).toBe(false)
+  expect(wrapper.text()).toContain('The image could not be loaded')
+  expect(wrapper.text()).toContain(analysis.symbol_interpretation)
+})
+it('opens the corrected copy from a saved analysis', async () => {
+  const fetch = vi.fn(async (url, options = {}) => url === '/api/box-sets'
+    ? { ok: true, status: 201, json: async () => ({ id: 5 }) }
+    : url === '/api/users/me' ? { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }
+      : { ok: true, json: async () => ({ ...metadata, image_url: '/api/analysis/12/image', result: { ...analysis, trained: true } }) })
+  vi.stubGlobal('fetch', fetch)
+  const router = await render('/profile/history/12')
+  router.addRoute({ path: '/box-sets/:id', component: { template: '<p>Editor</p>' } })
+  await wrapper.get('[data-testid="correct-boxes"]').trigger('click')
+  await flushPromises()
+  const [, options] = fetch.mock.calls.find(([url]) => url === '/api/box-sets')
+  expect(JSON.parse(options.body)).toEqual({ analysis_id: 12 })
+  expect(router.currentRoute.value.path).toBe('/box-sets/5')
+})
+it('offers no box correction for the generic model', async () => {
+  vi.stubGlobal('fetch', vi.fn(async () => ({ ok: true, json: async () => ({ ...metadata, image_url: '/api/analysis/12/image', result: { ...analysis, trained: false } }) })))
+  await render('/profile/history/12')
+  expect(wrapper.find('[data-testid="correct-boxes"]').exists()).toBe(false)
+})
 it('does not expose a missing or foreign result', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 404 }))
   await render('/profile/history/12')

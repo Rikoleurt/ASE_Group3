@@ -41,7 +41,7 @@ describe('App navigation', () => {
     await flushPromises()
     expect(wrapper.get('header a[href="/login"]').exists()).toBe(true)
     expect(wrapper.get('header a[href="/signup"]').exists()).toBe(true)
-    expect(wrapper.find('header button').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="logout"]').exists()).toBe(false)
     await wrapper.get('input[name="username"]').setValue('dev')
     await wrapper.get('input[name="password"]').setValue('dev')
     await wrapper.get('form').trigger('submit')
@@ -51,7 +51,7 @@ describe('App navigation', () => {
     expect(wrapper.text()).toContain('dev@ase3.com')
     expect(wrapper.find('header a[href="/login"]').exists()).toBe(false)
     expect(wrapper.find('header a[href="/signup"]').exists()).toBe(false)
-    expect(wrapper.get('header button').text()).toBe('Log out')
+    expect(wrapper.get('[data-testid="logout"]').text()).toBe('Log out')
 
     // A fresh app on a public page must recover the server session too.
     wrapper.unmount()
@@ -60,16 +60,16 @@ describe('App navigation', () => {
     wrapper = mount(App, { global: { plugins: [router] } })
     await flushPromises()
     expect(wrapper.find('header a[href="/login"]').exists()).toBe(false)
-    expect(wrapper.get('header button').text()).toBe('Log out')
+    expect(wrapper.get('[data-testid="logout"]').text()).toBe('Log out')
 
     fetch.mockResolvedValueOnce({ ok: false, status: 503 })
-    await wrapper.get('header button').trigger('click')
+    await wrapper.get('[data-testid="logout"]').trigger('click')
     await flushPromises()
     expect(wrapper.get('header [role="alert"]').text()).toContain('Unable to log out')
-    expect(wrapper.get('header button').text()).toBe('Log out')
+    expect(wrapper.get('[data-testid="logout"]').text()).toBe('Log out')
     expect(router.currentRoute.value.path).toBe('/')
 
-    await wrapper.get('header button').trigger('click')
+    await wrapper.get('[data-testid="logout"]').trigger('click')
     await flushPromises()
     expect(fetch).toHaveBeenCalledWith('/api/users/logout', expect.objectContaining({
       method: 'POST', headers: { 'X-CSRF-Token': 'csrf' },
@@ -79,6 +79,6 @@ describe('App navigation', () => {
     expect(router.currentRoute.value.path).toBe('/login')
     expect(wrapper.get('header a[href="/login"]').exists()).toBe(true)
     expect(wrapper.get('header a[href="/signup"]').exists()).toBe(true)
-    expect(wrapper.find('header button').exists()).toBe(false)
+    expect(wrapper.find('[data-testid="logout"]').exists()).toBe(false)
   })
 })

@@ -7,6 +7,8 @@ import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import ShareAnalysis from '../components/ShareAnalysis.vue'
 import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
+import SignCorrection from '../components/analysis/SignCorrection.vue'
+import { openCopy } from '../composables/useBoxSet'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -22,6 +24,21 @@ const SELECTION = computed(() => SELECTED.value?.sign ? {
     candidates: SELECTED.value.candidates,
     crop: SELECTED.value.crop || null,
 } : null)
+const CATALOGUE = ref([])
+const OPENING = ref(false)
+const OPEN_ERROR = ref('')
+
+async function correctBoxes() {
+    OPENING.value = true
+    OPEN_ERROR.value = ''
+    try {
+        await router.push(`/box-sets/${await openCopy(ANALYSIS.value.analysis_id)}`)
+    } catch (error) {
+        OPEN_ERROR.value = error instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : error.message
+    } finally {
+        OPENING.value = false
+    }
+}
 
 // ROUTE
 
@@ -40,7 +57,7 @@ async function analyze(file) {
         if (!response.ok) {
             const body = await response.json().catch(() => null)
             throw new Error(
-                typeof body?.detail === 'string' ? body.detail : `Request failed (${response.status}).`,
+                typeof body?.detail === 'string' ? body.detail : 'Something went wrong on the server. Please try again.',
             )
         }
 
@@ -52,8 +69,23 @@ async function analyze(file) {
         }
         STATUS.value = 'idle'
         ERROR_MESSAGE.value =
-        error instanceof TypeError ? 'Couldnt reach the server' : error.message
+        error instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : error.message
     }
+}
+
+async function loadCatalogue() {
+    if (CATALOGUE.value.length) return
+    try {
+        const response = await fetch('/api/corrections/catalogue')
+        if (response.ok) CATALOGUE.value = await response.json()
+    } catch {
+        // The form still explains that a sign must come from the list.
+    }
+}
+
+function selectSign(sign) {
+    SELECTED.value = sign
+    loadCatalogue()
 }
 
 // COMPONENT LOGIC
@@ -63,7 +95,7 @@ function handleFile(file) {
     if (!file) return
 
     if (!ALLOWED_TYPES.includes(file.type)) {
-        ERROR_MESSAGE.value = 'Only PNG or JPG allowed'
+        ERROR_MESSAGE.value = 'Only PNG or JPEG images can be analysed.'
         return
     }
 
@@ -159,7 +191,7 @@ onBeforeUnmount(revokePreview)
 
     <section v-else-if="STATUS === 'result'" class="flex flex-col gap-8 md:flex-row">
         <div class="md:w-1/2">
-            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas" :selected-id="SELECTED?.id ?? null" @select="SELECTED = $event">
+            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas" :selected-id="SELECTED?.id ?? null" @select="selectSign">
                 <img :src="PREVIEW_URL" :alt="FILENAME" class="w-full rounded-lg bg-white" />
             </TabletOverlay>
         </div>
@@ -172,7 +204,7 @@ onBeforeUnmount(revokePreview)
 
             <dl class="mt-6 divide-y divide-ink/10">
                 <div class="flex justify-between gap-4 py-2">
-                    <dt class="text-ink/70">Interpretation</dt>
+                    <dt class="text-ink/70">Transliteration</dt>
                     <dd class="font-medium">{{ ANALYSIS.symbol_interpretation }}</dd>
                 </div>
                 <div class="flex justify-between gap-4 py-2">
@@ -185,6 +217,18 @@ onBeforeUnmount(revokePreview)
                 </div>
             </dl>
 
+            <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/70">Is a sign misread? Click its box to suggest the right sign to a reviewer.</p>
+            <button
+            v-if="ANALYSIS.trained && ANALYSIS.analysis_id"
+            type="button"
+            class="mt-6 block cursor-pointer rounded bg-bar px-5 py-1.5 font-semibold hover:brightness-95 disabled:opacity-60"
+            :disabled="OPENING"
+            data-testid="correct-boxes"
+            @click="correctBoxes"
+            >
+                {{ OPENING ? 'Opening…' : 'Correct the boxes' }}
+            </button>
+            <p v-if="OPEN_ERROR" role="alert" class="mt-2 text-confidence-low">{{ OPEN_ERROR }}</p>
             <RouterLink v-if="ANALYSIS.analysis_id" :to="`/profile/history/${ANALYSIS.analysis_id}`" class="mt-6 inline-block underline">Saved in your history →</RouterLink>
             <ShareAnalysis v-if="ANALYSIS.analysis_id" :analysis-id="ANALYSIS.analysis_id" :filename="FILENAME" />
             <button
@@ -196,6 +240,15 @@ onBeforeUnmount(revokePreview)
             </button>
         </div>
     </section>
+
+    <SignCorrection
+    v-if="STATUS === 'result' && ANALYSIS.trained && SELECTED && ANALYSIS.analysis_id"
+    :sign="SELECTED"
+    :analysis-id="ANALYSIS.analysis_id"
+    :catalogue="CATALOGUE"
+    class="mt-8"
+    @close="SELECTED = null"
+    />
 
     <FractionCheck v-if="STATUS === 'result'" :analysis="ANALYSIS" class="mt-8" />
     <GlyphOccurrencesPane v-if="STATUS === 'result'" :selection="SELECTION" class="mt-8" />

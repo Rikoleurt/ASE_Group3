@@ -16,6 +16,15 @@ import communityView from '../views/CommunityView.vue?raw'
 import discussionView from '../views/DiscussionView.vue?raw'
 import benchmarksView from '../views/BenchmarksView.vue?raw'
 import glyphPane from '../components/glyphs/GlyphOccurrencesPane.vue?raw'
+import signCorrection from '../components/analysis/SignCorrection.vue?raw'
+import reviewView from '../views/ReviewView.vue?raw'
+import adminView from '../views/AdminView.vue?raw'
+import useBoxSet from '../composables/useBoxSet.js?raw'
+import tabletsView from '../views/TabletsView.vue?raw'
+import shareDialog from '../components/boxes/ShareDialog.vue?raw'
+import sharedView from '../views/SharedView.vue?raw'
+import historyPanel from '../components/boxes/HistoryPanel.vue?raw'
+import boxComments from '../components/boxes/BoxComments.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -56,6 +65,34 @@ const CALLS = [
   { method: 'delete', path: '/glyphs/annotations/{annotation_id}', source: glyphPane, snippet: '/api/glyphs/annotations/${comment.id}' },
   { method: 'get', path: '/tablets/{slug}/thumbnail.png', source: glyphPane, snippet: 'apiUrl(item.thumbnail_url)' },
   { method: 'get', path: '/tablets/{slug}/signs/{position}.png', source: glyphPane, snippet: 'apiUrl(item.crop_url)' },
+  { method: 'get', path: '/corrections/catalogue', source: analysisView, snippet: "'/api/corrections/catalogue'" },
+  { method: 'post', path: '/analysis/{analysis_id}/corrections', source: signCorrection, snippet: '/api/analysis/${props.analysisId}/corrections' },
+  { method: 'get', path: '/corrections', source: reviewView, snippet: '/api/corrections?status=${STATUS.value}&limit=200' },
+  { method: 'post', path: '/corrections/{correction_id}/review', source: reviewView, snippet: '/api/corrections/${item.id}/review' },
+  { method: 'get', path: '/corrections/export', source: reviewView, snippet: "'/api/corrections/export'" },
+  { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
+  { method: 'get', path: '/admin/users', source: adminView, snippet: '/api/admin/users?${query}' },
+  { method: 'get', path: '/admin/export/corrections', source: adminView, snippet: "'/api/admin/export/corrections'" },
+  { method: 'get', path: '/admin/export/corrections.zip', source: adminView, snippet: "'/api/admin/export/corrections.zip'" },
+  { method: 'post', path: '/box-sets', source: useBoxSet, snippet: "'/api/box-sets'" },
+  { method: 'get', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${encodeURIComponent(id)}' },
+  { method: 'patch', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${copy.value.id}' },
+  { method: 'get', path: '/tablets', source: tabletsView, snippet: '/api/tablets?${query}' },
+  { method: 'get', path: '/box-sets/{set_id}/shares', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares' },
+  { method: 'put', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
+  { method: 'delete', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
+  { method: 'put', path: '/box-sets/{set_id}/everyone', source: shareDialog, snippet: '/api/box-sets/${props.setId}/everyone' },
+  { method: 'get', path: '/users/search', source: shareDialog, snippet: '/api/users/search?q=${encodeURIComponent(query)}' },
+  { method: 'get', path: '/users/me/shared-copies', source: sharedView, snippet: "'/api/users/me/shared-copies'" },
+  { method: 'get', path: '/box-sets/{set_id}/changes', source: historyPanel, snippet: '/api/box-sets/${props.setId}/changes?${query}' },
+  { method: 'post', path: '/box-sets/{set_id}/changes/{change_id}/revert', source: historyPanel, snippet: '/api/box-sets/${props.setId}/changes/${change.id}/revert' },
+  { method: 'get', path: '/box-sets/{set_id}/comments', source: boxComments, snippet: '/api/box-sets/${props.setId}/comments' },
+  { method: 'post', path: '/box-sets/{set_id}/comments', source: boxComments, snippet: '/api/box-sets/${props.setId}/comments' },
+  { method: 'delete', path: '/box-sets/{set_id}/comments/{comment_id}', source: boxComments, snippet: '/api/box-sets/${props.setId}/comments/${comment.id}' },
+  { method: 'get', path: '/tablets/{slug}/boxes', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(SLUG.value)}/boxes?source=${SOURCE.value}' },
+  { method: 'get', path: '/tablets/{slug}/box-set', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(slug)}/box-set' },
+  { method: 'post', path: '/box-sets', source: tabletsView, snippet: "'/api/box-sets'" },
+  { method: 'patch', path: '/admin/users/{user_id}', source: adminView, snippet: '/api/admin/users/${user.id}' },
 ]
 
 function resolve(schema) {
@@ -114,41 +151,88 @@ describe('API contract', () => {
   it('the session returns the user and the CSRF token the frontend reads', () => {
     expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['user', 'csrf_token']))
     expect(session).toContain('csrf_token')
-    it('the session returns the user and CSRF token used by the frontend', () => {
-      expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['user', 'csrf_token']))
-      const user = resolve(contract.components.schemas.SessionUser.properties.user)
-      expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'username', 'email']))
-    })
-
-    it('history returns pagination, metadata and the saved analysis', () => {
-      expect(responseFields('get', '/users/me/analyses', '200')).toEqual(expect.arrayContaining(['items', 'next_cursor']))
-      const metadata = resolve(contract.components.schemas.AnalysisHistoryPage.properties.items.items)
-      expect(Object.keys(metadata.properties)).toEqual(expect.arrayContaining(['id', 'filename', 'created_at']))
-      expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toEqual(
-        expect.arrayContaining(['filename', 'created_at', 'format', 'size_bytes', 'result']),
-      )
-      const result = resolve(contract.components.schemas.AnalysisHistoryDetail.properties.result)
-      expect(Object.keys(result.properties)).toEqual(
-        expect.arrayContaining(['summary', 'symbol_interpretation', 'confidence', 'time_taken', 'signs', 'formulas']),
-      )
-    })
-
-    // Guards against #30 coming back: the page rendered a field the API never returned.
-    it('AnalysisView renders only fields of SavedAnalysisResult', () => {
-      expect(ANALYSIS_FIELDS).toEqual(expect.arrayContaining(['summary', 'signs', 'formulas', 'analysis_id']))
-      const returned = responseFields('post', '/analysis', '200')
-      expect(ANALYSIS_FIELDS.filter((field) => !returned.includes(field))).toEqual([])
-    })
-
-    // The pane only reads fields the API declares.
-    it.each([
-      ['item', 'GlyphOccurrence'],
-      ['comment', 'Annotation'],
-      ['page', 'GlyphOccurrencePage', 'AnnotationPage'],
-    ])('GlyphOccurrencesPane reads only fields of %s', (root, ...schemas) => {
-      const declared = schemas.flatMap((schema) => Object.keys(contract.components.schemas[schema].properties))
-      const used = [...glyphPane.matchAll(new RegExp(root + '\\.(\\w+)', 'g'))].map((m) => m[1])
-      expect(used.length).toBeGreaterThan(0)
-      expect(used.filter((field) => !declared.includes(field))).toEqual([])
+    const user = resolve(contract.components.schemas.SessionUser.properties.user)
+    expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'username', 'email']))
   })
-})})
+
+  it('history returns pagination, metadata and the saved analysis', () => {
+    expect(responseFields('get', '/users/me/analyses', '200')).toEqual(expect.arrayContaining(['items', 'next_cursor']))
+    const metadata = resolve(contract.components.schemas.AnalysisHistoryPage.properties.items.items)
+    expect(Object.keys(metadata.properties)).toEqual(expect.arrayContaining(['id', 'filename', 'created_at']))
+    expect(responseFields('get', '/users/me/analyses/{analysis_id}', '200')).toEqual(
+      expect.arrayContaining(['filename', 'created_at', 'format', 'size_bytes', 'result']),
+    )
+    const result = resolve(contract.components.schemas.AnalysisHistoryDetail.properties.result)
+    expect(Object.keys(result.properties)).toEqual(
+      expect.arrayContaining(['summary', 'symbol_interpretation', 'confidence', 'time_taken', 'signs', 'formulas']),
+    )
+  })
+
+  it('corrections accept what the correction form sends and return what it shows', () => {
+    expect(requestFields('post', '/analysis/{analysis_id}/corrections')).toEqual(
+      expect.arrayContaining(['sign_id', 'proposed_sign', 'uncertain', 'note']),
+    )
+    expect(responseFields('post', '/analysis/{analysis_id}/corrections', '201')).toContain('uncertain')
+    expect(responseFields('post', '/analysis', '200')).toContain('analysis_id')
+    expect(requestFields('post', '/corrections/{correction_id}/review')).toEqual(['decision'])
+  })
+
+  it('the session says whether the user reviews corrections and administers roles', () => {
+    for (const role of ['reviewer', 'admin']) {
+      expect(responseFields('get', '/users/me', '200')).toContain(role)
+      expect(responseFields('post', '/users/login', '200')).toContain(role)
+    }
+  })
+
+  it('the box editor sends the change shapes the API declares and reads the copy it returns', () => {
+    expect(requestFields('patch', '/box-sets/{set_id}').sort()).toEqual(['changes', 'version'])
+    for (const field of ['op', 'box', 'sign', 'box_id']) expect(useBoxSet).toContain(field)
+    expect(responseFields('patch', '/box-sets/{set_id}', '200')).toEqual(
+      expect.arrayContaining(['id', 'version', 'boxes', 'reading', 'image_url', 'source']),
+    )
+    expect(responseFields('patch', '/box-sets/{set_id}', '409').sort()).toEqual(['current', 'detail'])
+    expect(requestFields('post', '/box-sets').sort()).toEqual(['analysis_id', 'start', 'tablet'])
+  })
+
+  it('sharing sends and reads the declared fields', () => {
+    expect(requestFields('put', '/box-sets/{set_id}/shares/{user_id}')).toEqual(['permission'])
+    expect(requestFields('put', '/box-sets/{set_id}/everyone')).toEqual(['permission'])
+    expect(responseFields('get', '/box-sets/{set_id}/shares', '200').sort()).toEqual(['everyone', 'shares'])
+    expect(responseFields('get', '/box-sets/{set_id}', '200')).toEqual(expect.arrayContaining(['permission', 'everyone', 'owner']))
+  })
+
+  it('history and comments read the declared fields', () => {
+    expect(responseFields('get', '/box-sets/{set_id}/changes', '200').sort()).toEqual(['items', 'next_before'])
+    expect(requestFields('post', '/box-sets/{set_id}/comments').sort()).toEqual(['body', 'box_id'])
+    expect(responseFields('post', '/box-sets/{set_id}/comments', '201')).toEqual(
+      expect.arrayContaining(['id', 'box_id', 'author', 'body', 'created_at', 'can_delete']),
+    )
+  })
+
+  it('the admin page sends and reads only declared role fields', () => {
+    expect(requestFields('patch', '/admin/users/{user_id}')).toEqual(['admin', 'reviewer'])
+    expect(responseFields('patch', '/admin/users/{user_id}', '200')).toEqual(
+      expect.arrayContaining(['id', 'username', 'email', 'admin', 'reviewer', 'reviewer_from_env']),
+    )
+    expect(responseFields('get', '/admin/users', '200')).toEqual(expect.arrayContaining(['items', 'total']))
+  })
+
+  // Guards against #30 coming back: the page rendered a field the API never returned.
+  it('AnalysisView renders only fields of SavedAnalysisResult', () => {
+    expect(ANALYSIS_FIELDS).toEqual(expect.arrayContaining(['summary', 'signs', 'formulas', 'analysis_id']))
+    const returned = responseFields('post', '/analysis', '200')
+    expect(ANALYSIS_FIELDS.filter((field) => !returned.includes(field))).toEqual([])
+  })
+
+  // The pane only reads fields the API declares.
+  it.each([
+    ['item', 'GlyphOccurrence'],
+    ['comment', 'Annotation'],
+    ['page', 'GlyphOccurrencePage', 'AnnotationPage'],
+  ])('GlyphOccurrencesPane reads only fields of %s', (root, ...schemas) => {
+    const declared = schemas.flatMap((schema) => Object.keys(contract.components.schemas[schema].properties))
+    const used = [...glyphPane.matchAll(new RegExp(root + '\\.(\\w+)', 'g'))].map((m) => m[1])
+    expect(used.length).toBeGreaterThan(0)
+    expect(used.filter((field) => !declared.includes(field))).toEqual([])
+  })
+})

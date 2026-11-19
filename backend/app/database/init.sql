@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS `user` (
     email VARCHAR(255) NOT NULL,
     username VARCHAR(255) NOT NULL,
     password VARCHAR(255) NOT NULL,
+    is_admin BOOLEAN NOT NULL DEFAULT FALSE,     -- manages roles on the admin page
+    is_reviewer BOOLEAN NOT NULL DEFAULT FALSE,  -- reviews sign corrections (SIGN_REVIEWERS also grants it)
     PRIMARY KEY (id),
     CONSTRAINT uq_user_email UNIQUE (email),
     CONSTRAINT uq_user_username UNIQUE (username)
@@ -19,12 +21,14 @@ CREATE TABLE IF NOT EXISTS `user` (
 -- Development account:
 -- email: dev@ase3.com
 -- password: dev
--- The plaintext password is NOT stored.
-INSERT IGNORE INTO `user` (email, username, password)
+-- The plaintext password is NOT stored. It is an admin and a reviewer.
+INSERT IGNORE INTO `user` (email, username, password, is_admin, is_reviewer)
 VALUES (
     'dev@ase3.com',
     'dev',
-    'pbkdf2_sha256$600000$c131c210dfbcd7f1103c170d34f25f56$200b07591435d567598aecf533471cd64e06fefa58c8c1332b56822a8c740c6c'
+    'pbkdf2_sha256$600000$c131c210dfbcd7f1103c170d34f25f56$200b07591435d567598aecf533471cd64e06fefa58c8c1332b56822a8c740c6c',
+    TRUE,
+    TRUE
 );
 
 CREATE TABLE IF NOT EXISTS user_session (
@@ -46,6 +50,100 @@ CREATE TABLE IF NOT EXISTS analysis (
     result_json JSON NOT NULL,
     INDEX ix_analysis_user_date (user_id, created_at, id),
     FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Corrected copies of a tablet's boxes (#83): one per user per upload or corpus tablet.
+-- Exactly one of analysis_id and tablet_slug is set (the API ensures it: MySQL allows no CHECK on
+-- a column with ON DELETE CASCADE). `version` goes up by one per save; an older one is refused.
+CREATE TABLE IF NOT EXISTS box_set (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    owner_id BIGINT UNSIGNED NOT NULL,
+    analysis_id BIGINT UNSIGNED NULL,
+    tablet_slug VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    start ENUM('model', 'scholar') NOT NULL,
+    version INT UNSIGNED NOT NULL DEFAULT 0,
+    everyone ENUM('none', 'view', 'comment', 'edit') NOT NULL DEFAULT 'none',  -- access for all logged-in users (#84)
+    width INT UNSIGNED NOT NULL,
+    height INT UNSIGNED NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    CONSTRAINT uq_box_set_analysis UNIQUE (owner_id, analysis_id),
+    CONSTRAINT uq_box_set_tablet UNIQUE (owner_id, tablet_slug),
+    FOREIGN KEY (owner_id) REFERENCES `user`(id) ON DELETE CASCADE,
+    FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Coordinates are fractions of the image size. A deleted box is kept (deleted = TRUE) so
+-- that undoing the delete can bring it back.
+CREATE TABLE IF NOT EXISTS box (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    set_id BIGINT UNSIGNED NOT NULL,
+    x DOUBLE NOT NULL,
+    y DOUBLE NOT NULL,
+    w DOUBLE NOT NULL,
+    h DOUBLE NOT NULL,
+    sign VARCHAR(32) NULL,
+    deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    origin ENUM('model', 'scholar', 'user') NOT NULL,
+    -- As the model or the scholars drew it, to tell what the user changed; NULL for drawn boxes.
+    original_x DOUBLE NULL,
+    original_y DOUBLE NULL,
+    original_w DOUBLE NULL,
+    original_h DOUBLE NULL,
+    model_sign VARCHAR(32) NULL,
+    model_confidence DOUBLE NULL,
+    candidates JSON NULL,
+    INDEX ix_box_set (set_id, id),
+    FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- People a corrected copy is shared with (#84), each at one level. The copy's level for
+-- everyone logged in is box_set.everyone; a user gets the higher of the two.
+CREATE TABLE IF NOT EXISTS box_set_share (
+    set_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    permission ENUM('view', 'comment', 'edit', 'manage') NOT NULL,
+    granted_by BIGINT UNSIGNED NULL,
+    created_at DATETIME(6) NOT NULL,
+    PRIMARY KEY (set_id, user_id),
+    INDEX ix_box_set_share_user (user_id, set_id),
+    FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE,
+    FOREIGN KEY (granted_by) REFERENCES `user`(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Every change to a copy: who, when, and the box before and after ({box, sign, deleted}).
+CREATE TABLE IF NOT EXISTS box_change (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    set_id BIGINT UNSIGNED NOT NULL,
+    author_id BIGINT UNSIGNED NULL,
+    created_at DATETIME(6) NOT NULL,
+    version INT UNSIGNED NOT NULL,
+    action ENUM('add', 'update', 'delete', 'revert') NOT NULL,
+    box_id BIGINT UNSIGNED NOT NULL,
+    before_state JSON NULL,
+    after_state JSON NOT NULL,
+    reverts_id BIGINT UNSIGNED NULL,
+    reverted_by_id BIGINT UNSIGNED NULL,
+    INDEX ix_box_change_set (set_id, id),
+    FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE SET NULL,
+    FOREIGN KEY (box_id) REFERENCES box(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Comments on a corrected copy (#86): on one box (box_id), or on the whole copy (NULL).
+-- Plain text, 1-2000 characters after trimming (the API checks); created_at is UTC.
+CREATE TABLE IF NOT EXISTS box_comment (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    set_id BIGINT UNSIGNED NOT NULL,
+    box_id BIGINT UNSIGNED NULL,
+    author_id BIGINT UNSIGNED NULL,
+    body VARCHAR(2000) NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    INDEX ix_box_comment_set (set_id, box_id, id),
+    FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE,
+    FOREIGN KEY (box_id) REFERENCES box(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- One comment is written once and attached to many glyph occurrences.
@@ -72,6 +170,34 @@ CREATE TABLE IF NOT EXISTS glyph_annotation_target (
     FOREIGN KEY (annotation_id) REFERENCES glyph_annotation(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS sign_correction (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+    analysis_id BIGINT UNSIGNED NOT NULL,
+    author_id BIGINT UNSIGNED NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    sign_id INT UNSIGNED NOT NULL,
+    box_x DOUBLE NOT NULL,
+    box_y DOUBLE NOT NULL,
+    box_w DOUBLE NOT NULL,
+    box_h DOUBLE NOT NULL,
+    original_sign VARCHAR(32) NULL,
+    original_label VARCHAR(64) NOT NULL,
+    original_confidence DOUBLE NOT NULL,
+    model_version VARCHAR(255) NOT NULL,
+    image_width INT UNSIGNED NOT NULL,
+    image_height INT UNSIGNED NOT NULL,
+    proposed_sign VARCHAR(32) NULL,
+    uncertain BOOLEAN NOT NULL DEFAULT FALSE,
+    note VARCHAR(500) NULL,
+    status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+    reviewer_id BIGINT UNSIGNED NULL,
+    reviewed_at DATETIME(6) NULL,
+    INDEX ix_correction_status_date (status, created_at, id),
+    INDEX ix_correction_analysis_sign (analysis_id, sign_id),
+    FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE,
+    FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewer_id) REFERENCES `user`(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS analysis_comment (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,

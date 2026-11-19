@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from backend.app.data_controller.analysis_data_controller import AnalysisDataController, ImageTooLargeError
 from backend.app.model.analysis import SavedAnalysisResult, ApiError
 from backend.app.auth import AuthenticatedWrite, CurrentUser
+from backend.app.rate_limit import UPLOADS
 from backend.app.routes.community_routes import tablet_response
 from mysql.connector import Error as DatabaseError
 from PIL import Image, UnidentifiedImageError
@@ -26,6 +27,8 @@ AnalysisController = Annotated[AnalysisDataController, Depends(get_analysis_data
 @router.post("", response_model=SavedAnalysisResult, status_code=status.HTTP_200_OK,
              responses={code: {"model": ApiError} for code in (401, 403, 413, 503)})
 def analyze(file: UploadFile, analysis_data_controller: AnalysisController, user: AuthenticatedWrite) -> SavedAnalysisResult:
+    # Each upload keeps up to 10 MB on disk and runs the reader: a day's allowance per user (#98).
+    UPLOADS.check(f"user:{user.id}", "You have uploaded a lot of images today. Please try again tomorrow.")
     image_bytes = file.file.read(MAX_FILESIZE + 1)
     if len(image_bytes) > MAX_FILESIZE:
         raise HTTPException(
@@ -74,6 +77,7 @@ def analyze(file: UploadFile, analysis_data_controller: AnalysisController, user
                                                        image_bytes=image_bytes)
     except (DatabaseError, OSError) as error:
         raise HTTPException(503, "The analysis could not be saved. Please try again.") from error
+    UPLOADS.record(f"user:{user.id}")
     return SavedAnalysisResult(**result.model_dump(), analysis_id=saved.id, created_at=saved.created_at)
 
 

@@ -15,10 +15,13 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+// Clicking a box also opens the other-tablets pane; it gets an empty page unless a test says otherwise.
+const NO_OCCURRENCES = { ok: true, status: 200, json: async () => ({ sign: 'AB131a', total: 0, limit: 30, offset: 0, ranked_by: 'corpus', items: [], credit: null }) }
+
 async function upload(response) {
   const fetch = vi.fn((url) => Promise.resolve(url === '/api/users/me'
     ? { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }
-    : response))
+    : url.startsWith('/api/glyphs/') ? NO_OCCURRENCES : response))
   vi.stubGlobal('fetch', fetch)
   wrapper = mount(AnalysisView)
   const input = wrapper.get('input[type="file"]')
@@ -35,7 +38,7 @@ describe('Analysis page', () => {
     expect(fetch).toHaveBeenCalledWith('/api/analysis', expect.objectContaining({ method: 'POST' }))
     const card = wrapper.findAll('h2').find((title) => title.text() === 'Analysis').element.parentElement
     expect(card.textContent).toContain(analysis.summary)
-    expect(card.textContent).toContain('Interpretationta J / VIN J / ku-ro J')
+    expect(card.textContent).toContain('Transliterationta J / VIN J / ku-ro J')
     expect(card.textContent).toContain('Confidence83%')
     expect(card.textContent).toContain('Processing time2.7 s')
   })
@@ -55,6 +58,34 @@ describe('Analysis page', () => {
 
     expect(wrapper.find('input[type="file"]').exists()).toBe(true)
     expect(wrapper.find('[data-testid="formula"]').exists()).toBe(false)
+  })
+
+  it('opens the correction form for a clicked sign, with the sign catalogue', async () => {
+    const fetch = await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12, trained: true }) })
+    fetch.mockImplementation((url) => Promise.resolve(url === '/api/corrections/catalogue'
+      ? { ok: true, json: async () => [{ sign: 'AB81', name: 'AB81 (ku)', glyph: null }] }
+      : url.startsWith('/api/glyphs/') ? NO_OCCURRENCES
+        : { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }))
+    expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
+
+    await wrapper.findAll('[data-testid="sign-box"]')[2].trigger('click')
+    await flushPromises()
+
+    expect(fetch).toHaveBeenCalledWith('/api/corrections/catalogue')
+    const form = wrapper.get('[data-testid="sign-correction"]')
+    expect(form.get('[data-testid="correction-original"]').text()).toContain('VIN')
+    expect(form.findAll('datalist option').map((option) => option.attributes('value'))).toEqual(['AB81'])
+    await form.findAll('button').find((button) => button.text() === 'Close').trigger('click')
+    expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
+  })
+
+  it('offers no correction for the generic fallback model', async () => {
+    await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12, trained: false }) })
+    await wrapper.findAll('[data-testid="sign-box"]')[2].trigger('click')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
+    expect(wrapper.text()).not.toContain('Click its box to correct it')
   })
 
   it('shows the server message when the reader is unavailable', async () => {

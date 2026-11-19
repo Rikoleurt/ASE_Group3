@@ -30,7 +30,7 @@ def no_trained_detector(monkeypatch, tmp_path):
     monkeypatch.setattr("backend.app.tablet_demo.CLASSIFIER_WEIGHTS", tmp_path / "missing-classifier.pt")
 
 
-def saved(user_id, filename, image_format, size_bytes, result):
+def saved(user_id, filename, image_format, size_bytes, result, **_):  # image_bytes since #93
     return AnalysisMetadata(id=1, created_at=datetime.now(timezone.utc), filename=filename,
                             format=image_format, size_bytes=size_bytes)
 

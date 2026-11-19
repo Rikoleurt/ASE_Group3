@@ -2,10 +2,11 @@
 import { ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
+import TabletOverlay from '../components/analysis/TabletOverlay.vue'
+import { openCopy } from '../composables/useBoxSet'
 import { sessionFetch } from '../state/session'
 import AnalysisComment from "@/components/AnalysisComment.vue";
 import ShareAnalysis from '../components/ShareAnalysis.vue'
-import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import { sessionUser } from '../state/session'
 
 const route = useRoute()
@@ -13,12 +14,29 @@ const router = useRouter()
 const detail = ref(null)
 const loading = ref(false)
 const error = ref('')
+// The kept image failed to load (e.g. removed from the server): show the saved results without it.
+const imageMissing = ref(false)
+const opening = ref(false)
+const openError = ref('')
+
+async function correct() {
+  opening.value = true
+  openError.value = ''
+  try {
+    await router.push(`/box-sets/${await openCopy(detail.value.id)}`)
+  } catch (failure) {
+    openError.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
+  } finally {
+    opening.value = false
+  }
+}
 let requestId = 0
 
 async function load() {
   const request = ++requestId
   loading.value = true
   detail.value = null
+  imageMissing.value = false
   error.value = ''
   try {
     const response = await sessionFetch(`/api/users/me/analyses/${encodeURIComponent(route.params.id)}`)
@@ -47,19 +65,26 @@ watch(() => route.params.id, load, { immediate: true })
       <h1 class="mt-6 text-3xl font-bold">Saved analysis</h1>
       <p v-if="loading" role="status" class="mt-6">Loading analysis…</p>
       <p v-if="error" role="alert" class="mt-6">{{ error }}</p>
-      <button v-if="error" class="mt-4 rounded bg-bar px-6 py-2" @click="load">Try again</button>
+      <button v-if="error && error !== 'Analysis not found.'" class="mt-4 rounded bg-bar px-6 py-2" @click="load">Try again</button>
       <template v-if="detail">
         <section class="mt-6 rounded-3xl bg-card p-6">
           <h2 class="break-all text-xl font-bold">{{ detail.filename }}</h2>
           <p class="mt-2 text-ink/70"><time :datetime="detail.created_at">{{ new Date(detail.created_at).toLocaleString() }}</time> · {{ detail.format }} · {{ (detail.size_bytes / 1024).toFixed(1) }} KiB</p>
-          <TabletOverlay v-if="detail.image_url" class="mt-6" :signs="detail.result.signs" :formulas="detail.result.formulas">
-            <img :src="detail.image_url" :alt="detail.filename" class="w-full rounded-lg bg-white" />
+          <TabletOverlay v-if="detail.image_url && !imageMissing" class="mt-6" data-testid="history-image" :signs="detail.result.signs" :formulas="detail.result.formulas">
+            <img :src="detail.image_url" :alt="detail.filename" class="w-full rounded-lg bg-white" @error="imageMissing = true" />
           </TabletOverlay>
+          <p v-else-if="detail.image_url" role="alert" class="mt-4 text-sm text-ink/70">The image could not be loaded. These are the results saved at the time of analysis.</p>
           <p v-else class="mt-4 text-sm text-ink/70">This older analysis has no saved image. Upload and analyze the tablet again to share it.</p>
+          <div v-if="detail.image_url && detail.result.trained" class="mt-6">
+            <button type="button" class="cursor-pointer rounded bg-bar px-5 py-2 font-semibold hover:brightness-95 disabled:opacity-60" :disabled="opening" data-testid="correct-boxes" @click="correct">
+              {{ opening ? 'Opening…' : 'Correct the boxes' }}
+            </button>
+            <p v-if="openError" role="alert" class="mt-2 text-confidence-low">{{ openError }}</p>
+          </div>
           <ShareAnalysis v-if="detail.image_url" :analysis-id="detail.id" :filename="detail.filename" :discussion-id="detail.discussion_id" />
           <p class="mt-6">{{ detail.result.summary }}</p>
           <dl class="mt-4 divide-y divide-ink/10">
-            <div class="flex justify-between gap-4 py-3"><dt>Interpretation</dt><dd>{{ detail.result.symbol_interpretation }}</dd></div>
+            <div class="flex justify-between gap-4 py-3"><dt>Transliteration</dt><dd>{{ detail.result.symbol_interpretation }}</dd></div>
             <div class="flex justify-between gap-4 py-3"><dt>Confidence</dt><dd>{{ detail.result.confidence }}%</dd></div>
             <div class="flex justify-between gap-4 py-3"><dt>Processing time</dt><dd>{{ detail.result.time_taken }} s</dd></div>
           </dl>

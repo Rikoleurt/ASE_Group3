@@ -17,12 +17,14 @@ repository root.
 | API contract | `contract/openapi.json` matches the backend, and the frontend only calls endpoints and reads fields that exist in it | Nothing running | Backend: `backend/tests/test_api_contract.py`; frontend: `ApiContract.spec.js` |
 | MySQL integration | Registration, login, uniqueness, profile fields and the seed account against a real database | MySQL initialized by `init.sql` | `RUN_MYSQL_TESTS=1 uv run --project backend --no-sync python -m pytest backend/tests -m mysql` |
 | Frontend unit | Vue components and views, with `fetch` stubbed | Nothing running | `npm --prefix frontend run test:unit -- --run` |
+| Browser end-to-end | Sign up, log out, log in, wrong password, a refused upload, and HT 13 read by the trained reader with boxes, fraction check and history, in Chromium against the real frontend, backend and MySQL | MySQL, `models/` from `fetch_models.py --tag signs-v1`, Chromium | `cd e2e && npx playwright test` |
 | Research | `fraction-solver` on synthetic data | Nothing running | `uv run --project fraction-solver --no-sync python -m pytest fraction-solver/tests -ra` |
 | Research, corpus | `test_parse.py` on real lineara.eu tablets | The cached corpus (`python -m la.cli fetch`) | (included above; skipped without the corpus) |
 
 The corpus is CC BY-NC-SA and may not be redistributed, so CI never has it: the
-corpus tests always show as skipped there. CI does not download the trained
-models either, so their tests are skipped too. A green run does not mean these
+corpus tests always show as skipped there. The `backend` job does not download
+the trained models either, so their tests are skipped there; only the `e2e` job
+downloads them. A green run does not mean these
 tests ran; run them locally when you change the reader or the corpus code.
 
 ## Setup
@@ -32,6 +34,8 @@ npm ci
 npm --prefix frontend ci
 uv sync --project backend --locked --dev --extra cpu --python 3.12
 uv sync --project fraction-solver --locked --dev --python 3.12
+npm --prefix e2e ci
+(cd e2e && npx playwright install chromium)
 ```
 
 `--extra cpu` installs CPU-only PyTorch, as CI does (1.4 GB instead of 5.8 GB).
@@ -60,6 +64,47 @@ RUN_MYSQL_TESTS=1 uv run --project backend --no-sync python -m pytest backend/te
 The MySQL tests create test accounts and delete them afterwards. They use the
 `.env.example` defaults; if you changed `MYSQL_PORT` or the credentials in `.env`,
 add `--env-file .env` after `uv run`.
+
+**`e2e`**
+
+```bash
+uv run --project backend python scripts/fetch_models.py --tag signs-v1
+docker compose up -d --wait mysql
+cd e2e && npx playwright test
+```
+
+Playwright starts the backend (port 8000) and the frontend (port 5173) and waits
+for both; if they are already running, it reuses them. Before the tests it checks
+that MySQL answers and that the trained reader is in `models/`, and stops with the
+command to run if not: the tablet journey must never pass on the generic
+`yolo26n.pt`. The tablet is HT 13, converted to PNG from
+`backend/app/static/ht13.webp` into `e2e/.fixtures/`. It comes from SigLA
+(E. Salgarella & S. Castellan) via lineara.eu (M. Navarre) under CC BY-NC-SA 4.0,
+which allows redistributing it with this attribution
+([ATTRIBUTION.md](backend/app/static/ATTRIBUTION.md)); the CI's screenshots and
+videos show it. With `signs-v1` its KU-RO
+total does not balance; the test checks that the boxes, the transliteration, a
+formula and a verdict are shown, not exact counts, confidences or the verdict.
+
+Each test signs up its own `e2e-…` account with a random password and deletes it
+afterwards, even when it fails, along with its sessions and analyses. Accounts
+left by an interrupted run are deleted at the start of the next one. No test
+reruns: a journey that fails once fails the job.
+
+The frontend is built and served with `vite preview`, as it would be deployed;
+the dev server can reload a page mid-test.
+
+To inspect a failure locally, open the HTML report (`cd e2e && npx playwright
+show-report`) or a trace (`npx playwright show-trace test-results/<test>/trace.zip`):
+each failed test keeps a screenshot, a video and a trace. Add `--headed` or `--ui`
+to watch the browser.
+
+In CI, download the `e2e-report` artifact from the run page: it holds the JUnit
+report and `test-results/`, and `npx playwright show-trace <test>/trace.zip` opens
+a trace. Before the upload,
+[redact_diagnostics.py](e2e/redact_diagnostics.py) replaces the test passwords,
+session cookies and CSRF tokens in the traces with `[redacted]`. The HTML report
+is not uploaded, because it copies the traces and step titles.
 
 **`research`**
 
@@ -108,6 +153,7 @@ On a pull request, each job runs only when its area changed:
 | `frontend` | `frontend/`, `package.json`, `package-lock.json`, `contract/` |
 | `backend` | `backend/`, `contract/`, `fraction-solver/la/` (the backend imports it), `scripts/fetch_models.py`, `yolo26n.pt`, `docker-compose.yml`, `.env.example` |
 | `research` | `fraction-solver/` |
+| `e2e` | `e2e/`, `frontend/`, `backend/`, `contract/`, `fraction-solver/la/`, `scripts/fetch_models.py`, `yolo26n.pt`, `docker-compose.yml`, `.env.example`, `package.json`, `package-lock.json` |
 
 Changes to `.github/workflows/`, `pytest.ini` or `scripts/ci_summary.py` run
 every job, and so do pushes to `main` and manual runs (Actions → CI → Run
