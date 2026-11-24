@@ -269,7 +269,8 @@ def test_login_prefers_email_when_both_identifiers_are_given(client, connection)
     }
     response = client.post("/users/login", json={"email": "dev@ase3.com", "username": "other", "password": "dev"})
     assert response.status_code == 200
-    sql, parameters = connection.cursor.return_value.execute.call_args.args
+    # The first statement is the account lookup; a session row is inserted after it.
+    sql, parameters = connection.cursor.return_value.execute.call_args_list[0].args
     assert "WHERE email = %s" in sql
     assert parameters == ("dev@ase3.com",)
 
