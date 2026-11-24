@@ -5,7 +5,9 @@ import contract from '../../../contract/openapi.json'
 import analysisView from '../views/AnalysisView.vue?raw'
 import authForm from '../components/AuthForm.vue?raw'
 import useAuth from '../composables/useAuth.js?raw'
-import profileView from '../views/ProfileView.vue?raw'
+import session from '../state/session.js?raw'
+import historyView from '../views/HistoryView.vue?raw'
+import historyDetailView from '../views/HistoryDetailView.vue?raw'
 import tabletDemoView from '../views/TabletDemoView.vue?raw'
 import connectionTest from '../components/ConnectionTest.vue?raw'
 import tabletReadingView from '../views/TabletReadingView.vue?raw'
@@ -17,8 +19,10 @@ const CALLS = [
   { method: 'post', path: '/users/login', source: authForm, snippet: '/api/users/${props.mode}' },
   { method: 'post', path: '/users/register', source: useAuth, snippet: '/api/users/${mode}' },
   { method: 'post', path: '/users/login', source: useAuth, snippet: '/api/users/${mode}' },
-  { method: 'get', path: '/users/{user_id}/username', source: profileView, snippet: '/api/users/${userId.value}/username' },
-  { method: 'get', path: '/users/{user_id}/email', source: profileView, snippet: '/api/users/${userId.value}/email' },
+  { method: 'get', path: '/users/me', source: session, snippet: '/api/users/me' },
+  { method: 'post', path: '/users/logout', source: session, snippet: '/api/users/logout' },
+  { method: 'get', path: '/users/me/analyses', source: historyView, snippet: '/api/users/me/analyses?limit=20' },
+  { method: 'get', path: '/users/me/analyses/{analysis_id}', source: historyDetailView, snippet: '/api/users/me/analyses/${encodeURIComponent(' },
   { method: 'get', path: '/tablet-demo/ht13', source: tabletDemoView, snippet: '/api/tablet-demo/ht13?annotated=false' },
   { method: 'get', path: '/tablet-demo/ht13/predictions', source: tabletDemoView, snippet: '/api/tablet-demo/ht13/predictions' },
   { method: 'post', path: '/analysis', source: analysisView, snippet: "'/api/analysis'" },
@@ -66,9 +70,10 @@ describe('API contract', () => {
     expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'email', 'username']))
   })
 
-  it('profile endpoints return the username and email ProfileView reads', () => {
-    expect(responseFields('get', '/users/{user_id}/username', '200')).toContain('username')
-    expect(responseFields('get', '/users/{user_id}/email', '200')).toContain('email')
+  it('the session endpoint returns the CSRF token and the user the app reads', () => {
+    expect(responseFields('get', '/users/me', '200')).toEqual(expect.arrayContaining(['csrf_token', 'user']))
+    const user = resolve(resolve(contract.components.schemas.SessionUser).properties.user)
+    expect(Object.keys(user.properties)).toEqual(expect.arrayContaining(['id', 'email', 'username']))
   })
 
   // Guards against #30 coming back: the page rendered a field the API never returned.

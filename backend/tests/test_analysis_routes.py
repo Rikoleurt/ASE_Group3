@@ -1,14 +1,18 @@
 """Upload edge cases for POST /analysis. The size limit, oversized uploads and a
 missing model are covered in test_analysis.py."""
 
+from datetime import datetime, timezone
 from io import BytesIO
 
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
+from backend.app.auth import require_csrf
+from backend.app.data_controller.analysis_data_controller import AnalysisDataController
 from backend.app.main import app
-from backend.app.model.analysis import AnalysisResult
+from backend.app.model.analysis import AnalysisMetadata, AnalysisResult
+from backend.app.model.user import UserPublic
 
 
 @pytest.fixture(autouse=True)
@@ -19,10 +23,23 @@ def no_trained_detector(monkeypatch, tmp_path):
 
 
 @pytest.fixture
-def client():
+def client(monkeypatch):
+    # Uploads need a logged-in user and are saved to the history; both are stubbed so these
+    # tests stay about the image handling. Sessions and history are covered in test_history.py.
+    app.dependency_overrides[require_csrf] = lambda: UserPublic(id=1, email="dev@ase3.com", username="dev")
+    monkeypatch.setattr(
+        AnalysisDataController,
+        "save_analysis",
+        lambda self, user_id, filename, format, size_bytes, result: AnalysisMetadata(
+            id=1, created_at=datetime.now(timezone.utc), filename=filename, format=format, size_bytes=size_bytes
+        ),
+    )
     # Report server errors as 500 responses, as a browser would see them.
-    with TestClient(app, raise_server_exceptions=False) as client:
-        yield client
+    try:
+        with TestClient(app, raise_server_exceptions=False) as client:
+            yield client
+    finally:
+        app.dependency_overrides.pop(require_csrf, None)
 
 
 def image_bytes(format: str, size=(32, 32), mode="RGB") -> bytes:
@@ -48,11 +65,18 @@ def test_non_rgb_images_are_converted_before_analysis(client, mode):
     assert upload(client, image_bytes("PNG", mode=mode)).status_code == 200
 
 
-@pytest.mark.parametrize("content", [b"", b"not an image", image_bytes("PNG")[:40]])
-def test_unreadable_upload_is_rejected_with_422(client, content):
+@pytest.mark.parametrize(
+    "content,detail",
+    [
+        (b"", "Only PNG or JPEG images are supported."),
+        (b"not an image", "Only PNG or JPEG images are supported."),
+        (image_bytes("PNG")[:40], "Invalid image."),
+    ],
+)
+def test_unreadable_upload_is_rejected_with_422(client, content, detail):
     response = upload(client, content)
     assert response.status_code == 422
-    assert response.json() == {"detail": "Something went wrong with the image analysis"}
+    assert response.json() == {"detail": detail}
 
 
 def test_missing_file_field_is_rejected(client):
