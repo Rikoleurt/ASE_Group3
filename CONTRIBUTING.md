@@ -1,6 +1,6 @@
 # Contributing: tests and CI
 
-Every pull request to `main`, and every push to `main`, runs
+Every pull request to `main` (or to the `21-story-*` stack branches), and every push to `main`, runs
 [.github/workflows/ci.yml](.github/workflows/ci.yml). This page explains what it
 runs, how to run the same checks locally, and what to do when one fails.
 

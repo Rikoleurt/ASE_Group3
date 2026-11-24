@@ -2,7 +2,8 @@ name: CI
 
 on:
   pull_request:
-    branches: [main]
+    # Also the engineering-quality story branch, so its stacked task PRs are checked.
+    branches: [main, "21-story-*"]
   push:
     branches: [main]
   workflow_dispatch:
