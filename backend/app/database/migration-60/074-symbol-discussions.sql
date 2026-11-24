@@ -18,3 +18,15 @@ ALTER TABLE community_discussion
     ADD UNIQUE KEY uq_discussion_target (analysis_id, target_key),
     ADD UNIQUE KEY uq_discussion_title (title_key),
     DROP INDEX analysis_id;
+
+CREATE TABLE IF NOT EXISTS community_vote (
+    discussion_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
+    value TINYINT NOT NULL,
+    created_at DATETIME(6) NOT NULL,
+    PRIMARY KEY (discussion_id, user_id),
+    INDEX ix_vote_user (user_id),
+    CONSTRAINT ck_vote_value CHECK (value IN (-1, 1)),
+    FOREIGN KEY (discussion_id) REFERENCES community_discussion(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
