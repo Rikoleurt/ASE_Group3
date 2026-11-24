@@ -11,7 +11,7 @@ from backend.app.data_controller.community_data_controller import CommunityDataC
 from backend.app.data_controller.user_data_controller import UserDataController
 from backend.app.image_storage import image_path, store_image
 from backend.app.main import app
-from backend.app.model.community import DiscussionSummary, DiscussionDetail
+from backend.app.model.community import DiscussionSummary, DiscussionDetail, DiscussionPage
 from backend.app.model.user import UserPublic
 from backend.tests.test_history import png, result
 
@@ -34,7 +34,7 @@ def client(monkeypatch):
 
 
 def test_anonymous_visitors_can_read_but_cannot_publish(monkeypatch):
-    monkeypatch.setattr(CommunityDataController, "list_discussions", lambda *a: [summary()])
+    monkeypatch.setattr(CommunityDataController, "get_discussion_by_most_recent_date", lambda *a: DiscussionPage(items=[summary()]))
     monkeypatch.setattr(CommunityDataController, "get_discussion", lambda *a:
                         DiscussionDetail(**summary().model_dump(), result=result(), image_url="/api/community/discussions/3/image"))
     monkeypatch.setattr(CommunityDataController, "list_comments", lambda *a: [])

@@ -683,16 +683,23 @@
             "title": "Items",
             "type": "array"
           },
-          "next_before": {
+          "next_cursor": {
             "anyOf": [
               {
-                "type": "integer"
+                "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Next Before"
+            "title": "Next Cursor"
+          },
+          "parents": {
+            "items": {
+              "$ref": "#/components/schemas/DiscussionSummary"
+            },
+            "title": "Parents",
+            "type": "array"
           }
         },
         "required": [
@@ -1505,7 +1512,7 @@
             "name": "limit",
             "required": false,
             "schema": {
-              "default": 20,
+              "default": 30,
               "maximum": 100,
               "minimum": 1,
               "title": "Limit",
@@ -1514,20 +1521,46 @@
           },
           {
             "in": "query",
-            "name": "before",
+            "name": "filter_by",
+            "required": false,
+            "schema": {
+              "default": "recent",
+              "enum": [
+                "recent",
+                "tablet",
+                "author"
+              ],
+              "title": "Filter By",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "default": "",
+              "maxLength": 255,
+              "title": "Q",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
             "required": false,
             "schema": {
               "anyOf": [
                 {
-                  "exclusiveMinimum": 0,
-                  "maximum": 18446744073709551615,
-                  "type": "integer"
+                  "maxLength": 4096,
+                  "minLength": 1,
+                  "type": "string"
                 },
                 {
                   "type": "null"
                 }
               ],
-              "title": "Before"
+              "title": "Cursor"
             }
           }
         ],

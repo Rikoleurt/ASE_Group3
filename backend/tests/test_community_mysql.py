@@ -85,8 +85,8 @@ def test_public_discussion_keeps_private_analyses_and_comments_private(monkeypat
             second_id = shared.json()['id']
             assert visitor.get(f'/community/discussions/{second_id}/comments').json() == []
             page = visitor.get('/community/discussions?limit=1').json()
-            assert page['next_before'] == second_id
-            following = visitor.get(f'/community/discussions?limit=1&before={second_id}').json()
+            assert page['next_cursor']
+            following = visitor.get('/community/discussions', params={'limit': 1, 'cursor': page['next_cursor']}).json()
             assert following['items'][0]['id'] == discussion_id
             # Applying the migration repeatedly preserves discussions and private notes.
             sql = (Path(__file__).resolve().parents[1] / 'app/database/migration-60/061-community.sql').read_text()
@@ -165,6 +165,68 @@ def test_symbol_discussions_title_uniqueness_and_tree(monkeypatch):
                     return False
             with ThreadPoolExecutor(max_workers=2) as pool:
                 assert sorted(pool.map(race, uploads[1:])) == [False, True]
+    finally:
+        if user_id is not None:
+            with controller.connection() as connection:
+                cursor = connection.cursor()
+                cursor.execute('DELETE FROM `user` WHERE id = %s', (user_id,))
+                cursor.close()
+
+
+def test_filtered_pages_are_stable_and_keep_parent_context():
+    from datetime import datetime, timedelta
+
+    name = uuid4().hex
+    controller = CommunityDataController()
+    analyses = AnalysisDataController()
+    user_id = None
+    try:
+        with controller.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('INSERT INTO `user` (email, username, password) VALUES (%s, %s, %s)',
+                           (f'{name}@ase3.com', f'page-{name}', 'unused-test-password'))
+            user_id = cursor.lastrowid
+            cursor.close()
+        identifiers = []
+        # 35 results cross the normal 30-result page boundary. All have the
+        # same timestamp, so the secondary ID sort is essential.
+        timestamp = datetime(2026, 11, 24, 12)
+        for index in range(35):
+            saved = analyses.save_analysis(user_id, f'HT_{index}-{name}.png', 'PNG', len(png()), result(), image_bytes=png())
+            discussion, _ = controller.create_discussion(user_id, saved.id, f'Tablet {index}-{name}')
+            identifiers.append(discussion.id)
+        with controller.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('UPDATE community_discussion SET created_at = %s WHERE author_id = %s', (timestamp, user_id))
+            cursor.close()
+        first = controller.get_discussion_by_author(f'PAGE-{name}')
+        assert [item.id for item in first.items] == identifiers[::-1][:30]
+        assert first.next_cursor is not None
+        # A new row inserted while scrolling does not duplicate or shift old results.
+        extra = analyses.save_analysis(user_id, f'extra-{name}.png', 'PNG', len(png()), result(), image_bytes=png())
+        controller.create_discussion(user_id, extra.id, f'Extra-{name}')
+        second = controller.get_discussion_by_author(f'PAGE-{name}', cursor=first.next_cursor)
+        assert [item.id for item in second.items] == identifiers[::-1][30:]
+        assert second.next_cursor is None
+        # A newer ID with an older date still sorts by date, not ID.
+        with controller.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('UPDATE community_discussion SET created_at = %s WHERE analysis_id = %s',
+                           (timestamp - timedelta(days=1), extra.id))
+            cursor.close()
+        all_rows = controller.get_discussion_by_author(f'page-{name}', limit=100)
+        assert all_rows.items[-1].analysis_id == extra.id
+        # Match a custom tablet title even when fetching only its symbol row.
+        symbol, _ = controller.create_discussion(user_id, extra.id, f'Symbol-{name}', 1)
+        matched = controller.get_discussion_by_tablet_name(f'EXTRA-{name}', limit=1)
+        assert [item.id for item in matched.items] == [symbol.id]
+        assert len(matched.parents) == 1 and matched.parents[0].analysis_id == extra.id
+        assert matched.parents[0].sign_id is None
+        assert matched.next_cursor
+        # Literal underscore and percent searches never become wildcard queries.
+        assert len(controller.get_discussion_by_tablet_name(f'HT_1-{name}').items) == 1
+        assert controller.get_discussion_by_tablet_name(f'HT%{name}').items == []
+        assert controller.get_discussion_by_author("' OR 1=1 --").items == []
     finally:
         if user_id is not None:
             with controller.connection() as connection:

@@ -19,7 +19,7 @@ import discussionView from '../views/DiscussionView.vue?raw'
 // and the endpoint must exist in the contract.
 const CALLS = [
   { method: 'post', path: '/community/discussions', source: shareAnalysis, snippet: "communityApi('/discussions'" },
-  { method: 'get', path: '/community/discussions', source: communityView, snippet: '/discussions?limit=20' },
+  { method: 'get', path: '/community/discussions', source: communityView, snippet: '/discussions?${params}' },
   { method: 'get', path: '/community/discussions/{discussion_id}', source: discussionView, snippet: 'communityApi(`/discussions/${id}`)' },
   { method: 'get', path: '/community/discussions/{discussion_id}/comments', source: discussionView, snippet: 'communityApi(`/discussions/${id}/comments`)' },
   { method: 'post', path: '/community/discussions/{discussion_id}/comments', source: discussionView, snippet: 'communityApi(`/discussions/${id}/comments`, {' },
@@ -71,6 +71,16 @@ describe('API contract', () => {
     expect(contract.paths['/community/discussions'].post.security).toEqual([{ APIKeyCookie: [] }])
     expect(requestFields('post', '/community/discussions')).toEqual(expect.arrayContaining(['analysis_id', 'title', 'sign_id']))
     expect(requestFields('post', '/community/discussions/{discussion_id}/comments')).toEqual(['body'])
+  })
+  it('paginates searches and returns parent context for the tablet tree', () => {
+    const operation = contract.paths['/community/discussions'].get
+    expect(operation.parameters.map((parameter) => parameter.name)).toEqual(
+      expect.arrayContaining(['limit', 'filter_by', 'q', 'cursor']),
+    )
+    expect(operation.parameters.find((parameter) => parameter.name === 'limit').schema.default).toBe(30)
+    expect(responseFields('get', '/community/discussions', '200')).toEqual(
+      expect.arrayContaining(['items', 'parents', 'next_cursor']),
+    )
   })
   it.each(CALLS)('$method $path is called by the frontend and exists in the API', ({ method, path, source, snippet }) => {
     expect(source).toContain(snippet)

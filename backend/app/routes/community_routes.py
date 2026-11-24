@@ -8,7 +8,7 @@ from backend.app.data_controller.community_data_controller import CommunityDataC
 from backend.app.image_storage import image_path, crop_symbol
 from backend.app.model.analysis import ApiError
 from backend.app.model.community import (DiscussionCreate, DiscussionSummary, DiscussionPage,
-                                         DiscussionDetail, CommunityCommentCreate, DiscussionComment)
+                                         DiscussionDetail, CommunityCommentCreate, DiscussionComment, DiscussionFilter)
 
 router = APIRouter(prefix="/community", tags=["community"], responses={404: {"model": ApiError}, 503: {"model": ApiError}})
 Controller = Annotated[CommunityDataController, Depends(CommunityDataController)]
@@ -42,10 +42,20 @@ def share(payload: DiscussionCreate, user: AuthenticatedWrite, controller: Contr
 
 
 @router.get("/discussions", response_model=DiscussionPage)
-def discussions(controller: Controller, limit: Annotated[int, Query(ge=1, le=100)] = 20,
-                before: Annotated[int | None, Query(gt=0, le=2**64 - 1)] = None):
-    rows = controller.list_discussions(limit, before)
-    return DiscussionPage(items=rows[:limit], next_before=rows[limit - 1].id if len(rows) > limit else None)
+def discussions(controller: Controller, limit: Annotated[int, Query(ge=1, le=100)] = 30,
+                filter_by: DiscussionFilter = "recent",
+                q: Annotated[str, Query(max_length=255)] = "",
+                cursor: Annotated[str | None, Query(min_length=1, max_length=4096)] = None):
+    try:
+        if filter_by == "tablet":
+            return controller.get_discussion_by_tablet_name(q, limit, cursor)
+        if filter_by == "author":
+            return controller.get_discussion_by_author(q, limit, cursor)
+        if q.strip():
+            raise ValueError("Choose tablet or author to search by text.")
+        return controller.get_discussion_by_most_recent_date(limit, cursor)
+    except ValueError as error:
+        raise HTTPException(422, str(error)) from error
 
 
 @router.get("/discussions/{discussion_id}", response_model=DiscussionDetail, response_model_exclude_none=True)

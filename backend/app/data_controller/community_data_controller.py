@@ -1,4 +1,5 @@
 import json
+from base64 import b64decode, urlsafe_b64encode
 from datetime import datetime, timezone
 
 from mysql.connector import IntegrityError
@@ -6,7 +7,8 @@ from mysql.connector import IntegrityError
 from backend.app.data_controller.data_controller import DataController
 from backend.app.image_storage import image_path
 from backend.app.model.analysis import Box, DetectedSign
-from backend.app.model.community import DiscussionSummary, DiscussionDetail, DiscussionComment
+from backend.app.model.community import (DiscussionSummary, DiscussionDetail, DiscussionComment,
+                                         DiscussionPage, DiscussionCursor, DiscussionFilter)
 
 
 def utc(row):
@@ -41,6 +43,31 @@ def discussion_summary(row: dict) -> DiscussionSummary:
     result = json.loads(values.pop("result_json"))
     symbol = find_symbol(result, values["sign_id"]) if values["sign_id"] is not None else None
     return DiscussionSummary(**utc(values), symbol_name=symbol_name(symbol) if symbol else None)
+
+
+def encode_discussion_cursor(item: DiscussionSummary, filter_by: DiscussionFilter, q: str) -> str:
+    position = DiscussionCursor(created_at=item.created_at, id=item.id, filter_by=filter_by, q=q)
+    return urlsafe_b64encode(position.model_dump_json().encode()).decode().rstrip("=")
+
+
+def decode_discussion_cursor(value: str, filter_by: DiscussionFilter, q: str) -> DiscussionCursor:
+    try:
+        if len(value) > 4096:
+            raise ValueError()
+        raw = b64decode(value + "=" * (-len(value) % 4), altchars=b"-_", validate=True)
+        position = DiscussionCursor.model_validate_json(raw)
+        # MySQL DATETIME starts at year 1000. Never pass out-of-range dates to SQL.
+        timestamp = position.created_at.astimezone(timezone.utc)
+        if timestamp.year < 1000 or position.filter_by != filter_by or position.q != q:
+            raise ValueError()
+        return position
+    except (ValueError, OverflowError) as error:
+        raise ValueError("Invalid discussion cursor. Restart the search.") from error
+
+
+def search_pattern(query: str) -> str:
+    # A typed '%' or '_' is a literal character, not a SQL wildcard.
+    return "%" + query.replace("!", "!!").replace("%", "!%").replace("_", "!_") + "%"
 
 
 class CommunityDataController(DataController):
@@ -87,17 +114,58 @@ class CommunityDataController(DataController):
                                  sign_id=sign_id, symbol_name=symbol_name(symbol) if symbol else None,
                                  tablet_filename=analysis["filename"]), True
 
-    def list_discussions(self, limit: int, before: int | None) -> list[DiscussionSummary]:
+    def get_discussion_by_most_recent_date(self, limit: int = 30, cursor: str | None = None) -> DiscussionPage:
+        return self._get_discussion_page(limit, cursor, "recent", "")
+
+    def get_discussion_by_tablet_name(self, name: str, limit: int = 30,
+                                     cursor: str | None = None) -> DiscussionPage:
+        return self._get_discussion_page(limit, cursor, "tablet", name.strip())
+
+    def get_discussion_by_author(self, author: str, limit: int = 30,
+                                 cursor: str | None = None) -> DiscussionPage:
+        return self._get_discussion_page(limit, cursor, "author", author.strip())
+
+    def _get_discussion_page(self, limit: int, cursor: str | None,
+                             filter_by: DiscussionFilter, q: str) -> DiscussionPage:
+        if not 1 <= limit <= 100 or len(q) > 255:
+            raise ValueError("Invalid discussion search.")
+        position = decode_discussion_cursor(cursor, filter_by, q) if cursor is not None else None
+        conditions = []
+        params = []
+        if q and filter_by == "author":
+            conditions.append("u.username LIKE %s ESCAPE '!'")
+            params.append(search_pattern(q))
+        elif q and filter_by == "tablet":
+            conditions.append("(a.filename LIKE %s ESCAPE '!' OR EXISTS ("
+                              "SELECT 1 FROM community_discussion p WHERE p.analysis_id = d.analysis_id "
+                              "AND p.sign_id IS NULL AND p.title LIKE %s ESCAPE '!'))")
+            params.extend([search_pattern(q), search_pattern(q)])
+        if position:
+            timestamp = position.created_at.astimezone(timezone.utc).replace(tzinfo=None)
+            conditions.append("(d.created_at < %s OR (d.created_at = %s AND d.id < %s))")
+            params.extend([timestamp, timestamp, position.id])
+        where = "WHERE " + " AND ".join(conditions) + " " if conditions else ""
         with self.connection() as connection:
-            cursor = connection.cursor(dictionary=True)
+            db_cursor = connection.cursor(dictionary=True)
             try:
-                cursor.execute(f"SELECT {SUMMARY}{JOINS}"
-                               + ("WHERE d.id < %s " if before else "") + "ORDER BY d.id DESC LIMIT %s",
-                               (before, limit + 1) if before else (limit + 1,))
-                rows = cursor.fetchall()
+                db_cursor.execute(f"SELECT {SUMMARY}{JOINS}{where}"
+                                  "ORDER BY d.created_at DESC, d.id DESC LIMIT %s", (*params, limit + 1))
+                rows = db_cursor.fetchall()
+                items = [discussion_summary(row) for row in rows[:limit]]
+                # Only fetch public parent threads needed by this page's symbols.
+                # They are context, not extra matches or all the tablet's children.
+                parent_ids = {item.analysis_id for item in items if item.sign_id is None}
+                needed = sorted({item.analysis_id for item in items if item.sign_id is not None} - parent_ids)
+                parents = []
+                if needed:
+                    placeholders = ", ".join(["%s"] * len(needed))
+                    db_cursor.execute(f"SELECT {SUMMARY}{JOINS}WHERE d.sign_id IS NULL "
+                                      f"AND d.analysis_id IN ({placeholders})", tuple(needed))
+                    parents = [discussion_summary(row) for row in db_cursor.fetchall()]
             finally:
-                cursor.close()
-        return [discussion_summary(row) for row in rows]
+                db_cursor.close()
+        next_cursor = encode_discussion_cursor(items[-1], filter_by, q) if len(rows) > limit else None
+        return DiscussionPage(items=items, parents=parents, next_cursor=next_cursor)
 
     def get_discussion(self, discussion_id: int) -> DiscussionDetail | None:
         with self.connection() as connection:

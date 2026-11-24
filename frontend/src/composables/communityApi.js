@@ -3,7 +3,7 @@ import { sessionFetch } from '../state/session'
 export async function communityApi(path, options = {}) {
   const response = options.method
     ? await sessionFetch(`/api/community${path}`, options)
-    : await fetch(`/api/community${path}`, { cache: 'no-store' })
+    : await fetch(`/api/community${path}`, { ...options, cache: 'no-store' })
   const body = await response.json().catch(() => null)
   if (!response.ok) {
     const error = new Error(typeof body?.detail === 'string'

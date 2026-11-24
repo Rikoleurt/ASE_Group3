@@ -82,6 +82,8 @@ CREATE TABLE IF NOT EXISTS community_discussion (
     CONSTRAINT ck_discussion_sign CHECK (sign_id IS NULL OR sign_id >= 0),
     UNIQUE KEY uq_discussion_target (analysis_id, target_key),
     UNIQUE KEY uq_discussion_title (title_key),
+    INDEX ix_discussion_date (created_at DESC, id DESC),
+    INDEX ix_discussion_author_date (author_id, created_at DESC, id DESC),
     created_at DATETIME(6) NOT NULL,
     FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE

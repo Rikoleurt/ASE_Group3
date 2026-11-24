@@ -37,7 +37,7 @@ async function render(path = '/community', component) {
 }
 
 it('allows an anonymous visitor to open a shared tablet and read its thread', async () => {
-  vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.includes('?') ? { items: [summary], next_before: null }
+  vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.includes('?') ? { items: [summary], next_cursor: null }
     : url.endsWith('/comments') ? [comment] : detail)))
   const router = await render()
   await wrapper.get('a[href="/community/3"]').trigger('click')
@@ -55,15 +55,15 @@ it('allows an anonymous visitor to open a shared tablet and read its thread', as
 
 it('paginates forum rows and retries a failed load', async () => {
   const fetch = vi.fn().mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({ detail: 'Try later' }) })
-    .mockResolvedValueOnce(ok({ items: [summary], next_before: 3 }))
-    .mockResolvedValueOnce(ok({ items: [{ ...summary, id: 2, analysis_id: 13 }], next_before: null }))
+    .mockResolvedValueOnce(ok({ items: [summary], next_cursor: 3 }))
+    .mockResolvedValueOnce(ok({ items: [{ ...summary, id: 2, analysis_id: 13 }], next_cursor: null }))
   vi.stubGlobal('fetch', fetch)
   await render()
   expect(wrapper.get('[role="alert"]').text()).toBe('Try later')
-  await wrapper.get('button').trigger('click'); await flushPromises()
-  await wrapper.get('button').trigger('click'); await flushPromises()
+  await wrapper.findAll('button').find((button) => ['Try again', 'Load more'].includes(button.text())).trigger('click'); await flushPromises()
+  await wrapper.findAll('button').find((button) => ['Try again', 'Load more'].includes(button.text())).trigger('click'); await flushPromises()
   expect(wrapper.findAll('li')).toHaveLength(2)
-  expect(fetch).toHaveBeenLastCalledWith('/api/community/discussions?limit=20&before=3', { cache: 'no-store' })
+  expect(fetch).toHaveBeenLastCalledWith('/api/community/discussions?limit=30&filter_by=recent&cursor=3', expect.objectContaining({ cache: 'no-store' }))
 })
 
 it('keeps the draft on failure and posts a comment with session CSRF', async () => {
@@ -191,7 +191,7 @@ it('shows the symbol crop, author and tablet tree independently of its custom ti
 
 it('shows symbol discussions beneath their tablet and in the community feed', async () => {
   const child = { ...summary, id: 4, sign_id: 1, symbol_name: 'ku', tablet_filename: 'HT13.png' }
-  vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.includes('?') ? { items: [child], next_before: null }
+  vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.includes('?') ? { items: [child], next_cursor: null }
     : url.endsWith('/comments') ? [] : { ...detail, tablet_filename: 'HT13.png', parent_discussion: summary, symbol_discussions: [child] })))
   const router = await render()
   const group = wrapper.get('[data-analysis-id="12"]')
@@ -261,7 +261,7 @@ it('groups symbol threads beneath their own tablet, even when filenames match', 
   const sibling = { ...child, id: 4, sign_id: 1, title: 'ki', symbol_name: 'ki' }
   const otherChild = { ...child, id: 6, analysis_id: 13, title: 'Other reading' }
   vi.stubGlobal('fetch', vi.fn(async () => ok({
-    items: [otherChild, child, sibling, parent, secondParent], next_before: null,
+    items: [otherChild, child, sibling, parent, secondParent], next_cursor: null,
   })))
   await render()
   const groups = wrapper.findAll('[data-analysis-id]')
@@ -277,17 +277,17 @@ it('keeps a symbol under a filename heading until its parent arrives on a later 
   const parent = { ...summary, tablet_filename: 'HT13.png' }
   const child = { ...parent, id: 4, sign_id: 0, title: 'ri', symbol_name: 'ri' }
   const fetch = vi.fn()
-    .mockResolvedValueOnce(ok({ items: [child], next_before: 4 }))
-    .mockResolvedValueOnce(ok({ items: [parent], next_before: null }))
+    .mockResolvedValueOnce(ok({ items: [child], next_cursor: 4 }))
+    .mockResolvedValueOnce(ok({ items: [parent], next_cursor: null }))
   vi.stubGlobal('fetch', fetch)
   await render()
   expect(wrapper.get('[data-analysis-id="12"] h2').text()).toBe('HT13.png')
   expect(wrapper.find('a[href="/community/3"]').exists()).toBe(false)
   expect(wrapper.get('[data-analysis-id="12"] ul a').attributes('href')).toBe('/community/4')
-  await wrapper.get('button').trigger('click'); await flushPromises()
+  await wrapper.findAll('button').find((button) => ['Try again', 'Load more'].includes(button.text())).trigger('click'); await flushPromises()
   expect(wrapper.findAll('[data-analysis-id]')).toHaveLength(1)
   expect(wrapper.get('[data-analysis-id="12"] h2').text()).toBe(parent.title)
   expect(wrapper.get('a[href="/community/3"]').exists()).toBe(true)
   expect(wrapper.findAll('a[href="/community/4"]')).toHaveLength(1)
-  expect(fetch).toHaveBeenLastCalledWith('/api/community/discussions?limit=20&before=4', { cache: 'no-store' })
+  expect(fetch).toHaveBeenLastCalledWith('/api/community/discussions?limit=30&filter_by=recent&cursor=4', expect.objectContaining({ cache: 'no-store' }))
 })

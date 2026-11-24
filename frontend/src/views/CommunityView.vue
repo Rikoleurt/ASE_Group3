@@ -1,22 +1,37 @@
 <script setup>
-import { computed, onMounted, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { communityApi } from '../composables/communityApi'
+import LoadingIndicator from '../components/LoadingIndicator.vue'
 
 const discussions = ref([])
-const before = ref(null)
+const parents = ref(new Map())
+const nextCursor = ref(null)
 const loaded = ref(false)
 const loading = ref(false)
+const waitingForSearch = ref(false)
 const error = ref('')
+const filterBy = ref('recent')
+const query = ref('')
+const sentinel = ref(null)
+const filters = [
+  { value: 'recent', label: 'Most recent' },
+  { value: 'tablet', label: 'Tablet name' },
+  { value: 'author', label: 'Author' },
+]
+const busy = computed(() => loading.value || waitingForSearch.value)
+let generation = 0
+let activeRequest
+let searchTimer
+let observer
 
-// A symbol can arrive before its tablet thread on an older page. Keep a
-// filename heading until that thread is loaded, then make the heading a link.
-// Map insertion order follows the most recent discussion in each tablet group.
+// Parent context never creates a separate result or changes the match order.
 const tabletGroups = computed(() => {
   const groups = new Map()
   for (const discussion of discussions.value) {
     let group = groups.get(discussion.analysis_id)
     if (!group) {
-      group = { analysisId: discussion.analysis_id, filename: '', parent: null, symbols: [] }
+      group = { analysisId: discussion.analysis_id, filename: '',
+        parent: parents.value.get(discussion.analysis_id) || null, symbols: [] }
       groups.set(discussion.analysis_id, group)
     }
     if (discussion.tablet_filename) group.filename = discussion.tablet_filename
@@ -26,22 +41,78 @@ const tabletGroups = computed(() => {
   return [...groups.values()]
 })
 
-async function load() {
-  if (loading.value) return
+async function loadNextPage() {
+  if (busy.value || (loaded.value && !nextCursor.value)) return
+  const requestGeneration = generation
+  const controller = new AbortController()
+  activeRequest = controller
   loading.value = true
   error.value = ''
+  const params = new URLSearchParams({ limit: '30', filter_by: filterBy.value })
+  if (filterBy.value !== 'recent' && query.value.trim()) params.set('q', query.value.trim())
+  if (nextCursor.value) params.set('cursor', nextCursor.value)
   try {
-    const page = await communityApi(`/discussions?limit=20${before.value ? `&before=${before.value}` : ''}`)
-    discussions.value.push(...page.items)
-    before.value = page.next_before
+    const page = await communityApi(`/discussions?${params}`, { signal: controller.signal })
+    if (requestGeneration !== generation) return
+    const items = new Map(discussions.value.map((item) => [item.id, item]))
+    for (const item of page.items) items.set(item.id, item)
+    discussions.value = [...items.values()]
+    for (const parent of page.parents || []) parents.value.set(parent.analysis_id, parent)
+    nextCursor.value = page.next_cursor
     loaded.value = true
   } catch (failure) {
-    error.value = failure.message
+    if (requestGeneration === generation && !controller.signal.aborted) error.value = failure.message
   } finally {
-    loading.value = false
+    if (requestGeneration === generation) {
+      loading.value = false
+      activeRequest = null
+      // Re-observe after rendering. If a short page still leaves the marker in
+      // view, the observer requests one more page until the viewport is filled.
+      await nextTick()
+      if (requestGeneration === generation && observer && sentinel.value) {
+        observer.unobserve(sentinel.value)
+        observer.observe(sentinel.value)
+      }
+    }
   }
 }
-onMounted(load)
+
+function restartSearch(delay = 0) {
+  generation++
+  activeRequest?.abort()
+  activeRequest = null
+  clearTimeout(searchTimer)
+  discussions.value = []
+  parents.value = new Map()
+  nextCursor.value = null
+  loaded.value = false
+  loading.value = false
+  error.value = ''
+  waitingForSearch.value = delay > 0
+  if (delay) {
+    searchTimer = setTimeout(() => {
+      waitingForSearch.value = false
+      loadNextPage()
+    }, delay)
+  } else loadNextPage()
+}
+
+watch([filterBy, query], ([mode], [previousMode]) => restartSearch(mode === previousMode ? 300 : 0))
+onMounted(() => {
+  if (typeof IntersectionObserver !== 'undefined') {
+    observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting) && loaded.value && !error.value) loadNextPage()
+    }, { rootMargin: '200px' })
+    observer.observe(sentinel.value)
+  }
+  loadNextPage()
+})
+onBeforeUnmount(() => {
+  generation++
+  clearTimeout(searchTimer)
+  activeRequest?.abort()
+  observer?.disconnect()
+})
 </script>
 
 <template>
@@ -49,7 +120,22 @@ onMounted(load)
     <h1 class="text-3xl font-bold">Community</h1>
     <p class="mt-2 text-ink/70">Explore shared tablets and symbols, and discuss the model’s readings.</p>
     <RouterLink to="/analysis" class="mt-4 inline-block underline">Analyze a tablet to share →</RouterLink>
-    <ul v-if="tabletGroups.length" aria-label="Tablet discussions" class="mt-8 space-y-4">
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
+      <div role="group" aria-label="Filter discussions" class="flex flex-wrap gap-2">
+        <button v-for="filter in filters" :key="filter.value" type="button" :aria-pressed="filterBy === filter.value"
+          class="cursor-pointer rounded-lg border border-ink/20 px-4 py-2 font-semibold hover:bg-bar focus-visible:outline-2 focus-visible:outline-offset-2"
+          :class="filterBy === filter.value ? 'bg-bar' : 'bg-card'" @click="filterBy = filter.value">
+          {{ filter.label }}
+        </button>
+      </div>
+      <form v-if="filterBy !== 'recent'" role="search" class="w-full sm:ml-auto sm:w-72" @submit.prevent="restartSearch()">
+        <label for="discussion-search" class="sr-only">{{ filterBy === 'tablet' ? 'Search by tablet name' : 'Search by author' }}</label>
+        <input id="discussion-search" v-model="query" type="search" maxlength="255" autocomplete="off"
+          :placeholder="filterBy === 'tablet' ? 'Search tablet names…' : 'Search authors…'"
+          class="w-full rounded-lg border border-ink/30 bg-card px-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-2" />
+      </form>
+    </div>
+    <ul v-if="tabletGroups.length" :aria-busy="busy" aria-label="Tablet discussions" class="mt-8 space-y-4">
       <li v-for="group in tabletGroups" :key="group.analysisId" :data-analysis-id="group.analysisId" class="overflow-hidden rounded-2xl bg-card">
         <RouterLink v-if="group.parent" :to="`/community/${group.parent.id}`" class="block px-6 py-5 hover:bg-bar focus-visible:bg-bar">
           <p class="text-xs font-semibold uppercase tracking-wide text-ink/70">Tablet</p>
@@ -74,9 +160,13 @@ onMounted(load)
         </ul>
       </li>
     </ul>
-    <p v-else-if="loaded" class="mt-8 rounded-2xl bg-card p-6">No discussions yet. Share an analysis to start the conversation.</p>
-    <p v-if="loading" role="status" class="mt-6">Loading discussions…</p>
+    <p v-else-if="loaded && !busy" class="mt-8 rounded-2xl bg-card p-6">
+      {{ filterBy === 'recent' || !query.trim() ? 'No discussions yet. Share an analysis to start the conversation.' : 'No discussions match your search.' }}
+    </p>
+    <LoadingIndicator v-if="busy" class="mt-6" :label="waitingForSearch ? 'Searching discussions…' : 'Loading discussions…'" />
     <p v-if="error" role="alert" class="mt-6 text-conf-low">{{ error }}</p>
-    <button v-if="error || before" type="button" :disabled="loading" class="mt-6 rounded bg-bar px-6 py-2 disabled:opacity-50" @click="load">{{ error ? 'Try again' : 'Load more' }}</button>
+    <button v-if="error || nextCursor" type="button" :disabled="busy" class="mt-6 rounded bg-bar px-6 py-2 disabled:opacity-50" @click="loadNextPage">{{ error ? 'Try again' : 'Load more' }}</button>
+    <p v-if="loaded && discussions.length && !nextCursor && !busy" class="mt-6 text-sm text-ink/70">All matching discussions have been loaded.</p>
+    <div ref="sentinel" aria-hidden="true" class="h-px" />
   </main>
 </template>

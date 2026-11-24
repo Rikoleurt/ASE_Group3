@@ -5,6 +5,7 @@ import { communityApi } from '../composables/communityApi'
 import { sessionUser } from '../state/session'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
+import LoadingIndicator from '../components/LoadingIndicator.vue'
 import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
 
 const route = useRoute()
@@ -86,7 +87,7 @@ onBeforeUnmount(() => { requestId++ })
 <template>
   <main class="mx-auto max-w-5xl px-6 py-10">
     <RouterLink to="/community" class="underline">← Community</RouterLink>
-    <p v-if="loading" role="status" class="mt-6">Loading discussion…</p>
+    <LoadingIndicator v-if="loading" class="mt-6" label="Loading discussion…" />
     <p v-if="error" role="alert" class="mt-6 text-conf-low">{{ error }}</p>
     <button v-if="error" type="button" class="mt-4 rounded bg-bar px-6 py-2" @click="load">Try again</button>
     <template v-if="discussion">
