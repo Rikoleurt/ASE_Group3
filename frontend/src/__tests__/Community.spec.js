@@ -56,7 +56,7 @@ it('allows an anonymous visitor to open a shared tablet and read its thread', as
 it('paginates forum rows and retries a failed load', async () => {
   const fetch = vi.fn().mockResolvedValueOnce({ ok: false, status: 503, json: async () => ({ detail: 'Try later' }) })
     .mockResolvedValueOnce(ok({ items: [summary], next_before: 3 }))
-    .mockResolvedValueOnce(ok({ items: [{ ...summary, id: 2 }], next_before: null }))
+    .mockResolvedValueOnce(ok({ items: [{ ...summary, id: 2, analysis_id: 13 }], next_before: null }))
   vi.stubGlobal('fetch', fetch)
   await render()
   expect(wrapper.get('[role="alert"]').text()).toBe('Try later')
@@ -192,7 +192,9 @@ it('shows symbol discussions beneath their tablet and in the community feed', as
   vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.includes('?') ? { items: [child], next_before: null }
     : url.endsWith('/comments') ? [] : { ...detail, tablet_filename: 'HT13.png', parent_discussion: summary, symbol_discussions: [child] })))
   const router = await render()
-  expect(wrapper.text()).toContain('owner created a discussion about symbol ku from tablet HT13.png')
+  const group = wrapper.get('[data-analysis-id="12"]')
+  expect(group.get('h2').text()).toBe('HT13.png')
+  expect(group.get('ul a[href="/community/4"]').text()).toContain('Model reading: ku')
   await router.push('/community/3'); await flushPromises()
   expect(wrapper.get('nav a[href="/community/4"]').text()).toContain('Symbol ku')
 })
@@ -247,3 +249,42 @@ it.each([null, { ...session, user: { ...session.user, id: 8 } }])(
     expect(wrapper.find('dialog').exists()).toBe(false)
   },
 )
+
+
+it('groups symbol threads beneath their own tablet, even when filenames match', async () => {
+  const parent = { ...summary, tablet_filename: 'tablet.png' }
+  const secondParent = { ...parent, id: 2, analysis_id: 13, title: 'Another tablet' }
+  const child = { ...parent, id: 5, sign_id: 0, title: 'ri', symbol_name: 'ri' }
+  const sibling = { ...child, id: 4, sign_id: 1, title: 'ki', symbol_name: 'ki' }
+  const otherChild = { ...child, id: 6, analysis_id: 13, title: 'Other reading' }
+  vi.stubGlobal('fetch', vi.fn(async () => ok({
+    items: [otherChild, child, sibling, parent, secondParent], next_before: null,
+  })))
+  await render()
+  const groups = wrapper.findAll('[data-analysis-id]')
+  expect(groups.map((group) => group.attributes('data-analysis-id'))).toEqual(['13', '12'])
+  const own = wrapper.get('[data-analysis-id="12"]')
+  expect(own.get('h2').text()).toBe(parent.title)
+  expect(own.get('ul').findAll('a').map((link) => link.attributes('href'))).toEqual(['/community/5', '/community/4'])
+  expect(own.find('a[href="/community/6"]').exists()).toBe(false)
+  expect(wrapper.get('[data-analysis-id="13"] ul a').attributes('href')).toBe('/community/6')
+})
+
+it('keeps a symbol under a filename heading until its parent arrives on a later page', async () => {
+  const parent = { ...summary, tablet_filename: 'HT13.png' }
+  const child = { ...parent, id: 4, sign_id: 0, title: 'ri', symbol_name: 'ri' }
+  const fetch = vi.fn()
+    .mockResolvedValueOnce(ok({ items: [child], next_before: 4 }))
+    .mockResolvedValueOnce(ok({ items: [parent], next_before: null }))
+  vi.stubGlobal('fetch', fetch)
+  await render()
+  expect(wrapper.get('[data-analysis-id="12"] h2').text()).toBe('HT13.png')
+  expect(wrapper.find('a[href="/community/3"]').exists()).toBe(false)
+  expect(wrapper.get('[data-analysis-id="12"] ul a').attributes('href')).toBe('/community/4')
+  await wrapper.get('button').trigger('click'); await flushPromises()
+  expect(wrapper.findAll('[data-analysis-id]')).toHaveLength(1)
+  expect(wrapper.get('[data-analysis-id="12"] h2').text()).toBe(parent.title)
+  expect(wrapper.get('a[href="/community/3"]').exists()).toBe(true)
+  expect(wrapper.findAll('a[href="/community/4"]')).toHaveLength(1)
+  expect(fetch).toHaveBeenLastCalledWith('/api/community/discussions?limit=20&before=4', { cache: 'no-store' })
+})
