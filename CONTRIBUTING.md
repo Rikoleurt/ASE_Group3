@@ -67,6 +67,31 @@ add `--env-file .env` after `uv run`.
 uv run --project fraction-solver --no-sync python -m pytest fraction-solver/tests -ra
 ```
 
+## Formatting
+
+Python is formatted with [Ruff](ruff.toml) and the frontend with
+[Prettier](frontend/.prettierrc.json), both at 100 columns; `.editorconfig` covers
+editors. The `format` CI job checks **only the files a pull request changes**, so
+the standard applies to new work without a repository-wide reformat that would
+conflict with open branches.
+
+A changed file fails if it is new, or was formatted before the change and is not
+now. A file that was already unformatted on `main` is listed as a notice and left
+alone, so touching old code never forces you to reformat all of it. The one-time
+full reformat is deferred until long-lived branches are merged; its commit then goes
+in `.git-blame-ignore-revs`.
+
+```bash
+python3 scripts/format_check.py --base origin/main   # what CI runs
+python3 scripts/format_check.py --staged             # staged changes only
+uvx ruff@0.17.6 format path/to/file.py               # fix a Python file
+frontend/node_modules/.bin/prettier --write frontend/src/path/to/file.vue
+```
+
+To run the staged check on every commit: `pip install pre-commit && pre-commit install`.
+`git config blame.ignoreRevsFile .git-blame-ignore-revs` makes local `git blame` skip
+reformat commits (GitHub does this on its own).
+
 ## Known bugs are tests that fail on purpose
 
 A bug that is reported but not fixed yet gets a test that describes the correct
@@ -108,6 +133,7 @@ On a pull request, each job runs only when its area changed:
 | `frontend` | `frontend/`, `package.json`, `package-lock.json`, `contract/` |
 | `backend` | `backend/`, `contract/`, `fraction-solver/la/` (the backend imports it), `scripts/fetch_models.py`, `yolo26n.pt`, `docker-compose.yml`, `.env.example` |
 | `research` | `fraction-solver/` |
+| `format` | every pull request (see [Formatting](#formatting)) |
 
 Changes to `.github/workflows/`, `pytest.ini` or `scripts/ci_summary.py` run
 every job, and so do pushes to `main` and manual runs (Actions → CI → Run

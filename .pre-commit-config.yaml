@@ -1,0 +1,11 @@
+# Optional: `pip install pre-commit && pre-commit install`. Runs the same check as CI
+# on the staged changes, so it never asks you to reformat code you did not touch.
+repos:
+  - repo: local
+    hooks:
+      - id: format-check
+        name: format check (changed files)
+        entry: python3 scripts/format_check.py --staged
+        language: system
+        pass_filenames: false
+        always_run: true
