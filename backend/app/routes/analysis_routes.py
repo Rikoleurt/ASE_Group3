@@ -24,7 +24,12 @@ def get_analysis_data_controller() -> AnalysisDataController:
 AnalysisController = Annotated[AnalysisDataController, Depends(get_analysis_data_controller)]
 
 @router.post("", response_model=SavedAnalysisResult, status_code=status.HTTP_200_OK,
-             responses={code: {"model": ApiError} for code in (401, 403, 413, 503)})
+             responses={
+                 401: {"model": ApiError},
+                 403: {"model": ApiError},
+                 413: {"model": ApiError, "description": "Content Too Large"},
+                 503: {"model": ApiError},
+             })
 def analyze(file: UploadFile, analysis_data_controller: AnalysisController, user: AuthenticatedWrite) -> SavedAnalysisResult:
     image_bytes = file.file.read(MAX_FILESIZE + 1)
     if len(image_bytes) > MAX_FILESIZE:
