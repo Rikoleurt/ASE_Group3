@@ -6,6 +6,7 @@ const router = useRouter()
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import ShareAnalysis from '../components/ShareAnalysis.vue'
+import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -14,6 +15,11 @@ const FILENAME = ref('')
 const PREVIEW_URL = ref('')
 const ANALYSIS = ref(null)
 const IS_DRAGGING = ref(false)
+const SELECTED_SYMBOL = ref(null)
+
+function openSymbolDiscussion(symbol) {
+    SELECTED_SYMBOL.value = symbol
+}
 
 // ROUTE
 
@@ -82,6 +88,7 @@ function onInputChange(event) {
 }
 
 function reset() {
+    SELECTED_SYMBOL.value = null
     revokePreview()
     ANALYSIS.value = null
     FILENAME.value = ''
@@ -150,7 +157,7 @@ onBeforeUnmount(revokePreview)
 
     <section v-else-if="STATUS === 'result'" class="flex flex-col gap-8 md:flex-row">
         <div class="md:w-1/2">
-            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas">
+            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas" :can-discuss="Boolean(ANALYSIS.analysis_id)" @discuss="openSymbolDiscussion">
                 <img :src="PREVIEW_URL" :alt="FILENAME" class="w-full rounded-lg bg-white" />
             </TabletOverlay>
         </div>
@@ -189,5 +196,6 @@ onBeforeUnmount(revokePreview)
     </section>
 
     <FractionCheck v-if="STATUS === 'result'" :analysis="ANALYSIS" class="mt-8" />
+    <SymbolDiscussionDialog v-if="SELECTED_SYMBOL && ANALYSIS?.analysis_id" :analysis-id="ANALYSIS.analysis_id" :filename="FILENAME" :symbol="SELECTED_SYMBOL" @close="SELECTED_SYMBOL = null" />
 </main>
 </template>

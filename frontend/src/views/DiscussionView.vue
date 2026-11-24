@@ -1,10 +1,11 @@
 <script setup>
-import { onBeforeUnmount, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { communityApi } from '../composables/communityApi'
 import { sessionUser } from '../state/session'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
+import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,11 +17,19 @@ const pending = ref(false)
 const error = ref('')
 const commentsError = ref('')
 const imageError = ref(false)
+const selectedSymbol = ref(null)
+const canDiscussSymbols = computed(() => Boolean(sessionUser.value)
+  && sessionUser.value.id === discussion.value?.author_id)
 let requestId = 0
+
+function openSymbolDiscussion(symbol) {
+  if (canDiscussSymbols.value) selectedSymbol.value = symbol
+}
 
 async function load() {
   const request = ++requestId
   discussion.value = null
+  selectedSymbol.value = null
   comments.value = []
   draft.value = ''
   error.value = ''
@@ -82,10 +91,36 @@ onBeforeUnmount(() => { requestId++ })
     <template v-if="discussion">
       <h1 class="mt-6 break-words text-3xl font-bold">{{ discussion.title }}</h1>
       <p class="mt-2 text-ink/70">Shared by {{ discussion.author_username }} · <time :datetime="discussion.created_at">{{ new Date(discussion.created_at).toLocaleString() }}</time></p>
-      <section class="mt-8 grid items-start gap-6 md:grid-cols-2" aria-label="Shared analysis">
+      <p v-if="discussion.sign_id != null" class="mt-3" data-testid="symbol-origin">
+        {{ discussion.author_username }} created a discussion about symbol <strong>{{ discussion.symbol_name }}</strong>
+        from tablet <strong>{{ discussion.tablet_filename }}</strong>.
+      </p>
+      <nav v-if="discussion.tablet_filename" class="mt-6 rounded-xl border border-ink/20 p-4" aria-label="Tablet discussion tree">
+        <RouterLink v-if="discussion.parent_discussion && discussion.parent_discussion.id !== discussion.id" :to="`/community/${discussion.parent_discussion.id}`" class="font-semibold underline">
+          Tablet {{ discussion.tablet_filename }} — {{ discussion.parent_discussion.title }}
+        </RouterLink>
+        <p v-else class="font-semibold">Tablet {{ discussion.tablet_filename }}</p>
+        <p v-if="!discussion.parent_discussion && discussion.sign_id != null" class="mt-1 text-sm text-ink/70">This tablet has no general discussion yet.</p>
+        <ul v-if="discussion.symbol_discussions?.length" class="mt-3 space-y-2 border-l border-ink/20 pl-4">
+          <li v-for="child in discussion.symbol_discussions" :key="child.id">
+            <RouterLink :to="`/community/${child.id}`" :aria-current="child.id === discussion.id ? 'page' : undefined" class="underline">
+              Symbol {{ child.symbol_name }} — {{ child.title }}
+            </RouterLink>
+            <span class="text-sm text-ink/70"> · {{ child.author_username }}</span>
+          </li>
+        </ul>
+      </nav>
+      <section v-if="discussion.symbol" class="mt-8 rounded-3xl bg-card p-6" aria-label="Shared symbol">
+        <p v-if="imageError" role="alert">The symbol image could not be loaded.</p>
+        <img v-else :src="discussion.image_url" :alt="`Symbol ${discussion.symbol_name} from ${discussion.tablet_filename}`" class="mx-auto max-h-80 max-w-full rounded-lg bg-white object-contain" @error="imageError = true" />
+        <h2 class="mt-4 text-xl font-bold">{{ discussion.symbol_name }}</h2>
+        <p class="mt-2">Model reading: {{ discussion.symbol.reading || discussion.symbol.label }} · Confidence: {{ discussion.symbol.confidence }}%</p>
+        <p v-if="discussion.symbol.meaning" class="mt-2">{{ discussion.symbol.meaning }}</p>
+      </section>
+      <section v-else-if="discussion.result" class="mt-8 grid items-start gap-6 md:grid-cols-2" aria-label="Shared analysis">
         <div>
           <p v-if="imageError" role="alert">The tablet image could not be loaded.</p>
-          <TabletOverlay v-else :signs="discussion.result.signs" :formulas="discussion.result.formulas">
+          <TabletOverlay v-else :signs="discussion.result.signs" :formulas="discussion.result.formulas" :can-discuss="canDiscussSymbols" @discuss="openSymbolDiscussion">
             <img :src="discussion.image_url" :alt="discussion.title" class="w-full rounded-lg bg-white" @error="imageError = true" />
           </TabletOverlay>
         </div>
@@ -105,7 +140,7 @@ onBeforeUnmount(() => { requestId++ })
           </ul>
         </div>
       </section>
-      <FractionCheck :analysis="discussion.result" class="mt-8" />
+      <FractionCheck v-if="discussion.result" :analysis="discussion.result" class="mt-8" />
       <section class="mt-8 rounded-3xl bg-card p-6" aria-labelledby="discussion-comments">
         <h2 id="discussion-comments" class="text-xl font-bold">Discussion</h2>
         <p v-if="!comments.length && !loading && !commentsError" class="mt-4 text-ink/70">No comments yet. Start the discussion.</p>
@@ -127,6 +162,7 @@ onBeforeUnmount(() => { requestId++ })
         </form>
         <RouterLink v-else :to="{ path: '/login', query: { redirect: route.fullPath } }" class="mt-6 inline-block underline">Log in to join the discussion</RouterLink>
       </section>
+      <SymbolDiscussionDialog v-if="selectedSymbol && canDiscussSymbols" :analysis-id="discussion.analysis_id" :filename="discussion.tablet_filename" :symbol="selectedSymbol" @close="selectedSymbol = null" />
     </template>
   </main>
 </template>

@@ -9,6 +9,7 @@ let wrapper
 afterEach(() => {
   wrapper?.unmount()
   vi.unstubAllGlobals()
+  vi.useRealTimers()
 })
 
 function render(props = { signs, formulas: [mismatch] }) {
@@ -99,4 +100,38 @@ describe('Tablet overlay', () => {
     render()
     expect(wrapper.get('svg').classes()).toContain('still')
   })
+})
+
+
+it('keeps the card reachable across the gap and emits the selected occurrence', async () => {
+  vi.useFakeTimers()
+  render({ signs, canDiscuss: true })
+  await boxes()[0].trigger('mouseenter')
+  await boxes()[0].trigger('mouseleave')
+  await vi.advanceTimersByTimeAsync(100)
+  const card = wrapper.get('[data-testid="sign-card"]')
+  await card.trigger('mouseenter')
+  await vi.advanceTimersByTimeAsync(300)
+  expect(wrapper.find('[data-testid="sign-card"]').exists()).toBe(true)
+  await card.get('button').trigger('click')
+  expect(wrapper.emitted('discuss')[0][0]).toEqual(signs[0])
+  await card.trigger('mouseleave')
+  await vi.advanceTimersByTimeAsync(250)
+  expect(wrapper.find('[data-testid="sign-card"]').exists()).toBe(false)
+})
+
+it('lets keyboard users reach the discussion button and return to its box', async () => {
+  wrapper = mount(TabletOverlay, { props: { signs, canDiscuss: true }, attachTo: document.body })
+  boxes()[0].element.focus()
+  await boxes()[0].trigger('focus')
+  await boxes()[0].trigger('keydown', { key: 'Tab' })
+  const button = wrapper.get('[data-testid="sign-card"] button')
+  expect(document.activeElement).toBe(button.element)
+  await button.trigger('keydown', { key: 'Tab', shiftKey: true })
+  expect(document.activeElement).toBe(boxes()[0].element)
+  await boxes()[0].trigger('keydown', { key: 'Tab' })
+  await button.trigger('keydown', { key: 'Tab' })
+  expect(document.activeElement).toBe(boxes()[1].element)
+  await boxes()[1].trigger('keydown', { key: 'Escape' })
+  expect(wrapper.find('[data-testid="sign-card"]').exists()).toBe(false)
 })

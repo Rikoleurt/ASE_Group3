@@ -28,12 +28,15 @@ onMounted(load)
 <template>
   <main class="mx-auto max-w-5xl px-6 py-10">
     <h1 class="text-3xl font-bold">Community</h1>
-    <p class="mt-2 text-ink/70">Explore shared tablets and discuss the model’s readings.</p>
+    <p class="mt-2 text-ink/70">Explore shared tablets and symbols, and discuss the model’s readings.</p>
     <RouterLink to="/analysis" class="mt-4 inline-block underline">Analyze a tablet to share →</RouterLink>
     <ul v-if="discussions.length" class="mt-8 divide-y divide-ink/10 overflow-hidden rounded-2xl bg-card">
       <li v-for="discussion in discussions" :key="discussion.id">
         <RouterLink :to="`/community/${discussion.id}`" class="block px-6 py-5 hover:bg-bar focus-visible:bg-bar">
           <h2 class="break-words text-lg font-semibold">{{ discussion.title }}</h2>
+          <p v-if="discussion.sign_id != null" class="mt-1 text-sm">
+            {{ discussion.author_username }} created a discussion about symbol {{ discussion.symbol_name }} from tablet {{ discussion.tablet_filename }}.
+          </p>
           <p class="mt-1 text-sm text-ink/70">{{ discussion.author_username }} · <time :datetime="discussion.created_at">{{ new Date(discussion.created_at).toLocaleString() }}</time></p>
         </RouterLink>
       </li>

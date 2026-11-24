@@ -4,8 +4,8 @@ from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from fastapi.responses import FileResponse
 
 from backend.app.auth import AuthenticatedWrite
-from backend.app.data_controller.community_data_controller import CommunityDataController
-from backend.app.image_storage import image_path
+from backend.app.data_controller.community_data_controller import CommunityDataController, DuplicateDiscussionTitle
+from backend.app.image_storage import image_path, crop_symbol
 from backend.app.model.analysis import ApiError
 from backend.app.model.community import (DiscussionCreate, DiscussionSummary, DiscussionPage,
                                          DiscussionDetail, CommunityCommentCreate, DiscussionComment)
@@ -30,11 +30,11 @@ def tablet_response(image: tuple[str, str] | None) -> FileResponse:
                         403: {"model": ApiError}, 409: {"model": ApiError}})
 def share(payload: DiscussionCreate, user: AuthenticatedWrite, controller: Controller, response: Response):
     try:
-        result = controller.create_discussion(user.id, payload.analysis_id, payload.title)
-    except FileNotFoundError as error:
+        result = controller.create_discussion(user.id, payload.analysis_id, payload.title, payload.sign_id)
+    except (FileNotFoundError, DuplicateDiscussionTitle) as error:
         raise HTTPException(409, str(error)) from error
     if result is None:
-        raise HTTPException(404, "Analysis not found.")
+        raise HTTPException(404, "Analysis or symbol not found.")
     discussion, created = result
     if not created:
         response.status_code = 200
@@ -58,7 +58,18 @@ def discussion(discussion_id: DiscussionId, controller: Controller):
 
 @router.get("/discussions/{discussion_id}/image", response_class=FileResponse)
 def image(discussion_id: DiscussionId, controller: Controller):
-    return tablet_response(controller.get_image(discussion_id))
+    saved = controller.get_image(discussion_id)
+    if saved is None:
+        raise HTTPException(404, "Discussion image not found.")
+    key, image_format, box = saved
+    if box is None:
+        return tablet_response((key, image_format))
+    try:
+        content = crop_symbol(key, box)
+    except (OSError, ValueError) as error:
+        raise HTTPException(404, "Symbol image not found.") from error
+    return Response(content, media_type="image/png",
+                    headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
 
 
 @router.get("/discussions/{discussion_id}/comments", response_model=list[DiscussionComment])

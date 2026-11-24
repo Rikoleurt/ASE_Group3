@@ -72,9 +72,16 @@ CREATE TABLE IF NOT EXISTS analysis_image (
 
 CREATE TABLE IF NOT EXISTS community_discussion (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    analysis_id BIGINT UNSIGNED NOT NULL UNIQUE,
+    analysis_id BIGINT UNSIGNED NOT NULL,
+    sign_id BIGINT NULL,
+    target_key BIGINT GENERATED ALWAYS AS (COALESCE(sign_id, -1)) STORED,
     author_id BIGINT UNSIGNED NOT NULL,
     title VARCHAR(160) NOT NULL,
+    title_key VARCHAR(160) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_as_ci
+        GENERATED ALWAYS AS (TRIM(title)) STORED,
+    CONSTRAINT ck_discussion_sign CHECK (sign_id IS NULL OR sign_id >= 0),
+    UNIQUE KEY uq_discussion_target (analysis_id, target_key),
+    UNIQUE KEY uq_discussion_title (title_key),
     created_at DATETIME(6) NOT NULL,
     FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE,
     FOREIGN KEY (author_id) REFERENCES `user`(id) ON DELETE CASCADE

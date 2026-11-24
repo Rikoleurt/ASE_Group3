@@ -8,12 +8,19 @@ import { acceptSession, forgetSession } from '../state/session'
 import { analysis } from './analysisFixture'
 
 let wrapper
+let restoreDialog
 const session = { user: { id: 7, username: 'owner', email: 'owner@ase3.com' }, csrf_token: 'csrf' }
-const summary = { id: 3, analysis_id: 12, title: 'HT13 discussion', author_username: 'owner', created_at: '2026-11-10T12:00:00Z' }
+const summary = { id: 3, analysis_id: 12, author_id: 7, title: 'HT13 discussion', author_username: 'owner', created_at: '2026-11-10T12:00:00Z' }
 const detail = { ...summary, image_url: '/api/community/discussions/3/image', result: analysis }
 const comment = { id: 1, discussion_id: 3, author_username: 'reader', created_at: summary.created_at, body: '<script>alert(1)</script>\nA reading?' }
 const ok = (data, status = 200) => ({ ok: true, status, json: async () => data })
-afterEach(() => { wrapper?.unmount(); forgetSession(); vi.unstubAllGlobals() })
+afterEach(() => {
+  wrapper?.unmount()
+  restoreDialog?.()
+  restoreDialog = undefined
+  forgetSession()
+  vi.unstubAllGlobals()
+})
 
 async function render(path = '/community', component) {
   const router = createRouter({ history: createMemoryHistory(), routes: [
@@ -129,3 +136,114 @@ it('does not leak a previous discussion when navigating to a missing one', async
   expect(wrapper.find('img').exists()).toBe(false)
   expect(wrapper.get('[role="alert"]').text()).toBe('Discussion not found.')
 })
+
+it.each([
+  [{ id: 0, sign: null, label: 'object' }, 'symbol-0'],
+  [{ id: 1, sign: 'AB81', reading: 'ku', label: 'AB81' }, 'ku'],
+])('prefills an editable symbol title and publishes the occurrence ID', async (symbol, expected) => {
+  const fetch = vi.fn(async (url) => ok(url === '/api/users/me' ? session : summary))
+  vi.stubGlobal('fetch', fetch)
+  const router = await render('/analysis', {
+    components: { ShareAnalysis }, data: () => ({ symbol }),
+    template: '<ShareAnalysis :analysis-id="12" :symbol="symbol" auto-open />',
+  })
+  expect(wrapper.get('input').element.value).toBe(expected)
+  expect(fetch).not.toHaveBeenCalled()
+  await wrapper.get('input').setValue('My custom title')
+  await wrapper.get('form').trigger('submit'); await flushPromises()
+  expect(fetch).toHaveBeenCalledWith('/api/community/discussions', expect.objectContaining({
+    body: JSON.stringify({ analysis_id: 12, title: 'My custom title', sign_id: symbol.id }),
+  }))
+  expect(router.currentRoute.value.path).toBe('/community/3')
+})
+
+it('keeps the editable title after a duplicate-name conflict', async () => {
+  const fetch = vi.fn(async (url) => url === '/api/users/me' ? ok(session)
+    : { ok: false, status: 409, json: async () => ({ detail: 'A discussion with this title already exists. Choose another title.' }) })
+  vi.stubGlobal('fetch', fetch)
+  const router = await render('/analysis', {
+    components: { ShareAnalysis },
+    template: '<ShareAnalysis :analysis-id="12" :symbol="{ id: 0, sign: null }" auto-open />',
+  })
+  await wrapper.get('form').trigger('submit'); await flushPromises()
+  expect(wrapper.get('[role="alert"]').text()).toContain('Choose another title')
+  expect(wrapper.get('input').element.value).toBe('symbol-0')
+  expect(wrapper.get('input').attributes('disabled')).toBeUndefined()
+  expect(router.currentRoute.value.path).toBe('/analysis')
+})
+
+it('shows the symbol crop, author and tablet tree independently of its custom title', async () => {
+  const child = { ...summary, id: 4, title: 'What does this mean?', sign_id: 0, symbol_name: 'ku', tablet_filename: 'HT13.png' }
+  const symbolDetail = { ...child, image_url: '/api/community/discussions/4/image',
+    symbol: { ...analysis.signs[0], id: 0 }, parent_discussion: summary, symbol_discussions: [child] }
+  vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.endsWith('/comments') ? [] : symbolDetail)))
+  await render('/community/4')
+  expect(wrapper.get('h1').text()).toBe('What does this mean?')
+  expect(wrapper.get('[data-testid="symbol-origin"]').text()).toContain('owner created a discussion about symbol ku from tablet HT13.png')
+  expect(wrapper.get('img').attributes('src')).toBe(symbolDetail.image_url)
+  expect(wrapper.get('nav a[href="/community/3"]').text()).toContain('HT13.png')
+  expect(wrapper.get('nav a[aria-current="page"]').text()).toContain('ku')
+  expect(wrapper.find('[data-testid="tablet-overlay"]').exists()).toBe(false)
+  expect(wrapper.find('[data-testid="verdict"]').exists()).toBe(false)
+})
+
+it('shows symbol discussions beneath their tablet and in the community feed', async () => {
+  const child = { ...summary, id: 4, sign_id: 1, symbol_name: 'ku', tablet_filename: 'HT13.png' }
+  vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.includes('?') ? { items: [child], next_before: null }
+    : url.endsWith('/comments') ? [] : { ...detail, tablet_filename: 'HT13.png', parent_discussion: summary, symbol_discussions: [child] })))
+  const router = await render()
+  expect(wrapper.text()).toContain('owner created a discussion about symbol ku from tablet HT13.png')
+  await router.push('/community/3'); await flushPromises()
+  expect(wrapper.get('nav a[href="/community/4"]').text()).toContain('Symbol ku')
+})
+
+
+it('opens and publishes a symbol discussion directly from the owner’s shared tablet', async () => {
+  // jsdom does not implement the browser's modal-dialog API. Keep the real
+  // dialog component and form, and simulate only this native DOM operation.
+  const original = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal')
+  const showModal = vi.fn(function () { this.open = true })
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', { configurable: true, value: showModal })
+  restoreDialog = () => {
+    if (original) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', original)
+    else delete HTMLDialogElement.prototype.showModal
+  }
+  acceptSession(session)
+  const child = { ...summary, id: 4, sign_id: analysis.signs[0].id, title: 'A closer look',
+    tablet_filename: 'HT13.png', symbol_name: analysis.signs[0].reading }
+  const fetch = vi.fn(async (url, options) => {
+    if (url === '/api/users/me') return ok(session)
+    if (options?.method === 'POST') return ok(child, 201)
+    if (url.endsWith('/comments')) return ok([])
+    if (url.endsWith('/4')) return ok({ ...child, symbol: analysis.signs[0], image_url: '/api/community/discussions/4/image' })
+    return ok({ ...detail, tablet_filename: 'HT13.png' })
+  })
+  vi.stubGlobal('fetch', fetch)
+  const router = await render('/community/3')
+  await wrapper.findAll('[data-testid="sign-box"]')[0].trigger('mouseenter')
+  await wrapper.get('[data-testid="sign-card"] button').trigger('click')
+  const dialog = wrapper.get('dialog')
+  expect(showModal).toHaveBeenCalledOnce()
+  expect(dialog.element.open).toBe(true)
+  expect(dialog.text()).toContain('From tablet HT13.png')
+  expect(dialog.get('input').element.value).toBe(analysis.signs[0].reading)
+  await dialog.get('input').setValue('A closer look')
+  await dialog.get('form').trigger('submit'); await flushPromises()
+  expect(fetch).toHaveBeenCalledWith('/api/community/discussions', expect.objectContaining({
+    method: 'POST', body: JSON.stringify({ analysis_id: 12, title: 'A closer look', sign_id: analysis.signs[0].id }),
+  }))
+  expect(router.currentRoute.value.path).toBe('/community/4')
+  expect(wrapper.find('dialog').exists()).toBe(false)
+  expect(wrapper.get('h1').text()).toBe('A closer look')
+})
+
+it.each([null, { ...session, user: { ...session.user, id: 8 } }])(
+  'does not offer publication from someone else’s tablet or to an anonymous visitor', async (viewer) => {
+    if (viewer) acceptSession(viewer)
+    vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.endsWith('/comments') ? [] : detail)))
+    await render('/community/3')
+    await wrapper.findAll('[data-testid="sign-box"]')[0].trigger('mouseenter')
+    expect(wrapper.find('[data-testid="sign-card"] button').exists()).toBe(false)
+    expect(wrapper.find('dialog').exists()).toBe(false)
+  },
+)

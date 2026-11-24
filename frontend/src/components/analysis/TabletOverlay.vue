@@ -3,14 +3,64 @@
 // sign, coloured by role and settling on in reading order, then a dashed box
 // around each fraction formula, coloured by its verdict. Box coordinates are
 // fractions of the image size. Hovering or focusing a box shows its SignCard.
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ROLES, formulaColor, prefersStill, roleKey } from './colors.js'
 import SignCard from './SignCard.vue'
 
 const props = defineProps({
   signs: { type: Array, default: () => [] },
   formulas: { type: Array, default: () => [] },
+  canDiscuss: { type: Boolean, default: false },
 })
+const emit = defineEmits(['discuss'])
+const root = ref(null)
+let closeTimer
+
+function keepCard() {
+  clearTimeout(closeTimer)
+}
+
+function showCard(signId) {
+  keepCard()
+  ACTIVE.value = signId
+}
+
+function hideCard() {
+  keepCard()
+  ACTIVE.value = null
+}
+
+function scheduleClose() {
+  keepCard()
+  if (!props.canDiscuss) return hideCard()
+  closeTimer = setTimeout(() => {
+    const focused = document.activeElement
+    if (root.value?.querySelector('[data-testid="sign-card"]')?.contains(focused)) return
+    if (focused?.getAttribute('data-sign-id') === String(ACTIVE.value) && root.value?.contains(focused)) return
+    hideCard()
+  }, 200)
+}
+
+function focusDiscussion(event) {
+  if (!props.canDiscuss || event.shiftKey) return
+  const button = root.value?.querySelector('[data-testid="sign-card"] button')
+  if (button) {
+    event.preventDefault()
+    button.focus()
+  }
+}
+
+function focusAdjacentBox(event) {
+  const index = props.signs.findIndex((sign) => sign.id === ACTIVE.value)
+  const target = props.signs[event.shiftKey ? index : index + 1]
+  if (target) {
+    event.preventDefault()
+    root.value?.querySelector(`[data-sign-id="${target.id}"]`)?.focus()
+  }
+}
+
+onBeforeUnmount(keepCard)
+watch(() => props.signs, hideCard)
 
 const SHOWN = ref(true)
 const STILL = prefersStill()
@@ -45,7 +95,7 @@ function describe(sign) {
 </script>
 
 <template>
-  <div class="relative">
+  <div ref="root" class="relative" @keydown.esc="hideCard">
     <slot />
     <svg
       v-if="SHOWN && (signs.length || formulas.length)"
@@ -74,6 +124,7 @@ function describe(sign) {
         :key="sign.id"
         class="sign"
         data-testid="sign-box"
+        :data-sign-id="sign.id"
         :data-role="roleKey(sign, MARKERS)"
         :x="percent(sign.box.x)"
         :y="percent(sign.box.y)"
@@ -86,18 +137,28 @@ function describe(sign) {
         tabindex="0"
         fill="none"
         pointer-events="all"
-        @mouseenter="ACTIVE = sign.id"
-        @mouseleave="ACTIVE = null"
-        @focus="ACTIVE = sign.id"
-        @blur="ACTIVE = null"
+        @mouseenter="showCard(sign.id)"
+        @mouseleave="scheduleClose"
+        @focus="showCard(sign.id)"
+        @blur="scheduleClose"
+        @click="showCard(sign.id)"
+        @keydown.tab="focusDiscussion"
       />
     </svg>
     <SignCard
       v-if="SHOWN && ACTIVE_SIGN"
       :sign="ACTIVE_SIGN"
       :role-key="roleKey(ACTIVE_SIGN, MARKERS)"
-      class="pointer-events-none absolute z-30"
+      :can-discuss="canDiscuss"
+      class="absolute z-30"
+      :class="{ 'pointer-events-none': !canDiscuss }"
       :style="CARD_STYLE"
+      @mouseenter="keepCard"
+      @mouseleave="scheduleClose"
+      @focusin="keepCard"
+      @focusout="scheduleClose"
+      @keydown.tab="focusAdjacentBox"
+      @discuss="emit('discuss', $event)"
     />
     <button
       v-if="signs.length"

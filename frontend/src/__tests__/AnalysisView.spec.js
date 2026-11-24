@@ -15,12 +15,12 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-async function upload(response) {
+async function upload(response, options = {}) {
   const fetch = vi.fn((url) => Promise.resolve(url === '/api/users/me'
     ? { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }
     : response))
   vi.stubGlobal('fetch', fetch)
-  wrapper = mount(AnalysisView)
+  wrapper = mount(AnalysisView, options)
   const input = wrapper.get('input[type="file"]')
   Object.defineProperty(input.element, 'files', { value: [new File(['png'], 'tablet.png', { type: 'image/png' })] })
   await input.trigger('change')
@@ -62,4 +62,17 @@ describe('Analysis page', () => {
 
     expect(wrapper.get('[role="alert"]').text()).toBe('The sign reader is unavailable.')
   })
+})
+
+
+it('opens a symbol discussion from an uploaded detection with its analysis and occurrence', async () => {
+  await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12 }) }, {
+    global: { stubs: { SymbolDiscussionDialog: {
+      props: ['analysisId', 'symbol', 'filename'],
+      template: '<div data-testid="symbol-dialog">{{ analysisId }} / {{ symbol.id }} / {{ filename }}</div>',
+    } } },
+  })
+  await wrapper.findAll('[data-testid="sign-box"]')[0].trigger('mouseenter')
+  await wrapper.get('[data-testid="sign-card"] button').trigger('click')
+  expect(wrapper.get('[data-testid="symbol-dialog"]').text()).toBe(`12 / ${analysis.signs[0].id} / tablet.png`)
 })

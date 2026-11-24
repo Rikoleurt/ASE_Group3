@@ -105,3 +105,69 @@ def test_public_discussion_keeps_private_analyses_and_comments_private(monkeypat
             for identifier in users:
                 cursor.execute('DELETE FROM `user` WHERE id = %s', (identifier,))
             cursor.close()
+
+
+def test_symbol_discussions_title_uniqueness_and_tree(monkeypatch):
+    from backend.app.data_controller.community_data_controller import DuplicateDiscussionTitle
+
+    snapshot = result()
+    snapshot.signs[0].id = 0
+    snapshot.signs[0].box.w = 0.5
+    monkeypatch.setattr(AnalysisDataController, 'analyze', lambda *args, **kwargs: snapshot)
+    name = uuid4().hex
+    user_id = None
+    controller = UserDataController()
+    try:
+        with TestClient(app, base_url='https://testserver', headers={'X-Requested-With': 'ASE'}) as owner:
+            credentials = {'email': f'{name}@ase3.com', 'username': f'symbol-{name}', 'password': 'secret'}
+            user_id = owner.post('/users/register', json=credentials).json()['id']
+            owner.headers['X-CSRF-Token'] = owner.post('/users/login', json=credentials).json()['csrf_token']
+            uploads = [owner.post('/analysis', files={'file': (f'tablet-{i}.png', png(), 'image/png')}).json()
+                       for i in range(3)]
+            analysis_id = uploads[0]['analysis_id']
+            payload = {'analysis_id': analysis_id, 'sign_id': 0, 'title': f'ku-{name}'}
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                shares = list(pool.map(lambda _: CommunityDataController().create_discussion(
+                    user_id, analysis_id, payload['title'], 0), range(2)))
+            assert sorted(created for _, created in shares) == [False, True]
+            symbol_id = shares[0][0].id
+            assert shares[1][0].id == symbol_id
+            path = f'/community/discussions/{symbol_id}'
+            before_parent = owner.get(path).json()
+            assert 'parent_discussion' not in before_parent
+            assert 'result' not in before_parent
+            assert before_parent['symbol']['id'] == 0
+            assert owner.get(f'/users/me/analyses/{analysis_id}').json().get('discussion_id') is None
+            duplicate = owner.post('/community/discussions', json={**payload, 'title': f'Other-{name}'})
+            assert duplicate.status_code == 200 and duplicate.json()['id'] == symbol_id
+            # Both symbol and general discussions share one global, case-insensitive title namespace.
+            for sign_id in (None, 0):
+                collision = owner.post('/community/discussions', json={
+                    'analysis_id': uploads[1]['analysis_id'], 'sign_id': sign_id,
+                    'title': f"  {payload['title'].upper()}  ",
+                })
+                assert collision.status_code == 409
+            parent = owner.post('/community/discussions', json={
+                'analysis_id': analysis_id, 'title': f'Tablet-{name}',
+            })
+            assert parent.status_code == 201
+            parent_id = parent.json()['id']
+            assert owner.get(path).json()['parent_discussion']['id'] == parent_id
+            assert owner.get(f'/community/discussions/{parent_id}').json()['symbol_discussions'][0]['id'] == symbol_id
+            assert owner.get(f'/users/me/analyses/{analysis_id}').json()['discussion_id'] == parent_id
+            # Different analyses race for one title: exactly one can commit.
+            def race(upload):
+                try:
+                    return CommunityDataController().create_discussion(
+                        user_id, upload['analysis_id'], f'Race-{name}', 0,
+                    )[1]
+                except DuplicateDiscussionTitle:
+                    return False
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                assert sorted(pool.map(race, uploads[1:])) == [False, True]
+    finally:
+        if user_id is not None:
+            with controller.connection() as connection:
+                cursor = connection.cursor()
+                cursor.execute('DELETE FROM `user` WHERE id = %s', (user_id,))
+                cursor.close()

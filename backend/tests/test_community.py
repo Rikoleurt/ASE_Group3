@@ -57,7 +57,7 @@ def test_share_checks_owner_and_handles_duplicate_and_missing_image(client, monk
     monkeypatch.setattr(CommunityDataController, 'create_discussion', create)
     payload = {'analysis_id': 12, 'title': ' Tablet ', 'author_id': 999}
     assert client.post('/community/discussions', json=payload).status_code == 404
-    create.assert_called_once_with(7, 12, 'Tablet')
+    create.assert_called_once_with(7, 12, 'Tablet', None)
     create.side_effect = FileNotFoundError('Upload the tablet again.')
     assert client.post('/community/discussions', json=payload).status_code == 409
     create.side_effect = None
@@ -87,7 +87,7 @@ def test_images_are_served_only_through_authorized_lookups(client, monkeypatch):
     assert client.get('/analysis/12/image').status_code == 404
     private.assert_called_once_with(7, 12)
     assert client.get('/community/discussions/12/image').status_code == 404
-    public.return_value = (key, 'PNG')
+    public.return_value = (key, 'PNG', None)
     client.cookies.clear()
     response = client.get('/community/discussions/3/image')
     assert response.status_code == 200 and response.content == png()

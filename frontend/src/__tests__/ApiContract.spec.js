@@ -64,12 +64,12 @@ const ANALYSIS_FIELDS = [...new Set([...ANALYSIS_TEMPLATE.matchAll(/ANALYSIS\.(\
 describe('API contract', () => {
   it('provides the community author, image and analysis without requiring a session to read', () => {
     expect(responseFields('get', '/community/discussions/{discussion_id}', '200')).toEqual(
-      expect.arrayContaining(['id', 'title', 'author_username', 'created_at', 'image_url', 'result']),
+      expect.arrayContaining(['id', 'title', 'author_username', 'created_at', 'image_url', 'result', 'sign_id', 'symbol', 'symbol_name', 'tablet_filename', 'parent_discussion', 'symbol_discussions']),
     )
     const operation = contract.paths['/community/discussions/{discussion_id}'].get
     expect(operation.security).toBeUndefined()
     expect(contract.paths['/community/discussions'].post.security).toEqual([{ APIKeyCookie: [] }])
-    expect(requestFields('post', '/community/discussions')).toEqual(expect.arrayContaining(['analysis_id', 'title']))
+    expect(requestFields('post', '/community/discussions')).toEqual(expect.arrayContaining(['analysis_id', 'title', 'sign_id']))
     expect(requestFields('post', '/community/discussions/{discussion_id}/comments')).toEqual(['body'])
   })
   it.each(CALLS)('$method $path is called by the frontend and exists in the API', ({ method, path, source, snippet }) => {

@@ -9,7 +9,7 @@ import { loginDestination } from '../state/session'
 let wrapper
 const metadata = { id: 12, filename: 'tablet.png', format: 'PNG', size_bytes: 2048, created_at: '2026-11-10T12:00:00Z', result_schema_version: 1 }
 afterEach(() => { wrapper?.unmount(); vi.unstubAllGlobals() })
-async function render(path = '/profile/history') {
+async function render(path = '/profile/history', stubs = {}) {
   const router = createRouter({ history: createMemoryHistory(), routes: [
     { path: '/profile/history', component: HistoryView },
     { path: '/profile/history/:id', component: HistoryDetailView },
@@ -19,7 +19,7 @@ async function render(path = '/profile/history') {
   ] })
   await router.push(path)
   await router.isReady()
-  wrapper = mount({ template: '<RouterView />' }, { global: { plugins: [router] } })
+  wrapper = mount({ template: '<RouterView />' }, { global: { plugins: [router], stubs } })
   await flushPromises()
   return router
 }
@@ -91,4 +91,17 @@ it('restricts post-login destinations to local paths', () => {
   for (const redirect of ['https://example.com', '//example.com', '/\\example.com']) {
     expect(loginDestination({ query: { redirect } })).toBe('/profile')
   }
+})
+
+
+it('opens a symbol discussion from saved boxes without needing a stored crop', async () => {
+  const saved = { ...metadata, result: analysis, image_url: '/api/analysis/12/image' }
+  vi.stubGlobal('fetch', vi.fn(async (url) => ({ ok: true, json: async () => url.endsWith('/comments') ? [] : saved })))
+  await render('/profile/history/12', { SymbolDiscussionDialog: {
+    props: ['analysisId', 'symbol', 'filename'],
+    template: '<div data-testid="symbol-dialog">{{ analysisId }} / {{ symbol.id }} / {{ filename }}</div>',
+  } })
+  await wrapper.findAll('[data-testid="sign-box"]')[0].trigger('mouseenter')
+  await wrapper.get('[data-testid="sign-card"] button').trigger('click')
+  expect(wrapper.get('[data-testid="symbol-dialog"]').text()).toBe(`12 / ${analysis.signs[0].id} / tablet.png`)
 })

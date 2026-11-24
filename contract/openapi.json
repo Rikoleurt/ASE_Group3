@@ -539,6 +539,19 @@
             "title": "Analysis Id",
             "type": "integer"
           },
+          "sign_id": {
+            "anyOf": [
+              {
+                "maximum": 9.223372036854776e+18,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign Id"
+          },
           "title": {
             "maxLength": 160,
             "minLength": 1,
@@ -580,8 +593,69 @@
             "title": "Image Url",
             "type": "string"
           },
+          "parent_discussion": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DiscussionSummary"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "result": {
-            "$ref": "#/components/schemas/AnalysisResult"
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/AnalysisResult"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "sign_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign Id"
+          },
+          "symbol": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DetectedSign"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "symbol_discussions": {
+            "items": {
+              "$ref": "#/components/schemas/DiscussionSummary"
+            },
+            "title": "Symbol Discussions",
+            "type": "array"
+          },
+          "symbol_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol Name"
+          },
+          "tablet_filename": {
+            "default": "",
+            "title": "Tablet Filename",
+            "type": "string"
           },
           "title": {
             "title": "Title",
@@ -595,8 +669,7 @@
           "author_username",
           "title",
           "created_at",
-          "image_url",
-          "result"
+          "image_url"
         ],
         "title": "DiscussionDetail",
         "type": "object"
@@ -650,6 +723,33 @@
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "sign_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign Id"
+          },
+          "symbol_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Symbol Name"
+          },
+          "tablet_filename": {
+            "default": "",
+            "title": "Tablet Filename",
+            "type": "string"
           },
           "title": {
             "title": "Title",

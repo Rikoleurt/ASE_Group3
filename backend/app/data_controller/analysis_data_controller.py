@@ -88,7 +88,7 @@ class AnalysisDataController(DataController):
                 if row is not None:
                     cursor.execute("SELECT i.storage_key, d.id AS discussion_id FROM analysis a "
                                    "LEFT JOIN analysis_image i ON i.analysis_id = a.id "
-                                   "LEFT JOIN community_discussion d ON d.analysis_id = a.id WHERE a.id = %s",
+                                   "LEFT JOIN community_discussion d ON d.analysis_id = a.id AND d.sign_id IS NULL WHERE a.id = %s",
                                    (analysis_id,))
                     shared = cursor.fetchone()
                     row["image_url"] = f"/api/analysis/{analysis_id}/image" if shared["storage_key"] else None
