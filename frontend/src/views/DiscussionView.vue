@@ -18,6 +18,7 @@ const error = ref('')
 const commentsError = ref('')
 const imageError = ref(false)
 const selectedSymbol = ref(null)
+const tabletName = computed(() => (discussion.value?.tablet_filename || '').replace(/\.png$/i, ''))
 const canDiscussSymbols = computed(() => Boolean(sessionUser.value)
   && sessionUser.value.id === discussion.value?.author_id)
 let requestId = 0
@@ -93,17 +94,18 @@ onBeforeUnmount(() => { requestId++ })
       <p class="mt-2 text-ink/70">Shared by {{ discussion.author_username }} · <time :datetime="discussion.created_at">{{ new Date(discussion.created_at).toLocaleString() }}</time></p>
       <p v-if="discussion.sign_id != null" class="mt-3" data-testid="symbol-origin">
         {{ discussion.author_username }} created a discussion about symbol <strong>{{ discussion.symbol_name }}</strong>
-        from tablet <strong>{{ discussion.tablet_filename }}</strong>.
+        from tablet <strong>{{ tabletName }}</strong>.
       </p>
-      <nav v-if="discussion.tablet_filename" class="mt-6 rounded-xl border border-ink/20 p-4" aria-label="Tablet discussion tree">
-        <RouterLink v-if="discussion.parent_discussion && discussion.parent_discussion.id !== discussion.id" :to="`/community/${discussion.parent_discussion.id}`" class="font-semibold underline">
-          Tablet {{ discussion.tablet_filename }} — {{ discussion.parent_discussion.title }}
+      <nav v-if="discussion.tablet_filename" class="mt-6 rounded-xl border border-ink/20 p-4" aria-labelledby="discussion-tree-title">
+        <h2 id="discussion-tree-title" class="mb-3 text-xl font-bold">Discussion tree</h2>
+        <RouterLink v-if="discussion.parent_discussion && discussion.parent_discussion.id !== discussion.id" :to="`/community/${discussion.parent_discussion.id}`" class="font-semibold hover:underline">
+          Tablet {{ tabletName }} — {{ discussion.parent_discussion.title }}
         </RouterLink>
-        <p v-else class="font-semibold">Tablet {{ discussion.tablet_filename }}</p>
+        <p v-else class="font-semibold">Tablet {{ tabletName }}</p>
         <p v-if="!discussion.parent_discussion && discussion.sign_id != null" class="mt-1 text-sm text-ink/70">This tablet has no general discussion yet.</p>
         <ul v-if="discussion.symbol_discussions?.length" class="mt-3 space-y-2 border-l border-ink/20 pl-4">
           <li v-for="child in discussion.symbol_discussions" :key="child.id">
-            <RouterLink :to="`/community/${child.id}`" :aria-current="child.id === discussion.id ? 'page' : undefined" class="underline">
+            <RouterLink :to="`/community/${child.id}`" :aria-current="child.id === discussion.id ? 'page' : undefined" class="hover:underline">
               Symbol {{ child.symbol_name }} — {{ child.title }}
             </RouterLink>
             <span class="text-sm text-ink/70"> · {{ child.author_username }}</span>
@@ -112,7 +114,7 @@ onBeforeUnmount(() => { requestId++ })
       </nav>
       <section v-if="discussion.symbol" class="mt-8 rounded-3xl bg-card p-6" aria-label="Shared symbol">
         <p v-if="imageError" role="alert">The symbol image could not be loaded.</p>
-        <img v-else :src="discussion.image_url" :alt="`Symbol ${discussion.symbol_name} from ${discussion.tablet_filename}`" class="mx-auto max-h-80 max-w-full rounded-lg bg-white object-contain" @error="imageError = true" />
+        <img v-else :src="discussion.image_url" :alt="`Symbol ${discussion.symbol_name} from ${tabletName}`" class="mx-auto max-h-80 max-w-full rounded-lg bg-white object-contain" @error="imageError = true" />
         <h2 class="mt-4 text-xl font-bold">{{ discussion.symbol_name }}</h2>
         <p class="mt-2">Model reading: {{ discussion.symbol.reading || discussion.symbol.label }} · Confidence: {{ discussion.symbol.confidence }}%</p>
         <p v-if="discussion.symbol.meaning" class="mt-2">{{ discussion.symbol.meaning }}</p>
@@ -162,7 +164,7 @@ onBeforeUnmount(() => { requestId++ })
         </form>
         <RouterLink v-else :to="{ path: '/login', query: { redirect: route.fullPath } }" class="mt-6 inline-block underline">Log in to join the discussion</RouterLink>
       </section>
-      <SymbolDiscussionDialog v-if="selectedSymbol && canDiscussSymbols" :analysis-id="discussion.analysis_id" :filename="discussion.tablet_filename" :symbol="selectedSymbol" @close="selectedSymbol = null" />
+      <SymbolDiscussionDialog v-if="selectedSymbol && canDiscussSymbols" :analysis-id="discussion.analysis_id" :filename="tabletName" :symbol="selectedSymbol" @close="selectedSymbol = null" />
     </template>
   </main>
 </template>

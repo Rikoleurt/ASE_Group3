@@ -54,8 +54,7 @@ onMounted(load)
         <RouterLink v-if="group.parent" :to="`/community/${group.parent.id}`" class="block px-6 py-5 hover:bg-bar focus-visible:bg-bar">
           <p class="text-xs font-semibold uppercase tracking-wide text-ink/70">Tablet</p>
           <h2 class="mt-1 break-words text-lg font-semibold">{{ group.parent.title }}</h2>
-          <p v-if="group.filename && group.filename !== group.parent.title" class="mt-1 break-words text-sm text-ink/70">{{ group.filename }}</p>
-          <p class="mt-1 text-sm text-ink/70">{{ group.parent.author_username }} · <time :datetime="group.parent.created_at">{{ new Date(group.parent.created_at).toLocaleString() }}</time></p>
+          <p class="mt-1 text-sm text-ink/70">{{ group.parent.author_username }}</p>
         </RouterLink>
         <div v-else class="px-6 py-5">
           <p class="text-xs font-semibold uppercase tracking-wide text-ink/70">Tablet</p>
@@ -69,7 +68,7 @@ onMounted(load)
                 <h3 class="break-words font-semibold">{{ symbol.title }}</h3>
               </div>
               <p v-if="symbol.symbol_name && symbol.symbol_name !== symbol.title" class="mt-1 text-sm text-ink/70">Model reading: {{ symbol.symbol_name }}</p>
-              <p class="mt-1 text-sm text-ink/70">{{ symbol.author_username }} · <time :datetime="symbol.created_at">{{ new Date(symbol.created_at).toLocaleString() }}</time></p>
+              <p class="mt-1 text-sm text-ink/70">{{" Author : " + symbol.author_username }}</p>
             </RouterLink>
           </li>
         </ul>
