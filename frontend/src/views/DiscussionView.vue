@@ -7,6 +7,7 @@ import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import LoadingIndicator from '../components/LoadingIndicator.vue'
 import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
+import VoteButtons from '../components/VoteButtons.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -93,6 +94,8 @@ onBeforeUnmount(() => { requestId++ })
     <template v-if="discussion">
       <h1 class="mt-6 break-words text-3xl font-bold">{{ discussion.title }}</h1>
       <p class="mt-2 text-ink/70">Shared by {{ discussion.author_username }} · <time :datetime="discussion.created_at">{{ new Date(discussion.created_at).toLocaleString() }}</time></p>
+      <VoteButtons v-if="sessionUser" class="mt-3" :discussion-id="discussion.id" :initial-score="discussion.score" />
+      <p v-else class="mt-3 text-ink/70">{{ discussion.score }} points</p>
       <p v-if="discussion.sign_id != null" class="mt-3" data-testid="symbol-origin">
         {{ discussion.author_username }} created a discussion about symbol <strong>{{ discussion.symbol_name }}</strong>
         from tablet <strong>{{ tabletName }}</strong>.

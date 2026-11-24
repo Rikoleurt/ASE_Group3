@@ -141,6 +141,7 @@ onBeforeUnmount(() => {
           <p class="text-xs font-semibold uppercase tracking-wide text-ink/70">Tablet</p>
           <h2 class="mt-1 break-words text-lg font-semibold">{{ group.parent.title }}</h2>
           <p class="mt-1 text-sm text-ink/70">{{ group.parent.author_username }}</p>
+          <p class="mt-1 text-sm text-ink/70">{{ group.parent.score }} points</p>
         </RouterLink>
         <div v-else class="px-6 py-5">
           <p class="text-xs font-semibold uppercase tracking-wide text-ink/70">Tablet</p>
