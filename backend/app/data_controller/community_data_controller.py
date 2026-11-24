@@ -8,7 +8,7 @@ from backend.app.data_controller.data_controller import DataController
 from backend.app.image_storage import image_path
 from backend.app.model.analysis import Box, DetectedSign
 from backend.app.model.community import (DiscussionSummary, DiscussionDetail, DiscussionComment,
-                                         DiscussionPage, DiscussionCursor, DiscussionFilter)
+                                         DiscussionPage, DiscussionCursor, DiscussionFilter, VoteSet, VoteState)
 
 
 def utc(row):
@@ -34,7 +34,9 @@ def symbol_name(symbol: DetectedSign) -> str:
 
 
 SUMMARY = ("d.id, d.analysis_id, d.author_id, u.username AS author_username, d.title, d.created_at, "
-           "d.sign_id, a.filename AS tablet_filename, a.result_json")
+           "d.sign_id, a.filename AS tablet_filename, a.result_json, "
+           "CAST(COALESCE((SELECT SUM(v.value) FROM community_vote v WHERE v.discussion_id = d.id), 0) "
+           "AS SIGNED) AS score")
 JOINS = " FROM community_discussion d JOIN `user` u ON u.id = d.author_id JOIN analysis a ON a.id = d.analysis_id "
 
 
@@ -246,3 +248,43 @@ class CommunityDataController(DataController):
                 cursor.close()
         return DiscussionComment(id=comment_id, discussion_id=discussion_id, author_id=user_id,
                                  author_username=username, created_at=created_at, body=body)
+    
+    def get_vote(self, discussion_id: int, user_id: int) -> VoteState | None:
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute("SELECT id FROM community_discussion WHERE id = %s", (discussion_id,))
+                if cursor.fetchone() is None:
+                    return None
+                return self._vote_state(cursor, discussion_id, user_id)
+            finally:
+                cursor.close()
+    
+    def set_vote(self, discussion_id: int, user_id: int, value: int) -> VoteState | None:
+        with self.connection() as connection:
+            cursor = connection.cursor(dictionary=True)
+            try:
+                cursor.execute("SELECT id FROM community_discussion WHERE id = %s FOR SHARE", (discussion_id,))
+                if cursor.fetchone() is None:
+                    return None
+                if value == 0:
+                    cursor.execute("DELETE FROM community_vote WHERE discussion_id = %s AND user_id = %s",
+                                   (discussion_id, user_id))
+                else:
+                    cursor.execute(
+                        "INSERT INTO community_vote (discussion_id, user_id, value, created_at) "
+                        "VALUES (%s, %s, %s, %s) ON DUPLICATE KEY UPDATE value = VALUES(value)",
+                        (discussion_id, user_id, value, datetime.now(timezone.utc).replace(tzinfo=None)),
+                    )
+                return self._vote_state(cursor, discussion_id, user_id)
+            finally:
+                cursor.close()
+
+    def _vote_state(self, cursor, discussion_id: int, user_id: int) -> VoteState:
+        cursor.execute("SELECT CAST(COALESCE(SUM(value), 0) AS SIGNED) AS score "
+                       "FROM community_vote WHERE discussion_id = %s", (discussion_id,))
+        score = cursor.fetchone()["score"]
+        cursor.execute("SELECT value FROM community_vote WHERE discussion_id = %s AND user_id = %s",
+                       (discussion_id, user_id))
+        mine = cursor.fetchone()
+        return VoteState(score=score, my_vote=mine["value"] if mine else 0)
