@@ -1,0 +1,5 @@
+# Commits that only reformat code, so `git blame` skips them. Add the one-time
+# full reformat here once long-lived branches are merged:
+#   git blame --ignore-revs-file .git-blame-ignore-revs <file>
+# or set it once per clone (GitHub's blame view reads this file automatically):
+#   git config blame.ignoreRevsFile .git-blame-ignore-revs
