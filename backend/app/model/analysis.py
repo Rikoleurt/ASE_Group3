@@ -1,7 +1,8 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, StringConstraints
+from typing import Annotated
 
 
 class Box(BaseModel):
@@ -103,6 +104,8 @@ class AnalysisMetadata(BaseModel):
 
 class AnalysisHistoryDetail(AnalysisMetadata):
     result: AnalysisResult
+    image_url: str | None = None
+    discussion_id: int | None = None
 
 
 class AnalysisHistoryPage(BaseModel):
@@ -112,3 +115,13 @@ class AnalysisHistoryPage(BaseModel):
 
 class ApiError(BaseModel):
     detail: str
+
+class CommentCreate(BaseModel):
+    body: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=2000)]
+
+class AnalysisComment(BaseModel):
+    id: int
+    analysis_id: int
+    author_id: int
+    created_at: datetime
+    body: str

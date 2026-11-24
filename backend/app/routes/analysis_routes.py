@@ -1,10 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, HTTPException, Path, UploadFile, status
+from fastapi.responses import FileResponse
 
 from backend.app.data_controller.analysis_data_controller import AnalysisDataController
 from backend.app.model.analysis import SavedAnalysisResult, ApiError
-from backend.app.auth import AuthenticatedWrite
+from backend.app.auth import AuthenticatedWrite, CurrentUser
+from backend.app.routes.community_routes import tablet_response
 from mysql.connector import Error as DatabaseError
 from PIL import Image, UnidentifiedImageError
 from PIL.PngImagePlugin import PngImageFile
@@ -22,7 +24,12 @@ def get_analysis_data_controller() -> AnalysisDataController:
 AnalysisController = Annotated[AnalysisDataController, Depends(get_analysis_data_controller)]
 
 @router.post("", response_model=SavedAnalysisResult, status_code=status.HTTP_200_OK,
-             responses={code: {"model": ApiError} for code in (401, 403, 413, 503)})
+             responses={
+                 401: {"model": ApiError},
+                 403: {"model": ApiError},
+                 413: {"model": ApiError, "description": "Content Too Large"},
+                 503: {"model": ApiError},
+             })
 def analyze(file: UploadFile, analysis_data_controller: AnalysisController, user: AuthenticatedWrite) -> SavedAnalysisResult:
     image_bytes = file.file.read(MAX_FILESIZE + 1)
     if len(image_bytes) > MAX_FILESIZE:
@@ -63,7 +70,15 @@ def analyze(file: UploadFile, analysis_data_controller: AnalysisController, user
         )
 
     try:
-        saved = analysis_data_controller.save_analysis(user.id, filename, image_format, len(image_bytes), result)
-    except DatabaseError as error:
+        saved = analysis_data_controller.save_analysis(user.id, filename, image_format, len(image_bytes), result,
+                                                       image_bytes=image_bytes)
+    except (DatabaseError, OSError) as error:
         raise HTTPException(503, "The analysis could not be saved. Please try again.") from error
     return SavedAnalysisResult(**result.model_dump(), analysis_id=saved.id, created_at=saved.created_at)
+
+
+@router.get("/{analysis_id}/image", response_class=FileResponse,
+            responses={code: {"model": ApiError} for code in (401, 404, 503)})
+def private_image(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: CurrentUser,
+                  analysis_data_controller: AnalysisController):
+    return tablet_response(analysis_data_controller.get_image(user.id, analysis_id))
