@@ -21,6 +21,7 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/203_edition_releases_votes.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/204_glyph_seen.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/205_box_marks.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/206_tablet_bookmarks.sql
 ```
 
 ## Tables
@@ -72,6 +73,29 @@ Boxes left out of a hand-set order follow it, in the automatic order.
 
 The marks are stored as JSON in `box.marks` (migration
 `migration-workbench/205_box_marks.sql`). Changes saved before them read as no marks.
+
+## Working comfortably in the editor (workbench)
+
+- **Zoom and pan.**
+  - Zoom with the − / + / Fit buttons, Ctrl + wheel (a trackpad pinch arrives as this), or the
+    keys + − 0. Zoom goes up to 800% and keeps the point under the cursor in place.
+  - Pan by scrolling, or by dragging with the space bar held or the middle button.
+  - The editor is widened inside a scrolling frame rather than transformed, so boxes, handles
+    and badges stay exactly where they belong.
+- **Invert and More contrast** change how the drawing is shown, never the image.
+- **Shortcuts**, listed with **?**:
+  - N / P: next / previous box in reading order;
+  - V / D: select and move / draw a box;
+  - 1–5: name the selected box with the model's guess;
+  - U / W: uncertain / word end;
+  - arrows (with Shift to resize), Delete, Ctrl+Z, Ctrl+S.
+
+  Shortcuts do nothing while you type in a field.
+- **Bookmarks.** ☆ beside a tablet's name bookmarks it (`tablet_bookmark`, migration
+  `migration-workbench/206_tablet_bookmarks.sql`; `GET /bookmarks`,
+  `PUT` / `DELETE /bookmarks/{slug}`, at most 200).
+- **Recent tablets.** Bookmarked and recently opened tablets (the last 8, remembered in this
+  browser) are listed first on the Tablets page.
 
 ## Merging versions into an edition (workbench)
 

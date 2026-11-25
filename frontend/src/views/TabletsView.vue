@@ -2,6 +2,7 @@
 // Corpus tablets (#82): find a tablet, see its tracing with the scholars' published boxes or
 // the reader's own, and start correcting them (#83, #85). The tablet is in the URL
 // (/tablets/HT-13), and so is the source (?boxes=model).
+import { RECENT_TABLETS, openedTablet } from '../state/preferences'
 import { useGlyphActivity } from '../composables/useGlyphActivity'
 import EditionsPanel from '../components/versions/EditionsPanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -49,6 +50,30 @@ let request = 0
 const SLUG = computed(() => route.params.slug || null)
 // Bubbles with new activity on the scholars' glyphs (their sign ids are positions); opening one clears it.
 const { COUNTS: ACTIVITY, seen } = useGlyphActivity(SLUG)
+// Bookmarks (kept on the server) and recently opened tablets (in this browser): workbench, story K.
+const BOOKMARKS = ref([])
+const BOOKMARKING = ref(false)
+const nameOf = (slug) => slug.replaceAll('-', ' ')
+watch(SLUG, (slug) => openedTablet(slug), { immediate: true })
+
+async function loadBookmarks() {
+  BOOKMARKS.value = []
+  if (!sessionUser.value) return
+  const response = await fetch('/api/bookmarks').catch(() => null)
+  if (response?.ok) BOOKMARKS.value = (await response.json()).tablets
+}
+watch(() => sessionUser.value?.id, loadBookmarks, { immediate: true })
+
+async function toggleBookmark() {
+  BOOKMARKING.value = true
+  try {
+    const marked = BOOKMARKS.value.includes(SLUG.value)
+    const response = await sessionFetch(`/api/bookmarks/${encodeURIComponent(SLUG.value)}`, { method: marked ? 'DELETE' : 'PUT' })
+    if (response.ok) BOOKMARKS.value = (await response.json()).tablets
+  } finally {
+    BOOKMARKING.value = false
+  }
+}
 const SOURCE = computed(() => (route.query.boxes === 'model' ? 'model' : 'scholar'))
 
 let listId = 0
@@ -242,6 +267,19 @@ function compareVersions() {
           </template>
           <p v-else-if="WITHOUT_DRAWING || CORPUS_MISSING" class="mt-1">An admin can download them from this page. {{ HINT || 'Download them with: python scripts/fetch_corpus.py' }}</p>
         </div>
+        <div v-if="!QUERY.trim() && (BOOKMARKS.length || RECENT_TABLETS.length)" class="mt-3 text-sm" data-testid="quick-tablets">
+          <template v-for="group in [{ name: 'Bookmarked', slugs: BOOKMARKS, id: 'bookmarked' }, { name: 'Recently opened', slugs: RECENT_TABLETS.filter((slug) => !BOOKMARKS.includes(slug)).slice(0, 5), id: 'recent' }]" :key="group.id">
+            <template v-if="group.slugs.length">
+              <h2 class="mt-2 font-semibold text-ink/70">{{ group.name }}</h2>
+              <ul :data-testid="`${group.id}-tablets`">
+                <li v-for="slug in group.slugs" :key="slug">
+                  <button type="button" class="w-full cursor-pointer rounded px-2 py-0.5 text-left hover:bg-bar" :class="{ 'bg-bar font-semibold': slug === SLUG }" @click="pick(slug)">{{ nameOf(slug) }}</button>
+                </li>
+              </ul>
+            </template>
+          </template>
+          <h2 class="mt-2 font-semibold text-ink/70">All tablets</h2>
+        </div>
         <ul class="mt-2 max-h-[60vh] overflow-auto" data-testid="tablet-list">
           <li v-for="tablet in TABLETS" :key="tablet.slug">
             <button
@@ -263,6 +301,17 @@ function compareVersions() {
         <template v-else>
           <div class="flex flex-wrap items-center gap-3">
             <h2 class="text-2xl font-bold">{{ BOXES?.tablet || SLUG.replaceAll('-', ' ') }}</h2>
+            <button
+              v-if="sessionUser"
+              type="button"
+              class="cursor-pointer rounded px-2 py-0.5 text-xl leading-none hover:bg-bar disabled:opacity-50"
+              :aria-pressed="BOOKMARKS.includes(SLUG)"
+              :aria-label="BOOKMARKS.includes(SLUG) ? 'Remove the bookmark' : 'Bookmark this tablet'"
+              :title="BOOKMARKS.includes(SLUG) ? 'Bookmarked: click to remove' : 'Bookmark this tablet'"
+              :disabled="BOOKMARKING"
+              data-testid="bookmark"
+              @click="toggleBookmark"
+            >{{ BOOKMARKS.includes(SLUG) ? '★' : '☆' }}</button>
             <div class="flex gap-1" role="group" aria-label="Which boxes">
               <button
                 v-for="option in SOURCES"

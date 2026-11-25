@@ -15,6 +15,8 @@ import SignPicker from '../components/signs/SignPicker.vue'
 import SignPreview from '../components/signs/SignPreview.vue'
 import { marksOf, useBoxSet } from '../composables/useBoxSet'
 import MarksPanel from '../components/boxes/MarksPanel.vue'
+import ShortcutHelp from '../components/boxes/ShortcutHelp.vue'
+import ZoomFrame from '../components/boxes/ZoomFrame.vue'
 import { useCatalogue } from '../composables/useCatalogue'
 import '../components/analysis/linearA.css'
 
@@ -23,6 +25,8 @@ const router = useRouter()
 const set = useBoxSet()
 const { copy, boxes, loading, saving, error, conflict, changes, dirty, history } = set
 const SELECTED_ID = ref(null)
+const ZOOMER = ref(null)
+const HELP = ref(false) // the shortcut list (?)
 // Setting the reading order by hand (workbench, story F): lines of box ids, clicked in order.
 const ORDERING = ref(null)
 const ORDER_BADGES = computed(() => Object.fromEntries((ORDERING.value ?? []).flatMap((ids, line) => ids.map((id, seq) => [id, `${line + 1}·${seq + 1}`]))))
@@ -177,11 +181,55 @@ function discard() {
   }
 }
 
+// Editor shortcuts (workbench, story K); ? lists them. Returns whether the key was one.
+function shortcut(event) {
+  const key = event.key
+  if (key === '?') {
+    HELP.value = !HELP.value
+    return true
+  }
+  if (key === 'Escape' && HELP.value) {
+    HELP.value = false
+    return true
+  }
+  const zoom = { '+': 'zoomIn', '=': 'zoomIn', '-': 'zoomOut', '0': 'fit' }[key]
+  if (zoom) {
+    ZOOMER.value?.[zoom]()
+    return true
+  }
+  const lower = key.toLowerCase()
+  if (lower === 'n' || lower === 'p') {
+    const order = ORDERED.value
+    if (!order.length) return true
+    const at = order.findIndex((box) => box.id === SELECTED_ID.value)
+    const step = lower === 'n' ? 1 : -1
+    SELECTED_ID.value = order[at < 0 ? (step > 0 ? 0 : order.length - 1) : (at + step + order.length) % order.length].id
+    return true
+  }
+  if (!CAN_EDIT.value) return false
+  if (lower === 'v' || lower === 'd') {
+    MODE.value = lower === 'v' ? 'select' : 'draw'
+    return true
+  }
+  if (/^[1-5]$/.test(key) && SELECTED.value?.candidates?.[Number(key) - 1]) {
+    pick(SELECTED.value.candidates[Number(key) - 1].sign)
+    return true
+  }
+  return false
+}
+
 function onKey(event) {
-  const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)
+  // Typing in a text field is not a shortcut; a focused checkbox, radio or slider does not count.
+  const target = event.target
+  const typing = ['TEXTAREA', 'SELECT'].includes(target?.tagName) || target?.isContentEditable ||
+    (target?.tagName === 'INPUT' && !['checkbox', 'radio', 'range', 'button'].includes(target.type))
   // Shortcuts wait for a drag, a save or an undo to finish (#98).
   if (typing || LOCKED.value || EDITOR.value?.busy()) return
   const plain = !event.ctrlKey && !event.metaKey && !event.altKey
+  if (plain && shortcut(event)) {
+    event.preventDefault()
+    return
+  }
   if (plain && CAN_EDIT.value && SELECTED.value && ['u', 'w'].includes(event.key.toLowerCase())) {
     // U: uncertain reading on or off; W: a word ends after this sign (workbench, story F).
     event.preventDefault()
@@ -261,6 +309,7 @@ watch(() => route.params.id, load, { immediate: true })
 
     <div v-if="copy" class="mt-6 flex flex-col gap-8 lg:flex-row">
       <section class="lg:w-3/5" aria-label="Tablet">
+        <ShortcutHelp v-if="HELP" @close="HELP = false" />
         <div v-if="CAN_EDIT" class="mb-3 flex flex-wrap items-center gap-2" role="toolbar" aria-label="Editing tools">
           <button
             v-for="option in [{ value: 'select', label: 'Select and move' }, { value: 'draw', label: 'Draw a box' }]"
@@ -282,6 +331,7 @@ watch(() => route.params.id, load, { immediate: true })
             data-testid="mode-order"
             @click="ORDERING ? finishOrdering(false) : startOrdering()"
           >Reading order</button>
+          <button type="button" class="cursor-pointer rounded px-2 py-1.5 text-sm hover:bg-bar" title="Keyboard shortcuts (?)" data-testid="shortcuts" @click="HELP = true">?</button>
           <button type="button" class="cursor-pointer rounded px-3 py-1.5 text-sm hover:bg-bar disabled:opacity-50" :disabled="!history.length || LOCKED" :title="history.length ? 'Undo your last unsaved edit (Ctrl+Z)' : 'Nothing to undo'" data-testid="undo" @click="set.undo()">Undo last edit</button>
           <span class="ml-auto text-sm" :class="dirty ? 'font-semibold' : 'text-ink/70'" role="status" data-testid="save-state">
             {{ dirty ? `${changes.length} unsaved change${changes.length === 1 ? '' : 's'}` : 'All changes saved' }}
@@ -300,8 +350,8 @@ watch(() => route.params.id, load, { immediate: true })
           <button type="button" class="cursor-pointer underline" @click="finishOrdering(false)">Cancel</button>
         </div>
         <p v-if="IMAGE_MISSING" role="alert" class="rounded-lg bg-card p-4">The tablet image could not be loaded.</p>
+        <ZoomFrame v-else ref="ZOOMER">
         <BoxEditor
-          v-else
           ref="EDITOR"
           :badges="ORDERING ? ORDER_BADGES : BADGES"
           :image-url="`/api${copy.image_url}`"
@@ -323,6 +373,7 @@ watch(() => route.params.id, load, { immediate: true })
           @nudge="set.setBox"
           @image-error="IMAGE_MISSING = true"
         />
+        </ZoomFrame>
         <p v-if="!CAN_EDIT" class="mt-2 text-sm text-ink/70" data-testid="read-only">
           You can look at these boxes but not change them. Click a box to see its sign.
         </p>

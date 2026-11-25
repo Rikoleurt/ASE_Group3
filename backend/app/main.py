@@ -19,6 +19,7 @@ from backend.app.routes.corpus_routes import router as corpus_router
 from backend.app.routes.version_routes import router as version_router
 from backend.app.routes.edition_routes import router as edition_router
 from backend.app.routes.activity_routes import router as activity_router
+from backend.app.routes.bookmark_routes import router as bookmark_router
 from backend.app.routes.share_routes import router as share_router
 from backend.app.routes.comment_routes import router as comment_router
 from backend.app.routes.community_routes import router as community_router
@@ -50,6 +51,7 @@ app.include_router(corpus_router)
 app.include_router(version_router)
 app.include_router(edition_router)
 app.include_router(activity_router)
+app.include_router(bookmark_router)
 app.include_router(comment_router)
 app.include_router(community_router)
 
