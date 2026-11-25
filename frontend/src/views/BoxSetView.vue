@@ -261,7 +261,7 @@ watch(() => route.params.id, load, { immediate: true })
           <template v-else>
             <p class="mt-2 text-lg">
               <SignPreview v-if="SELECTED.sign" :sign="SELECTED.sign" :glyph="glyphOf(SELECTED.sign)" :preview-url="GLYPHS[SELECTED.sign]?.preview_url ?? null" :size="48" class="mr-2 align-middle" />
-              <span class="linear-a text-3xl" aria-hidden="true">{{ glyphOf(SELECTED.sign) }}</span>
+              <span class="linear-a mr-2 text-3xl" aria-hidden="true">{{ glyphOf(SELECTED.sign) }}</span>
               <span class="font-semibold" data-testid="selected-sign">{{ signName(SELECTED.sign) }}</span>
             </p>
             <p v-if="SELECTED.model_sign && SELECTED.model_sign !== SELECTED.sign" class="text-sm text-ink/70">

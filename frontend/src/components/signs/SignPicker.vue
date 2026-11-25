@@ -124,7 +124,7 @@ function choose() {
           }}</span>
           <span class="min-w-0 flex-1">
             <span class="font-semibold">{{ sign.sign }}</span>
-            <span v-if="sign.reading" class="text-ink/70"> {{ sign.reading }}</span>
+            <span v-if="sign.reading" class="ml-1.5 text-ink/70">{{ sign.reading }}</span>
             <span
               v-if="
                 sign.name && sign.name !== sign.sign && !sign.name.includes(`(${sign.reading})`)
