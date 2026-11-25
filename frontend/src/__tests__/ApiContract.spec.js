@@ -38,6 +38,7 @@ import sketchPad from '../components/signs/SketchPad.vue?raw'
 import signView from '../views/SignView.vue?raw'
 import notificationBell from '../components/NotificationBell.vue?raw'
 import discussionLinks from '../components/DiscussionLinks.vue?raw'
+import queuesView from '../views/QueuesView.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -108,6 +109,7 @@ const CALLS = [
   { method: 'post', path: '/box-sets/{set_id}/releases', source: releasePanel, snippet: "method: 'POST'" },
   { method: 'get', path: '/editions/{release_id}', source: editionView, snippet: '/api/editions/${encodeURIComponent(route.params.id)}' },
   { method: 'get', path: '/editions/{release_id}/export.{fmt}', source: editionView, snippet: '/api/editions/${RELEASE.id}/export.${format.ext}' },
+  ...['disagreement', 'low-confidence', 'no-edition', 'close-votes'].map((queue) => ({ method: 'get', path: `/queues/${queue}`, source: queuesView, snippet: '/api/queues/${TAB.value}?${query}' })),
   { method: 'get', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: '/api/admin/users/${props.user.id}/voting' },
   { method: 'put', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: "method: 'PUT'" },
   { method: 'get', path: '/tablets/{slug}/glyph-activity', source: useGlyphActivity, snippet: '/api/tablets/${encodeURIComponent(slug.value)}/glyph-activity' },

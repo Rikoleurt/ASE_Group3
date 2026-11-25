@@ -155,6 +155,7 @@ const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visibl
                 <div v-show="OPEN === 'account'" :class="menuClass">
                     <RouterLink to="/profile" :class="itemClass" exact-active-class="font-bold">Profile</RouterLink>
                     <RouterLink to="/shared" :class="itemClass" exact-active-class="font-bold">Shared with me</RouterLink>
+                    <RouterLink to="/queues" :class="itemClass" exact-active-class="font-bold" data-testid="menu-queues">Work queues</RouterLink>
                     <RouterLink v-if="sessionReviewer" to="/review" :class="itemClass" exact-active-class="font-bold">Review corrections</RouterLink>
                     <RouterLink v-if="sessionAdmin" to="/admin" :class="itemClass" exact-active-class="font-bold">Admin</RouterLink>
                     <label :class="[itemClass, 'flex cursor-pointer items-center gap-2 border-t border-ink/10']" data-testid="activity-toggle">

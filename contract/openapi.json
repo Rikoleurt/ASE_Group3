@@ -1285,6 +1285,36 @@
         "title": "Candidate",
         "type": "object"
       },
+      "CandidateSign": {
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "probability": {
+            "title": "Probability",
+            "type": "number"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          }
+        },
+        "required": [
+          "sign",
+          "label",
+          "probability"
+        ],
+        "title": "CandidateSign",
+        "type": "object"
+      },
       "CatalogueSign": {
         "properties": {
           "glyph": {
@@ -1349,6 +1379,98 @@
           "comment"
         ],
         "title": "ClearOverride",
+        "type": "object"
+      },
+      "CloseRelease": {
+        "properties": {
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "owner": {
+            "title": "Owner",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "votes": {
+            "title": "Votes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "owner",
+          "votes"
+        ],
+        "title": "CloseRelease",
+        "type": "object"
+      },
+      "CloseVote": {
+        "properties": {
+          "gap": {
+            "title": "Gap",
+            "type": "integer"
+          },
+          "releases": {
+            "items": {
+              "$ref": "#/components/schemas/CloseRelease"
+            },
+            "title": "Releases",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          },
+          "votes": {
+            "title": "Votes",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "gap",
+          "votes",
+          "releases"
+        ],
+        "title": "CloseVote",
+        "type": "object"
+      },
+      "CloseVoteQueue": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/CloseVote"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "CloseVoteQueue",
         "type": "object"
       },
       "Comment": {
@@ -1808,6 +1930,134 @@
           "candidates"
         ],
         "title": "DetectedSign",
+        "type": "object"
+      },
+      "DisagreementQueue": {
+        "properties": {
+          "against": {
+            "enum": [
+              "model",
+              "edition"
+            ],
+            "title": "Against",
+            "type": "string"
+          },
+          "built_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Built At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/DisagreementRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "missing_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing Hint"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "against",
+          "total",
+          "items"
+        ],
+        "title": "DisagreementQueue",
+        "type": "object"
+      },
+      "DisagreementRow": {
+        "properties": {
+          "agree": {
+            "title": "Agree",
+            "type": "integer"
+          },
+          "differs": {
+            "title": "Differs",
+            "type": "integer"
+          },
+          "edition_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Edition Id"
+          },
+          "missing": {
+            "title": "Missing",
+            "type": "integer"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "agree",
+          "differs",
+          "missing",
+          "total",
+          "score"
+        ],
+        "title": "DisagreementRow",
         "type": "object"
       },
       "DiscussionComment": {
@@ -2902,6 +3152,137 @@
           "authenticated"
         ],
         "title": "LoginResponse",
+        "type": "object"
+      },
+      "LowConfidenceQueue": {
+        "properties": {
+          "built_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Built At"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LowConfidenceSign"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "missing_hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Missing Hint"
+          },
+          "model_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model Version"
+          },
+          "threshold": {
+            "title": "Threshold",
+            "type": "number"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "threshold",
+          "total",
+          "items"
+        ],
+        "title": "LowConfidenceQueue",
+        "type": "object"
+      },
+      "LowConfidenceSign": {
+        "properties": {
+          "box": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Box",
+            "type": "object"
+          },
+          "candidates": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/CandidateSign"
+            },
+            "title": "Candidates",
+            "type": "array"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "reading": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "id",
+          "sign",
+          "label",
+          "confidence",
+          "box"
+        ],
+        "title": "LowConfidenceSign",
         "type": "object"
       },
       "MarkRead": {
@@ -4697,6 +5078,50 @@
           "total"
         ],
         "title": "TabletPage",
+        "type": "object"
+      },
+      "TabletQueue": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TabletRow"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "items"
+        ],
+        "title": "TabletQueue",
+        "type": "object"
+      },
+      "TabletRow": {
+        "properties": {
+          "signs": {
+            "title": "Signs",
+            "type": "integer"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "signs"
+        ],
+        "title": "TabletRow",
         "type": "object"
       },
       "TabletVersion": {
@@ -11442,6 +11867,352 @@
         "summary": "Unread Count",
         "tags": [
           "notifications"
+        ]
+      }
+    },
+    "/queues/close-votes": {
+      "get": {
+        "description": "Tablets whose two most-backed releases are at most one vote apart, with no admin override:\nwhere one more vote decides the community edition.",
+        "operationId": "close_votes_queues_close_votes_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CloseVoteQueue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Close Votes",
+        "tags": [
+          "work queues"
+        ]
+      }
+    },
+    "/queues/disagreement": {
+      "get": {
+        "description": "Tablets where the scholars' reading differs most from the model's (from the offline run)\nor from the tablet's accepted edition, most disagreement first.",
+        "operationId": "disagreement_queues_disagreement_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "against",
+            "required": false,
+            "schema": {
+              "default": "model",
+              "enum": [
+                "model",
+                "edition"
+              ],
+              "title": "Against",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DisagreementQueue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Disagreement",
+        "tags": [
+          "work queues"
+        ]
+      }
+    },
+    "/queues/low-confidence": {
+      "get": {
+        "description": "The model's least confident signs across the corpus (from the offline run).",
+        "operationId": "low_confidence_queues_low_confidence_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LowConfidenceQueue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Low Confidence",
+        "tags": [
+          "work queues"
+        ]
+      }
+    },
+    "/queues/no-edition": {
+      "get": {
+        "description": "Tablets with a drawing here but no released edition open to everyone, most signs first.",
+        "operationId": "no_edition_queues_no_edition_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "maximum": 100000,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TabletQueue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "No Edition",
+        "tags": [
+          "work queues"
         ]
       }
     },
