@@ -71,6 +71,6 @@ out/            generated: census.json, sections.csv, solve.json, validate.json
 
 ## Data and licence
 
-Corpus data from [lineara.eu](https://lineara.eu) (M. Navarre), derived from [SigLA](https://sigla.phis.me) (E. Salgarella & S. Castellan), licensed **CC BY-NC-SA 4.0**. Used here non-commercially with attribution. The Linear A cache (`data/cache/`, `data/images/`) is committed so the project works without a crawl; the Linear B corpus (`data/damos/`) stays local.
+Corpus data from [lineara.eu](https://lineara.eu) (M. Navarre), derived from [SigLA](https://sigla.phis.me) (E. Salgarella & S. Castellan), licensed **CC BY-NC-SA 4.0**. Used here non-commercially with attribution. The Linear A data (`data/cache/`, `data/images/`, `out/yolo_signs/annotations.json`) is not in git: download it from the `corpus-v1` release with `python scripts/fetch_corpus.py` (from the repository root), or crawl it with `python -m la.cli fetch` and `python -m la.cli images`. The release keeps this licence and credit (`data/LICENCE-corpus.txt`). The Linear B corpus (`data/damos/`) stays local.
 
 Code in this repository is available under the MIT licence.

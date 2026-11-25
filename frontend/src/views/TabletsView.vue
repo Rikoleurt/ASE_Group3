@@ -2,11 +2,11 @@
 // Corpus tablets (#82): find a tablet, see its tracing with the scholars' published boxes or
 // the reader's own, and start correcting them (#83, #85). The tablet is in the URL
 // (/tablets/HT-13), and so is the source (?boxes=model).
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
-import { loadSession, sessionFetch, sessionUser } from '../state/session'
+import { loadSession, sessionAdmin, sessionFetch, sessionUser } from '../state/session'
 
 const PAGE = 50
 const SOURCES = [
@@ -21,6 +21,13 @@ const TABLETS = ref([])
 const TOTAL = ref(0)
 const WITHOUT_DRAWING = ref(0) // tablets hidden because their drawing is not downloaded on this server
 const HINT = ref('')
+const CORPUS_MISSING = ref(false) // no transcriptions at all: a fresh server
+// Admins can download the missing data onto the server from the corpus-v1 release.
+const DOWNLOAD = ref(null) // { state, log, error } from /tablets/download
+const DOWNLOAD_ERROR = ref('')
+const DOWNLOADING = computed(() => DOWNLOAD.value?.state === 'running')
+const POLL_MS = 1500
+let poll = null
 const LISTING = ref(false)
 const LIST_ERROR = ref('')
 const BOXES = ref(null)
@@ -43,6 +50,7 @@ async function list(more = false) {
   try {
     const query = new URLSearchParams({ q: searched, limit: PAGE, offset: more ? TABLETS.value.length : 0 })
     const response = await fetch(`/api/tablets?${query}`)
+    if (mine === listId) CORPUS_MISSING.value = response.status === 503
     if (!response.ok) throw new Error(response.status === 503 ? 'The corpus is not installed on this server.' : 'The tablets could not be loaded.')
     const page = await response.json()
     if (mine !== listId) return
@@ -127,6 +135,34 @@ async function correct() {
   }
 }
 
+function track(status) {
+  DOWNLOAD.value = status
+  clearTimeout(poll)
+  if (status.state === 'running') poll = setTimeout(checkDownload, POLL_MS)
+  else if (status.state === 'done') list()
+}
+
+async function checkDownload() {
+  const response = await sessionFetch('/api/tablets/download').catch(() => null)
+  if (response?.ok) track(await response.json())
+  else poll = setTimeout(checkDownload, POLL_MS * 2) // a blip: keep watching
+}
+
+async function download() {
+  DOWNLOAD_ERROR.value = ''
+  try {
+    const response = await sessionFetch('/api/tablets/download', { method: 'POST' })
+    const body = await response.json().catch(() => null)
+    if (response.status === 409) return checkDownload() // already running (another admin, or another tab)
+    if (!response.ok) throw new Error(typeof body?.detail === 'string' ? body.detail : 'The download could not be started.')
+    track(body)
+  } catch (failure) {
+    DOWNLOAD_ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
+  }
+}
+
+onBeforeUnmount(() => clearTimeout(poll))
+
 onMounted(async () => {
   await loadSession().catch(() => {}) // logged-out visitors can look; correcting needs a login
   list()
@@ -149,10 +185,26 @@ watch([SLUG, () => sessionUser.value?.id], checkCopy, { immediate: true })
         </form>
         <p v-if="LIST_ERROR" role="alert" class="mt-3 text-confidence-low">{{ LIST_ERROR }}</p>
         <p class="mt-3 text-sm text-ink/70" role="status">{{ LISTING ? 'Loading…' : `${TOTAL} tablet${TOTAL === 1 ? '' : 's'}` }}</p>
-        <p v-if="WITHOUT_DRAWING" class="mt-2 rounded-lg bg-card p-2 text-xs text-ink/80" data-testid="missing-drawings">
-          {{ WITHOUT_DRAWING }} more tablet{{ WITHOUT_DRAWING === 1 ? ' is' : 's are' }} hidden: {{ WITHOUT_DRAWING === 1 ? 'its drawing is' : 'their drawings are' }} not downloaded on this server.
-          {{ HINT }}
-        </p>
+        <div v-if="WITHOUT_DRAWING || CORPUS_MISSING || DOWNLOAD" class="mt-2 rounded-lg bg-card p-2 text-xs text-ink/80" data-testid="missing-drawings">
+          <p v-if="WITHOUT_DRAWING">
+            {{ WITHOUT_DRAWING }} more tablet{{ WITHOUT_DRAWING === 1 ? ' is' : 's are' }} hidden: {{ WITHOUT_DRAWING === 1 ? 'its drawing is' : 'their drawings are' }} not downloaded on this server.
+          </p>
+          <template v-if="sessionAdmin">
+            <button
+              v-if="WITHOUT_DRAWING || CORPUS_MISSING || DOWNLOADING"
+              type="button"
+              class="mt-2 w-full cursor-pointer rounded bg-bar px-3 py-1.5 text-sm font-semibold hover:brightness-95 disabled:cursor-wait disabled:opacity-60"
+              :disabled="DOWNLOADING"
+              data-testid="download-corpus"
+              @click="download"
+            >{{ DOWNLOADING ? 'Downloading…' : 'Download the drawings (33 MB)' }}</button>
+            <p v-if="DOWNLOADING && DOWNLOAD.log.length" class="mt-1 font-mono" role="status" data-testid="download-progress">{{ DOWNLOAD.log.at(-1) }}</p>
+            <p v-else-if="DOWNLOAD?.state === 'done'" class="mt-1" role="status">Downloaded. The tablets are listed now.</p>
+            <p v-if="DOWNLOAD?.state === 'failed' || DOWNLOAD_ERROR" role="alert" class="mt-1 text-confidence-low">{{ DOWNLOAD_ERROR || DOWNLOAD.error }}</p>
+            <p v-if="WITHOUT_DRAWING || CORPUS_MISSING" class="mt-1 text-ink/60">From the corpus-v1 release on GitHub (CC BY-NC-SA 4.0). Or on the server: python scripts/fetch_corpus.py</p>
+          </template>
+          <p v-else-if="WITHOUT_DRAWING || CORPUS_MISSING" class="mt-1">An admin can download them from this page. {{ HINT || 'Download them with: python scripts/fetch_corpus.py' }}</p>
+        </div>
         <ul class="mt-2 max-h-[60vh] overflow-auto" data-testid="tablet-list">
           <li v-for="tablet in TABLETS" :key="tablet.slug">
             <button

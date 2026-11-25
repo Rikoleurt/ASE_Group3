@@ -1105,6 +1105,45 @@
         "title": "CommunityCommentCreate",
         "type": "object"
       },
+      "CorpusDownload": {
+        "description": "The server's download of the corpus data from the corpus-v1 release (admins' button).",
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "log": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Log",
+            "type": "array"
+          },
+          "state": {
+            "enum": [
+              "idle",
+              "running",
+              "done",
+              "failed"
+            ],
+            "title": "State",
+            "type": "string"
+          }
+        },
+        "required": [
+          "state",
+          "log"
+        ],
+        "title": "CorpusDownload",
+        "type": "object"
+      },
       "CorrectionCreate": {
         "description": "Either a replacement sign from the catalogue, or a flag that the reading is uncertain.",
         "properties": {
@@ -7144,6 +7183,96 @@
           }
         },
         "summary": "List Tablets",
+        "tags": [
+          "corpus tablets"
+        ]
+      }
+    },
+    "/tablets/download": {
+      "get": {
+        "description": "How the server's download of the corpus data is going (admins only).",
+        "operationId": "download_status_tablets_download_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorpusDownload"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Download Status",
+        "tags": [
+          "corpus tablets"
+        ]
+      },
+      "post": {
+        "description": "Download the missing drawings (and transcriptions and boxes) from the corpus-v1 release\nonto this server, in the background; poll GET /tablets/download. Admins only: it writes to\nthe server's disk. Files already present are kept.",
+        "operationId": "download_tablets_download_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CorpusDownload"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Download",
         "tags": [
           "corpus tablets"
         ]

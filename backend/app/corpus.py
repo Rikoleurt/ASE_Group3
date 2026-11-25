@@ -31,7 +31,7 @@ class TabletSummary:
     signs: int  # signs with a published box
 
 
-DOWNLOAD_HINT = "Download them with: cd fraction-solver && python -m la.cli images --tracings-only"
+DOWNLOAD_HINT = "Download them with: python scripts/fetch_corpus.py"
 _drawn: dict[int, tuple[float, list[TabletSummary], int]] = {}
 _DRAWN_SECONDS = 60  # drawings downloaded while the server runs show up within a minute
 

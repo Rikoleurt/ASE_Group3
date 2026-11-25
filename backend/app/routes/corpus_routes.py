@@ -9,11 +9,11 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException, Path, Query, Request, Response
 from fastapi.responses import FileResponse
 
-from backend.app import corpus, glyph_index, reading
-from backend.app.auth import COOKIE_NAME, current_user
+from backend.app import corpus, corpus_download, glyph_index, reading
+from backend.app.auth import COOKIE_NAME, Admin, AdminWrite, current_user
 from backend.app.data_controller.analysis_data_controller import read_signs
 from backend.app.model.analysis import ApiError
-from backend.app.model.corpus import Credit, Source, TabletBoxes, TabletItem, TabletPage
+from backend.app.model.corpus import CorpusDownload, Credit, Source, TabletBoxes, TabletItem, TabletPage
 from backend.app.routes.glyph_routes import Index
 
 router = APIRouter(prefix="/tablets", tags=["corpus tablets"])
@@ -40,6 +40,22 @@ def list_tablets(index: Index,
     found = [tablet for tablet in drawn if needle in "".join(tablet.tablet.lower().split()).replace("-", "")]
     return TabletPage(items=[TabletItem(**vars(tablet)) for tablet in found[offset:offset + limit]], total=len(found),
                       without_drawing=without_drawing, hint=corpus.DOWNLOAD_HINT if without_drawing else None)
+
+
+@router.get("/download", response_model=CorpusDownload)
+def download_status(_admin: Admin) -> CorpusDownload:
+    """How the server's download of the corpus data is going (admins only)."""
+    return CorpusDownload(**corpus_download.status())
+
+
+@router.post("/download", response_model=CorpusDownload, status_code=202, responses={409: {"model": ApiError}})
+def download(_admin: AdminWrite) -> CorpusDownload:
+    """Download the missing drawings (and transcriptions and boxes) from the corpus-v1 release
+    onto this server, in the background; poll GET /tablets/download. Admins only: it writes to
+    the server's disk. Files already present are kept."""
+    if not corpus_download.start():
+        raise HTTPException(409, "A download is already running.")
+    return CorpusDownload(**corpus_download.status())
 
 
 @router.get("/{slug}/image", response_class=FileResponse, responses={200: {"content": {"image/png": {}}}, **ERRORS})

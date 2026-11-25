@@ -188,6 +188,21 @@ seeded `dev` account is both. For an existing database, apply
 [080_user_roles.sql](backend/app/database/migration-80/080_user_roles.sql). See
 [roles](docs/roles.md) for making the first admin and the admin API.
 
+The **Tablets** page and the glyph pane read the Linear A corpus (transcriptions, the scholars'
+sign boxes and the tablet drawings), which is not in git. Download it once from the
+`corpus-v1` release:
+
+```bash
+python scripts/fetch_corpus.py              # add --with-crops for the sign crops too
+```
+
+Or, logged in as an admin, press **Download the drawings** on the Tablets page: the server runs
+the same download in the background and lists the tablets when it is done. The server needs a
+GitHub token for that (`GITHUB_TOKEN`, or git's saved login), as the repository is private.
+
+The corpus is CC BY-NC-SA 4.0 (lineara.eu / SigLA), not MIT: non-commercial use, keep the
+credit, share derived work under the same licence.
+
 To use an existing MySQL server instead, run `init.sql` as an administrator,
 create a database user with access to `ase3`, and set `MYSQL_HOST`, `MYSQL_PORT`,
 `MYSQL_USER` and `MYSQL_PASSWORD` in `.env`. `MYSQL_ROOT_PASSWORD` is only used

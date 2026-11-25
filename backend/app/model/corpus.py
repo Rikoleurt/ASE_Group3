@@ -21,6 +21,13 @@ class TabletPage(BaseModel):
     hint: str | None = None  # how to download the missing drawings
 
 
+class CorpusDownload(BaseModel):
+    """The server's download of the corpus data from the corpus-v1 release (admins' button)."""
+    state: Literal["idle", "running", "done", "failed"]
+    log: list[str]  # the latest progress lines
+    error: str | None = None
+
+
 class Credit(BaseModel):
     licence: str
     url: str
