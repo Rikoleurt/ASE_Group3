@@ -14,7 +14,11 @@ const props = defineProps({
   selected: { type: Number, default: null }, // index into clusters
 })
 const emit = defineEmits(['select'])
-const BADGES = computed(() => props.clusters.map((place, index) => ({ key: index, box: place.box, count: props.badges[index] })).filter((item) => item.count))
+const BADGES = computed(() =>
+  props.clusters
+    .map((place, index) => ({ key: index, box: place.box, count: props.badges[index] }))
+    .filter((item) => item.count),
+)
 
 const percent = (value) => value * 100
 // Each version's box is drawn a little inside the previous one's, so boxes in the same place

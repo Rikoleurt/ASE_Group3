@@ -27,7 +27,13 @@ const PICKS = ref([])
 const SELECTED = ref(null)
 // Bubbles with new activity on places the scholars have a sign in (workbench, story I).
 const { COUNTS: ACTIVITY, seen } = useGlyphActivity(computed(() => route.params.slug))
-const BADGES = computed(() => Object.fromEntries((RESULT.value?.clusters ?? []).map((place, index) => [index, ACTIVITY.value[place.members.scholar?.id]]).filter(([, count]) => count)))
+const BADGES = computed(() =>
+  Object.fromEntries(
+    (RESULT.value?.clusters ?? [])
+      .map((place, index) => [index, ACTIVITY.value[place.members.scholar?.id]])
+      .filter(([, count]) => count),
+  ),
+)
 watch(SELECTED, (index) => seen(RESULT.value?.clusters[index]?.members.scholar?.id))
 const ONLY_DIFFERENCES = ref(true)
 const TITLE = ref('')
