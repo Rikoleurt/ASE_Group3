@@ -2,10 +2,11 @@
 // Corpus tablets (#82): find a tablet, see its tracing with the scholars' published boxes or
 // the reader's own, and start correcting them (#83, #85). The tablet is in the URL
 // (/tablets/HT-13), and so is the source (?boxes=model).
+import SketchPad from '../components/signs/SketchPad.vue'
 import { RECENT_TABLETS, openedTablet } from '../state/preferences'
 import { useGlyphActivity } from '../composables/useGlyphActivity'
 import EditionsPanel from '../components/versions/EditionsPanel.vue'
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
@@ -48,6 +49,56 @@ let searched = ''
 let request = 0
 
 const SLUG = computed(() => route.params.slug || null)
+// Search by sign sequence (workbench, story G): KU-RO, AB81-AB02, ku-*-ro, ku|ka-ro.
+const MODE = ref('tablet') // tablet | sequence
+const SEQUENCE = ref(null) // the last sequence search's results
+const SEQUENCE_SOURCE = ref('scholar') // scholar | edition
+const ACROSS_WORDS = ref(false)
+const SEQUENCE_ERROR = ref('')
+const SEARCHING = ref(false)
+const SKETCHING = ref(false)
+const HIGHLIGHT = computed(() => String(route.query.hl ?? '').split(',').filter(Boolean).map(Number))
+
+async function searchSequence() {
+  const q = QUERY.value.trim()
+  SEQUENCE_ERROR.value = ''
+  if (!q) return
+  SEARCHING.value = true
+  try {
+    const query = new URLSearchParams({ q, source: SEQUENCE_SOURCE.value, across_words: String(ACROSS_WORDS.value), limit: '100' })
+    const response = await fetch(`/api/corpus/search?${query}`)
+    const body = await response.json().catch(() => null)
+    if (!response.ok) throw new Error(typeof body?.detail === 'string' ? body.detail : 'The search failed.')
+    SEQUENCE.value = body
+  } catch (failure) {
+    SEQUENCE.value = null
+    SEQUENCE_ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
+  } finally {
+    SEARCHING.value = false
+  }
+}
+
+function openHit(item) {
+  if (item.release_id) {
+    router.push(`/editions/${item.release_id}`)
+    return
+  }
+  const positions = item.hits.flatMap((hit) => hit.positions).filter((position) => position != null)
+  router.push({ path: `/tablets/${item.slug}`, query: positions.length ? { hl: positions.join(',') } : {} })
+}
+
+// Opened from a sequence search: bring the first highlighted sign into view once the drawing has
+// loaded (before that, the boxes are not where they will be).
+async function showFound() {
+  if (!HIGHLIGHT.value.length) return
+  await nextTick()
+  document.querySelector('[data-testid="sign-box"].found')?.scrollIntoView?.({ block: 'center', behavior: 'smooth' })
+}
+
+function addSketched(sign) {
+  QUERY.value = QUERY.value.trim() ? `${QUERY.value.trim()}-${sign}` : sign
+  SKETCHING.value = false
+}
 // Bubbles with new activity on the scholars' glyphs (their sign ids are positions); opening one clears it.
 const { COUNTS: ACTIVITY, seen } = useGlyphActivity(SLUG)
 // Bookmarks (kept on the server) and recently opened tablets (in this browser): workbench, story K.
@@ -240,13 +291,37 @@ function compareVersions() {
 
     <div class="mt-6 flex flex-col gap-8 md:flex-row">
       <nav class="md:w-64 md:shrink-0" aria-label="Tablets">
-        <form role="search" class="flex gap-2" @submit.prevent="search">
-          <label class="sr-only" for="tablet-search">Find a tablet</label>
-          <input id="tablet-search" v-model="QUERY" type="search" placeholder="HT 13" class="min-w-0 flex-1 rounded border border-ink/30 bg-white px-3 py-1.5" />
+        <div class="mb-2 flex gap-1 text-sm" role="group" aria-label="Search by">
+          <button
+            v-for="option in [{ value: 'tablet', label: 'Tablet' }, { value: 'sequence', label: 'Sign sequence' }]"
+            :key="option.value"
+            type="button"
+            class="cursor-pointer rounded px-2 py-0.5 hover:bg-bar"
+            :class="{ 'bg-bar font-semibold': MODE === option.value }"
+            :aria-pressed="MODE === option.value"
+            :data-testid="`search-${option.value}`"
+            @click="MODE = option.value"
+          >{{ option.label }}</button>
+        </div>
+        <form role="search" class="flex gap-2" @submit.prevent="MODE === 'sequence' ? searchSequence() : search()">
+          <label class="sr-only" for="tablet-search">{{ MODE === 'sequence' ? 'Find a sign sequence' : 'Find a tablet' }}</label>
+          <input id="tablet-search" v-model="QUERY" type="search" :placeholder="MODE === 'sequence' ? 'KU-RO, ku-*-ro, AB81' : 'HT 13'" class="min-w-0 flex-1 rounded border border-ink/30 bg-white px-3 py-1.5" />
           <button type="submit" class="cursor-pointer rounded bg-bar px-3 py-1.5 font-semibold hover:brightness-95">Search</button>
         </form>
+        <div v-if="MODE === 'sequence'" class="mt-2 text-sm" data-testid="sequence-options">
+          <label class="flex items-center gap-1"><input v-model="ACROSS_WORDS" type="checkbox" data-testid="across-words" /> Across word breaks</label>
+          <label class="mt-1 flex items-center gap-1">In
+            <select v-model="SEQUENCE_SOURCE" class="rounded border border-ink/30 bg-white px-1" data-testid="sequence-source">
+              <option value="scholar">the scholars' transcriptions</option>
+              <option value="edition">the community editions</option>
+            </select>
+          </label>
+          <button type="button" class="mt-1 cursor-pointer underline" :aria-expanded="SKETCHING" data-testid="sequence-sketch" @click="SKETCHING = !SKETCHING">✎ Draw a sign to add</button>
+          <SketchPad v-if="SKETCHING" class="mt-2 rounded-lg bg-card p-2" :limit="6" @pick="addSketched" />
+          <p class="mt-1 text-xs text-ink/60">Signs by number or reading, joined by - ; * for any sign, | for either.</p>
+        </div>
         <p v-if="LIST_ERROR" role="alert" class="mt-3 text-confidence-low">{{ LIST_ERROR }}</p>
-        <p class="mt-3 text-sm text-ink/70" role="status">{{ LISTING ? 'Loading…' : `${TOTAL} tablet${TOTAL === 1 ? '' : 's'}` }}</p>
+        <p v-if="MODE === 'tablet'" class="mt-3 text-sm text-ink/70" role="status">{{ LISTING ? 'Loading…' : `${TOTAL} tablet${TOTAL === 1 ? '' : 's'}` }}</p>
         <div v-if="WITHOUT_DRAWING || CORPUS_MISSING || DOWNLOAD" class="mt-2 rounded-lg bg-card p-2 text-xs text-ink/80" data-testid="missing-drawings">
           <p v-if="WITHOUT_DRAWING">
             {{ WITHOUT_DRAWING }} more tablet{{ WITHOUT_DRAWING === 1 ? ' is' : 's are' }} hidden: {{ WITHOUT_DRAWING === 1 ? 'its drawing is' : 'their drawings are' }} not downloaded on this server.
@@ -267,7 +342,7 @@ function compareVersions() {
           </template>
           <p v-else-if="WITHOUT_DRAWING || CORPUS_MISSING" class="mt-1">An admin can download them from this page. {{ HINT || 'Download them with: python scripts/fetch_corpus.py' }}</p>
         </div>
-        <div v-if="!QUERY.trim() && (BOOKMARKS.length || RECENT_TABLETS.length)" class="mt-3 text-sm" data-testid="quick-tablets">
+        <div v-if="MODE === 'tablet' && !QUERY.trim() && (BOOKMARKS.length || RECENT_TABLETS.length)" class="mt-3 text-sm" data-testid="quick-tablets">
           <template v-for="group in [{ name: 'Bookmarked', slugs: BOOKMARKS, id: 'bookmarked' }, { name: 'Recently opened', slugs: RECENT_TABLETS.filter((slug) => !BOOKMARKS.includes(slug)).slice(0, 5), id: 'recent' }]" :key="group.id">
             <template v-if="group.slugs.length">
               <h2 class="mt-2 font-semibold text-ink/70">{{ group.name }}</h2>
@@ -280,7 +355,24 @@ function compareVersions() {
           </template>
           <h2 class="mt-2 font-semibold text-ink/70">All tablets</h2>
         </div>
-        <ul class="mt-2 max-h-[60vh] overflow-auto" data-testid="tablet-list">
+        <template v-if="MODE === 'sequence'">
+          <p v-if="SEQUENCE_ERROR" role="alert" class="mt-3 text-confidence-low">{{ SEQUENCE_ERROR }}</p>
+          <p v-else-if="SEARCHING" role="status" class="mt-3 text-sm">Searching…</p>
+          <template v-else-if="SEQUENCE">
+            <p class="mt-3 text-sm text-ink/70" role="status" data-testid="sequence-count">
+              {{ SEQUENCE.total_hits }} match{{ SEQUENCE.total_hits === 1 ? '' : 'es' }} on {{ SEQUENCE.total_tablets }} tablet{{ SEQUENCE.total_tablets === 1 ? '' : 's' }}
+            </p>
+            <ul class="mt-2 max-h-[60vh] overflow-auto" data-testid="sequence-results">
+              <li v-for="item in SEQUENCE.items" :key="item.slug">
+                <button type="button" class="w-full cursor-pointer rounded px-2 py-1 text-left hover:bg-bar" :class="{ 'bg-bar font-semibold': item.slug === SLUG }" @click="openHit(item)">
+                  <span class="flex justify-between"><span>{{ item.tablet }}</span><span class="text-sm text-ink/60">{{ item.hits.length }}×</span></span>
+                  <span class="block text-xs text-ink/60">{{ [...new Set(item.hits.map((hit) => hit.text))].join(', ') }}<template v-if="item.release_id"> · in the community edition</template></span>
+                </button>
+              </li>
+            </ul>
+          </template>
+        </template>
+        <ul v-else class="mt-2 max-h-[60vh] overflow-auto" data-testid="tablet-list">
           <li v-for="tablet in TABLETS" :key="tablet.slug">
             <button
               type="button"
@@ -293,7 +385,7 @@ function compareVersions() {
             </button>
           </li>
         </ul>
-        <button v-if="TABLETS.length < TOTAL" type="button" class="mt-2 cursor-pointer underline" :disabled="LISTING" @click="list(true)">More tablets</button>
+        <button v-if="MODE === 'tablet' && TABLETS.length < TOTAL" type="button" class="mt-2 cursor-pointer underline" :disabled="LISTING" @click="list(true)">More tablets</button>
       </nav>
 
       <section class="min-w-0 flex-1" aria-live="polite">
@@ -398,9 +490,10 @@ function compareVersions() {
                 :signs="BOXES.signs"
                 :formulas="BOXES.formulas"
                 :badges="SOURCE === 'scholar' ? ACTIVITY : {}"
+                :highlight="SOURCE === 'scholar' ? HIGHLIGHT : []"
                 @select="(sign) => SOURCE === 'scholar' && seen(sign.id)"
               >
-                <img :src="`/api${BOXES.image_url}`" :alt="`${BOXES.tablet} tracing`" class="w-full rounded-lg bg-white" />
+                <img :src="`/api${BOXES.image_url}`" @load="showFound" :alt="`${BOXES.tablet} tracing`" class="w-full rounded-lg bg-white" />
               </TabletOverlay>
             </div>
             <p class="mt-4">{{ BOXES.summary }}</p>

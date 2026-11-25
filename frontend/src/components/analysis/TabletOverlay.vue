@@ -11,6 +11,7 @@ import GlyphBadges from '../versions/GlyphBadges.vue'
 
 const props = defineProps({
   badges: { type: Object, default: () => ({}) }, // sign id -> new activity (workbench)
+  highlight: { type: Array, default: () => [] }, // sign ids found by a sequence search (workbench)
   signs: { type: Array, default: () => [] },
   formulas: { type: Array, default: () => [] },
   selectedId: { type: [Number, String], default: null },
@@ -142,7 +143,7 @@ function describe(sign) {
         :width="percent(sign.box.w)"
         :height="percent(sign.box.h)"
         :stroke="ROLES[roleKey(sign, MARKERS)].color"
-        :class="{ active: ACTIVE === sign.id, selected: selectedId === sign.id }"
+        :class="{ active: ACTIVE === sign.id, selected: selectedId === sign.id, found: highlight.includes(sign.id) }"
         :style="{ animationDelay: `${index * 60}ms` }"
         :aria-label="describe(sign)"
         :aria-pressed="selectedId === sign.id"
@@ -215,6 +216,11 @@ rect {
 }
 
 /* The glyph the pane below is showing: a thick outline plus a faint fill. */
+.sign.found {
+  stroke-width: 5;
+  fill: rgba(250, 204, 21, 0.45);
+}
+
 .sign.selected {
   stroke-width: 6;
   fill: rgba(204, 111, 0, 0.2);

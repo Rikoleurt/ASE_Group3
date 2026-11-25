@@ -92,6 +92,7 @@ const CALLS = [
   { method: 'patch', path: '/box-sets/{set_id}', source: useBoxSet, snippet: '/api/box-sets/${copy.value.id}' },
   { method: 'get', path: '/tablets', source: tabletsView, snippet: '/api/tablets?${query}' },
   { method: 'get', path: '/bookmarks', source: tabletsView, snippet: "'/api/bookmarks'" },
+  { method: 'get', path: '/corpus/search', source: tabletsView, snippet: '/api/corpus/search?${query}' },
   { method: 'put', path: '/bookmarks/{slug}', source: tabletsView, snippet: '/api/bookmarks/${encodeURIComponent(SLUG.value)}' },
   { method: 'delete', path: '/bookmarks/{slug}', source: tabletsView, snippet: "method: marked ? 'DELETE' : 'PUT'" },
   { method: 'get', path: '/tablets/{slug}/versions', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(SLUG.value)}/versions' },

@@ -22,6 +22,7 @@ from backend.app.routes.activity_routes import router as activity_router
 from backend.app.routes.bookmark_routes import router as bookmark_router
 from backend.app.routes.notification_routes import router as notification_router
 from backend.app.routes.link_routes import router as link_router
+from backend.app.routes.search_routes import router as search_router
 from backend.app.routes.share_routes import router as share_router
 from backend.app.routes.comment_routes import router as comment_router
 from backend.app.routes.community_routes import router as community_router
@@ -56,6 +57,7 @@ app.include_router(activity_router)
 app.include_router(bookmark_router)
 app.include_router(notification_router)
 app.include_router(link_router)
+app.include_router(search_router)
 app.include_router(comment_router)
 app.include_router(community_router)
 
