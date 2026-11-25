@@ -7,7 +7,10 @@ const props = defineProps({
   analysisId: { type: Number, required: true },
   filename: { type: String, default: 'Tablet analysis' },
   discussionId: { type: Number, default: null },
+  symbol: { type: Object, default: null },
+  autoOpen: { type: Boolean, default: false },
 })
+const emit = defineEmits(['cancel'])
 const router = useRouter()
 const route = useRoute()
 const editing = ref(false)
@@ -16,12 +19,18 @@ const sharedId = ref(null)
 const pending = ref(false)
 const error = ref('')
 let requestId = 0
-watch(() => [props.analysisId, props.discussionId], () => {
+function defaultTitle() {
+  if (!props.symbol) return props.filename.slice(0, 160)
+  const sign = props.symbol
+  return (sign.sign ? (sign.reading || sign.label || sign.sign) : `symbol-${sign.id}`).slice(0, 160)
+}
+
+watch(() => [props.analysisId, props.discussionId, props.symbol?.id], () => {
   requestId++
-  editing.value = false
+  editing.value = props.autoOpen
   pending.value = false
   error.value = ''
-  title.value = props.filename.slice(0, 160)
+  title.value = defaultTitle()
   sharedId.value = props.discussionId
 }, { immediate: true })
 onBeforeUnmount(() => { requestId++ })
@@ -34,9 +43,13 @@ async function share() {
   try {
     const discussion = await communityApi('/discussions', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ analysis_id: props.analysisId, title: title.value.trim() }),
+      body: JSON.stringify({ analysis_id: props.analysisId, title: title.value.trim(),
+        ...(props.symbol ? { sign_id: props.symbol.id } : {}) }),
     })
-    if (request === requestId) sharedId.value = discussion.id
+    if (request === requestId) {
+      sharedId.value = discussion.id
+      if (props.symbol) await router.push(`/community/${discussion.id}`)
+    }
   } catch (failure) {
     if (request !== requestId) return
     if (failure.status === 401) {
@@ -49,19 +62,20 @@ async function share() {
 </script>
 
 <template>
-  <section class="mt-6 border-t border-ink/10 pt-6" aria-label="Share analysis">
+  <section class="mt-6 border-t border-ink/10 pt-6" :aria-label="symbol ? 'Share symbol' : 'Share analysis'">
     <RouterLink v-if="sharedId" :to="`/community/${sharedId}`" class="font-semibold underline">View discussion →</RouterLink>
     <template v-else>
       <button v-if="!editing" type="button" class="cursor-pointer rounded bg-bar px-5 py-2 hover:brightness-95" @click="editing = true">Share with community</button>
       <form v-else class="space-y-3" @submit.prevent="share">
-        <p class="text-sm text-ink/70">Your tablet image and analysis will be public. Private history comments will stay private.</p>
+        <p v-if="symbol" class="text-sm text-ink/70">This symbol’s image and model reading, your username and the tablet name will be public. Private history comments will stay private.</p>
+        <p v-else class="text-sm text-ink/70">Your tablet image and analysis will be public. Private history comments will stay private.</p>
         <label class="block font-semibold">
           Discussion title
-          <input v-model="title" maxlength="160" required :disabled="pending" class="mt-2 block w-full rounded border border-ink/30 bg-white px-3 py-2 font-normal" />
+          <input v-model="title" :autofocus="autoOpen" maxlength="160" required :disabled="pending" class="mt-2 block w-full rounded border border-ink/30 bg-white px-3 py-2 font-normal" />
         </label>
         <div class="flex gap-4">
           <button type="submit" :disabled="pending || !title.trim()" class="cursor-pointer rounded bg-bar px-5 py-2 disabled:opacity-50">{{ pending ? 'Sharing…' : 'Publish discussion' }}</button>
-          <button type="button" :disabled="pending" class="underline" @click="editing = false">Cancel</button>
+          <button type="button" :disabled="pending" class="underline" @click="editing = false; emit('cancel')">Cancel</button>
         </div>
         <p v-if="error" role="alert" class="text-conf-low">{{ error }}</p>
       </form>

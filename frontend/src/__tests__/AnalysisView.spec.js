@@ -18,12 +18,12 @@ afterEach(() => {
 // Clicking a box also opens the other-tablets pane; it gets an empty page unless a test says otherwise.
 const NO_OCCURRENCES = { ok: true, status: 200, json: async () => ({ sign: 'AB131a', total: 0, limit: 30, offset: 0, ranked_by: 'corpus', items: [], credit: null }) }
 
-async function upload(response) {
+async function upload(response, options = {}) {
   const fetch = vi.fn((url) => Promise.resolve(url === '/api/users/me'
     ? { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }
     : url.startsWith('/api/glyphs/') ? NO_OCCURRENCES : response))
   vi.stubGlobal('fetch', fetch)
-  wrapper = mount(AnalysisView)
+  wrapper = mount(AnalysisView, options)
   const input = wrapper.get('input[type="file"]')
   Object.defineProperty(input.element, 'files', { value: [new File(['png'], 'tablet.png', { type: 'image/png' })] })
   await input.trigger('change')
@@ -117,4 +117,17 @@ describe('Analysis page', () => {
     expect(calls.some(([url]) => url === '/api/glyphs/AB59/occurrences/search')).toBe(true)
     expect(wrapper.findAll('[data-testid="sign-box"]')[0].attributes('aria-pressed')).toBe('true')
   })
+})
+
+
+it('opens a symbol discussion from an uploaded detection with its analysis and occurrence', async () => {
+  await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12 }) }, {
+    global: { stubs: { SymbolDiscussionDialog: {
+      props: ['analysisId', 'symbol', 'filename'],
+      template: '<div data-testid="symbol-dialog">{{ analysisId }} / {{ symbol.id }} / {{ filename }}</div>',
+    } } },
+  })
+  await wrapper.findAll('[data-testid="sign-box"]')[0].trigger('mouseenter')
+  await wrapper.get('[data-testid="sign-card"] button').trigger('click')
+  expect(wrapper.get('[data-testid="symbol-dialog"]').text()).toBe(`12 / ${analysis.signs[0].id} / tablet.png`)
 })

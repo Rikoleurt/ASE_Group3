@@ -2,9 +2,9 @@
 // Draws the reader's boxes over whatever image is put in the slot: one box per
 // sign, coloured by role and settling on in reading order, then a dashed box
 // around each fraction formula, coloured by its verdict. Box coordinates are
-// fractions of the image size. Hovering or focusing a box shows its SignCard;
-// clicking it, or pressing Enter or Space on it, emits `select` with the sign.
-import { computed, ref } from 'vue'
+// fractions of the image size. Hovering or focusing a box shows its SignCard (with Discuss and
+// Mention when allowed); clicking it, or pressing Enter or Space on it, also emits `select`.
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ROLES, formulaColor, prefersStill, roleKey } from './colors.js'
 import SignCard from './SignCard.vue'
 
@@ -12,9 +12,63 @@ const props = defineProps({
   signs: { type: Array, default: () => [] },
   formulas: { type: Array, default: () => [] },
   selectedId: { type: [Number, String], default: null },
+  canDiscuss: { type: Boolean, default: false },
+  canMention: { type: Boolean, default: false },
 })
+const emit = defineEmits(['select', 'discuss', 'mention'])
+const interactive = computed(() => props.canDiscuss || props.canMention)
+const root = ref(null)
+let closeTimer
 
-const emit = defineEmits(['select'])
+function keepCard() {
+  clearTimeout(closeTimer)
+}
+
+function showCard(signId) {
+  keepCard()
+  ACTIVE.value = signId
+}
+
+function hideCard() {
+  keepCard()
+  ACTIVE.value = null
+}
+
+function scheduleClose() {
+  keepCard()
+  if (!interactive.value) return hideCard()
+  closeTimer = setTimeout(() => {
+    const focused = document.activeElement
+    if (root.value?.querySelector('[data-testid="sign-card"]')?.contains(focused)) return
+    if (focused?.getAttribute('data-sign-id') === String(ACTIVE.value) && root.value?.contains(focused)) return
+    hideCard()
+  }, 200)
+}
+
+function focusDiscussion(event) {
+  if (!interactive.value || event.shiftKey) return
+  const button = root.value?.querySelector('[data-testid="sign-card"] button')
+  if (button) {
+    event.preventDefault()
+    button.focus()
+  }
+}
+
+function focusAdjacentBox(event) {
+  const buttons = [...root.value.querySelectorAll('[data-testid="sign-card"] button')]
+  const current = buttons.indexOf(event.target)
+  if (event.shiftKey ? current > 0 : current < buttons.length - 1) return
+  const index = props.signs.findIndex((sign) => sign.id === ACTIVE.value)
+  const target = props.signs[event.shiftKey ? index : index + 1]
+  if (target) {
+    event.preventDefault()
+    root.value?.querySelector(`[data-sign-id="${target.id}"]`)?.focus()
+  }
+}
+
+onBeforeUnmount(keepCard)
+watch(() => props.signs, hideCard)
+
 
 const SHOWN = ref(true)
 const STILL = prefersStill()
@@ -49,7 +103,7 @@ function describe(sign) {
 </script>
 
 <template>
-  <div class="relative">
+  <div ref="root" class="relative" @keydown.esc="hideCard">
     <slot />
     <svg
       v-if="SHOWN && (signs.length || formulas.length)"
@@ -78,6 +132,7 @@ function describe(sign) {
         :key="sign.id"
         class="sign"
         data-testid="sign-box"
+        :data-sign-id="sign.id"
         :data-role="roleKey(sign, MARKERS)"
         :x="percent(sign.box.x)"
         :y="percent(sign.box.y)"
@@ -92,21 +147,32 @@ function describe(sign) {
         tabindex="0"
         fill="none"
         pointer-events="all"
-        @mouseenter="ACTIVE = sign.id"
-        @mouseleave="ACTIVE = null"
-        @focus="ACTIVE = sign.id"
-        @blur="ACTIVE = null"
-        @click="emit('select', sign)"
+        @mouseenter="showCard(sign.id)"
+        @mouseleave="scheduleClose"
+        @focus="showCard(sign.id)"
+        @blur="scheduleClose"
+        @click="showCard(sign.id); emit('select', sign)"
         @keydown.enter.prevent="emit('select', sign)"
         @keydown.space.prevent="emit('select', sign)"
+        @keydown.tab="focusDiscussion"
       />
     </svg>
     <SignCard
       v-if="SHOWN && ACTIVE_SIGN"
       :sign="ACTIVE_SIGN"
       :role-key="roleKey(ACTIVE_SIGN, MARKERS)"
-      class="pointer-events-none absolute z-30"
+      :can-discuss="canDiscuss"
+      :can-mention="canMention"
+      class="absolute z-30"
+      :class="{ 'pointer-events-none': !interactive }"
       :style="CARD_STYLE"
+      @mouseenter="keepCard"
+      @mouseleave="scheduleClose"
+      @focusin="keepCard"
+      @focusout="scheduleClose"
+      @keydown.tab="focusAdjacentBox"
+      @discuss="emit('discuss', $event)"
+      @mention="emit('mention', $event)"
     />
     <button
       v-if="signs.length"

@@ -4,14 +4,19 @@ import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import { openCopy } from '../composables/useBoxSet'
-import { sessionFetch } from '../state/session'
+import { sessionFetch, sessionUser } from '../state/session'
 import AnalysisComment from "@/components/AnalysisComment.vue";
 import ShareAnalysis from '../components/ShareAnalysis.vue'
-import { sessionUser } from '../state/session'
+import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 const detail = ref(null)
+const selectedSymbol = ref(null)
+
+function openSymbolDiscussion(symbol) {
+  selectedSymbol.value = symbol
+}
 const loading = ref(false)
 const error = ref('')
 // The kept image failed to load (e.g. removed from the server): show the saved results without it.
@@ -33,6 +38,7 @@ async function correct() {
 let requestId = 0
 
 async function load() {
+  selectedSymbol.value = null
   const request = ++requestId
   loading.value = true
   detail.value = null
@@ -70,7 +76,7 @@ watch(() => route.params.id, load, { immediate: true })
         <section class="mt-6 rounded-3xl bg-card p-6">
           <h2 class="break-all text-xl font-bold">{{ detail.filename }}</h2>
           <p class="mt-2 text-ink/70"><time :datetime="detail.created_at">{{ new Date(detail.created_at).toLocaleString() }}</time> · {{ detail.format }} · {{ (detail.size_bytes / 1024).toFixed(1) }} KiB</p>
-          <TabletOverlay v-if="detail.image_url && !imageMissing" class="mt-6" data-testid="history-image" :signs="detail.result.signs" :formulas="detail.result.formulas">
+          <TabletOverlay v-if="detail.image_url && !imageMissing" class="mt-6" data-testid="history-image" :signs="detail.result.signs" :formulas="detail.result.formulas" can-discuss @discuss="openSymbolDiscussion">
             <img :src="detail.image_url" :alt="detail.filename" class="w-full rounded-lg bg-white" @error="imageMissing = true" />
           </TabletOverlay>
           <p v-else-if="detail.image_url" role="alert" class="mt-4 text-sm text-ink/70">The image could not be loaded. These are the results saved at the time of analysis.</p>
@@ -103,6 +109,7 @@ watch(() => route.params.id, load, { immediate: true })
         <p class="mt-6 text-sm text-ink/70">History comments below are private and are not included when sharing.</p>
         <AnalysisComment :analysis-id="detail.id" :current-user-id="sessionUser?.id ?? null" />
       </template>
+      <SymbolDiscussionDialog v-if="selectedSymbol && detail" :analysis-id="detail.id" :filename="detail.filename" :symbol="selectedSymbol" @close="selectedSymbol = null" />
     </div>
   </main>
 </template>

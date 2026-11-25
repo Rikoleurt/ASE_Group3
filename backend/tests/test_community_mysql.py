@@ -85,8 +85,8 @@ def test_public_discussion_keeps_private_analyses_and_comments_private(monkeypat
             second_id = shared.json()['id']
             assert visitor.get(f'/community/discussions/{second_id}/comments').json() == []
             page = visitor.get('/community/discussions?limit=1').json()
-            assert page['next_before'] == second_id
-            following = visitor.get(f'/community/discussions?limit=1&before={second_id}').json()
+            assert page['next_cursor']
+            following = visitor.get('/community/discussions', params={'limit': 1, 'cursor': page['next_cursor']}).json()
             assert following['items'][0]['id'] == discussion_id
             # Applying the migration repeatedly preserves discussions and private notes.
             sql = (Path(__file__).resolve().parents[1] / 'app/database/migration-60/061-community.sql').read_text()
@@ -105,3 +105,131 @@ def test_public_discussion_keeps_private_analyses_and_comments_private(monkeypat
             for identifier in users:
                 cursor.execute('DELETE FROM `user` WHERE id = %s', (identifier,))
             cursor.close()
+
+
+def test_symbol_discussions_title_uniqueness_and_tree(monkeypatch):
+    from backend.app.data_controller.community_data_controller import DuplicateDiscussionTitle
+
+    snapshot = result()
+    snapshot.signs[0].id = 0
+    snapshot.signs[0].box.w = 0.5
+    monkeypatch.setattr(AnalysisDataController, 'analyze', lambda *args, **kwargs: snapshot)
+    name = uuid4().hex
+    user_id = None
+    controller = UserDataController()
+    try:
+        with TestClient(app, base_url='https://testserver', headers={'X-Requested-With': 'ASE'}) as owner:
+            credentials = {'email': f'{name}@ase3.com', 'username': f'symbol-{name}', 'password': 'secret'}
+            user_id = owner.post('/users/register', json=credentials).json()['id']
+            owner.headers['X-CSRF-Token'] = owner.post('/users/login', json=credentials).json()['csrf_token']
+            uploads = [owner.post('/analysis', files={'file': (f'tablet-{i}.png', png(), 'image/png')}).json()
+                       for i in range(3)]
+            analysis_id = uploads[0]['analysis_id']
+            payload = {'analysis_id': analysis_id, 'sign_id': 0, 'title': f'ku-{name}'}
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                shares = list(pool.map(lambda _: CommunityDataController().create_discussion(
+                    user_id, analysis_id, payload['title'], 0), range(2)))
+            assert sorted(created for _, created in shares) == [False, True]
+            symbol_id = shares[0][0].id
+            assert shares[1][0].id == symbol_id
+            path = f'/community/discussions/{symbol_id}'
+            before_parent = owner.get(path).json()
+            assert 'parent_discussion' not in before_parent
+            assert 'result' not in before_parent
+            assert before_parent['symbol']['id'] == 0
+            assert owner.get(f'/users/me/analyses/{analysis_id}').json().get('discussion_id') is None
+            duplicate = owner.post('/community/discussions', json={**payload, 'title': f'Other-{name}'})
+            assert duplicate.status_code == 200 and duplicate.json()['id'] == symbol_id
+            # Both symbol and general discussions share one global, case-insensitive title namespace.
+            for sign_id in (None, 0):
+                collision = owner.post('/community/discussions', json={
+                    'analysis_id': uploads[1]['analysis_id'], 'sign_id': sign_id,
+                    'title': f"  {payload['title'].upper()}  ",
+                })
+                assert collision.status_code == 409
+            parent = owner.post('/community/discussions', json={
+                'analysis_id': analysis_id, 'title': f'Tablet-{name}',
+            })
+            assert parent.status_code == 201
+            parent_id = parent.json()['id']
+            assert owner.get(path).json()['parent_discussion']['id'] == parent_id
+            assert owner.get(f'/community/discussions/{parent_id}').json()['symbol_discussions'][0]['id'] == symbol_id
+            assert owner.get(f'/users/me/analyses/{analysis_id}').json()['discussion_id'] == parent_id
+            # Different analyses race for one title: exactly one can commit.
+            def race(upload):
+                try:
+                    return CommunityDataController().create_discussion(
+                        user_id, upload['analysis_id'], f'Race-{name}', 0,
+                    )[1]
+                except DuplicateDiscussionTitle:
+                    return False
+            with ThreadPoolExecutor(max_workers=2) as pool:
+                assert sorted(pool.map(race, uploads[1:])) == [False, True]
+    finally:
+        if user_id is not None:
+            with controller.connection() as connection:
+                cursor = connection.cursor()
+                cursor.execute('DELETE FROM `user` WHERE id = %s', (user_id,))
+                cursor.close()
+
+
+def test_filtered_pages_are_stable_and_keep_parent_context():
+    from datetime import datetime, timedelta
+
+    name = uuid4().hex
+    controller = CommunityDataController()
+    analyses = AnalysisDataController()
+    user_id = None
+    try:
+        with controller.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('INSERT INTO `user` (email, username, password) VALUES (%s, %s, %s)',
+                           (f'{name}@ase3.com', f'page-{name}', 'unused-test-password'))
+            user_id = cursor.lastrowid
+            cursor.close()
+        identifiers = []
+        # 35 results cross the normal 30-result page boundary. All have the
+        # same timestamp, so the secondary ID sort is essential.
+        timestamp = datetime(2026, 11, 24, 12)
+        for index in range(35):
+            saved = analyses.save_analysis(user_id, f'HT_{index}-{name}.png', 'PNG', len(png()), result(), image_bytes=png())
+            discussion, _ = controller.create_discussion(user_id, saved.id, f'Tablet {index}-{name}')
+            identifiers.append(discussion.id)
+        with controller.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('UPDATE community_discussion SET created_at = %s WHERE author_id = %s', (timestamp, user_id))
+            cursor.close()
+        first = controller.get_discussion_by_author(f'PAGE-{name}')
+        assert [item.id for item in first.items] == identifiers[::-1][:30]
+        assert first.next_cursor is not None
+        # A new row inserted while scrolling does not duplicate or shift old results.
+        extra = analyses.save_analysis(user_id, f'extra-{name}.png', 'PNG', len(png()), result(), image_bytes=png())
+        controller.create_discussion(user_id, extra.id, f'Extra-{name}')
+        second = controller.get_discussion_by_author(f'PAGE-{name}', cursor=first.next_cursor)
+        assert [item.id for item in second.items] == identifiers[::-1][30:]
+        assert second.next_cursor is None
+        # A newer ID with an older date still sorts by date, not ID.
+        with controller.connection() as connection:
+            cursor = connection.cursor()
+            cursor.execute('UPDATE community_discussion SET created_at = %s WHERE analysis_id = %s',
+                           (timestamp - timedelta(days=1), extra.id))
+            cursor.close()
+        all_rows = controller.get_discussion_by_author(f'page-{name}', limit=100)
+        assert all_rows.items[-1].analysis_id == extra.id
+        # Match a custom tablet title even when fetching only its symbol row.
+        symbol, _ = controller.create_discussion(user_id, extra.id, f'Symbol-{name}', 1)
+        matched = controller.get_discussion_by_tablet_name(f'EXTRA-{name}', limit=1)
+        assert [item.id for item in matched.items] == [symbol.id]
+        assert len(matched.parents) == 1 and matched.parents[0].analysis_id == extra.id
+        assert matched.parents[0].sign_id is None
+        assert matched.next_cursor
+        # Literal underscore and percent searches never become wildcard queries.
+        assert len(controller.get_discussion_by_tablet_name(f'HT_1-{name}').items) == 1
+        assert controller.get_discussion_by_tablet_name(f'HT%{name}').items == []
+        assert controller.get_discussion_by_author("' OR 1=1 --").items == []
+    finally:
+        if user_id is not None:
+            with controller.connection() as connection:
+                cursor = connection.cursor()
+                cursor.execute('DELETE FROM `user` WHERE id = %s', (user_id,))
+                cursor.close()

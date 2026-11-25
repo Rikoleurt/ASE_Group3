@@ -9,6 +9,7 @@ import ShareAnalysis from '../components/ShareAnalysis.vue'
 import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 import SignCorrection from '../components/analysis/SignCorrection.vue'
 import { openCopy } from '../composables/useBoxSet'
+import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
 const STATUS = ref('idle')
@@ -38,6 +39,12 @@ async function correctBoxes() {
     } finally {
         OPENING.value = false
     }
+}
+
+const SELECTED_SYMBOL = ref(null)
+
+function openSymbolDiscussion(symbol) {
+    SELECTED_SYMBOL.value = symbol
 }
 
 // ROUTE
@@ -122,6 +129,7 @@ function onInputChange(event) {
 }
 
 function reset() {
+    SELECTED_SYMBOL.value = null
     revokePreview()
     ANALYSIS.value = null
     SELECTED.value = null
@@ -135,6 +143,10 @@ function revokePreview() {
         URL.revokeObjectURL(PREVIEW_URL.value)
         PREVIEW_URL.value = ''
     }
+}
+
+function round(value, decimals) {
+    return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
 }
 
 onBeforeUnmount(revokePreview)
@@ -191,7 +203,7 @@ onBeforeUnmount(revokePreview)
 
     <section v-else-if="STATUS === 'result'" class="flex flex-col gap-8 md:flex-row">
         <div class="md:w-1/2">
-            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas" :selected-id="SELECTED?.id ?? null" @select="selectSign">
+            <TabletOverlay :signs="ANALYSIS.signs" :formulas="ANALYSIS.formulas" :selected-id="SELECTED?.id ?? null" :can-discuss="Boolean(ANALYSIS.analysis_id)" @select="selectSign" @discuss="openSymbolDiscussion">
                 <img :src="PREVIEW_URL" :alt="FILENAME" class="w-full rounded-lg bg-white" />
             </TabletOverlay>
         </div>
@@ -209,7 +221,7 @@ onBeforeUnmount(revokePreview)
                 </div>
                 <div class="flex justify-between gap-4 py-2">
                     <dt class="text-ink/70">Confidence</dt>
-                    <dd class="font-medium">{{ ANALYSIS.confidence }}%</dd>
+                    <dd class="font-medium">{{ round(ANALYSIS.confidence, 2) }}%</dd>
                 </div>
                 <div class="flex justify-between gap-4 py-2">
                     <dt class="text-ink/70">Processing time</dt>
@@ -252,5 +264,6 @@ onBeforeUnmount(revokePreview)
 
     <FractionCheck v-if="STATUS === 'result'" :analysis="ANALYSIS" class="mt-8" />
     <GlyphOccurrencesPane v-if="STATUS === 'result'" :selection="SELECTION" class="mt-8" />
+    <SymbolDiscussionDialog v-if="SELECTED_SYMBOL && ANALYSIS?.analysis_id" :analysis-id="ANALYSIS.analysis_id" :filename="FILENAME" :symbol="SELECTED_SYMBOL" @close="SELECTED_SYMBOL = null" />
 </main>
 </template>
