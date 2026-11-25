@@ -25,7 +25,12 @@ def get_analysis_data_controller() -> AnalysisDataController:
 AnalysisController = Annotated[AnalysisDataController, Depends(get_analysis_data_controller)]
 
 @router.post("", response_model=SavedAnalysisResult, status_code=status.HTTP_200_OK,
-             responses={code: {"model": ApiError} for code in (401, 403, 413, 503)})
+             responses={
+                 401: {"model": ApiError},
+                 403: {"model": ApiError},
+                 413: {"model": ApiError, "description": "Content Too Large"},
+                 503: {"model": ApiError},
+             })
 def analyze(file: UploadFile, analysis_data_controller: AnalysisController, user: AuthenticatedWrite) -> SavedAnalysisResult:
     # Each upload keeps up to 10 MB on disk and runs the reader: a day's allowance per user (#98).
     UPLOADS.check(f"user:{user.id}", "You have uploaded a lot of images today. Please try again tomorrow.")
