@@ -83,11 +83,11 @@ watch(() => props.analysisId, loadComments, { immediate: true })
     <h2 id="comments-title" class="text-xl font-bold">Comments</h2>
 
     <p v-if="loading" role="status" class="mt-4">Loading comments…</p>
-    <p v-else-if="!comments.length && !error" class="mt-4 text-ink/70">No comments yet.</p>
+    <p v-else-if="!comments.length && !error" class="mt-4 text-ink/80">No comments yet.</p>
 
     <ul v-else-if="comments.length" class="mt-4 divide-y divide-ink/10">
       <li v-for="c in comments" :key="c.id" class="py-3">
-        <div class="flex items-center justify-between gap-4 text-sm text-ink/70">
+        <div class="flex items-center justify-between gap-4 text-sm text-ink/80">
           <time :datetime="c.created_at">{{ new Date(c.created_at).toLocaleString() }}</time>
           <button
             v-if="currentUserId === null || c.author_id === currentUserId"
@@ -119,7 +119,7 @@ watch(() => props.analysisId, loadComments, { immediate: true })
         @keydown.meta.enter="submit"
       />
       <div class="mt-2 flex items-center justify-between">
-        <small class="text-ink/70">{{ draft.length }}/{{ MAX_LENGTH }}</small>
+        <small class="text-ink/80">{{ draft.length }}/{{ MAX_LENGTH }}</small>
         <button
           type="button"
           :disabled="!draft.trim() || submitting"

@@ -147,11 +147,11 @@ onMounted(load)
           </button>
         </li>
       </ul>
-      <p v-else-if="SEARCHED && SEARCHED === QUERY.trim()" class="mt-1 text-sm text-ink/70">No one else has a username starting with "{{ SEARCHED }}".</p>
-      <p v-else-if="QUERY.trim().length === 1" class="mt-1 text-sm text-ink/70">Type at least two letters.</p>
+      <p v-else-if="SEARCHED && SEARCHED === QUERY.trim()" class="mt-1 text-sm text-ink/80">No one else has a username starting with "{{ SEARCHED }}".</p>
+      <p v-else-if="QUERY.trim().length === 1" class="mt-1 text-sm text-ink/80">Type at least two letters.</p>
 
       <h3 class="mt-5 text-sm font-semibold">People with access</h3>
-      <p v-if="!OTHERS.length" class="mt-1 text-sm text-ink/70">Not shared with anyone by name.</p>
+      <p v-if="!OTHERS.length" class="mt-1 text-sm text-ink/80">Not shared with anyone by name.</p>
       <ul class="mt-1 divide-y divide-ink/10">
         <li v-for="item in OTHERS" :key="item.user.id" class="flex flex-wrap items-center gap-2 py-2" data-testid="share-row">
           <span class="flex-1">{{ item.user.username }}</span>
@@ -167,7 +167,7 @@ onMounted(load)
             <option v-for="level in (locked(item) ? LEVELS : OFFERED)" :key="level.value" :value="level.value">{{ level.label }}</option>
           </select>
           <button v-if="!locked(item)" type="button" class="cursor-pointer text-sm underline disabled:opacity-60" :disabled="BUSY" :aria-label="`Remove ${item.user.username}`" @click="unshare(item.user)">Remove</button>
-          <p v-if="everyoneGivesMore(item)" class="w-full text-xs text-ink/70" data-testid="everyone-more">Everyone logged in can {{ SHARING.everyone }}, so {{ item.user.username }} can too.</p>
+          <p v-if="everyoneGivesMore(item)" class="w-full text-xs text-ink/80" data-testid="everyone-more">Everyone logged in can {{ SHARING.everyone }}, so {{ item.user.username }} can too.</p>
         </li>
       </ul>
 
@@ -176,7 +176,7 @@ onMounted(load)
         <option v-for="level in EVERYONE" :key="level.value" :value="level.value">{{ level.label }}</option>
       </select>
 
-      <details class="mt-5 text-sm text-ink/70">
+      <details class="mt-5 text-sm text-ink/80">
         <summary class="cursor-pointer">What the levels allow</summary>
         <dl class="mt-2">
           <template v-for="level in LEVELS" :key="level.value"><dt class="font-semibold">{{ level.label }}</dt><dd class="mb-1">{{ level.hint }}</dd></template>

@@ -136,7 +136,7 @@ onMounted(() => {
     <p v-if="FORBIDDEN" role="alert" class="mt-6 rounded-2xl bg-card p-6">Only reviewers can see this page.</p>
 
     <template v-else>
-      <p class="mt-2 text-ink/70">
+      <p class="mt-2 text-ink/80">
         Approved corrections become training labels. Corrections of the same sign are shown together.
       </p>
 
@@ -176,9 +176,9 @@ onMounted(() => {
               The model read
               <span v-if="GLYPHS[group.first.original_sign]" class="linear-a">{{ GLYPHS[group.first.original_sign] }}</span>
               {{ group.first.original_label }}
-              <span class="font-normal text-ink/70">({{ Math.round(group.first.original_confidence) }}%)</span>
+              <span class="font-normal text-ink/80">({{ Math.round(group.first.original_confidence) }}%)</span>
             </p>
-            <p class="text-sm text-ink/70">Analysis {{ group.first.analysis_id }} · sign {{ group.first.sign_id }}</p>
+            <p class="text-sm text-ink/80">Analysis {{ group.first.analysis_id }} · sign {{ group.first.sign_id }}</p>
           </div>
           <p v-if="group.conflicting" class="mt-2 text-sm font-semibold" data-testid="conflict">
             Users disagree on this sign.
@@ -191,7 +191,7 @@ onMounted(() => {
                   <span v-if="!item.uncertain && GLYPHS[item.proposed_sign]" class="linear-a mr-1">{{ GLYPHS[item.proposed_sign] }}</span>{{ proposal(item) }}
                 </p>
                 <p v-if="item.note" class="text-sm">“{{ item.note }}”</p>
-                <p class="text-xs text-ink/70">
+                <p class="text-xs break-all text-ink/80">
                   <time :datetime="item.created_at">{{ date(item.created_at) }}</time> · {{ item.model_version }}
                 </p>
                 <p v-if="ITEM_ERRORS[item.id]" role="alert" class="mt-1 text-sm text-conf-low">{{ ITEM_ERRORS[item.id] }}</p>

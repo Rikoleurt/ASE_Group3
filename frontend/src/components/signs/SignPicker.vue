@@ -69,7 +69,7 @@ function choose() {
           />
           <span
             >{{ candidate.label }}
-            <span class="text-ink/60">{{ Math.round(candidate.probability) }}%</span></span
+            <span class="text-ink/80">{{ Math.round(candidate.probability) }}%</span></span
           >
         </button>
       </div>
@@ -147,18 +147,18 @@ function choose() {
           }}</span>
           <span class="min-w-0 flex-1">
             <span class="font-semibold">{{ sign.sign }}</span>
-            <span v-if="sign.reading" class="ml-1.5 text-ink/70">{{ sign.reading }}</span>
+            <span v-if="sign.reading" class="ml-1.5 text-ink/80">{{ sign.reading }}</span>
             <span
               v-if="
                 sign.name && sign.name !== sign.sign && !sign.name.includes(`(${sign.reading})`)
               "
-              class="block truncate text-xs text-ink/60"
+              class="block truncate text-xs text-ink/80"
               >{{ sign.name }}</span
             >
           </span>
         </button>
       </li>
     </ul>
-    <p v-else-if="QUERY.trim()" class="mt-1 text-sm text-ink/70">No sign matches.</p>
+    <p v-else-if="QUERY.trim()" class="mt-1 text-sm text-ink/80">No sign matches.</p>
   </div>
 </template>

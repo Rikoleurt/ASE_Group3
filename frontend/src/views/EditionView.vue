@@ -92,21 +92,28 @@ function sourceName(source) {
 <template>
   <main class="mx-auto max-w-5xl px-6 py-10">
     <p v-if="LOADING" role="status">Loading…</p>
-    <p v-else-if="ERROR" role="alert" class="text-confidence-low">{{ ERROR }}</p>
+    <template v-else-if="ERROR">
+      <h1 class="text-2xl font-bold">Edition release</h1>
+      <p role="alert" class="mt-2 text-confidence-low">{{ ERROR }}</p>
+      <p class="mt-4">
+        <RouterLink to="/tablets" class="underline">Browse the tablets</RouterLink> to find an
+        edition, or check the link you followed.
+      </p>
+    </template>
     <template v-if="RELEASE">
       <RouterLink :to="`/tablets/${RELEASE.tablet}`" class="underline">← {{ TABLET }}</RouterLink>
       <h1 class="mt-2 text-3xl font-bold">{{ TITLE }}</h1>
-      <p class="mt-1 text-ink/70" data-testid="release-meta">
+      <p class="mt-1 text-ink/80" data-testid="release-meta">
         Release {{ RELEASE.number }} · {{ DATE }} · edited by {{ RELEASE.owner }}
       </p>
       <p
         v-if="RELEASE.contributors.length"
-        class="text-sm text-ink/70"
+        class="text-sm text-ink/80"
         data-testid="release-contributors"
       >
         Contributors: {{ RELEASE.contributors.join(', ') }}
       </p>
-      <p v-if="RELEASE.merged_from.length" class="text-sm text-ink/70">
+      <p v-if="RELEASE.merged_from.length" class="text-sm text-ink/80">
         Merged from {{ RELEASE.merged_from.map(sourceName).join(', ') }}.
       </p>
       <p v-if="RELEASE.notes" class="mt-3 rounded-lg bg-card p-3">{{ RELEASE.notes }}</p>
@@ -126,19 +133,19 @@ function sourceName(source) {
           >
             {{ COPIED ? 'Copied' : 'Copy the citation' }}
           </button>
-          <span class="ml-2 text-ink/70">Download:</span>
+          <span class="ml-2 text-ink/80">Download:</span>
           <a
             v-for="format in FORMATS"
             :key="format.ext"
             :href="`/api/editions/${RELEASE.id}/export.${format.ext}`"
-            class="underline"
+            class="inline-flex min-h-10 items-center px-1 underline"
             :title="format.what"
             :data-testid="`export-${format.ext}`"
             download
             >{{ format.label }}</a
           >
         </div>
-        <p class="mt-1 text-xs text-ink/60">
+        <p class="mt-1 text-xs text-ink/80">
           A release never changes: this page and these files stay the same, whatever is edited
           later.
         </p>
@@ -160,7 +167,7 @@ function sourceName(source) {
       </div>
       <p class="mt-4">{{ RELEASE.reading.summary }}</p>
       <p class="mt-1" data-testid="release-reading">
-        <span class="text-ink/70">Transliteration:</span>
+        <span class="text-ink/80">Transliteration:</span>
         {{ RELEASE.reading.symbol_interpretation }}
       </p>
       <FractionCheck
@@ -172,7 +179,7 @@ function sourceName(source) {
         }"
         class="mt-6"
       />
-      <p class="mt-6 text-sm text-ink/70">Drawings: SigLA via lineara.eu, CC BY-NC-SA 4.0.</p>
+      <p class="mt-6 text-sm text-ink/80">Drawings: SigLA via lineara.eu, CC BY-NC-SA 4.0.</p>
     </template>
   </main>
 </template>

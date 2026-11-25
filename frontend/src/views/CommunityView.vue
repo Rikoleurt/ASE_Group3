@@ -139,7 +139,7 @@ onBeforeUnmount(() => {
 <template>
   <main class="mx-auto max-w-5xl px-6 py-10">
     <h1 class="text-3xl font-bold">Community</h1>
-    <p class="mt-2 text-ink/70">Explore shared tablets and symbols, and discuss the model’s readings.</p>
+    <p class="mt-2 text-ink/80">Explore shared tablets and symbols, and discuss the model’s readings.</p>
     <RouterLink to="/analysis" class="mt-4 inline-block underline">Analyze a tablet to share →</RouterLink>
     <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
       <div role="group" aria-label="Filter discussions" class="flex flex-wrap gap-2">
@@ -156,17 +156,17 @@ onBeforeUnmount(() => {
           class="w-full rounded-lg border border-ink/30 bg-card px-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-2" />
       </form>
     </div>
-    <p v-if="authorId" class="mt-3 text-sm text-ink/70">Showing discussions by the mentioned user. <button type="button" class="hover:underline" @click="authorId = null">Clear author selection</button></p>
+    <p v-if="authorId" class="mt-3 text-sm text-ink/80">Showing discussions by the mentioned user. <button type="button" class="hover:underline" @click="authorId = null">Clear author selection</button></p>
     <ul v-if="tabletGroups.length" :aria-busy="busy" aria-label="Tablet discussions" class="mt-8 space-y-4">
       <li v-for="group in tabletGroups" :key="group.analysisId" :data-analysis-id="group.analysisId" class="overflow-hidden rounded-2xl bg-card">
         <RouterLink v-if="group.parent" :to="`/community/${group.parent.id}`" class="block px-6 py-5 hover:bg-bar focus-visible:bg-bar">
-          <p class="text-xs font-semibold uppercase tracking-wide text-ink/70">Tablet</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-ink/80">Tablet</p>
           <h2 class="mt-1 break-words text-lg font-semibold">{{ group.parent.title }}</h2>
-          <p class="mt-1 text-sm text-ink/70">{{ group.parent.author_username }}</p>
-          <p class="mt-1 text-sm text-ink/70">{{ group.parent.score }} points</p>
+          <p class="mt-1 text-sm text-ink/80">{{ group.parent.author_username }}</p>
+          <p class="mt-1 text-sm text-ink/80">{{ group.parent.score }} points</p>
         </RouterLink>
         <div v-else class="px-6 py-5">
-          <p class="text-xs font-semibold uppercase tracking-wide text-ink/70">Tablet</p>
+          <p class="text-xs font-semibold uppercase tracking-wide text-ink/80">Tablet</p>
           <h2 class="mt-1 break-words text-lg font-semibold">{{ group.filename || `Tablet ${group.analysisId}` }}</h2>
         </div>
         <ul v-if="group.symbols.length" :aria-label="`Symbol discussions for ${group.filename || group.parent?.title || group.analysisId}`" class="mx-6 mb-5 border-l-2 border-ink/20 pl-4 sm:ml-8">
@@ -176,8 +176,8 @@ onBeforeUnmount(() => {
                 <span class="rounded bg-ink/10 px-2 py-0.5 text-xs font-semibold">Symbol</span>
                 <h3 class="break-words font-semibold">{{ symbol.title }}</h3>
               </div>
-              <p v-if="symbol.symbol_name && symbol.symbol_name !== symbol.title" class="mt-1 text-sm text-ink/70">Model reading: {{ symbol.symbol_name }}</p>
-              <p class="mt-1 text-sm text-ink/70">{{" Author : " + symbol.author_username }}</p>
+              <p v-if="symbol.symbol_name && symbol.symbol_name !== symbol.title" class="mt-1 text-sm text-ink/80">Model reading: {{ symbol.symbol_name }}</p>
+              <p class="mt-1 text-sm text-ink/80">{{" Author : " + symbol.author_username }}</p>
             </RouterLink>
           </li>
         </ul>
@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
     <LoadingIndicator v-if="busy" class="mt-6" :label="waitingForSearch ? 'Searching discussions…' : 'Loading discussions…'" />
     <p v-if="error" role="alert" class="mt-6 text-conf-low">{{ error }}</p>
     <button v-if="error || nextCursor" type="button" :disabled="busy" class="mt-6 rounded bg-bar px-6 py-2 disabled:opacity-50" @click="loadNextPage">{{ error ? 'Try again' : 'Load more' }}</button>
-    <p v-if="loaded && discussions.length && !nextCursor && !busy" class="mt-6 text-sm text-ink/70">All matching discussions have been loaded.</p>
+    <p v-if="loaded && discussions.length && !nextCursor && !busy" class="mt-6 text-sm text-ink/80">All matching discussions have been loaded.</p>
     <div ref="sentinel" aria-hidden="true" class="h-px" />
   </main>
 </template>

@@ -59,7 +59,7 @@ const date = (value) =>
 <template>
   <section class="rounded-3xl bg-card p-5" aria-labelledby="releases-h" data-testid="releases">
     <h2 id="releases-h" class="text-xl font-bold">Releases</h2>
-    <p class="mt-1 text-sm text-ink/70">
+    <p class="mt-1 text-sm text-ink/80">
       A release is a fixed snapshot that others vote on and cite; later edits do not change it.
     </p>
     <ul v-if="RELEASES.length" class="mt-2">
@@ -67,10 +67,10 @@ const date = (value) =>
         <RouterLink :to="`/editions/${item.id}`" class="font-semibold underline"
           >Release {{ item.number }}</RouterLink
         >
-        <span class="text-sm text-ink/60">
+        <span class="text-sm text-ink/80">
           · {{ date(item.created_at) }} · {{ item.box_count }} boxes</span
         >
-        <span v-if="item.notes" class="block text-sm text-ink/70">{{ item.notes }}</span>
+        <span v-if="item.notes" class="block text-sm text-ink/80">{{ item.notes }}</span>
       </li>
     </ul>
     <template v-if="canRelease">
@@ -86,7 +86,7 @@ const date = (value) =>
       <form v-else class="mt-3" @submit.prevent="release">
         <label class="block text-sm font-semibold" for="release-notes"
           >What changed?
-          <span class="font-normal text-ink/70">(optional, shown to voters)</span></label
+          <span class="font-normal text-ink/80">(optional, shown to voters)</span></label
         >
         <textarea
           id="release-notes"
@@ -98,7 +98,7 @@ const date = (value) =>
         <p v-if="dirty" class="mt-1 text-sm text-confidence-low" role="alert">
           Save your changes first: unsaved changes are not released.
         </p>
-        <p class="mt-1 text-sm text-ink/70">
+        <p class="mt-1 text-sm text-ink/80">
           Releasing opens this edition to everyone logged in, to view.
         </p>
         <button

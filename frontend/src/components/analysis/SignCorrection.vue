@@ -92,11 +92,11 @@ async function submit(uncertain) {
         data-testid="correction-crop"
       />
       <div>
-        <p class="text-ink/70">The model read</p>
+        <p class="text-ink/80">The model read</p>
         <p class="text-lg font-bold" data-testid="correction-original">
           <span v-if="sign.glyph" class="linear-a mr-1">{{ sign.glyph }}</span>{{ sign.label }}
         </p>
-        <p class="text-sm text-ink/70">{{ Math.round(sign.confidence) }}% confident</p>
+        <p class="text-sm text-ink/80">{{ Math.round(sign.confidence) }}% confident</p>
       </div>
     </div>
 
@@ -118,7 +118,7 @@ async function submit(uncertain) {
         />
         <span v-if="MATCH" class="flex items-center gap-2" data-testid="correction-choice">
           <SignPreview :sign="MATCH.sign" :glyph="MATCH.glyph" :preview-url="MATCH.preview_url" :size="40" />
-          <span><span class="font-semibold">{{ MATCH.sign }}</span> <span v-if="MATCH.reading" class="text-ink/70">{{ MATCH.reading }}</span></span>
+          <span><span class="font-semibold">{{ MATCH.sign }}</span> <span v-if="MATCH.reading" class="text-ink/80">{{ MATCH.reading }}</span></span>
         </span>
       </div>
       <ul v-if="SUGGESTIONS.length" class="max-h-56 overflow-auto rounded border border-ink/15 bg-white" data-testid="correction-suggestions">
@@ -126,12 +126,12 @@ async function submit(uncertain) {
           <button type="button" class="flex w-full cursor-pointer items-center gap-3 px-2 py-1 text-left hover:bg-bar" @click="PROPOSED = entry.sign">
             <SignPreview :sign="entry.sign" :glyph="entry.glyph" :preview-url="entry.preview_url" :size="36" />
             <span v-if="entry.preview_url" class="linear-a text-xl" aria-hidden="true">{{ entry.glyph }}</span>
-            <span><span class="font-semibold">{{ entry.sign }}</span> <span v-if="entry.reading" class="text-ink/70">{{ entry.reading }}</span></span>
+            <span><span class="font-semibold">{{ entry.sign }}</span> <span v-if="entry.reading" class="text-ink/80">{{ entry.reading }}</span></span>
           </button>
         </li>
       </ul>
 
-      <label for="correction-note" class="font-semibold">Note <span class="font-normal text-ink/70">(optional)</span></label>
+      <label for="correction-note" class="font-semibold">Note <span class="font-normal text-ink/80">(optional)</span></label>
       <textarea
         id="correction-note"
         v-model="NOTE"

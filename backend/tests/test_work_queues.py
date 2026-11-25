@@ -25,6 +25,7 @@ def offline(monkeypatch, tmp_path):
                 "tablets": {
                     "HT-1": {"tablet": "HT 1", "agree": 1, "differs": 1, "missing": 0, "total": 2},
                     "HT-2": {"tablet": "HT 2", "agree": 2, "differs": 0, "missing": 0, "total": 2},
+                    "KN-1": {"tablet": "KN 1", "agree": 7, "differs": 2, "missing": 1, "total": 10},
                     "Odd": {"tablet": "Odd", "agree": 0, "differs": 0, "missing": 0, "total": 0},
                 },
                 "low_confidence": [
@@ -90,14 +91,16 @@ def test_disagreement_with_the_model_comes_from_the_offline_run(
         assert (body["against"], body["model_version"], body["total"]) == (
             "model",
             "reader-7",
-            2,
+            3,
         )  # empty ones left out
+        # Most places that differ first: KN 1 (3 of 10) before HT 1 (1 of 2), then by share.
         assert [(row["slug"], row["score"]) for row in body["items"]] == [
+            ("KN-1", 0.3),
             ("HT-1", 0.5),
             ("HT-2", 0.0),
         ]
         page = client.get("/queues/disagreement?offset=1&limit=1").json()
-        assert [row["slug"] for row in page["items"]] == ["HT-2"] and page["total"] == 2
+        assert [row["slug"] for row in page["items"]] == ["HT-1"] and page["total"] == 3
 
 
 def test_without_the_offline_run_the_queues_say_how_to_build_it(

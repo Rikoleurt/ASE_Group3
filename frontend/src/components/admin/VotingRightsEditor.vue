@@ -73,7 +73,7 @@ async function change() {
             ? 'Can vote on editions.'
             : 'Cannot vote: their votes are kept but not counted.'
         }}
-        <span v-if="RIGHTS.reason" class="block text-sm text-ink/70"
+        <span v-if="RIGHTS.reason" class="block text-sm text-ink/80"
           >Last change by {{ RIGHTS.changed_by }}: “{{ RIGHTS.reason }}”</span
         >
       </p>

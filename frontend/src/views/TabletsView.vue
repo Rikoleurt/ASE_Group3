@@ -287,7 +287,7 @@ function compareVersions() {
 <template>
   <main class="mx-auto max-w-6xl px-6 py-10">
     <h1 class="text-3xl font-bold">Tablets</h1>
-    <p class="mt-1 text-ink/70">Every corpus tablet with the scholars' sign boxes. Compare them with the model's boxes, and correct either.</p>
+    <p class="mt-1 text-ink/80">Every corpus tablet with the scholars' sign boxes. Compare them with the model's boxes, and correct either.</p>
 
     <div class="mt-6 flex flex-col gap-8 md:flex-row">
       <nav class="md:w-64 md:shrink-0" aria-label="Tablets">
@@ -318,10 +318,10 @@ function compareVersions() {
           </label>
           <button type="button" class="mt-1 cursor-pointer underline" :aria-expanded="SKETCHING" data-testid="sequence-sketch" @click="SKETCHING = !SKETCHING">✎ Draw a sign to add</button>
           <SketchPad v-if="SKETCHING" class="mt-2 rounded-lg bg-card p-2" :limit="6" @pick="addSketched" />
-          <p class="mt-1 text-xs text-ink/60">Signs by number or reading, joined by - ; * for any sign, | for either.</p>
+          <p class="mt-1 text-xs text-ink/80">Signs by number or reading, joined by - ; * for any sign, | for either.</p>
         </div>
         <p v-if="LIST_ERROR" role="alert" class="mt-3 text-confidence-low">{{ LIST_ERROR }}</p>
-        <p v-if="MODE === 'tablet'" class="mt-3 text-sm text-ink/70" role="status">{{ LISTING ? 'Loading…' : `${TOTAL} tablet${TOTAL === 1 ? '' : 's'}` }}</p>
+        <p v-if="MODE === 'tablet'" class="mt-3 text-sm text-ink/80" role="status">{{ LISTING ? 'Loading…' : `${TOTAL} tablet${TOTAL === 1 ? '' : 's'}` }}</p>
         <div v-if="WITHOUT_DRAWING || CORPUS_MISSING || DOWNLOAD" class="mt-2 rounded-lg bg-card p-2 text-xs text-ink/80" data-testid="missing-drawings">
           <p v-if="WITHOUT_DRAWING">
             {{ WITHOUT_DRAWING }} more tablet{{ WITHOUT_DRAWING === 1 ? ' is' : 's are' }} hidden: {{ WITHOUT_DRAWING === 1 ? 'its drawing is' : 'their drawings are' }} not downloaded on this server.
@@ -338,14 +338,14 @@ function compareVersions() {
             <p v-if="DOWNLOADING && DOWNLOAD.log.length" class="mt-1 font-mono" role="status" data-testid="download-progress">{{ DOWNLOAD.log.at(-1) }}</p>
             <p v-else-if="DOWNLOAD?.state === 'done'" class="mt-1" role="status">Downloaded. The tablets are listed now.</p>
             <p v-if="DOWNLOAD?.state === 'failed' || DOWNLOAD_ERROR" role="alert" class="mt-1 text-confidence-low">{{ DOWNLOAD_ERROR || DOWNLOAD.error }}</p>
-            <p v-if="WITHOUT_DRAWING || CORPUS_MISSING" class="mt-1 text-ink/60">From the corpus-v1 release on GitHub (CC BY-NC-SA 4.0). Or on the server: python scripts/fetch_corpus.py</p>
+            <p v-if="WITHOUT_DRAWING || CORPUS_MISSING" class="mt-1 text-ink/80">From the corpus-v1 release on GitHub (CC BY-NC-SA 4.0). Or on the server: python scripts/fetch_corpus.py</p>
           </template>
           <p v-else-if="WITHOUT_DRAWING || CORPUS_MISSING" class="mt-1">An admin can download them from this page. {{ HINT || 'Download them with: python scripts/fetch_corpus.py' }}</p>
         </div>
         <div v-if="MODE === 'tablet' && !QUERY.trim() && (BOOKMARKS.length || RECENT_TABLETS.length)" class="mt-3 text-sm" data-testid="quick-tablets">
           <template v-for="group in [{ name: 'Bookmarked', slugs: BOOKMARKS, id: 'bookmarked' }, { name: 'Recently opened', slugs: RECENT_TABLETS.filter((slug) => !BOOKMARKS.includes(slug)).slice(0, 5), id: 'recent' }]" :key="group.id">
             <template v-if="group.slugs.length">
-              <h2 class="mt-2 font-semibold text-ink/70">{{ group.name }}</h2>
+              <h2 class="mt-2 font-semibold text-ink/80">{{ group.name }}</h2>
               <ul :data-testid="`${group.id}-tablets`">
                 <li v-for="slug in group.slugs" :key="slug">
                   <button type="button" class="w-full cursor-pointer rounded px-2 py-0.5 text-left hover:bg-bar" :class="{ 'bg-bar font-semibold': slug === SLUG }" @click="pick(slug)">{{ nameOf(slug) }}</button>
@@ -353,20 +353,20 @@ function compareVersions() {
               </ul>
             </template>
           </template>
-          <h2 class="mt-2 font-semibold text-ink/70">All tablets</h2>
+          <h2 class="mt-2 font-semibold text-ink/80">All tablets</h2>
         </div>
         <template v-if="MODE === 'sequence'">
           <p v-if="SEQUENCE_ERROR" role="alert" class="mt-3 text-confidence-low">{{ SEQUENCE_ERROR }}</p>
           <p v-else-if="SEARCHING" role="status" class="mt-3 text-sm">Searching…</p>
           <template v-else-if="SEQUENCE">
-            <p class="mt-3 text-sm text-ink/70" role="status" data-testid="sequence-count">
+            <p class="mt-3 text-sm text-ink/80" role="status" data-testid="sequence-count">
               {{ SEQUENCE.total_hits }} match{{ SEQUENCE.total_hits === 1 ? '' : 'es' }} on {{ SEQUENCE.total_tablets }} tablet{{ SEQUENCE.total_tablets === 1 ? '' : 's' }}
             </p>
             <ul class="mt-2 max-h-[60vh] overflow-auto" data-testid="sequence-results">
               <li v-for="item in SEQUENCE.items" :key="item.slug">
                 <button type="button" class="w-full cursor-pointer rounded px-2 py-1 text-left hover:bg-bar" :class="{ 'bg-bar font-semibold': item.slug === SLUG }" @click="openHit(item)">
-                  <span class="flex justify-between"><span>{{ item.tablet }}</span><span class="text-sm text-ink/60">{{ item.hits.length }}×</span></span>
-                  <span class="block text-xs text-ink/60">{{ [...new Set(item.hits.map((hit) => hit.text))].join(', ') }}<template v-if="item.release_id"> · in the community edition</template></span>
+                  <span class="flex justify-between"><span>{{ item.tablet }}</span><span class="text-sm text-ink/80">{{ item.hits.length }}×</span></span>
+                  <span class="block text-xs text-ink/80">{{ [...new Set(item.hits.map((hit) => hit.text))].join(', ') }}<template v-if="item.release_id"> · in the community edition</template></span>
                 </button>
               </li>
             </ul>
@@ -381,7 +381,7 @@ function compareVersions() {
               :aria-current="tablet.slug === SLUG ? 'page' : undefined"
               @click="pick(tablet.slug)"
             >
-              <span>{{ tablet.tablet }}</span><span class="text-sm text-ink/60">{{ tablet.signs }} sign{{ tablet.signs === 1 ? '' : 's' }}</span>
+              <span>{{ tablet.tablet }}</span><span class="text-sm text-ink/80">{{ tablet.signs }} sign{{ tablet.signs === 1 ? '' : 's' }}</span>
             </button>
           </li>
         </ul>
@@ -445,61 +445,66 @@ function compareVersions() {
               <p v-if="OPEN_ERROR" role="alert" class="text-confidence-low">{{ OPEN_ERROR }}</p>
             </div>
 
-            <section v-if="sessionUser && VERSIONS.length" class="mt-4 rounded-2xl bg-card p-4 lg:w-3/4" aria-labelledby="versions-h" data-testid="versions">
-              <div class="flex flex-wrap items-baseline justify-between gap-2">
-                <h3 id="versions-h" class="font-bold">Versions of this tablet</h3>
-                <button
-                  type="button"
-                  class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="COMPARE.length < 2"
-                  data-testid="compare-versions"
-                  @click="compareVersions"
-                >Compare {{ COMPARE.length >= 2 ? COMPARE.length : '' }} versions</button>
-                <button
-                  type="button"
-                  class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
-                  :disabled="COMPARE.length < 2"
-                  data-testid="merge-versions"
-                  @click="mergeVersions"
-                >Merge into an edition</button>
+            <!-- The drawing first; beside it on wide screens, below it on narrow ones: the versions and editions. -->
+            <div class="mt-4 grid items-start gap-4 xl:grid-cols-[minmax(0,3fr)_minmax(18rem,2fr)]">
+              <div class="min-w-0">
+                <TabletOverlay
+                  :signs="BOXES.signs"
+                  :formulas="BOXES.formulas"
+                  :badges="SOURCE === 'scholar' ? ACTIVITY : {}"
+                  :highlight="SOURCE === 'scholar' ? HIGHLIGHT : []"
+                  @select="(sign) => SOURCE === 'scholar' && seen(sign.id)"
+                >
+                  <img :src="`/api${BOXES.image_url}`" @load="showFound" :alt="`${BOXES.tablet} tracing`" class="w-full rounded-lg bg-white" />
+                </TabletOverlay>
               </div>
-              <p class="text-sm text-ink/70">Tick two to {{ MAX_COMPARE }} to see where they agree and differ, or to merge them into an edition of your own.</p>
-              <ul class="mt-2">
-                <li v-for="version in VERSIONS" :key="version.key" class="flex items-center gap-3 py-1" data-testid="version">
-                  <input
-                    :id="`compare-${version.key}`"
-                    v-model="COMPARE"
-                    type="checkbox"
-                    :value="version.key"
-                    :disabled="!COMPARE.includes(version.key) && COMPARE.length >= MAX_COMPARE"
-                    class="h-4 w-4"
-                  />
-                  <label :for="`compare-${version.key}`" class="flex-1">
-                    {{ versionName(version) }}
-                    <span v-if="version.box_count != null" class="ml-1 text-sm text-ink/60">· {{ version.box_count }} box{{ version.box_count === 1 ? '' : 'es' }}</span>
-                    <span v-if="version.permission && !version.mine" class="ml-1 text-sm text-ink/60">· you can {{ version.permission === 'manage' ? 'manage' : version.permission }}</span>
-                  </label>
-                  <RouterLink v-if="version.key.startsWith('copy:')" :to="`/box-sets/${version.key.slice(5)}`" class="text-sm underline">Open</RouterLink>
-                </li>
-              </ul>
-              <p v-if="!COPIES.length" class="mt-1 text-sm text-ink/60">No corrected copies yet: yours, and those shared with you, will be listed here.</p>
-            </section>
-            <EditionsPanel :slug="SLUG" class="mt-4 lg:w-3/4" />
-            <div class="mt-4 lg:w-3/4">
-              <TabletOverlay
-                :signs="BOXES.signs"
-                :formulas="BOXES.formulas"
-                :badges="SOURCE === 'scholar' ? ACTIVITY : {}"
-                :highlight="SOURCE === 'scholar' ? HIGHLIGHT : []"
-                @select="(sign) => SOURCE === 'scholar' && seen(sign.id)"
-              >
-                <img :src="`/api${BOXES.image_url}`" @load="showFound" :alt="`${BOXES.tablet} tracing`" class="w-full rounded-lg bg-white" />
-              </TabletOverlay>
+              <div class="flex min-w-0 flex-col gap-4">
+                <section v-if="sessionUser && VERSIONS.length" class="rounded-2xl bg-card p-4" aria-labelledby="versions-h" data-testid="versions">
+                  <div class="flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 id="versions-h" class="font-bold">Versions of this tablet</h3>
+                    <button
+                      type="button"
+                      class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                      :disabled="COMPARE.length < 2"
+                      data-testid="compare-versions"
+                      @click="compareVersions"
+                    >Compare {{ COMPARE.length >= 2 ? COMPARE.length : '' }} versions</button>
+                    <button
+                      type="button"
+                      class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                      :disabled="COMPARE.length < 2"
+                      data-testid="merge-versions"
+                      @click="mergeVersions"
+                    >Merge into an edition</button>
+                  </div>
+                  <p class="text-sm text-ink/80">Tick two to {{ MAX_COMPARE }} to see where they agree and differ, or to merge them into an edition of your own.</p>
+                  <ul class="mt-2">
+                    <li v-for="version in VERSIONS" :key="version.key" class="flex items-center gap-3 py-1" data-testid="version">
+                      <input
+                        :id="`compare-${version.key}`"
+                        v-model="COMPARE"
+                        type="checkbox"
+                        :value="version.key"
+                        :disabled="!COMPARE.includes(version.key) && COMPARE.length >= MAX_COMPARE"
+                        class="h-4 w-4"
+                      />
+                      <label :for="`compare-${version.key}`" class="flex-1">
+                        {{ versionName(version) }}
+                        <span v-if="version.box_count != null" class="ml-1 text-sm text-ink/80">· {{ version.box_count }} box{{ version.box_count === 1 ? '' : 'es' }}</span>
+                        <span v-if="version.permission && !version.mine" class="ml-1 text-sm text-ink/80">· you can {{ version.permission === 'manage' ? 'manage' : version.permission }}</span>
+                      </label>
+                      <RouterLink v-if="version.key.startsWith('copy:')" :to="`/box-sets/${version.key.slice(5)}`" class="inline-flex min-h-10 items-center px-1 text-sm underline">Open</RouterLink>
+                    </li>
+                  </ul>
+                  <p v-if="!COPIES.length" class="mt-1 text-sm text-ink/80">No corrected copies yet: yours, and those shared with you, will be listed here.</p>
+                </section>
+                <EditionsPanel :slug="SLUG" />
+              </div>
             </div>
             <p class="mt-4">{{ BOXES.summary }}</p>
-            <p class="mt-1"><span class="text-ink/70">Transliteration:</span> {{ BOXES.symbol_interpretation }}</p>
+            <p class="mt-1"><span class="text-ink/80">Transliteration:</span> {{ BOXES.symbol_interpretation }}</p>
             <FractionCheck :analysis="{ ...BOXES, trained: true }" class="mt-6" />
-            <p class="mt-6 text-sm text-ink/70" data-testid="credit">
+            <p class="mt-6 text-sm text-ink/80" data-testid="credit">
               {{ BOXES.credit.text }} <a :href="BOXES.credit.url" class="underline" rel="noopener" target="_blank">{{ BOXES.credit.licence }}</a>
             </p>
           </template>

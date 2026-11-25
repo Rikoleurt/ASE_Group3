@@ -24,7 +24,7 @@ function open(sign) {
 <template>
   <main class="mx-auto max-w-6xl px-6 py-10">
     <h1 class="text-3xl font-bold">Find a sign</h1>
-    <p class="mt-1 text-ink/70">
+    <p class="mt-1 text-ink/80">
       Type a sign's number, reading or name, or draw it if you only remember its shape.
     </p>
 
@@ -43,7 +43,7 @@ function open(sign) {
           class="mt-1 w-full max-w-md rounded border border-ink/30 bg-white px-3 py-1.5"
           @keydown.enter.prevent="SHOWN.length && open(SHOWN[0].sign)"
         />
-        <p class="mt-3 text-sm text-ink/70" role="status">
+        <p class="mt-3 text-sm text-ink/80" role="status">
           {{
             QUERY.trim()
               ? `${SHOWN.length} match${SHOWN.length === 1 ? '' : 'es'}`
@@ -68,7 +68,7 @@ function open(sign) {
               />
               <span class="min-w-0">
                 <span class="block font-semibold">{{ sign.sign }}</span>
-                <span v-if="sign.reading" class="block text-sm text-ink/70">{{
+                <span v-if="sign.reading" class="block text-sm text-ink/80">{{
                   sign.reading
                 }}</span>
               </span>

@@ -95,7 +95,7 @@ onBeforeUnmount(() => {
   <div class="relative">
     <button
       type="button"
-      class="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full hover:bg-black/10"
+      class="relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full hover:bg-black/10"
       :aria-expanded="OPEN"
       :aria-label="UNREAD ? `Notifications: ${UNREAD} unread` : 'Notifications'"
       data-testid="bell"
@@ -137,7 +137,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <p v-if="ERROR" role="alert" class="mt-2 text-sm text-confidence-low">{{ ERROR }}</p>
-      <p v-else-if="!LOADING && !ITEMS.length" class="mt-2 text-sm text-ink/70">
+      <p v-else-if="!LOADING && !ITEMS.length" class="mt-2 text-sm text-ink/80">
         Nothing yet. You will hear here when someone shares, comments, mentions you, backs your
         edition or merges your boxes.
       </p>
@@ -158,7 +158,7 @@ onBeforeUnmount(() => {
               />
               <span>
                 {{ item.message }}
-                <span class="block text-xs font-normal text-ink/60">{{
+                <span class="block text-xs font-normal text-ink/80">{{
                   when(item.created_at)
                 }}</span>
               </span>

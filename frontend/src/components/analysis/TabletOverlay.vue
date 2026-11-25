@@ -228,6 +228,8 @@ rect {
 
 .sign:focus-visible {
   stroke-width: 5;
+  outline: 3px solid var(--color-accent);
+  outline-offset: 2px;
 }
 
 /* The formula box fades in, dashed, after the signs. */

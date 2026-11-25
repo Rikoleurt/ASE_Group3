@@ -100,12 +100,12 @@ const date = (value) =>
       {{ date(PAGE.override.created_at) }}): “{{ PAGE.override.comment }}” The votes are still shown
       below.
     </p>
-    <p v-if="!PAGE.items.length" class="mt-1 text-sm text-ink/70">
+    <p v-if="!PAGE.items.length" class="mt-1 text-sm text-ink/80">
       No released editions yet. Merge versions into an edition and release it for others to vote on.
     </p>
     <p
       v-else-if="!PAGE.voting.allowed"
-      class="mt-1 text-sm text-ink/70"
+      class="mt-1 text-sm text-ink/80"
       data-testid="voting-blocked"
     >
       {{ PAGE.voting.reason }}
@@ -129,11 +129,11 @@ const date = (value) =>
             class="font-semibold underline-offset-2 hover:underline"
             >{{ name(item) }}</RouterLink
           >
-          <span class="text-sm text-ink/60"
+          <span class="text-sm text-ink/80"
             >· {{ backers(item) }} · {{ item.box_count }} boxes</span
           >
         </div>
-        <p v-if="item.notes" class="text-sm text-ink/70">{{ item.notes }}</p>
+        <p v-if="item.notes" class="text-sm text-ink/80">{{ item.notes }}</p>
         <div class="mt-1 flex flex-wrap gap-2 text-sm">
           <template v-if="PAGE.voting.allowed">
             <button

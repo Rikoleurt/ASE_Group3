@@ -64,7 +64,7 @@ function verdictStyle(formula) {
       <li v-for="[key, role] in KEY" :key="key" class="flex items-center gap-2">
         <span class="inline-block h-3.5 w-3.5 rounded-sm border-2" :style="{ borderColor: role.color }" />
         <HoverTip :tip="DEFINITIONS[key]">{{ role.label }}</HoverTip>
-        <span class="text-ink/60" data-testid="key-count">({{ COUNTS[key] }})</span>
+        <span class="text-ink/80" data-testid="key-count">({{ COUNTS[key] }})</span>
       </li>
       <li v-if="FORMULAS.length" class="flex items-center gap-2">
         <span class="inline-block h-3.5 w-5 rounded-sm border-2 border-dashed border-ink/60" />
@@ -75,7 +75,7 @@ function verdictStyle(formula) {
     <h3 class="mt-6 font-bold">The tablet in Linear A</h3>
     <TabletText :analysis="analysis" />
 
-    <p v-if="!FORMULAS.length" class="mt-6 text-ink/70" data-testid="no-formula">
+    <p v-if="!FORMULAS.length" class="mt-6 text-ink/80" data-testid="no-formula">
       No fraction signs or KU-RO total were found on this tablet.
     </p>
 
@@ -97,12 +97,12 @@ function verdictStyle(formula) {
         {{ verdictText(formula) }}
       </p>
       <details class="mt-3 text-sm">
-        <summary class="cursor-pointer text-ink/70">Show the working</summary>
+        <summary class="cursor-pointer text-ink/80">Show the working</summary>
         <ol class="mt-1 space-y-0.5 font-mono" data-testid="steps">
           <li v-for="(step, number) in formula.steps" :key="number">{{ step }}</li>
         </ol>
       </details>
-      <p v-if="formula.kind !== 'group'" class="mt-2 text-sm text-ink/70">{{ formula.note }}</p>
+      <p v-if="formula.kind !== 'group'" class="mt-2 text-sm text-ink/80">{{ formula.note }}</p>
     </article>
   </section>
 </template>

@@ -103,7 +103,7 @@ onMounted(loadProfile)
             :key="item.label"
             class="flex justify-between gap-4 py-2"
           >
-            <dt class="text-ink/70">{{ item.label }}</dt>
+            <dt class="text-ink/80">{{ item.label }}</dt>
             <dd class="font-medium">{{ item.value }}</dd>
           </div>
         </dl>

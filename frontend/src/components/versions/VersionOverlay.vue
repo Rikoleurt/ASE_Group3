@@ -40,7 +40,7 @@ const inset = (colour, side) => Math.min(colour * 0.35, percent(side) / 5)
         :key="index"
         role="button"
         tabindex="0"
-        class="cursor-pointer outline-none"
+        class="cursor-pointer outline-none focus-visible:outline-3 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:outline-solid"
         :aria-label="`Place ${index + 1}`"
         :aria-pressed="selected === index"
         data-testid="place"

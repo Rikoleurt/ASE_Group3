@@ -46,7 +46,7 @@ const SHORTCUTS = [
           </tr>
         </tbody>
       </table>
-      <p class="mt-3 text-xs text-ink/60">Shortcuts do nothing while you type in a field.</p>
+      <p class="mt-3 text-xs text-ink/80">Shortcuts do nothing while you type in a field.</p>
     </section>
   </div>
 </template>

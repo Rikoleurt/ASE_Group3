@@ -55,10 +55,10 @@ function mentionIn(discussion) {
         <RouterLink :to="`/community/${discussion.id}`" class="underline">{{
           discussion.title
         }}</RouterLink>
-        <span class="text-ink/60"> · {{ discussion.author }}</span>
+        <span class="text-ink/80"> · {{ discussion.author }}</span>
       </li>
     </ul>
-    <p v-else class="mt-1 text-ink/60">No discussion mentions this yet.</p>
+    <p v-else class="mt-1 text-ink/80">No discussion mentions this yet.</p>
     <template v-if="sessionUser">
       <button
         type="button"
@@ -71,7 +71,7 @@ function mentionIn(discussion) {
       </button>
       <div v-if="CHOOSING" class="mt-1 rounded-lg bg-white/70 p-2" data-testid="discussion-choice">
         <p v-if="ERROR" role="alert" class="text-confidence-low">{{ ERROR }}</p>
-        <p v-else-if="!RECENT.length" class="text-ink/60">
+        <p v-else-if="!RECENT.length" class="text-ink/80">
           No discussions yet: start one from a saved analysis on the Community page.
         </p>
         <ul v-else>

@@ -67,13 +67,13 @@ onMounted(load)
 
     <div class="mx-auto max-w-4xl">
       <h1 class="text-3xl font-bold">Analysis history</h1>
-      <p class="mt-2 text-ink/70">Your saved results, most recent first.</p>
+      <p class="mt-2 text-ink/80">Your saved results, most recent first.</p>
       <ul v-if="items.length" class="mt-6 divide-y divide-ink/10 overflow-hidden rounded-2xl bg-card">
         <li v-for="item in items" :key="item.id">
-          <RouterLink :to="`/profile/history/${item.id}`" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-bar focus-visible:bg-bar focus-visible:outline-2 focus-visible:outline-offset-[-2px]" :aria-label="`View analysis of ${item.filename}, ${date(item.created_at)}`">
+          <RouterLink :to="`/profile/history/${item.id}`" class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 transition-colors hover:bg-bar focus-visible:bg-bar focus-visible:outline-2 focus-visible:outline-offset-[-2px]">
             <span class="min-w-0 flex-1 break-all font-semibold">{{ item.filename }}</span>
             <span class="text-sm">{{ item.format }} · {{ (item.size_bytes / 1024).toFixed(1) }} KiB</span>
-            <time :datetime="item.created_at" class="text-sm text-ink/70">{{ date(item.created_at) }}</time>
+            <time :datetime="item.created_at" class="text-sm text-ink/80">{{ date(item.created_at) }}</time>
             <span aria-hidden="true">→</span>
           </RouterLink>
         </li>

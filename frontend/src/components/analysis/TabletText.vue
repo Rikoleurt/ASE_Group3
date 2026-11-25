@@ -27,7 +27,7 @@ function reading(sign) {
 <template>
   <ol v-if="LINES.length" class="mt-3 space-y-3" data-testid="tablet-text">
     <li v-for="line in LINES" :key="line.index" class="flex flex-wrap items-end gap-x-6 gap-y-1">
-      <span class="w-6 self-center text-right text-sm text-ink/50">{{ line.index + 1 }}</span>
+      <span class="w-6 self-center text-right text-sm text-ink/80">{{ line.index + 1 }}</span>
       <span class="flex flex-wrap items-end gap-2">
         <span
           v-for="sign in line.signs"
@@ -44,7 +44,7 @@ function reading(sign) {
       </span>
       <span class="text-sm">
         <span class="font-medium">{{ line.text }}</span>
-        <span v-if="line.gloss !== line.text" class="text-ink/70"> — {{ line.gloss }}</span>
+        <span v-if="line.gloss !== line.text" class="text-ink/80"> — {{ line.gloss }}</span>
       </span>
     </li>
   </ol>

@@ -138,7 +138,7 @@ function removeAlternative(sign) {
           <button
             v-if="!disabled"
             type="button"
-            class="cursor-pointer px-1 text-ink/60 hover:text-ink"
+            class="cursor-pointer px-1 text-ink/80 hover:text-ink"
             :aria-label="`Remove ${sign}`"
             @click="removeAlternative(sign)"
           >

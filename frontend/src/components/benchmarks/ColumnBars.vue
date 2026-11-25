@@ -31,8 +31,8 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
       <ul class="m-0 list-none p-0" :aria-label="title">
         <li v-for="b in bars" :key="b.key" class="row" :class="{ few: few(b) }" :data-bar="b.key" :data-few="few(b) || null">
           <span class="cat">
-            <span class="leading-tight">{{ compact ? (b.short ?? b.label) : b.label }}<span v-if="compact && b.count != null" class="ml-1 text-ink/70 tabular-nums">({{ b.count }})</span></span>
-            <span v-if="!compact && b.count != null" class="text-ink/70 tabular-nums">n = {{ b.count }}</span>
+            <span class="leading-tight">{{ compact ? (b.short ?? b.label) : b.label }}<span v-if="compact && b.count != null" class="ml-1 text-ink/80 tabular-nums">({{ b.count }})</span></span>
+            <span v-if="!compact && b.count != null" class="text-ink/80 tabular-nums">n = {{ b.count }}</span>
           </span>
           <span class="plot" role="img" :aria-label="label(b, countLabel)" :title="label(b, countLabel)">
             <span
@@ -54,7 +54,7 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
           <span v-for="t in TICKS" :key="t" class="tick tabular-nums" :style="{ left: `${t}%` }">{{ t }}%</span>
         </span>
       </div>
-      <p v-if="anyFew" class="m-0 mt-0.5 text-[11px] text-ink/70" data-testid="few-note">Grey: fewer than {{ minCount }} signs, too few to compare versions.</p>
+      <p v-if="anyFew" class="m-0 mt-0.5 text-[11px] text-ink/80" data-testid="few-note">Grey: fewer than {{ minCount }} signs, too few to compare versions.</p>
     </div>
   </figure>
 </template>
@@ -106,7 +106,7 @@ const share = (v) => Math.max(0, Math.min(1, v ?? 0)) * 100
 .compact .bar { top: 0.25rem; height: 0.8rem; }
 .compact .axis { min-height: 0.9rem; }
 .compact .ticks { height: 0.9rem; }
-.few .cat, .few .value { color: rgb(77 42 0 / 0.55); }
+.few .cat, .few .value { color: rgb(77 42 0 / 0.8); font-style: italic; } /* faded text failed contrast (visual review) */
 .no-motion { transition: none; }
 @media (prefers-reduced-motion: reduce) { .bar, .value { transition: none; } }
 </style>

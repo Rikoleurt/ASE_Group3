@@ -12,15 +12,34 @@
   /* Tablet confidence scores */
   --color-confidence-high: #15803d;
   --color-confidence-mid: #d97706;
-  --color-confidence-low: #dc2626;
+  --color-confidence-low: #b91c1c; /* errors as text on the page: >= 4.5:1 (visual review) */
   /* Benchmark verdicts as text on cards: darker than the confidence colours for >= 4.5:1 contrast on --color-card. */
   --color-better: #166534;
   --color-worse: #991b1b;
+  --color-caution: #92400e; /* "cannot be checked" and middling confidence as text: >= 4.5:1 on --color-card */
 }
 
 @layer base {
   body {
     background-color: var(--color-page);
     color: var(--color-ink);
+  }
+}
+@layer base {
+  /* Boxes drawn on a tablet are focusable SVG shapes: show where keyboard focus is (visual review). */
+  svg [tabindex]:focus-visible {
+    outline: 3px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  /* Touch targets of at least 40 px on a phone (visual review). Checkboxes and radios keep their
+     size; their labels are the target. */
+  @media (max-width: 640px) {
+    button,
+    select,
+    [role="tab"],
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]) {
+      min-height: 2.5rem;
+    }
   }
 }

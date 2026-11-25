@@ -284,7 +284,7 @@ watch(() => route.params.id, load, { immediate: true })
         Share<template v-if="copy.everyone !== 'none'"> · everyone logged in can {{ EVERYONE_TEXT[copy.everyone] }}</template>
       </button>
     </div>
-    <p v-if="copy" class="mt-1 text-ink/70" data-testid="copy-owner">
+    <p v-if="copy" class="mt-1 text-ink/80" data-testid="copy-owner">
       {{ copy.source.filename || copy.source.tablet.replaceAll('-', ' ') }} ·
       <template v-if="copy.title">“{{ copy.title }}” · </template>
       <template v-if="copy.permission === 'owner'">your {{ copy.kind === 'edition' ? 'edition' : 'corrected copy' }}</template>
@@ -299,7 +299,7 @@ watch(() => route.params.id, load, { immediate: true })
       class="mt-4 max-w-xl"
       @released="copy.everyone = copy.everyone === 'none' ? 'view' : copy.everyone"
     />
-    <p v-if="copy?.kind === 'edition' && copy.merged_from.length" class="mt-1 text-sm text-ink/70" data-testid="merged-from">
+    <p v-if="copy?.kind === 'edition' && copy.merged_from.length" class="mt-1 text-sm text-ink/80" data-testid="merged-from">
       Merged from {{ copy.merged_from.map(mergedName).join(', ') }}.
       <template v-if="copy.contributors.length">Contributors: {{ copy.contributors.join(', ') }}.</template>
     </p>
@@ -334,7 +334,7 @@ watch(() => route.params.id, load, { immediate: true })
           >Reading order</button>
           <button type="button" class="cursor-pointer rounded px-2 py-1.5 text-sm hover:bg-bar" title="Keyboard shortcuts (?)" data-testid="shortcuts" @click="HELP = true">?</button>
           <button type="button" class="cursor-pointer rounded px-3 py-1.5 text-sm hover:bg-bar disabled:opacity-50" :disabled="!history.length || LOCKED" :title="history.length ? 'Undo your last unsaved edit (Ctrl+Z)' : 'Nothing to undo'" data-testid="undo" @click="set.undo()">Undo last edit</button>
-          <span class="ml-auto text-sm" :class="dirty ? 'font-semibold' : 'text-ink/70'" role="status" data-testid="save-state">
+          <span class="ml-auto text-sm" :class="dirty ? 'font-semibold' : 'text-ink/80'" role="status" data-testid="save-state">
             {{ dirty ? `${changes.length} unsaved change${changes.length === 1 ? '' : 's'}` : 'All changes saved' }}
           </span>
           <button type="button" class="cursor-pointer rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5 disabled:opacity-50" :disabled="!dirty || saving" data-testid="discard" @click="discard">Discard</button>
@@ -375,10 +375,10 @@ watch(() => route.params.id, load, { immediate: true })
           @image-error="IMAGE_MISSING = true"
         />
         </ZoomFrame>
-        <p v-if="!CAN_EDIT" class="mt-2 text-sm text-ink/70" data-testid="read-only">
+        <p v-if="!CAN_EDIT" class="mt-2 text-sm text-ink/80" data-testid="read-only">
           You can look at these boxes but not change them. Click a box to see its sign.
         </p>
-        <p v-else class="mt-2 text-sm text-ink/70">
+        <p v-else class="mt-2 text-sm text-ink/80">
           Drag a box to move it and its corners to resize it. In <em>Draw a box</em> mode, drag on the tablet.
           Dashed boxes differ from where this copy started; boxes you drew or renamed stay grey until you save.
           Arrow keys move the selected box, Shift with arrows resizes it, Delete removes it, Ctrl+Z undoes your last edit.
@@ -395,21 +395,21 @@ watch(() => route.params.id, load, { immediate: true })
 
         <section class="rounded-3xl bg-card p-5" aria-labelledby="selected-h" data-testid="selected-panel">
           <h2 id="selected-h" class="text-xl font-bold">Selected box</h2>
-          <p v-if="!SELECTED" class="mt-2 text-ink/70">Click a box on the tablet, or one in the list below.</p>
+          <p v-if="!SELECTED" class="mt-2 text-ink/80">Click a box on the tablet, or one in the list below.</p>
           <template v-else>
             <p class="mt-2 text-lg">
               <SignPreview v-if="SELECTED.sign" :sign="SELECTED.sign" :glyph="glyphOf(SELECTED.sign)" :preview-url="GLYPHS[SELECTED.sign]?.preview_url ?? null" :size="48" class="mr-2 align-middle" />
               <span class="linear-a mr-2 text-3xl" aria-hidden="true">{{ glyphOf(SELECTED.sign) }}</span>
               <span class="font-semibold" data-testid="selected-sign">{{ signName(SELECTED.sign) }}</span>
             </p>
-            <p v-if="SELECTED.model_sign && SELECTED.model_sign !== SELECTED.sign" class="text-sm text-ink/70">
+            <p v-if="SELECTED.model_sign && SELECTED.model_sign !== SELECTED.sign" class="text-sm text-ink/80">
               The model read {{ signName(SELECTED.model_sign) }}<template v-if="SELECTED.model_confidence"> ({{ Math.round(SELECTED.model_confidence) }}%)</template>.
             </p>
-            <p v-else-if="SELECTED.origin === 'user' || SELECTED.id < 0" class="text-sm text-ink/70">Drawn by hand.</p>
-            <p v-if="copy.kind === 'edition' && (SELECTED.source?.kind === 'scholar' || SELECTED.source?.kind === 'model')" class="text-sm text-ink/70" data-testid="box-source">
+            <p v-else-if="SELECTED.origin === 'user' || SELECTED.id < 0" class="text-sm text-ink/80">Drawn by hand.</p>
+            <p v-if="copy.kind === 'edition' && (SELECTED.source?.kind === 'scholar' || SELECTED.source?.kind === 'model')" class="text-sm text-ink/80" data-testid="box-source">
               From the {{ SELECTED.source.kind === 'scholar' ? "scholars'" : "model's" }} boxes.
             </p>
-            <p v-else-if="SELECTED.source?.kind === 'copy'" class="text-sm text-ink/70" data-testid="box-source">
+            <p v-else-if="SELECTED.source?.kind === 'copy'" class="text-sm text-ink/80" data-testid="box-source">
               From {{ SELECTED.source.author ?? 'a' }}'s copy<template v-if="SELECTED.source.version != null"> (version {{ SELECTED.source.version }})</template>.
             </p>
 
@@ -444,8 +444,8 @@ watch(() => route.params.id, load, { immediate: true })
               >
                 <span class="linear-a w-8 text-xl" aria-hidden="true">{{ glyphOf(box.sign) }}</span>
                 <span>{{ signName(box.sign) }}</span>
-                <span v-if="box.id < 0" class="ml-auto text-xs text-ink/70">new</span>
-                <span v-else-if="box.changed" class="ml-auto text-xs text-ink/70">changed</span>
+                <span v-if="box.id < 0" class="ml-auto text-xs text-ink/80">new</span>
+                <span v-else-if="box.changed" class="ml-auto text-xs text-ink/80">changed</span>
               </button>
             </li>
           </ol>
@@ -473,10 +473,10 @@ watch(() => route.params.id, load, { immediate: true })
 
     <section v-if="copy" class="mt-10" aria-labelledby="reading-h">
       <h2 id="reading-h" class="text-2xl font-bold">Reading of the saved boxes</h2>
-      <p class="mt-1 text-ink/70">{{ dirty ? 'Save to update the reading with your latest changes.' : copy.reading.summary }}</p>
-      <p class="mt-2"><span class="text-ink/70">Transliteration:</span> {{ copy.reading.symbol_interpretation }}</p>
+      <p class="mt-1 text-ink/80">{{ dirty ? 'Save to update the reading with your latest changes.' : copy.reading.summary }}</p>
+      <p class="mt-2"><span class="text-ink/80">Transliteration:</span> {{ copy.reading.symbol_interpretation }}</p>
       <FractionCheck :analysis="READING" class="mt-6" />
-      <p v-if="CAN_EDIT" class="mt-8 text-sm text-ink/70" data-testid="training-note">
+      <p v-if="CAN_EDIT" class="mt-8 text-sm text-ink/80" data-testid="training-note">
         Corrected boxes may be used to train the sign reader. Admins export them with an account number, not a name.
       </p>
     </section>

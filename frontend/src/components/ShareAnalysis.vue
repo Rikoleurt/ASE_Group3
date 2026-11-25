@@ -67,8 +67,8 @@ async function share() {
     <template v-else>
       <button v-if="!editing" type="button" class="cursor-pointer rounded bg-bar px-5 py-2 hover:brightness-95" @click="editing = true">Share with community</button>
       <form v-else class="space-y-3" @submit.prevent="share">
-        <p v-if="symbol" class="text-sm text-ink/70">This symbol’s image and model reading, your username and the tablet name will be public. Private history comments will stay private.</p>
-        <p v-else class="text-sm text-ink/70">Your tablet image and analysis will be public. Private history comments will stay private.</p>
+        <p v-if="symbol" class="text-sm text-ink/80">This symbol’s image and model reading, your username and the tablet name will be public. Private history comments will stay private.</p>
+        <p v-else class="text-sm text-ink/80">Your tablet image and analysis will be public. Private history comments will stay private.</p>
         <label class="block font-semibold">
           Discussion title
           <input v-model="title" :autofocus="autoOpen" maxlength="160" required :disabled="pending" class="mt-2 block w-full rounded border border-ink/30 bg-white px-3 py-2 font-normal" />

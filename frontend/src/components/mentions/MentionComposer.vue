@@ -174,12 +174,12 @@ defineExpose({ insertMention })
 <template>
   <div>
     <textarea id="community-comment" ref="input" :value="text" :disabled="disabled" maxlength="2000" required rows="4"
-      aria-describedby="mention-help" aria-autocomplete="list" :aria-expanded="open" :aria-controls="open ? 'mention-options' : undefined"
+      aria-describedby="mention-help" aria-autocomplete="list" :aria-controls="open ? 'mention-options' : undefined"
       :aria-activedescendant="open && items.length ? `mention-option-${active}` : undefined"
       class="mt-2 w-full rounded border border-ink/30 bg-white px-3 py-2"
       @input="onInput" @select="trackSelection" @click="trackSelection(); detectTrigger()"
       @keyup="trackSelection" @keydown="onKeydown" />
-    <p id="mention-help" class="mt-1 text-sm text-ink/70">Type @ to mention a user, a symbol from this tablet or a sign (by number or reading).</p>
+    <p id="mention-help" class="mt-1 text-sm text-ink/80">Type @ to mention a user, a symbol from this tablet or a sign (by number or reading).</p>
     <p v-if="inputError" role="alert" class="mt-2 text-conf-low">{{ inputError }}</p>
     <div v-if="open" class="mt-2 rounded-xl border border-ink/20 bg-page p-3 shadow-lg">
       <div role="group" aria-label="Mention type" class="flex gap-2">

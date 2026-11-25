@@ -158,11 +158,11 @@ watch(() => [props.setId, props.version], () => load(), { immediate: true })
       <label :title="selectedBoxId === null ? 'Select a box first' : undefined"><input v-model="ONLY_BOX" type="checkbox" :disabled="selectedBoxId === null" data-testid="history-only-box" /> Only the selected box</label>
     </div>
     <p v-if="ERROR" role="alert" class="mt-2 text-confidence-low">{{ ERROR }}</p>
-    <p v-if="unsaved && canRevert" class="mt-2 text-sm text-ink/70">Save or discard your changes before reverting saved ones.</p>
-    <p v-if="!LOADING && !ERROR && !SAVES.length" class="mt-2 text-ink/70">{{ CHANGES.length ? 'No changes match.' : 'No changes saved yet.' }}</p>
+    <p v-if="unsaved && canRevert" class="mt-2 text-sm text-ink/80">Save or discard your changes before reverting saved ones.</p>
+    <p v-if="!LOADING && !ERROR && !SAVES.length" class="mt-2 text-ink/80">{{ CHANGES.length ? 'No changes match.' : 'No changes saved yet.' }}</p>
     <ol class="mt-2 max-h-96 overflow-auto">
       <li v-for="save in SAVES" :key="save.version" class="border-t border-ink/10 py-2 first:border-0" data-testid="history-save">
-        <p class="text-sm text-ink/70">{{ save.author.username ?? 'Deleted account' }} · <time :datetime="save.created_at">{{ when(save.created_at) }}</time></p>
+        <p class="text-sm text-ink/80">{{ save.author.username ?? 'Deleted account' }} · <time :datetime="save.created_at">{{ when(save.created_at) }}</time></p>
         <ul>
           <li v-for="change in save.changes" :key="change.id" class="flex items-center gap-2">
             <button

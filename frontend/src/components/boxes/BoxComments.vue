@@ -91,12 +91,12 @@ watch(() => props.setId, load, { immediate: true })
   <section class="rounded-3xl bg-card p-5" aria-labelledby="comments-h" data-testid="comments">
     <h2 id="comments-h" class="text-xl font-bold">{{ TITLE }}</h2>
     <p v-if="ERROR" role="alert" class="mt-2 text-confidence-low">{{ ERROR }}</p>
-    <p v-if="UNSAVED" class="mt-2 text-ink/70">Save the new box before commenting on it.</p>
+    <p v-if="UNSAVED" class="mt-2 text-ink/80">Save the new box before commenting on it.</p>
     <template v-else>
-      <p v-if="!LOADING && !ERROR && !THREAD.length" class="mt-2 text-ink/70">No comments yet.</p>
+      <p v-if="!LOADING && !ERROR && !THREAD.length" class="mt-2 text-ink/80">No comments yet.</p>
       <ol class="mt-2 max-h-72 overflow-auto">
         <li v-for="comment in THREAD" :key="comment.id" class="border-t border-ink/10 py-2 first:border-0" data-testid="comment">
-          <p class="text-sm text-ink/70">
+          <p class="text-sm text-ink/80">
             {{ comment.author.username ?? 'Deleted account' }} · <time :datetime="comment.created_at">{{ new Date(comment.created_at).toLocaleString() }}</time>
             <button v-if="comment.can_delete" type="button" class="ml-2 cursor-pointer underline" data-testid="comment-delete" @click="remove(comment)">Delete</button>
           </p>
@@ -107,13 +107,13 @@ watch(() => props.setId, load, { immediate: true })
         <label class="sr-only" for="comment-body">Your comment</label>
         <textarea id="comment-body" v-model="DRAFT" rows="3" :maxlength="MAX" class="w-full rounded border border-ink/30 bg-white px-3 py-2" :placeholder="boxId === null ? 'A comment on the whole copy' : 'Why is this box right or wrong?'" />
         <div class="flex items-center justify-between text-sm">
-          <span class="text-ink/60">{{ DRAFT.length }} / {{ MAX }}</span>
+          <span class="text-ink/80">{{ DRAFT.length }} / {{ MAX }}</span>
           <button type="submit" class="cursor-pointer rounded bg-bar px-4 py-1 font-semibold hover:brightness-95 disabled:opacity-50" :disabled="!DRAFT.trim() || POSTING" data-testid="comment-post">
             {{ POSTING ? 'Posting…' : 'Comment' }}
           </button>
         </div>
       </form>
-      <p v-else class="mt-2 text-sm text-ink/70">You can read comments on this copy but not write them.</p>
+      <p v-else class="mt-2 text-sm text-ink/80">You can read comments on this copy but not write them.</p>
     </template>
   </section>
 </template>

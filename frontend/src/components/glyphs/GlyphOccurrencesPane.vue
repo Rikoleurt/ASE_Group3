@@ -313,7 +313,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
       <!-- The clicked crop; when there is none but a Unicode character is shown, the empty box is left out. -->
       <div v-if="clickedImage || !activeCharacter" class="picked-box flex h-24 w-24 shrink-0 items-center justify-center rounded bg-white">
         <img v-if="clickedImage" :src="clickedImage" :alt="`The glyph you selected, read as ${active}`" class="max-h-full max-w-full" data-testid="glyph-selected-crop" />
-        <span v-else class="px-1 text-center text-xs text-ink/70">No image of the glyph</span>
+        <span v-else class="px-1 text-center text-xs text-ink/80">No image of the glyph</span>
       </div>
       <div
         v-if="activeCharacter"
@@ -327,7 +327,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
       <div class="min-w-0">
         <p class="text-lg font-bold" data-testid="glyph-selected-sign">{{ active }}<span v-if="reading" class="font-normal"> ({{ reading }})</span></p>
         <p v-if="activeTab?.probability !== undefined" class="text-sm">The reader's confidence: {{ percent(activeTab.probability) }}</p>
-        <p v-if="charactersKnown && !activeCharacter" class="text-sm text-ink/70" data-testid="glyph-selected-no-character">This sign has no Unicode character.</p>
+        <p v-if="charactersKnown && !activeCharacter" class="text-sm text-ink/80" data-testid="glyph-selected-no-character">This sign has no Unicode character.</p>
       </div>
     </div>
     </div>
@@ -353,7 +353,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
         <span v-if="characters[tab.sign]" class="linear-a mr-1 text-lg align-middle" aria-hidden="true" data-testid="glyph-tab-character">{{ characters[tab.sign] }}</span>{{ tab.label }}<span v-if="tab.probability !== undefined"> · {{ percent(tab.probability) }}</span>
       </button>
     </div>
-    <p v-if="tabs.length > 1" class="mt-1 text-sm text-ink/70">The reader can be wrong: check its other guesses too.</p>
+    <p v-if="tabs.length > 1" class="mt-1 text-sm text-ink/80">The reader can be wrong: check its other guesses too.</p>
 
     <p v-if="loading && !items.length" role="status" class="mt-4">Loading tablets…</p>
     <div v-if="loadError" role="alert" class="mt-4 text-confidence-low">
@@ -392,7 +392,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
               :aria-label="`Include ${item.title}, position ${item.position}`"
               @change="toggle(item)"
             />
-            {{ item.title }} <span class="font-normal text-ink/70">#{{ item.position }}</span>
+            {{ item.title }} <span class="font-normal text-ink/80">#{{ item.position }}</span>
           </label>
           <div class="card-crop mt-2 flex h-24 items-center justify-center rounded bg-white">
             <img
@@ -403,7 +403,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
               decoding="async"
               class="max-h-full max-w-full"
             />
-            <span v-else class="px-2 text-center text-ink/70">No drawing of this sign</span>
+            <span v-else class="px-2 text-center text-ink/80">No drawing of this sign</span>
           </div>
           <img
             :src="apiUrl(item.thumbnail_url)"
@@ -414,8 +414,8 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
           />
           <p class="mt-2">
             <span v-if="item.similarity !== null">Similarity {{ item.similarity.toFixed(2) }}</span>
-            <span v-else class="text-ink/70">Similarity unavailable</span>
-            <span v-if="item.reading" class="text-ink/70"> · {{ item.reading }}</span>
+            <span v-else class="text-ink/80">Similarity unavailable</span>
+            <span v-if="item.reading" class="text-ink/80"> · {{ item.reading }}</span>
           </p>
           <p
             v-if="item.outlier"
@@ -451,7 +451,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
             >
               Comment on {{ tickedItems.length }} occurrence{{ tickedItems.length === 1 ? '' : 's' }}
             </button>
-            <span class="text-sm text-ink/70">{{ trimmed.length }}/{{ MAX_COMMENT }}</span>
+            <span class="text-sm text-ink/80">{{ trimmed.length }}/{{ MAX_COMMENT }}</span>
           </div>
         </template>
         <p v-else>
@@ -466,11 +466,11 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
     <div v-if="active && !missing" class="mt-4" data-testid="glyph-comments">
       <h3 class="font-bold">Comments on {{ active }}</h3>
       <p v-if="commentsError" role="alert" class="text-confidence-low">{{ commentsError }}</p>
-      <p v-else-if="!comments.length" class="text-sm text-ink/70">No comments yet.</p>
+      <p v-else-if="!comments.length" class="text-sm text-ink/80">No comments yet.</p>
       <ul class="mt-2 space-y-3">
         <li v-for="comment in comments" :key="comment.id" class="rounded-xl bg-page p-3 text-sm" data-testid="glyph-comment">
           <p class="whitespace-pre-wrap break-words">{{ comment.body }}</p>
-          <p class="mt-1 text-ink/70">
+          <p class="mt-1 text-ink/80">
             {{ comment.author.username }} · {{ when(comment.created_at) }} · on {{ comment.targets.length }}
             occurrence{{ comment.targets.length === 1 ? '' : 's' }}
             <span class="sr-only">: {{ comment.targets.map((t) => `${t.tablet} ${t.position}`).join(', ') }}</span>
@@ -488,7 +488,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
       <button v-if="commentsMore" type="button" class="mt-2 cursor-pointer underline" @click="loadComments(commentsMore)">Older comments</button>
     </div>
 
-    <p v-if="credit" class="mt-4 text-xs text-ink/70">
+    <p v-if="credit" class="mt-4 text-xs text-ink/80">
       {{ credit.text }}
       <a :href="credit.url" target="_blank" rel="noopener" class="underline">{{ credit.licence }}</a>.
     </p>

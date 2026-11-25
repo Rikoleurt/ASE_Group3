@@ -129,7 +129,7 @@ defineExpose({ zoomIn, zoomOut, fit, ZOOM })
       <label class="flex cursor-pointer items-center gap-1"
         ><input v-model="CONTRAST" type="checkbox" data-testid="contrast" /> More contrast</label
       >
-      <span class="ml-auto text-xs text-ink/60">Ctrl + wheel to zoom · space + drag to pan</span>
+      <span class="ml-auto text-xs text-ink/80">Ctrl + wheel to zoom · space + drag to pan</span>
     </div>
     <div
       ref="FRAME"

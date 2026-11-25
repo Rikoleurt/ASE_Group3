@@ -67,7 +67,7 @@ const demoLinks = [
     {to: '/tablet-reading', label: 'Tablet reading (HT 13)'},
 ]
 
-const linkClass = 'inline-flex items-center gap-1.5 whitespace-nowrap hover:underline focus-visible:underline'
+const linkClass = 'inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap hover:underline focus-visible:underline'
 const activeClass = 'font-bold underline'
 const menuClass = 'absolute right-0 top-full z-40 mt-2 min-w-48 rounded-xl bg-card py-2 shadow-lg ring-1 ring-ink/10'
 const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visible:bg-bar'

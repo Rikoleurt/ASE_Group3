@@ -15,7 +15,9 @@ for logged-in users, like the model's readings it draws on.
 
 **Disagreement** is counted per place on the tablet. The two readings' boxes are matched as in
 Compare (`box_matching.py`). Each place either agrees (same sign), differs (different signs) or
-has a box in only one reading. The score is the share of places that do not agree.
+has a box in only one reading. Tablets with the most places that differ come first, then
+those where the largest share differs (the score), so a long tablet with many disagreements
+comes before a two-sign fragment.
 
 ## The offline model readings
 
@@ -44,7 +46,7 @@ items in queue order.
 
 | Route | Does |
 |---|---|
-| `GET /queues/disagreement?against=model\|edition` | most disagreement first; `built_at` and `model_version` for the offline run, or `missing_hint` when it was not built |
+| `GET /queues/disagreement?against=model\|edition` | most places that differ first, then the largest share; `built_at` and `model_version` for the offline run, or `missing_hint` when it was not built |
 | `GET /queues/low-confidence` | least confident first, with the `threshold` |
 | `GET /queues/no-edition` | most signs first |
 | `GET /queues/close-votes` | closest first, with the two most-backed releases |

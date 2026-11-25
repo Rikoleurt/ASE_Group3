@@ -75,12 +75,12 @@ watch(() => route.params.id, load, { immediate: true })
       <template v-if="detail">
         <section class="mt-6 rounded-3xl bg-card p-6">
           <h2 class="break-all text-xl font-bold">{{ detail.filename }}</h2>
-          <p class="mt-2 text-ink/70"><time :datetime="detail.created_at">{{ new Date(detail.created_at).toLocaleString() }}</time> · {{ detail.format }} · {{ (detail.size_bytes / 1024).toFixed(1) }} KiB</p>
+          <p class="mt-2 text-ink/80"><time :datetime="detail.created_at">{{ new Date(detail.created_at).toLocaleString() }}</time> · {{ detail.format }} · {{ (detail.size_bytes / 1024).toFixed(1) }} KiB</p>
           <TabletOverlay v-if="detail.image_url && !imageMissing" class="mt-6" data-testid="history-image" :signs="detail.result.signs" :formulas="detail.result.formulas" can-discuss @discuss="openSymbolDiscussion">
             <img :src="detail.image_url" :alt="detail.filename" class="w-full rounded-lg bg-white" @error="imageMissing = true" />
           </TabletOverlay>
-          <p v-else-if="detail.image_url" role="alert" class="mt-4 text-sm text-ink/70">The image could not be loaded. These are the results saved at the time of analysis.</p>
-          <p v-else class="mt-4 text-sm text-ink/70">This older analysis has no saved image. Upload and analyze the tablet again to share it.</p>
+          <p v-else-if="detail.image_url" role="alert" class="mt-4 text-sm text-ink/80">The image could not be loaded. These are the results saved at the time of analysis.</p>
+          <p v-else class="mt-4 text-sm text-ink/80">This older analysis has no saved image. Upload and analyze the tablet again to share it.</p>
           <div v-if="detail.image_url && detail.result.trained" class="mt-6">
             <button type="button" class="cursor-pointer rounded bg-bar px-5 py-2 font-semibold hover:brightness-95 disabled:opacity-60" :disabled="opening" data-testid="correct-boxes" @click="correct">
               {{ opening ? 'Opening…' : 'Correct the boxes' }}
@@ -106,7 +106,7 @@ watch(() => route.params.id, load, { immediate: true })
         </section>
         <FractionCheck :analysis="detail.result" class="mt-6" />
 
-        <p class="mt-6 text-sm text-ink/70">History comments below are private and are not included when sharing.</p>
+        <p class="mt-6 text-sm text-ink/80">History comments below are private and are not included when sharing.</p>
         <AnalysisComment :analysis-id="detail.id" :current-user-id="sessionUser?.id ?? null" />
       </template>
       <SymbolDiscussionDialog v-if="selectedSymbol && detail" :analysis-id="detail.id" :filename="detail.filename" :symbol="selectedSymbol" @close="selectedSymbol = null" />

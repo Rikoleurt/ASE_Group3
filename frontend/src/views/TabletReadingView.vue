@@ -27,10 +27,10 @@ const selection = computed(() => {
 })
 
 const VERDICTS = {
-  BALANCED: { text: 'Balances', class: 'text-confidence-high' },
-  OVERFULL: { text: 'Does not balance', class: 'text-confidence-low' },
-  ERROR_NO_DAMAGE: { text: 'Does not balance', class: 'text-confidence-low' },
-  IMPOSSIBLE: { text: 'Cannot balance', class: 'text-confidence-low' },
+  BALANCED: { text: 'Balances', class: 'text-better' },
+  OVERFULL: { text: 'Does not balance', class: 'text-worse' },
+  ERROR_NO_DAMAGE: { text: 'Does not balance', class: 'text-worse' },
+  IMPOSSIBLE: { text: 'Cannot balance', class: 'text-worse' },
 }
 
 const UNICODE_FRACTIONS = {
@@ -51,13 +51,13 @@ function formatValue(value) {
 }
 
 function verdictOf(section) {
-  return VERDICTS[section.verdict] || { text: section.verdict, class: 'text-confidence-mid' }
+  return VERDICTS[section.verdict] || { text: section.verdict, class: 'text-caution' }
 }
 
 function tokenClass(token) {
   if (token.kind === 'number') return 'font-bold'
   if (token.kind === 'fraction') return 'font-bold text-accent'
-  if (token.kind === 'damage') return 'text-ink/50'
+  if (token.kind === 'damage') return 'text-ink/80'
   return ''
 }
 
@@ -110,7 +110,7 @@ onMounted(load)
       <template v-if="reading">
         <header class="rounded-3xl bg-card p-6">
           <h1 class="text-3xl font-bold">{{ reading.id }}</h1>
-          <p class="mt-1 text-ink/70">
+          <p class="mt-1 text-ink/80">
             {{ [reading.site, reading.period, reading.scribe].filter(Boolean).join(' · ') }}
           </p>
           <a v-if="reading.url" :href="reading.url" target="_blank" rel="noopener" class="mt-2 inline-block underline hover:text-accent">
@@ -122,7 +122,7 @@ onMounted(load)
           <h2 id="transcription-title" class="text-xl font-bold">Transcription</h2>
           <ol class="mt-4 space-y-1 font-mono">
             <li v-for="line in reading.lines" :key="line.number" data-testid="line" class="flex gap-3">
-              <span class="w-6 shrink-0 text-right text-ink/50">{{ line.number }}</span>
+              <span class="w-6 shrink-0 text-right text-ink/80">{{ line.number }}</span>
               <span class="flex flex-wrap gap-x-2">
                 <span
                   v-for="(token, i) in line.tokens.filter((t) => t.kind !== 'divider')"
@@ -133,7 +133,7 @@ onMounted(load)
               </span>
             </li>
           </ol>
-          <p class="mt-3 text-sm text-ink/70">
+          <p class="mt-3 text-sm text-ink/80">
             Syllables as read by SigLA; numbers in bold; fraction signs in colour; [ ] marks a break in the clay.
           </p>
         </section>
@@ -147,7 +147,7 @@ onMounted(load)
           <h2 id="arithmetic-title" class="text-xl font-bold">Arithmetic check</h2>
           <table class="mt-4 w-full text-left">
             <thead>
-              <tr class="text-ink/70">
+              <tr class="text-ink/80">
                 <th class="py-1 font-normal">Line</th>
                 <th class="py-1 font-normal">Word</th>
                 <th class="py-1 text-right font-normal">Amount</th>
@@ -158,7 +158,7 @@ onMounted(load)
                 <td class="py-1">{{ entry.line }}</td>
                 <td class="py-1">{{ entry.word || '—' }}</td>
                 <td class="py-1 text-right">
-                  {{ formatValue(entry.quantity.value) }}<span v-if="entry.quantity.damaged" class="text-ink/50"> (broken)</span>
+                  {{ formatValue(entry.quantity.value) }}<span v-if="entry.quantity.damaged" class="text-ink/80"> (broken)</span>
                 </td>
               </tr>
               <tr class="font-bold">
@@ -189,7 +189,7 @@ onMounted(load)
             lineara.eu reports “{{ reading.upstream_arithmetic.detail }}”: it checks whole numbers only, so it misses
             that the fraction signs do not add up.
           </p>
-          <p class="mt-3 text-sm text-ink/70">Fraction values from Corazza et al. (2021).</p>
+          <p class="mt-3 text-sm text-ink/80">Fraction values from Corazza et al. (2021).</p>
         </section>
 
         <section class="rounded-3xl bg-card p-6" aria-labelledby="fractions-title">
@@ -212,11 +212,11 @@ onMounted(load)
               </div>
               <p class="font-bold">
                 Best match: {{ sign.guesses[0]?.label }}
-                <span :class="sign.correct ? 'text-confidence-high' : 'text-confidence-low'">
+                <span :class="sign.correct ? 'text-better' : 'text-worse'">
                   {{ sign.correct ? '✓ matches' : '✗ differs from' }} transcription ({{ sign.transcribed.label }})
                 </span>
               </p>
-              <p class="text-ink/70">Next: {{ sign.guesses.slice(1).map((g) => g.label).join(', ') }}</p>
+              <p class="text-ink/80">Next: {{ sign.guesses.slice(1).map((g) => g.label).join(', ') }}</p>
               <button
                 v-if="sign.transcribed.sign"
                 type="button"
@@ -230,7 +230,7 @@ onMounted(load)
           </ul>
         </section>
 
-        <p class="text-xs text-ink/70">
+        <p class="text-xs text-ink/80">
           {{ reading.credit.text }}
           <a :href="reading.credit.url" target="_blank" rel="noopener" class="underline">{{ reading.credit.licence }}</a>.
         </p>

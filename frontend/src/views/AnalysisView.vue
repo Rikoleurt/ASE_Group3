@@ -172,7 +172,7 @@ onBeforeUnmount(revokePreview)
         </svg>
 
         <h1 class="text-2xl font-bold">Upload File</h1>
-        <p class="text-ink/70">Drag an image here, or</p>
+        <p class="text-ink/80">Drag an image here, or</p>
 
         <label
         class="cursor-pointer rounded bg-bar px-8 py-1.5 font-medium hover:brightness-95 focus-within:outline-2 focus-within:outline-offset-2 focus-within:outline-accent"
@@ -194,7 +194,7 @@ onBeforeUnmount(revokePreview)
     >
         <div class="h-14 w-14 animate-spin rounded-full border-4 border-ink/20 border-t-accent"/><div>
         <p class="text-xl font-bold">Analyzing your image…</p>
-        <p class="mt-1 text-ink/70">{{ FILENAME }}</p>
+        <p class="mt-1 text-ink/80">{{ FILENAME }}</p>
         </div>
     </section>
 
@@ -207,26 +207,26 @@ onBeforeUnmount(revokePreview)
 
         <div class="rounded-3xl bg-card p-6 md:flex-1">
             <h2 class="text-2xl font-bold">Analysis</h2>
-            <p class="mt-1 text-ink/70">{{ FILENAME }}</p>
+            <p class="mt-1 text-ink/80">{{ FILENAME }}</p>
 
             <p class="mt-4 leading-relaxed">{{ ANALYSIS.summary }}</p>
 
             <dl class="mt-6 divide-y divide-ink/10">
                 <div class="flex justify-between gap-4 py-2">
-                    <dt class="text-ink/70">Transliteration</dt>
+                    <dt class="text-ink/80">Transliteration</dt>
                     <dd class="font-medium">{{ ANALYSIS.symbol_interpretation }}</dd>
                 </div>
                 <div class="flex justify-between gap-4 py-2">
-                    <dt class="text-ink/70">Confidence</dt>
+                    <dt class="text-ink/80">Confidence</dt>
                     <dd class="font-medium">{{ round(ANALYSIS.confidence, 2) }}%</dd>
                 </div>
                 <div class="flex justify-between gap-4 py-2">
-                    <dt class="text-ink/70">Processing time</dt>
+                    <dt class="text-ink/80">Processing time</dt>
                     <dd class="font-medium">{{ ANALYSIS.time_taken }} s</dd>
                 </div>
             </dl>
 
-            <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/70">Is a sign misread? Click its box to suggest the right sign to a reviewer.</p>
+            <p v-if="ANALYSIS.trained && ANALYSIS.signs.length" class="mt-6 text-sm text-ink/80">Is a sign misread? Click its box to suggest the right sign to a reviewer.</p>
             <button
             v-if="ANALYSIS.trained && ANALYSIS.analysis_id"
             type="button"

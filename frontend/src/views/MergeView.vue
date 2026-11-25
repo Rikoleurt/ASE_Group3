@@ -160,7 +160,7 @@ async function create() {
       >← {{ RESULT?.tablet ?? route.params.slug.replaceAll('-', ' ') }}</RouterLink
     >
     <h1 class="mt-2 text-3xl font-bold">Merge into an edition</h1>
-    <p class="mt-1 text-ink/70">
+    <p class="mt-1 text-ink/80">
       Choose, place by place, whose box and sign to keep. The edition is yours to edit, share and
       propose; each box keeps the credit for where it came from.
     </p>
@@ -349,7 +349,7 @@ async function create() {
                           place.members[key].label ?? 'No sign'
                         }}</span>
                       </span>
-                      <span class="block text-xs text-ink/60">{{ NAMES[key] }}</span>
+                      <span class="block text-xs text-ink/80">{{ NAMES[key] }}</span>
                     </span>
                   </label>
                   <label

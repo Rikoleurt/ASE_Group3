@@ -84,9 +84,9 @@ async function loadPredictions() {
 }
 
 function confidenceClass(confidence) {
-  if (confidence >= 90) return 'text-confidence-high'
-  if (confidence >= 60) return 'text-confidence-mid'
-  return 'text-confidence-low'
+  if (confidence >= 90) return 'text-better'
+  if (confidence >= 60) return 'text-caution'
+  return 'text-worse'
 }
 
 function learnMore(symbol) {
@@ -119,7 +119,7 @@ onMounted(loadPredictions)
         <div
           v-else
           role="alert"
-          class="flex aspect-[3/4] w-full items-center justify-center rounded-lg bg-card p-4 text-center text-ink/70"
+          class="flex aspect-[3/4] w-full items-center justify-center rounded-lg bg-card p-4 text-center text-ink/80"
         >
           There was an issue loading the tablet image.
         </div>
@@ -151,7 +151,7 @@ onMounted(loadPredictions)
               :src="symbol.imageUrl"
               class="h-full w-full object-contain"
             />
-            <div v-else class="flex h-full w-full items-center justify-center p-4 text-center text-ink/70">
+            <div v-else class="flex h-full w-full items-center justify-center p-4 text-center text-ink/80">
               There was an issue loading the symbol image.
             </div>
           </div>

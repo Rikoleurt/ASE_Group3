@@ -95,7 +95,7 @@ function failed(item) {
             : 'No occurrences in the corpus'
         }}
       </h2>
-      <p v-if="PAGE.total > PAGE.items.length" class="text-sm text-ink/70">
+      <p v-if="PAGE.total > PAGE.items.length" class="text-sm text-ink/80">
         The {{ PAGE.items.length }} most typical are shown.
       </p>
       <ul
@@ -117,7 +117,7 @@ function failed(item) {
             />
             <span
               v-else
-              class="flex h-20 items-center justify-center rounded bg-white/60 text-xs text-ink/60"
+              class="flex h-20 items-center justify-center rounded bg-white/60 text-xs text-ink/80"
               data-testid="no-drawing"
               >Drawing not downloaded</span
             >

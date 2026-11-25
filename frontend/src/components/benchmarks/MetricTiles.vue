@@ -52,9 +52,9 @@ const tiles = computed(() =>
       <h3 class="text-[11px] leading-tight font-semibold" aria-hidden="true">{{ tile.short }}</h3>
       <p class="text-lg leading-none font-bold tabular-nums" aria-hidden="true">{{ tile.present ? tile.value : '—' }}</p>
       <p class="text-[11px] leading-tight tabular-nums" aria-hidden="true" data-testid="delta">
-        <span v-if="tile.present && tile.vs" :class="verdictClass[tile.vs.verdict]" :data-verdict="tile.vs.verdict"><span>{{ tile.mark }}</span> {{ tile.delta }} <span :class="tile.vs.verdict === 'tie' ? 'text-ink/70' : 'font-semibold'">{{ tile.vs.verdict }}</span></span>
-        <template v-else-if="tile.present && isReference"><span class="text-ink/70">reference</span></template>
-        <template v-else-if="!tile.present"><span class="text-ink/70">n/a</span></template>
+        <span v-if="tile.present && tile.vs" :class="verdictClass[tile.vs.verdict]" :data-verdict="tile.vs.verdict"><span>{{ tile.mark }}</span> {{ tile.delta }} <span :class="tile.vs.verdict === 'tie' ? 'text-ink/80' : 'font-semibold'">{{ tile.vs.verdict }}</span></span>
+        <template v-else-if="tile.present && isReference"><span class="text-ink/80">reference</span></template>
+        <template v-else-if="!tile.present"><span class="text-ink/80">n/a</span></template>
       </p>
       <div class="sr-only">
         {{ tile.title }}: {{ tile.value }}

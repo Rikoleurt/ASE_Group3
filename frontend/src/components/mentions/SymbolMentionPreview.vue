@@ -39,7 +39,7 @@ onBeforeUnmount(() => request.abort())
       <img v-else :src="preview.target.image_url" :alt="`Symbol ${preview.target.label}`" class="mx-auto mt-4 max-h-64 max-w-full rounded bg-white object-contain" @error="imageError = true" />
       <p class="mt-4">Model reading: {{ preview.symbol.reading || preview.symbol.label }} · Confidence: {{ Math.round(preview.symbol.confidence) }}%</p>
       <RouterLink v-if="preview.target.discussion_id" :to="`/community/${preview.target.discussion_id}`" class="mt-4 inline-block font-semibold hover:underline" @click="dialog.close()">Open symbol discussion →</RouterLink>
-      <p v-else class="mt-4 text-sm text-ink/70">This symbol has no dedicated discussion yet.</p>
+      <p v-else class="mt-4 text-sm text-ink/80">This symbol has no dedicated discussion yet.</p>
     </template>
   </dialog>
 </template>

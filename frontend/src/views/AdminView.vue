@@ -148,13 +148,13 @@ onMounted(async () => {
     <p v-if="FORBIDDEN" role="alert" class="mt-6 rounded-2xl bg-card p-6">Only admins can see this page.</p>
 
     <template v-else>
-      <p class="mt-2 text-ink/70">
+      <p class="mt-2 text-ink/80">
         Admins manage roles. Reviewers approve or reject sign corrections before they become training labels.
       </p>
 
       <section class="mt-6 rounded-2xl bg-card p-5" aria-labelledby="export-h">
         <h2 id="export-h" class="text-xl font-bold">Training data</h2>
-        <p class="mt-1 text-sm text-ink/70">
+        <p class="mt-1 text-sm text-ink/80">
           Corrected boxes, with approved sign corrections, to train the reader on. JSON matches the format of the
           training set; the YOLO zip has images, labels and the class list.
         </p>
@@ -196,7 +196,8 @@ onMounted(async () => {
       <p v-if="LOADING" role="status" class="mt-6">Loading users…</p>
       <p v-else-if="!ERROR && !USERS.length" class="mt-8 rounded-2xl bg-card p-6">No users found.</p>
 
-      <table v-if="USERS.length" class="mt-6 w-full border-collapse text-left" data-testid="admin-users">
+      <div v-if="USERS.length" class="mt-6 overflow-x-auto">
+      <table class="w-full border-collapse text-left" data-testid="admin-users">
         <caption class="sr-only">Users and their roles</caption>
         <thead>
           <tr class="border-b border-ink/20">
@@ -209,8 +210,8 @@ onMounted(async () => {
           <tr v-for="user in USERS" :key="user.id" class="border-b border-ink/10" data-testid="admin-user">
             <th scope="row" class="py-2 pr-4 font-normal">
               <span class="font-semibold">{{ user.username }}</span>
-              <span v-if="isSelf(user)" class="text-ink/70"> (you)</span>
-              <span class="block text-sm text-ink/70">{{ user.email }}</span>
+              <span v-if="isSelf(user)" class="text-ink/80"> (you)</span>
+              <span class="block text-sm text-ink/80">{{ user.email }}</span>
             </th>
             <td v-for="role in ROLES" :key="role.key" class="py-2 pr-4 text-center">
               <input
@@ -223,15 +224,16 @@ onMounted(async () => {
                 :data-testid="`role-${role.key}`"
                 @change="toggle(user, role.key, $event)"
               />
-              <span v-if="lockReason(user, role.key)" class="block text-xs text-ink/60">{{ lockReason(user, role.key) }}</span>
+              <span v-if="lockReason(user, role.key)" class="block text-xs text-ink/80">{{ lockReason(user, role.key) }}</span>
             </td>
             <td class="py-2 pr-4 text-center">
-              <span v-if="isSelf(user)" class="text-xs text-ink/60">Not your own</span>
+              <span v-if="isSelf(user)" class="text-xs text-ink/80">Not your own</span>
               <button v-else type="button" class="cursor-pointer text-sm underline" :aria-expanded="VOTING?.id === user.id" data-testid="voting-open" @click="VOTING = VOTING?.id === user.id ? null : user">Voting rights</button>
             </td>
           </tr>
         </tbody>
       </table>
+      </div>
 
       <VotingRightsEditor v-if="VOTING" :key="VOTING.id" :user="VOTING" class="mt-4 max-w-xl" @close="VOTING = null" />
 

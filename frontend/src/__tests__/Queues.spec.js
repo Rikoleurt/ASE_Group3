@@ -119,8 +119,8 @@ describe('Work queues', () => {
     expect(wrapper.get('[data-testid="queue-count"]').text()).toBe('26 items')
     expect(wrapper.get('[data-testid="queue-built"]').text()).toContain('model reader-7')
     expect(rows().map((r) => r.text())).toEqual([
-      expect.stringContaining('50% differ'),
-      expect.stringContaining('25% differ'),
+      expect.stringContaining('1 of 2 places differ'),
+      expect.stringContaining('1 of 2 places differ'),
     ])
     expect(rows()[0].get('[data-testid="queue-action"]').attributes('href')).toBe(
       '/tablets/HT-1/compare?v=scholar&v=model',

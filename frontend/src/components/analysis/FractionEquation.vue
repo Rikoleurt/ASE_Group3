@@ -44,23 +44,23 @@ function sumOf(terms) {
 
 <template>
   <div class="mt-3 grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-3" data-testid="equation">
-    <span class="text-sm text-ink/70">{{ IS_GROUP ? 'Sum' : 'Entries' }}</span>
+    <span class="text-sm text-ink/80">{{ IS_GROUP ? 'Sum' : 'Entries' }}</span>
     <div class="flex flex-wrap items-center gap-2" data-testid="equation-entries">
       <template v-for="(term, index) in formula.entries" :key="term.id">
-        <span v-if="index" class="piece text-xl text-ink/60" :style="at(index)">+</span>
+        <span v-if="index" class="piece text-xl text-ink/80" :style="at(index)">+</span>
         <span class="piece flex flex-col items-center rounded-lg bg-page px-2 py-1" :style="at(index)" data-testid="term">
           <span class="linear-a text-3xl" :style="{ color: ROLES.fraction.color }">{{ term.glyph ?? '?' }}</span>
           <span class="text-xs">{{ term.label }} = {{ pretty(term.value) }}</span>
         </span>
       </template>
-      <span v-if="!formula.entries.length" class="piece text-ink/70">no fractions</span>
+      <span v-if="!formula.entries.length" class="piece text-ink/80">no fractions</span>
       <span class="piece text-xl font-bold" :style="at(ENTRY_SUM_AT)">
         {{ formula.entries.length > 1 ? `= ${sumOf(formula.entries)} ` : '' }}= {{ pretty(formula.entries_sum) }}
       </span>
     </div>
 
     <template v-if="!IS_GROUP">
-      <span class="text-sm text-ink/70">Total</span>
+      <span class="text-sm text-ink/80">Total</span>
       <div class="flex flex-wrap items-center gap-2" data-testid="equation-total">
         <span class="piece flex flex-col items-center rounded-lg bg-page px-2 py-1" :style="at(TOTAL_AT)">
           <span class="linear-a text-3xl" :style="{ color: ROLES.total.color }">{{ markerGlyphs || '?' }}</span>
@@ -76,12 +76,12 @@ function sumOf(terms) {
           <span class="linear-a text-3xl" :style="{ color: ROLES.fraction.color }">{{ term.glyph ?? '?' }}</span>
           <span class="text-xs">{{ term.label }} = {{ pretty(term.value) }}</span>
         </span>
-        <span v-if="!formula.total.length" class="piece text-ink/70" :style="at(TOTAL_AT)">no fraction</span>
+        <span v-if="!formula.total.length" class="piece text-ink/80" :style="at(TOTAL_AT)">no fraction</span>
         <span class="piece text-xl font-bold" :style="at(TOTAL_SUM_AT)">= {{ pretty(formula.total_value) }}</span>
       </div>
 
       <template v-if="CHECK">
-        <span class="text-sm text-ink/70">Check</span>
+        <span class="text-sm text-ink/80">Check</span>
         <span class="piece text-xl font-bold" :style="at(CHECK_AT)" data-testid="equation-check">{{ CHECK }}</span>
       </template>
     </template>

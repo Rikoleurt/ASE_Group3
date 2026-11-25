@@ -122,22 +122,22 @@ onBeforeUnmount(() => { requestId++ })
     <button v-if="error" type="button" class="mt-4 rounded bg-bar px-6 py-2" @click="load">Try again</button>
     <template v-if="discussion">
       <h1 class="mt-6 break-words text-3xl font-bold">{{ discussion.title }}</h1>
-      <p class="mt-2 text-ink/70">Shared by {{ discussion.author_username }} · <time :datetime="discussion.created_at">{{ new Date(discussion.created_at).toLocaleString() }}</time></p>
+      <p class="mt-2 text-ink/80">Shared by {{ discussion.author_username }} · <time :datetime="discussion.created_at">{{ new Date(discussion.created_at).toLocaleString() }}</time></p>
       <VoteButtons v-if="sessionUser" class="mt-3" :discussion-id="discussion.id" :initial-score="discussion.score" />
-      <p v-else class="mt-3 text-ink/70">{{ discussion.score }} points</p>
+      <p v-else class="mt-3 text-ink/80">{{ discussion.score }} points</p>
       <nav v-if="discussion.tablet_filename" class="mt-6 rounded-xl border border-ink/20 p-4" aria-labelledby="discussion-tree-title">
         <h2 id="discussion-tree-title" class="mb-3 text-xl font-bold">Discussion tree</h2>
         <RouterLink v-if="discussion.parent_discussion && discussion.parent_discussion.id !== discussion.id" :to="`/community/${discussion.parent_discussion.id}`" class="font-semibold hover:underline">
           Tablet {{ tabletName }} — {{ discussion.parent_discussion.title }}
         </RouterLink>
         <p v-else class="font-semibold">Tablet {{ tabletName }}</p>
-        <p v-if="!discussion.parent_discussion && discussion.sign_id != null" class="mt-1 text-sm text-ink/70">This tablet has no general discussion yet.</p>
+        <p v-if="!discussion.parent_discussion && discussion.sign_id != null" class="mt-1 text-sm text-ink/80">This tablet has no general discussion yet.</p>
         <ul v-if="discussion.symbol_discussions?.length" class="mt-3 space-y-2 border-l border-ink/20 pl-4">
           <li v-for="child in discussion.symbol_discussions" :key="child.id">
             <RouterLink :to="`/community/${child.id}`" :aria-current="child.id === discussion.id ? 'page' : undefined" class="hover:underline">
               Symbol {{ child.symbol_name }} — {{ child.title }}
             </RouterLink>
-            <span class="text-sm text-ink/70"> · {{ child.author_username }}</span>
+            <span class="text-sm text-ink/80"> · {{ child.author_username }}</span>
           </li>
         </ul>
       </nav>
@@ -175,10 +175,10 @@ onBeforeUnmount(() => { requestId++ })
       <FractionCheck v-if="discussion.result" :analysis="discussion.result" class="mt-8" />
       <section class="mt-8 rounded-3xl bg-card p-6" aria-labelledby="discussion-comments">
         <h2 id="discussion-comments" class="text-xl font-bold">Discussion</h2>
-        <p v-if="!comments.length && !loading && !commentsError" class="mt-4 text-ink/70">No comments yet. Start the discussion.</p>
+        <p v-if="!comments.length && !loading && !commentsError" class="mt-4 text-ink/80">No comments yet. Start the discussion.</p>
         <ol aria-label="Comments" class="mt-4 divide-y divide-ink/10">
           <li v-for="comment in comments" :key="comment.id" class="py-4">
-            <p class="text-sm"><strong>{{ comment.author_username }}</strong> · <time :datetime="comment.created_at" class="text-ink/70">{{ new Date(comment.created_at).toLocaleString() }}</time></p>
+            <p class="text-sm"><strong>{{ comment.author_username }}</strong> · <time :datetime="comment.created_at" class="text-ink/80">{{ new Date(comment.created_at).toLocaleString() }}</time></p>
             <MentionText :body="comment.body" :mentions="comment.mentions || []" class="mt-2" @preview="previewTarget = $event" />
           </li>
         </ol>

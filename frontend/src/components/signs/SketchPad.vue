@@ -181,7 +181,7 @@ defineExpose({ search })
       </div>
     </div>
     <div class="min-w-0 flex-1" aria-live="polite">
-      <p v-if="STATUS === 'idle'" class="text-sm text-ink/70">
+      <p v-if="STATUS === 'idle'" class="text-sm text-ink/80">
         Draw a sign: the most similar ones appear here.
       </p>
       <p v-else-if="STATUS === 'searching' && !RESULTS.length" role="status" class="text-sm">
@@ -212,11 +212,11 @@ defineExpose({ search })
             <span class="min-w-0">
               <span class="block font-semibold"
                 >{{ sign.sign
-                }}<span v-if="sign.reading" class="ml-1 font-normal text-ink/70">{{
+                }}<span v-if="sign.reading" class="ml-1 font-normal text-ink/80">{{
                   sign.reading
                 }}</span></span
               >
-              <span class="block text-xs text-ink/60">{{ Math.round(sign.score) }}% alike</span>
+              <span class="block text-xs text-ink/80">{{ Math.round(sign.score) }}% alike</span>
             </span>
           </button>
         </li>

@@ -114,7 +114,7 @@ function compareLink(row) {
 <template>
   <main class="mx-auto max-w-6xl px-6 py-10">
     <h1 class="text-3xl font-bold">Work queues</h1>
-    <p class="mt-1 text-ink/70">
+    <p class="mt-1 text-ink/80">
       Where your attention is most useful, with a link to the action each item needs.
     </p>
 
@@ -137,7 +137,7 @@ function compareLink(row) {
         :class="
           TAB === tab.key
             ? 'border-ink/20 border-b-page bg-page font-semibold'
-            : 'border-transparent text-ink/70 hover:text-ink'
+            : 'border-transparent text-ink/80 hover:text-ink'
         "
         @click="show(tab.key)"
         @keydown="moveTab($event, index)"
@@ -182,13 +182,13 @@ function compareLink(row) {
       >
         The model has not read the corpus for the queues yet. {{ META.missing_hint }}
       </p>
-      <p v-else-if="builtAt" class="mt-3 text-xs text-ink/60" data-testid="queue-built">
+      <p v-else-if="builtAt" class="mt-3 text-xs break-all text-ink/80" data-testid="queue-built">
         Model readings from {{ builtAt
         }}<template v-if="META.model_version"> (model {{ META.model_version }})</template>.
       </p>
 
       <p v-if="ERROR" class="mt-4 text-red-700" role="alert">{{ ERROR }}</p>
-      <p class="mt-3 text-sm text-ink/70" role="status" data-testid="queue-count">
+      <p class="mt-3 text-sm text-ink/80" role="status" data-testid="queue-count">
         <template v-if="LOADING && !ITEMS.length">Loading…</template>
         <template v-else-if="!ERROR">{{ TOTAL }} item{{ TOTAL === 1 ? '' : 's' }}</template>
       </p>
@@ -205,20 +205,22 @@ function compareLink(row) {
             class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3"
             data-testid="queue-row"
           >
-            <RouterLink :to="`/tablets/${row.slug}`" class="w-28 font-semibold underline">{{
-              row.tablet
-            }}</RouterLink>
-            <span class="w-24 tabular-nums" :title="`${row.agree} of ${row.total} places agree`">
-              <strong>{{ percent(row.score) }}</strong> differ
+            <RouterLink
+              :to="`/tablets/${row.slug}`"
+              class="inline-flex min-h-10 w-28 items-center font-semibold underline"
+              >{{ row.tablet }}</RouterLink
+            >
+            <span class="w-40 tabular-nums" :title="`${percent(row.score)} of the places differ`">
+              <strong>{{ row.differs + row.missing }} of {{ row.total }}</strong> places differ
             </span>
-            <span class="grow text-sm text-ink/70">
+            <span class="grow text-sm text-ink/80">
               {{ row.differs }} different sign{{ row.differs === 1 ? '' : 's' }},
               {{ row.missing }} box{{ row.missing === 1 ? '' : 'es' }} in one only,
               {{ row.agree }} agree
             </span>
             <RouterLink
               :to="compareLink(row)"
-              class="rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
+              class="inline-flex min-h-10 items-center rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
               data-testid="queue-action"
               >Compare</RouterLink
             >
@@ -232,12 +234,14 @@ function compareLink(row) {
             class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3"
             data-testid="queue-row"
           >
-            <RouterLink :to="`/tablets/${row.slug}`" class="w-28 font-semibold underline">{{
-              row.tablet
-            }}</RouterLink>
+            <RouterLink
+              :to="`/tablets/${row.slug}`"
+              class="inline-flex min-h-10 w-28 items-center font-semibold underline"
+              >{{ row.tablet }}</RouterLink
+            >
             <span class="w-40">
               <img
-                v-if="row.sign"
+                v-if="row.sign && row.sign !== 'unidentified'"
                 :src="`/api/glyphs/${encodeURIComponent(row.sign)}/preview.png`"
                 alt=""
                 class="mr-1 inline h-6 w-6 object-contain align-middle"
@@ -248,7 +252,7 @@ function compareLink(row) {
             <span class="w-20 tabular-nums"
               ><strong>{{ Math.round(row.confidence) }}%</strong> sure</span
             >
-            <span class="grow text-sm text-ink/70">
+            <span class="grow text-sm text-ink/80">
               <template v-if="row.candidates.length > 1"
                 >or
                 {{
@@ -261,7 +265,7 @@ function compareLink(row) {
             </span>
             <RouterLink
               :to="{ path: `/tablets/${row.slug}`, query: { boxes: 'model' } }"
-              class="rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
+              class="inline-flex min-h-10 items-center rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
               data-testid="queue-action"
               >Check</RouterLink
             >
@@ -279,13 +283,13 @@ function compareLink(row) {
               {{ row.original_label }} →
               <strong>{{ row.uncertain ? 'flagged as uncertain' : row.proposed_sign }}</strong>
             </span>
-            <span class="grow text-sm text-ink/70"
+            <span class="grow text-sm text-ink/80"
               >analysis {{ row.analysis_id }}, sign {{ row.sign_id }}, proposed
               {{ new Date(row.created_at).toLocaleDateString() }}</span
             >
             <RouterLink
               to="/review"
-              class="rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
+              class="inline-flex min-h-10 items-center rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
               data-testid="queue-action"
               >Review</RouterLink
             >
@@ -299,15 +303,17 @@ function compareLink(row) {
             class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3"
             data-testid="queue-row"
           >
-            <RouterLink :to="`/tablets/${row.slug}`" class="w-28 font-semibold underline">{{
-              row.tablet
-            }}</RouterLink>
-            <span class="grow text-sm text-ink/70"
+            <RouterLink
+              :to="`/tablets/${row.slug}`"
+              class="inline-flex min-h-10 w-28 items-center font-semibold underline"
+              >{{ row.tablet }}</RouterLink
+            >
+            <span class="grow text-sm text-ink/80"
               >{{ row.signs }} sign{{ row.signs === 1 ? '' : 's' }}</span
             >
             <RouterLink
               :to="`/tablets/${row.slug}`"
-              class="rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
+              class="inline-flex min-h-10 items-center rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
               data-testid="queue-action"
               >Start an edition</RouterLink
             >
@@ -321,13 +327,15 @@ function compareLink(row) {
             class="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3"
             data-testid="queue-row"
           >
-            <RouterLink :to="`/tablets/${row.slug}`" class="w-28 font-semibold underline">{{
-              row.tablet
-            }}</RouterLink>
+            <RouterLink
+              :to="`/tablets/${row.slug}`"
+              class="inline-flex min-h-10 w-28 items-center font-semibold underline"
+              >{{ row.tablet }}</RouterLink
+            >
             <span class="w-28 tabular-nums">
               <strong>{{ row.gap === 0 ? 'Tied' : `${row.gap} vote apart` }}</strong>
             </span>
-            <span class="grow text-sm text-ink/70">
+            <span class="grow text-sm text-ink/80">
               <template v-for="(release, index) in row.releases" :key="release.id">
                 <template v-if="index">, </template>
                 <RouterLink :to="`/editions/${release.id}`" class="underline">{{
@@ -338,7 +346,7 @@ function compareLink(row) {
             </span>
             <RouterLink
               :to="`/tablets/${row.slug}`"
-              class="rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
+              class="inline-flex min-h-10 items-center rounded border border-ink/30 px-3 py-1.5 text-sm hover:bg-ink/5"
               data-testid="queue-action"
               >Vote</RouterLink
             >
@@ -348,7 +356,7 @@ function compareLink(row) {
 
       <p
         v-else-if="!LOADING && !ERROR && !META.missing_hint"
-        class="mt-4 rounded border border-ink/15 bg-white p-4 text-ink/70"
+        class="mt-4 rounded border border-ink/15 bg-white p-4 text-ink/80"
         data-testid="queue-empty"
       >
         Nothing here right now.

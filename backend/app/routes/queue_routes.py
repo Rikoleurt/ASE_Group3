@@ -36,7 +36,7 @@ class DisagreementQueue(BaseModel):
     model_version: str | None = None
     missing_hint: str | None = None  # against=model: how to build the file when it is absent
     total: int
-    items: list[DisagreementRow]  # most disagreement first
+    items: list[DisagreementRow]  # most places that differ first, then the largest share
 
 
 class CandidateSign(BaseModel):
@@ -117,7 +117,7 @@ def disagreement(
     limit: Limit = 25,
 ) -> DisagreementQueue:
     """Tablets where the scholars' reading differs most from the model's (from the offline run)
-    or from the tablet's accepted edition, most disagreement first."""
+    or from the tablet's accepted edition: most places that differ first, then the largest share."""
     index = _index()
     if against == "model":
         data = work_queues.offline()
@@ -164,7 +164,7 @@ def disagreement(
                 )
         except DatabaseError as error:
             raise HTTPException(503, UNAVAILABLE) from error
-    rows.sort(key=lambda row: (-row.score, -row.total, row.tablet))
+    rows.sort(key=lambda row: (-(row.differs + row.missing), -row.score, row.tablet))
     return DisagreementQueue(
         against=against, total=len(rows), items=rows[offset : offset + limit], **meta
     )

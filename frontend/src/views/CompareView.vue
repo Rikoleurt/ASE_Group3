@@ -153,7 +153,7 @@ function missingFrom(place) {
                 aria-hidden="true"
               />
               {{ NAMES[version.key] }}
-              <span class="text-sm text-ink/60">({{ version.box_count }})</span>
+              <span class="text-sm text-ink/80">({{ version.box_count }})</span>
               <span class="sr-only">{{
                 HIDDEN.includes(version.key)
                   ? '(hidden; select to show)'
@@ -170,7 +170,7 @@ function missingFrom(place) {
             <tr v-for="pair in RESULT.agreement" :key="`${pair.a}|${pair.b}`">
               <td class="pr-3">{{ NAMES[pair.a] }} and {{ NAMES[pair.b] }}</td>
               <td class="pr-2 text-right font-semibold">{{ percent(pair) }}</td>
-              <td class="text-ink/60">{{ pair.same }} of {{ pair.total }} places</td>
+              <td class="text-ink/80">{{ pair.same }} of {{ pair.total }} places</td>
             </tr>
           </tbody>
         </table>
@@ -202,7 +202,7 @@ function missingFrom(place) {
               Only where they differ
             </label>
           </div>
-          <p class="text-sm text-ink/70" data-testid="counts">
+          <p class="text-sm text-ink/80" data-testid="counts">
             {{ COUNTS.agree ?? 0 }} agree · {{ COUNTS.differs ?? 0 }} with different signs ·
             {{ COUNTS.missing ?? 0 }} missing from some<template v-if="MOVED">
               · {{ MOVED }} with boxes in different places</template
@@ -232,7 +232,7 @@ function missingFrom(place) {
                     data-testid="place-status"
                     >{{ STATUS_LABELS[place.status] }}</span
                   >
-                  <span v-if="place.moved" class="text-xs text-ink/60">boxes differ in place</span>
+                  <span v-if="place.moved" class="text-xs text-ink/80">boxes differ in place</span>
                 </span>
                 <span class="mt-1 flex flex-wrap gap-2">
                   <span
@@ -254,10 +254,10 @@ function missingFrom(place) {
                       />
                       {{ place.members[key].label ?? 'No sign' }}
                     </template>
-                    <span v-else class="text-ink/50">none</span>
+                    <span v-else class="text-ink/80">none</span>
                   </span>
                 </span>
-                <span v-if="place.status === 'missing'" class="mt-1 block text-xs text-ink/60"
+                <span v-if="place.status === 'missing'" class="mt-1 block text-xs text-ink/80"
                   >Not in: {{ missingFrom(place) }}</span
                 >
               </button>

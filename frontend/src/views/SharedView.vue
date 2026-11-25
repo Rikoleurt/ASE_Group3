@@ -34,7 +34,7 @@ onMounted(load)
 <template>
   <main class="mx-auto max-w-4xl px-6 py-10">
     <h1 class="text-3xl font-bold">Shared with me</h1>
-    <p class="mt-1 text-ink/70">Other people's corrected boxes that you can open.</p>
+    <p class="mt-1 text-ink/80">Other people's corrected boxes that you can open.</p>
     <p v-if="LOADING" role="status" class="mt-6">Loading…</p>
     <p v-else-if="ERROR" role="alert" class="mt-6 text-confidence-low">{{ ERROR }}</p>
     <p v-else-if="!COPIES.length" class="mt-6 rounded-2xl bg-card p-6">Nothing has been shared with you yet.</p>
@@ -42,7 +42,7 @@ onMounted(load)
       <li v-for="copy in COPIES" :key="copy.id">
         <RouterLink :to="`/box-sets/${copy.id}`" class="flex flex-wrap items-baseline gap-x-4 gap-y-1 px-5 py-3 hover:bg-bar focus-visible:bg-bar" data-testid="shared-copy">
           <span class="font-semibold">{{ copy.title }}</span>
-          <span class="text-sm text-ink/70">{{ copy.kind === 'tablet' ? 'Corpus tablet' : 'Upload' }} · by {{ copy.owner }}</span>
+          <span class="text-sm text-ink/80">{{ copy.kind === 'tablet' ? 'Corpus tablet' : 'Upload' }} · by {{ copy.owner }}</span>
           <span class="ml-auto text-sm">{{ LEVEL_TEXT[copy.permission] }}<template v-if="copy.shared_with_everyone"> · shared with everyone</template></span>
         </RouterLink>
       </li>
