@@ -103,6 +103,10 @@ function revokePreview() {
     }
 }
 
+function round(value, decimals) {
+    return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
 onBeforeUnmount(revokePreview)
 </script>
 
@@ -175,7 +179,7 @@ onBeforeUnmount(revokePreview)
                 </div>
                 <div class="flex justify-between gap-4 py-2">
                     <dt class="text-ink/70">Confidence</dt>
-                    <dd class="font-medium">{{ ANALYSIS.confidence }}%</dd>
+                    <dd class="font-medium">{{ round(ANALYSIS.confidence, 2) }}%</dd>
                 </div>
                 <div class="flex justify-between gap-4 py-2">
                     <dt class="text-ink/70">Processing time</dt>

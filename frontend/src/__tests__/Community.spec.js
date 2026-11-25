@@ -172,13 +172,21 @@ it('keeps the editable title after a duplicate-name conflict', async () => {
   expect(router.currentRoute.value.path).toBe('/analysis')
 })
 
-it('shows the symbol crop, author and tablet tree independently of its custom title', async () => {
+it.each([{}, { result: null }])('loads a symbol thread without a full analysis (%j)', async (resultFields) => {
   const child = { ...summary, id: 4, title: 'What does this mean?', sign_id: 0, symbol_name: 'ku', tablet_filename: 'HT13.png' }
   const symbolDetail = { ...child, image_url: '/api/community/discussions/4/image',
-    symbol: { ...analysis.signs[0], id: 0 }, parent_discussion: summary, symbol_discussions: [child] }
-  vi.stubGlobal('fetch', vi.fn(async (url) => ok(url.endsWith('/comments') ? [] : symbolDetail)))
+    symbol: { ...analysis.signs[0], id: 0, confidence: 87.126 }, parent_discussion: summary, symbol_discussions: [child], ...resultFields }
+  const symbolComment = { ...comment, discussion_id: child.id }
+  const fetch = vi.fn(async (url) => ok(url.endsWith('/comments') ? [symbolComment] : symbolDetail))
+  vi.stubGlobal('fetch', fetch)
   await render('/community/4')
   expect(wrapper.get('h1').text()).toBe('What does this mean?')
+  expect(wrapper.get('[aria-label="Shared symbol"]').text()).toContain('Confidence: 87.13%')
+  expect(wrapper.find('[role="status"]').exists()).toBe(false)
+  expect(wrapper.get('[aria-label="Comments"]').text()).toContain(symbolComment.body)
+  expect(fetch.mock.calls.map(([url]) => url)).toEqual([
+    '/api/community/discussions/4', '/api/community/discussions/4/comments',
+  ])
   expect(wrapper.get('[data-testid="symbol-origin"]').text()).toContain('owner created a discussion about symbol ku from tablet HT13.')
   expect(wrapper.get('img').attributes('src')).toBe(symbolDetail.image_url)
   expect(wrapper.get('nav a[href="/community/3"]').text()).toContain('HT13')

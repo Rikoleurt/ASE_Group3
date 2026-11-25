@@ -1,5 +1,6 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { communityApi } from '../composables/communityApi'
 import LoadingIndicator from '../components/LoadingIndicator.vue'
 
@@ -10,8 +11,21 @@ const loaded = ref(false)
 const loading = ref(false)
 const waitingForSearch = ref(false)
 const error = ref('')
-const filterBy = ref('recent')
-const query = ref('')
+const route = useRoute()
+function routeSearch() {
+  const values = route?.query || {}
+  const mode = ['recent', 'tablet', 'author'].includes(values.filter_by) ? values.filter_by : 'recent'
+  const id = mode === 'author' && typeof values.author_id === 'string' && /^[1-9][0-9]{0,19}$/.test(values.author_id) ? values.author_id : null
+  return { mode, id, text: !id && typeof values.q === 'string' ? values.q.slice(0, 255) : '' }
+}
+const initialSearch = routeSearch()
+const filterBy = ref(initialSearch.mode)
+const query = ref(initialSearch.text)
+const authorId = ref(initialSearch.id)
+function selectFilter(mode) {
+  authorId.value = null
+  filterBy.value = mode
+}
 const sentinel = ref(null)
 const filters = [
   { value: 'recent', label: 'Most recent' },
@@ -49,7 +63,8 @@ async function loadNextPage() {
   loading.value = true
   error.value = ''
   const params = new URLSearchParams({ limit: '30', filter_by: filterBy.value })
-  if (filterBy.value !== 'recent' && query.value.trim()) params.set('q', query.value.trim())
+  if (filterBy.value === 'author' && authorId.value) params.set('author_id', authorId.value)
+  else if (filterBy.value !== 'recent' && query.value.trim()) params.set('q', query.value.trim())
   if (nextCursor.value) params.set('cursor', nextCursor.value)
   try {
     const page = await communityApi(`/discussions?${params}`, { signal: controller.signal })
@@ -97,7 +112,13 @@ function restartSearch(delay = 0) {
   } else loadNextPage()
 }
 
-watch([filterBy, query], ([mode], [previousMode]) => restartSearch(mode === previousMode ? 300 : 0))
+watch(() => route?.query, () => {
+  const search = routeSearch()
+  filterBy.value = search.mode
+  authorId.value = search.id
+  query.value = search.text
+})
+watch([filterBy, query, authorId], ([mode], [previousMode]) => restartSearch(mode === previousMode ? 300 : 0))
 onMounted(() => {
   if (typeof IntersectionObserver !== 'undefined') {
     observer = new IntersectionObserver((entries) => {
@@ -124,17 +145,18 @@ onBeforeUnmount(() => {
       <div role="group" aria-label="Filter discussions" class="flex flex-wrap gap-2">
         <button v-for="filter in filters" :key="filter.value" type="button" :aria-pressed="filterBy === filter.value"
           class="cursor-pointer rounded-lg border border-ink/20 px-4 py-2 font-semibold hover:bg-bar focus-visible:outline-2 focus-visible:outline-offset-2"
-          :class="filterBy === filter.value ? 'bg-bar' : 'bg-card'" @click="filterBy = filter.value">
+          :class="filterBy === filter.value ? 'bg-bar' : 'bg-card'" @click="selectFilter(filter.value)">
           {{ filter.label }}
         </button>
       </div>
       <form v-if="filterBy !== 'recent'" role="search" class="w-full sm:ml-auto sm:w-72" @submit.prevent="restartSearch()">
         <label for="discussion-search" class="sr-only">{{ filterBy === 'tablet' ? 'Search by tablet name' : 'Search by author' }}</label>
-        <input id="discussion-search" v-model="query" type="search" maxlength="255" autocomplete="off"
+        <input id="discussion-search" v-model="query" type="search" @input="authorId = null" maxlength="255" autocomplete="off"
           :placeholder="filterBy === 'tablet' ? 'Search tablet names…' : 'Search authors…'"
           class="w-full rounded-lg border border-ink/30 bg-card px-4 py-2 focus-visible:outline-2 focus-visible:outline-offset-2" />
       </form>
     </div>
+    <p v-if="authorId" class="mt-3 text-sm text-ink/70">Showing discussions by the mentioned user. <button type="button" class="hover:underline" @click="authorId = null">Clear author selection</button></p>
     <ul v-if="tabletGroups.length" :aria-busy="busy" aria-label="Tablet discussions" class="mt-8 space-y-4">
       <li v-for="group in tabletGroups" :key="group.analysisId" :data-analysis-id="group.analysisId" class="overflow-hidden rounded-2xl bg-card">
         <RouterLink v-if="group.parent" :to="`/community/${group.parent.id}`" class="block px-6 py-5 hover:bg-bar focus-visible:bg-bar">

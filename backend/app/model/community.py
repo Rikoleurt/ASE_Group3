@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, StringConstraints
 
 from backend.app.model.analysis import AnalysisResult, DetectedSign
+from backend.app.model.mention import ResolvedMention
 
 PositiveId = Annotated[int, Field(gt=0, le=2**64 - 1)]
 Title = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=160)]
@@ -17,6 +18,7 @@ class DiscussionCursor(BaseModel):
     created_at: AwareDatetime
     id: Annotated[int, Field(strict=True, gt=0, le=2**64 - 1)]
     filter_by: DiscussionFilter
+    author_id: PositiveId | None = None
     q: Annotated[str, StringConstraints(max_length=255)]
 
 
@@ -63,3 +65,4 @@ class DiscussionComment(BaseModel):
     author_username: str
     created_at: datetime
     body: str
+    mentions: list[ResolvedMention] = Field(default_factory=list)

@@ -8,8 +8,9 @@ const props = defineProps({
   sign: { type: Object, required: true },
   roleKey: { type: String, required: true },
   canDiscuss: { type: Boolean, default: false },
+  canMention: { type: Boolean, default: false },
 })
-defineEmits(['discuss'])
+defineEmits(['discuss', 'mention'])
 
 const ROLE = computed(() => ROLES[props.roleKey])
 // The runner-up readings worth mentioning: below 1% they are noise.
@@ -52,6 +53,9 @@ const OTHERS = computed(() => (props.sign.candidates ?? []).slice(1).filter((oth
       </div>
     </dl>
     <p v-if="!sign.glyph" class="mt-2 text-xs opacity-70">This sign has no Unicode character.</p>
+    <button v-if="canMention" type="button" class="mt-3 mr-2 cursor-pointer rounded bg-page px-3 py-2 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2" @click="$emit('mention', sign)">
+      Mention this symbol
+    </button>
     <button v-if="canDiscuss" type="button" class="mt-3 cursor-pointer rounded bg-page px-3 py-2 text-sm font-semibold text-ink focus-visible:outline-2 focus-visible:outline-offset-2" @click="$emit('discuss', sign)">
       Open discussion
     </button>

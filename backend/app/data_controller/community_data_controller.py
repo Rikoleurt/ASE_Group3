@@ -6,7 +6,8 @@ from mysql.connector import IntegrityError
 
 from backend.app.data_controller.data_controller import DataController
 from backend.app.image_storage import image_path
-from backend.app.model.analysis import Box, DetectedSign
+from backend.app.model.analysis import Box
+from backend.app.mentions import find_symbol, symbol_name, resolve_mentions, validate_mentions
 from backend.app.model.community import (DiscussionSummary, DiscussionDetail, DiscussionComment,
                                          DiscussionPage, DiscussionCursor, DiscussionFilter)
 
@@ -17,20 +18,6 @@ def utc(row):
 
 class DuplicateDiscussionTitle(ValueError):
     """A different discussion already uses this title."""
-
-
-def find_symbol(result: dict, sign_id: int) -> DetectedSign | None:
-    """Find an occurrence in the immutable saved analysis, never in client boxes."""
-    for sign in result["signs"]:
-        if sign["id"] == sign_id:
-            return DetectedSign(**{**sign, "crop": None})
-    return None
-
-
-def symbol_name(symbol: DetectedSign) -> str:
-    if not symbol.sign:
-        return f"symbol-{symbol.id}"
-    return symbol.reading or symbol.label or symbol.sign
 
 
 SUMMARY = ("d.id, d.analysis_id, d.author_id, u.username AS author_username, d.title, d.created_at, "
@@ -45,12 +32,14 @@ def discussion_summary(row: dict) -> DiscussionSummary:
     return DiscussionSummary(**utc(values), symbol_name=symbol_name(symbol) if symbol else None)
 
 
-def encode_discussion_cursor(item: DiscussionSummary, filter_by: DiscussionFilter, q: str) -> str:
-    position = DiscussionCursor(created_at=item.created_at, id=item.id, filter_by=filter_by, q=q)
+def encode_discussion_cursor(item: DiscussionSummary, filter_by: DiscussionFilter, q: str,
+                             author_id: int | None = None) -> str:
+    position = DiscussionCursor(created_at=item.created_at, id=item.id, filter_by=filter_by, q=q, author_id=author_id)
     return urlsafe_b64encode(position.model_dump_json().encode()).decode().rstrip("=")
 
 
-def decode_discussion_cursor(value: str, filter_by: DiscussionFilter, q: str) -> DiscussionCursor:
+def decode_discussion_cursor(value: str, filter_by: DiscussionFilter, q: str,
+                             author_id: int | None = None) -> DiscussionCursor:
     try:
         if len(value) > 4096:
             raise ValueError()
@@ -58,7 +47,7 @@ def decode_discussion_cursor(value: str, filter_by: DiscussionFilter, q: str) ->
         position = DiscussionCursor.model_validate_json(raw)
         # MySQL DATETIME starts at year 1000. Never pass out-of-range dates to SQL.
         timestamp = position.created_at.astimezone(timezone.utc)
-        if timestamp.year < 1000 or position.filter_by != filter_by or position.q != q:
+        if timestamp.year < 1000 or position.filter_by != filter_by or position.q != q or position.author_id != author_id:
             raise ValueError()
         return position
     except (ValueError, OverflowError) as error:
@@ -122,17 +111,20 @@ class CommunityDataController(DataController):
         return self._get_discussion_page(limit, cursor, "tablet", name.strip())
 
     def get_discussion_by_author(self, author: str, limit: int = 30,
-                                 cursor: str | None = None) -> DiscussionPage:
-        return self._get_discussion_page(limit, cursor, "author", author.strip())
+                                 cursor: str | None = None, author_id: int | None = None) -> DiscussionPage:
+        return self._get_discussion_page(limit, cursor, "author", author.strip(), author_id)
 
     def _get_discussion_page(self, limit: int, cursor: str | None,
-                             filter_by: DiscussionFilter, q: str) -> DiscussionPage:
+                             filter_by: DiscussionFilter, q: str, author_id: int | None = None) -> DiscussionPage:
         if not 1 <= limit <= 100 or len(q) > 255:
             raise ValueError("Invalid discussion search.")
-        position = decode_discussion_cursor(cursor, filter_by, q) if cursor is not None else None
+        position = decode_discussion_cursor(cursor, filter_by, q, author_id) if cursor is not None else None
         conditions = []
         params = []
-        if q and filter_by == "author":
+        if author_id is not None:
+            conditions.append("d.author_id = %s")
+            params.append(author_id)
+        elif q and filter_by == "author":
             conditions.append("u.username LIKE %s ESCAPE '!'")
             params.append(search_pattern(q))
         elif q and filter_by == "tablet":
@@ -164,7 +156,7 @@ class CommunityDataController(DataController):
                     parents = [discussion_summary(row) for row in db_cursor.fetchall()]
             finally:
                 db_cursor.close()
-        next_cursor = encode_discussion_cursor(items[-1], filter_by, q) if len(rows) > limit else None
+        next_cursor = encode_discussion_cursor(items[-1], filter_by, q, author_id) if len(rows) > limit else None
         return DiscussionPage(items=items, parents=parents, next_cursor=next_cursor)
 
     def get_discussion(self, discussion_id: int) -> DiscussionDetail | None:
@@ -224,9 +216,10 @@ class CommunityDataController(DataController):
                                "c.created_at, c.body FROM community_comment c JOIN `user` u ON u.id = c.author_id "
                                "WHERE c.discussion_id = %s ORDER BY c.created_at, c.id", (discussion_id,))
                 rows = cursor.fetchall()
+                mentions = resolve_mentions(cursor, [row["body"] for row in rows])
             finally:
                 cursor.close()
-        return [DiscussionComment(**utc(row)) for row in rows]
+        return [DiscussionComment(**utc(row), mentions=refs) for row, refs in zip(rows, mentions)]
 
     def add_comment(self, discussion_id: int, user_id: int, body: str) -> DiscussionComment | None:
         with self.connection() as connection:
@@ -235,6 +228,7 @@ class CommunityDataController(DataController):
                 cursor.execute("SELECT id FROM community_discussion WHERE id = %s FOR SHARE", (discussion_id,))
                 if cursor.fetchone() is None:
                     return None
+                mentions = validate_mentions(cursor, body)
                 created_at = datetime.now(timezone.utc)
                 cursor.execute("INSERT INTO community_comment (discussion_id, author_id, body, created_at) "
                                "VALUES (%s, %s, %s, %s)",
@@ -245,4 +239,4 @@ class CommunityDataController(DataController):
             finally:
                 cursor.close()
         return DiscussionComment(id=comment_id, discussion_id=discussion_id, author_id=user_id,
-                                 author_username=username, created_at=created_at, body=body)
+                                 author_username=username, created_at=created_at, body=body, mentions=mentions)

@@ -11,8 +11,10 @@ const props = defineProps({
   signs: { type: Array, default: () => [] },
   formulas: { type: Array, default: () => [] },
   canDiscuss: { type: Boolean, default: false },
+  canMention: { type: Boolean, default: false },
 })
-const emit = defineEmits(['discuss'])
+const emit = defineEmits(['discuss', 'mention'])
+const interactive = computed(() => props.canDiscuss || props.canMention)
 const root = ref(null)
 let closeTimer
 
@@ -32,7 +34,7 @@ function hideCard() {
 
 function scheduleClose() {
   keepCard()
-  if (!props.canDiscuss) return hideCard()
+  if (!interactive.value) return hideCard()
   closeTimer = setTimeout(() => {
     const focused = document.activeElement
     if (root.value?.querySelector('[data-testid="sign-card"]')?.contains(focused)) return
@@ -42,7 +44,7 @@ function scheduleClose() {
 }
 
 function focusDiscussion(event) {
-  if (!props.canDiscuss || event.shiftKey) return
+  if (!interactive.value || event.shiftKey) return
   const button = root.value?.querySelector('[data-testid="sign-card"] button')
   if (button) {
     event.preventDefault()
@@ -51,6 +53,9 @@ function focusDiscussion(event) {
 }
 
 function focusAdjacentBox(event) {
+  const buttons = [...root.value.querySelectorAll('[data-testid="sign-card"] button')]
+  const current = buttons.indexOf(event.target)
+  if (event.shiftKey ? current > 0 : current < buttons.length - 1) return
   const index = props.signs.findIndex((sign) => sign.id === ACTIVE.value)
   const target = props.signs[event.shiftKey ? index : index + 1]
   if (target) {
@@ -150,8 +155,9 @@ function describe(sign) {
       :sign="ACTIVE_SIGN"
       :role-key="roleKey(ACTIVE_SIGN, MARKERS)"
       :can-discuss="canDiscuss"
+      :can-mention="canMention"
       class="absolute z-30"
-      :class="{ 'pointer-events-none': !canDiscuss }"
+      :class="{ 'pointer-events-none': !interactive }"
       :style="CARD_STYLE"
       @mouseenter="keepCard"
       @mouseleave="scheduleClose"
@@ -159,6 +165,7 @@ function describe(sign) {
       @focusout="scheduleClose"
       @keydown.tab="focusAdjacentBox"
       @discuss="emit('discuss', $event)"
+      @mention="emit('mention', $event)"
     />
     <button
       v-if="signs.length"

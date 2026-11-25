@@ -7,6 +7,9 @@ import TabletOverlay from '../components/analysis/TabletOverlay.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import LoadingIndicator from '../components/LoadingIndicator.vue'
 import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
+import MentionComposer from '../components/mentions/MentionComposer.vue'
+import MentionText from '../components/mentions/MentionText.vue'
+import SymbolMentionPreview from '../components/mentions/SymbolMentionPreview.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -19,6 +22,8 @@ const error = ref('')
 const commentsError = ref('')
 const imageError = ref(false)
 const selectedSymbol = ref(null)
+const mentionComposer = ref(null)
+const previewTarget = ref(null)
 const tabletName = computed(() => (discussion.value?.tablet_filename || '').replace(/\.png$/i, ''))
 const canDiscussSymbols = computed(() => Boolean(sessionUser.value)
   && sessionUser.value.id === discussion.value?.author_id)
@@ -28,10 +33,22 @@ function openSymbolDiscussion(symbol) {
   if (canDiscussSymbols.value) selectedSymbol.value = symbol
 }
 
+function round(value, decimals) {
+    return Number(Math.round(value+'e'+decimals)+'e-'+decimals);
+}
+
+function mentionSymbol(symbol) {
+  if (!sessionUser.value || !discussion.value || pending.value) return
+  const analysisId = discussion.value.analysis_id
+  const label = symbol.sign ? (symbol.reading || symbol.label || symbol.sign) : `symbol-${symbol.id}`
+  mentionComposer.value?.insertMention({ key: `symbol:${analysisId}:${symbol.id}`, kind: 'symbol', label })
+}
+
 async function load() {
   const request = ++requestId
   discussion.value = null
   selectedSymbol.value = null
+  previewTarget.value = null
   comments.value = []
   draft.value = ''
   error.value = ''
@@ -93,10 +110,6 @@ onBeforeUnmount(() => { requestId++ })
     <template v-if="discussion">
       <h1 class="mt-6 break-words text-3xl font-bold">{{ discussion.title }}</h1>
       <p class="mt-2 text-ink/70">Shared by {{ discussion.author_username }} · <time :datetime="discussion.created_at">{{ new Date(discussion.created_at).toLocaleString() }}</time></p>
-      <p v-if="discussion.sign_id != null" class="mt-3" data-testid="symbol-origin">
-        {{ discussion.author_username }} created a discussion about symbol <strong>{{ discussion.symbol_name }}</strong>
-        from tablet <strong>{{ tabletName }}</strong>.
-      </p>
       <nav v-if="discussion.tablet_filename" class="mt-6 rounded-xl border border-ink/20 p-4" aria-labelledby="discussion-tree-title">
         <h2 id="discussion-tree-title" class="mb-3 text-xl font-bold">Discussion tree</h2>
         <RouterLink v-if="discussion.parent_discussion && discussion.parent_discussion.id !== discussion.id" :to="`/community/${discussion.parent_discussion.id}`" class="font-semibold hover:underline">
@@ -117,13 +130,14 @@ onBeforeUnmount(() => { requestId++ })
         <p v-if="imageError" role="alert">The symbol image could not be loaded.</p>
         <img v-else :src="discussion.image_url" :alt="`Symbol ${discussion.symbol_name} from ${tabletName}`" class="mx-auto max-h-80 max-w-full rounded-lg bg-white object-contain" @error="imageError = true" />
         <h2 class="mt-4 text-xl font-bold">{{ discussion.symbol_name }}</h2>
-        <p class="mt-2">Model reading: {{ discussion.symbol.reading || discussion.symbol.label }} · Confidence: {{ discussion.symbol.confidence }}%</p>
+        <button v-if="sessionUser" type="button" :disabled="pending || loading" class="mt-3 rounded bg-bar px-3 py-2 disabled:opacity-50" @click="mentionSymbol(discussion.symbol)">Mention this symbol</button>
+        <p class="mt-2">Model reading: {{ discussion.symbol.reading || discussion.symbol.label }} · Confidence: {{ round(discussion.symbol.confidence, 2) }}%</p>
         <p v-if="discussion.symbol.meaning" class="mt-2">{{ discussion.symbol.meaning }}</p>
       </section>
       <section v-else-if="discussion.result" class="mt-8 grid items-start gap-6 md:grid-cols-2" aria-label="Shared analysis">
         <div>
           <p v-if="imageError" role="alert">The tablet image could not be loaded.</p>
-          <TabletOverlay v-else :signs="discussion.result.signs" :formulas="discussion.result.formulas" :can-discuss="canDiscussSymbols" @discuss="openSymbolDiscussion">
+          <TabletOverlay v-else :signs="discussion.result.signs" :formulas="discussion.result.formulas" :can-discuss="canDiscussSymbols" :can-mention="Boolean(sessionUser) && !pending && !loading" @discuss="openSymbolDiscussion" @mention="mentionSymbol">
             <img :src="discussion.image_url" :alt="discussion.title" class="w-full rounded-lg bg-white" @error="imageError = true" />
           </TabletOverlay>
         </div>
@@ -132,13 +146,13 @@ onBeforeUnmount(() => { requestId++ })
           <p class="mt-4">{{ discussion.result.summary }}</p>
           <dl class="mt-4 divide-y divide-ink/10">
             <div class="flex justify-between gap-4 py-3"><dt>Interpretation</dt><dd class="break-words">{{ discussion.result.symbol_interpretation }}</dd></div>
-            <div class="flex justify-between gap-4 py-3"><dt>Confidence</dt><dd>{{ discussion.result.confidence }}%</dd></div>
+            <div class="flex justify-between gap-4 py-3"><dt>Confidence</dt><dd>{{ round(discussion.result.confidence, 2) }}%</dd></div>
             <div class="flex justify-between gap-4 py-3"><dt>Processing time</dt><dd>{{ discussion.result.time_taken }} s</dd></div>
           </dl>
           <ul class="mt-4 divide-y divide-ink/10" aria-label="Recognized signs">
             <li v-for="sign in discussion.result.signs" :key="sign.id" class="flex justify-between gap-3 py-2">
               <span><span class="linear-a text-xl">{{ sign.glyph }}</span> {{ sign.reading || sign.label }} <span v-if="sign.meaning">— {{ sign.meaning }}</span></span>
-              <span>{{ sign.confidence }}%</span>
+              <span>{{ round(sign.confidence, 2) }}%</span>
             </li>
           </ul>
         </div>
@@ -150,14 +164,14 @@ onBeforeUnmount(() => { requestId++ })
         <ol aria-label="Comments" class="mt-4 divide-y divide-ink/10">
           <li v-for="comment in comments" :key="comment.id" class="py-4">
             <p class="text-sm"><strong>{{ comment.author_username }}</strong> · <time :datetime="comment.created_at" class="text-ink/70">{{ new Date(comment.created_at).toLocaleString() }}</time></p>
-            <p class="mt-2 whitespace-pre-wrap break-words">{{ comment.body }}</p>
+            <MentionText :body="comment.body" :mentions="comment.mentions || []" class="mt-2" @preview="previewTarget = $event" />
           </li>
         </ol>
         <p v-if="commentsError" role="alert" class="mt-4 text-conf-low">{{ commentsError }}</p>
         <button v-if="commentsError" type="button" class="mt-2 underline" @click="load">Reload discussion</button>
         <form v-if="sessionUser" class="mt-6" @submit.prevent="submit">
           <label for="community-comment" class="block font-semibold">Add a comment</label>
-          <textarea id="community-comment" v-model="draft" :disabled="pending" maxlength="2000" required rows="4" class="mt-2 w-full rounded border border-ink/30 bg-white px-3 py-2" />
+          <MentionComposer ref="mentionComposer" v-model="draft" :discussion-id="discussion.id" :disabled="pending || loading" />
           <div class="mt-3 flex items-center justify-between gap-4">
             <small>{{ draft.length }}/2000</small>
             <button type="submit" :disabled="pending || loading || !draft.trim()" class="cursor-pointer rounded bg-bar px-6 py-2 disabled:opacity-50">{{ pending ? 'Posting…' : 'Post comment' }}</button>
@@ -165,6 +179,7 @@ onBeforeUnmount(() => { requestId++ })
         </form>
         <RouterLink v-else :to="{ path: '/login', query: { redirect: route.fullPath } }" class="mt-6 inline-block underline">Log in to join the discussion</RouterLink>
       </section>
+      <SymbolMentionPreview v-if="previewTarget" :key="previewTarget.key" :target="previewTarget" @close="previewTarget = null" />
       <SymbolDiscussionDialog v-if="selectedSymbol && canDiscussSymbols" :analysis-id="discussion.analysis_id" :filename="tabletName" :symbol="selectedSymbol" @close="selectedSymbol = null" />
     </template>
   </main>
