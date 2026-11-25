@@ -40,6 +40,34 @@ async function load() {
 }
 watch(() => route.params.id, load, { immediate: true })
 
+// How to cite the release: the server's citation, with this site's address for the permalink.
+const CITATION = computed(() =>
+  (RELEASE.value?.citation ?? '').replace(
+    ` /editions/${RELEASE.value?.id}.`,
+    ` ${window.location.origin}/editions/${RELEASE.value?.id}.`,
+  ),
+)
+const COPIED = ref(false)
+const FORMATS = [
+  { ext: 'xml', label: 'TEI-EpiDoc', what: 'TEI-EpiDoc XML: the text, with a zone per box' },
+  { ext: 'svg', label: 'SVG', what: 'The drawing with the boxes and signs, one file' },
+  { ext: 'png', label: 'PNG', what: 'The drawing with the boxes and signs, as an image' },
+  { ext: 'csv', label: 'CSV', what: 'A row per box: its sign, place, marks and source' },
+  { ext: 'json', label: 'JSON', what: 'Everything, for programs' },
+]
+
+async function copyCitation() {
+  try {
+    await navigator.clipboard.writeText(CITATION.value)
+    COPIED.value = true
+    setTimeout(() => {
+      COPIED.value = false
+    }, 2000)
+  } catch {
+    COPIED.value = false // no clipboard access: the text can still be selected
+  }
+}
+
 const TABLET = computed(() => RELEASE.value?.tablet.replaceAll('-', ' ') ?? '')
 const TITLE = computed(
   () => RELEASE.value?.title || `${RELEASE.value?.owner}'s edition of ${TABLET.value}`,
@@ -82,6 +110,39 @@ function sourceName(source) {
         Merged from {{ RELEASE.merged_from.map(sourceName).join(', ') }}.
       </p>
       <p v-if="RELEASE.notes" class="mt-3 rounded-lg bg-card p-3">{{ RELEASE.notes }}</p>
+      <section
+        class="mt-4 max-w-3xl rounded-2xl bg-card p-4"
+        aria-labelledby="cite-h"
+        data-testid="cite"
+      >
+        <h2 id="cite-h" class="font-bold">Cite this edition</h2>
+        <p class="mt-1 text-sm" data-testid="citation">{{ CITATION }}</p>
+        <div class="mt-2 flex flex-wrap items-center gap-2 text-sm">
+          <button
+            type="button"
+            class="cursor-pointer rounded bg-bar px-3 py-1 font-semibold hover:brightness-95"
+            data-testid="copy-citation"
+            @click="copyCitation"
+          >
+            {{ COPIED ? 'Copied' : 'Copy the citation' }}
+          </button>
+          <span class="ml-2 text-ink/70">Download:</span>
+          <a
+            v-for="format in FORMATS"
+            :key="format.ext"
+            :href="`/api/editions/${RELEASE.id}/export.${format.ext}`"
+            class="underline"
+            :title="format.what"
+            :data-testid="`export-${format.ext}`"
+            download
+            >{{ format.label }}</a
+          >
+        </div>
+        <p class="mt-1 text-xs text-ink/60">
+          A release never changes: this page and these files stay the same, whatever is edited
+          later.
+        </p>
+      </section>
       <DiscussionLinks
         class="max-w-xl"
         :target="`edition:${RELEASE.id}`"

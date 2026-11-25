@@ -3468,6 +3468,17 @@
             "title": "Boxes",
             "type": "array"
           },
+          "citation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Citation"
+          },
           "contributors": {
             "default": [],
             "items": {
@@ -10130,7 +10141,7 @@
     },
     "/editions/{release_id}": {
       "get": {
-        "description": "A release, with its reading: the permalink to cite. Anyone may see the releases of an edition\nopen to everyone; otherwise only those who can open the edition.",
+        "description": "A release, with its reading and how to cite it: the permalink. Anyone may see the releases of\nan edition open to everyone; otherwise only those who can open the edition.",
         "operationId": "get_release_editions__release_id__get",
         "parameters": [
           {
@@ -10218,6 +10229,117 @@
           }
         },
         "summary": "Get Release",
+        "tags": [
+          "editions"
+        ]
+      }
+    },
+    "/editions/{release_id}/export.{fmt}": {
+      "get": {
+        "description": "The release as a file: SVG (the drawing embedded), PNG, CSV or JSON (a row per box, with its\nmarks and source) or TEI-EpiDoc XML. Each carries the citation and the corpus licence.",
+        "operationId": "export_release_editions__release_id__export__fmt__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "release_id",
+            "required": true,
+            "schema": {
+              "exclusiveMinimum": 0,
+              "maximum": 18446744073709551615,
+              "title": "Release Id",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "path",
+            "name": "fmt",
+            "required": true,
+            "schema": {
+              "enum": [
+                "svg",
+                "png",
+                "csv",
+                "json",
+                "xml"
+              ],
+              "title": "Fmt",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {},
+              "application/tei+xml": {},
+              "image/png": {},
+              "image/svg+xml": {},
+              "text/csv; charset=utf-8": {}
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Export Release",
         "tags": [
           "editions"
         ]

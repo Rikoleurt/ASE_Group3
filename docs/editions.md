@@ -55,13 +55,44 @@ accepted release instead of every copy: one agreed version per tablet, with imag
 `edition-<id>`. This removes the duplicates the default export has when several people
 corrected the same tablet.
 
+## Citing and exporting a release
+
+A release never changes, so its page (`/editions/<id>`) is the permalink to cite. The page
+shows a ready-made citation, with a button to copy it:
+
+> anouk, dev. Agreed: an edition of HT 13, release 2. ASE Group 3 Linear A workbench,
+> 25 November 2026. https://…/editions/9. Drawings and transcriptions: SigLA … CC BY-NC-SA 4.0.
+
+The page also offers the release as files (`GET /editions/{id}/export.{xml,svg,png,csv,json}`).
+Each carries the citation and the licence:
+
+| Format | Holds |
+|---|---|
+| TEI-EpiDoc (`.tei.xml`) | the text in a minimal EpiDoc profile, described below |
+| SVG | the drawing embedded (one self-contained file), a box and the sign's reading per box; marked boxes in red |
+| PNG | the same as an image, with a credit line |
+| CSV | a row per box: line, order, sign, reading, pixel box, certainty, damage, other readings, word end, source and its author |
+| JSON | everything above, for programs |
+
+The TEI-EpiDoc profile contains:
+
+- **header:** the title, one `respStmt` per contributor, the permalink as `idno`, the date,
+  the licence in `availability`, and the tablet in `msIdentifier`;
+- **facsimile:** a `zone` per box;
+- **text:** the edition `div`, with `lb` per line, `w` per word and `g ref="#AB81"` per sign;
+  `unclear` for uncertain or partly preserved signs, `supplied reason="lost"` for restored
+  ones and `gap` for illegible ones, each pointing to its zone (`facs`).
+
+Set `PUBLIC_URL` on the server for absolute links in the files; otherwise they are relative.
+
 ## API
 
 | Route | Does |
 |---|---|
 | `POST /box-sets/{id}/releases` `{notes?}` | release an edition (owner or manage); 201 |
 | `GET /box-sets/{id}/releases` | an edition's releases, newest first |
-| `GET /editions/{release_id}` | a release with its reading (the permalink) |
+| `GET /editions/{release_id}` | a release with its reading and citation (the permalink) |
+| `GET /editions/{release_id}/export.{fmt}` | the release as `xml` (TEI-EpiDoc), `svg`, `png`, `csv` or `json` |
 | `GET /tablets/{slug}/editions` | released editions open to everyone, votes, the accepted one, any override, whether you may vote |
 | `PUT /tablets/{slug}/vote` `{release_id}` / `DELETE` | back a release / withdraw |
 | `PUT /tablets/{slug}/edition-override` `{release_id, comment}` | admins: choose over the vote |

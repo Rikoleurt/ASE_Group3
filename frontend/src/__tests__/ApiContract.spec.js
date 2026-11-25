@@ -107,6 +107,7 @@ const CALLS = [
   { method: 'get', path: '/box-sets/{set_id}/releases', source: releasePanel, snippet: '/api/box-sets/${props.setId}/releases' },
   { method: 'post', path: '/box-sets/{set_id}/releases', source: releasePanel, snippet: "method: 'POST'" },
   { method: 'get', path: '/editions/{release_id}', source: editionView, snippet: '/api/editions/${encodeURIComponent(route.params.id)}' },
+  { method: 'get', path: '/editions/{release_id}/export.{fmt}', source: editionView, snippet: '/api/editions/${RELEASE.id}/export.${format.ext}' },
   { method: 'get', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: '/api/admin/users/${props.user.id}/voting' },
   { method: 'put', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: "method: 'PUT'" },
   { method: 'get', path: '/tablets/{slug}/glyph-activity', source: useGlyphActivity, snippet: '/api/tablets/${encodeURIComponent(slug.value)}/glyph-activity' },

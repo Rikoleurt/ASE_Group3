@@ -48,6 +48,7 @@ class Release(BaseModel):
     merged_from: list[MergedFrom] = []
     contributors: list[str] = []
     reading: Reading | None = None  # worked out from the boxes (only on GET /editions/{id})
+    citation: str | None = None  # how to cite it (only on GET /editions/{id})
 
 
 class ReleaseSummary(BaseModel):

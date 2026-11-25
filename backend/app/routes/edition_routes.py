@@ -9,11 +9,12 @@
   most backed release, the earlier one on a tie. An override needs a reason, which everyone sees.
 """
 
-from typing import Annotated
+from typing import Annotated, Literal
 
-from fastapi import APIRouter, Depends, HTTPException, Path, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Path, Request, Response, status
 from mysql.connector import Error as DatabaseError
 
+from backend.app import corpus, edition_export, glyph_index
 from backend.app.auth import Admin, AdminWrite, AuthenticatedWrite, CurrentUser
 from backend.app.data_controller.analysis_data_controller import describe_sign, read_signs
 from backend.app.data_controller.edition_data_controller import EditionDataController
@@ -165,12 +166,9 @@ def edition_releases(
         raise HTTPException(503, UNAVAILABLE) from error
 
 
-@router.get("/editions/{release_id}", response_model=Release, responses=ERRORS)
-def get_release(
-    release_id: Identifier, request: Request, editions: Editions, controller: Controller
-) -> Release:
-    """A release, with its reading: the permalink to cite. Anyone may see the releases of an edition
-    open to everyone; otherwise only those who can open the edition."""
+def _visible_release(release_id: int, request: Request, editions, controller) -> Release:
+    """The release with its reading and citation; 404 unless its edition is open to everyone or the
+    user can open it."""
     try:
         row = editions.release(release_id)
     except DatabaseError as error:
@@ -185,7 +183,62 @@ def get_release(
             raise HTTPException(503, UNAVAILABLE) from error
         if user is None or level_of(row["owner_id"], "none", user.id, share) is None:
             raise HTTPException(404, "Release not found.")
-    return _release(row, reading=True)
+    release = _release(row, reading=True)
+    release.citation = edition_export.citation(release)
+    return release
+
+
+@router.get("/editions/{release_id}", response_model=Release, responses=ERRORS)
+def get_release(
+    release_id: Identifier, request: Request, editions: Editions, controller: Controller
+) -> Release:
+    """A release, with its reading and how to cite it: the permalink. Anyone may see the releases of
+    an edition open to everyone; otherwise only those who can open the edition."""
+    return _visible_release(release_id, request, editions, controller)
+
+
+EXPORTS = {
+    "svg": "image/svg+xml",
+    "png": "image/png",
+    "csv": "text/csv; charset=utf-8",
+    "json": "application/json",
+    "xml": "application/tei+xml",
+}
+
+
+@router.get(
+    "/editions/{release_id}/export.{fmt}",
+    response_class=Response,
+    responses={**ERRORS, 200: {"content": {media: {} for media in EXPORTS.values()}}},
+)
+def export_release(
+    release_id: Identifier,
+    fmt: Literal["svg", "png", "csv", "json", "xml"],
+    request: Request,
+    editions: Editions,
+    controller: Controller,
+) -> Response:
+    """The release as a file: SVG (the drawing embedded), PNG, CSV or JSON (a row per box, with its
+    marks and source) or TEI-EpiDoc XML. Each carries the citation and the corpus licence."""
+    release = _visible_release(release_id, request, editions, controller)
+    path = glyph_index.tracing_path(release.tablet) if fmt in ("svg", "png") else None
+    if fmt == "png" and path is None:
+        raise HTTPException(
+            404, f"This tablet's drawing is not on this server. {corpus.DOWNLOAD_HINT}"
+        )
+    body = {
+        "svg": lambda: edition_export.to_svg(release, path),
+        "png": lambda: edition_export.to_png(release, path),
+        "csv": lambda: edition_export.to_csv(release),
+        "json": lambda: edition_export.to_json(release),
+        "xml": lambda: edition_export.to_tei(release),
+    }[fmt]()
+    name = f"{release.tablet}-edition-{release.edition_id}-release-{release.number}.{'tei.xml' if fmt == 'xml' else fmt}"
+    return Response(
+        body,
+        media_type=EXPORTS[fmt],
+        headers={"Content-Disposition": f'attachment; filename="{name}"'},
+    )
 
 
 def _voting(editions: EditionDataController, user) -> Voting:
