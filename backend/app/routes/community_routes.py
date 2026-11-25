@@ -2,6 +2,7 @@ from typing import Annotated, Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Path, Query, Response
 from fastapi.responses import FileResponse
+from mysql.connector import Error as DatabaseError
 
 from backend.app.auth import AuthenticatedWrite, CurrentUser
 from backend.app.mentions import InvalidMention
@@ -11,7 +12,7 @@ from backend.app.data_controller.community_data_controller import CommunityDataC
 from backend.app.image_storage import image_path, crop_symbol
 from backend.app.model.analysis import ApiError
 from backend.app.model.community import (DiscussionCreate, DiscussionSummary, DiscussionPage,
-                                         DiscussionDetail, CommunityCommentCreate, DiscussionComment, DiscussionFilter)
+                                         DiscussionDetail, CommunityCommentCreate, DiscussionComment, DiscussionFilter, VoteState, VoteSet)
 
 router = APIRouter(prefix="/community", tags=["community"], responses={404: {"model": ApiError}, 503: {"model": ApiError}})
 Controller = Annotated[CommunityDataController, Depends(CommunityDataController)]
@@ -145,3 +146,27 @@ def symbol_image(analysis_id: DiscussionId, sign_id: SignId, controller: Mention
         raise HTTPException(404, "Public symbol image not found.") from error
     return Response(content, media_type="image/png",
                     headers={"Cache-Control": "no-store", "X-Content-Type-Options": "nosniff"})
+
+
+@router.get("/discussions/{discussion_id}/vote", response_model=VoteState,
+            responses={401: {"model": ApiError}})
+def get_vote(discussion_id: DiscussionId, user: CurrentUser, controller: Controller):
+    try:
+        result = controller.get_vote(discussion_id, user.id)
+    except DatabaseError as error:
+        raise HTTPException(503, "Community storage is unavailable.") from error
+    if result is None:
+        raise HTTPException(404, "Discussion not found.")
+    return result
+
+
+@router.put("/discussions/{discussion_id}/vote", response_model=VoteState,
+            responses={401: {"model": ApiError}, 403: {"model": ApiError}, 422: {"description": "Invalid vote"}})
+def set_vote(discussion_id: DiscussionId, payload: VoteSet, user: AuthenticatedWrite, controller: Controller):
+    try:
+        result = controller.set_vote(discussion_id, user.id, payload.value)
+    except DatabaseError as error:
+        raise HTTPException(503, "Community storage is unavailable.") from error
+    if result is None:
+        raise HTTPException(404, "Discussion not found.")
+    return result

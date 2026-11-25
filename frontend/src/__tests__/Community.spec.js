@@ -187,7 +187,7 @@ it.each([{}, { result: null }])('loads a symbol thread without a full analysis (
   expect(fetch.mock.calls.map(([url]) => url)).toEqual([
     '/api/community/discussions/4', '/api/community/discussions/4/comments',
   ])
-  expect(wrapper.get('[data-testid="symbol-origin"]').text()).toContain('owner created a discussion about symbol ku from tablet HT13.')
+  expect(wrapper.text()).toContain('Shared by owner')
   expect(wrapper.get('img').attributes('src')).toBe(symbolDetail.image_url)
   expect(wrapper.get('nav a[href="/community/3"]').text()).toContain('HT13')
   expect(wrapper.get('nav').text()).not.toContain('.png')
@@ -298,4 +298,38 @@ it('keeps a symbol under a filename heading until its parent arrives on a later 
   expect(wrapper.get('a[href="/community/3"]').exists()).toBe(true)
   expect(wrapper.findAll('a[href="/community/4"]')).toHaveLength(1)
   expect(fetch).toHaveBeenLastCalledWith('/api/community/discussions?limit=30&filter_by=recent&cursor=4', expect.objectContaining({ cache: 'no-store' }))
+})
+
+
+it('allows voting while composing a comment with a mention', async () => {
+  acceptSession(session)
+  const token = '@[reader](user:8)'
+  const mentioned = { key: 'user:8', kind: 'user', label: 'reader', user_id: 8, available: true, token }
+  const posted = { ...comment, body: token, mentions: [mentioned] }
+  const fetch = vi.fn(async (url, options) => {
+    if (url === '/api/users/me') return ok(session)
+    if (url.endsWith('/vote')) return ok(options?.method === 'PUT'
+      ? { score: 3, my_vote: 1 } : { score: 2, my_vote: 0 })
+    if (url.endsWith('/comments')) return ok(options?.method === 'POST' ? posted : [])
+    return ok({ ...detail, score: 2 })
+  })
+  vi.stubGlobal('fetch', fetch)
+  await render('/community/3')
+  await wrapper.get('textarea').setValue('My draft')
+  await wrapper.get('[aria-label="Upvote"]').trigger('click')
+  await flushPromises()
+  expect(wrapper.get('[aria-label="Upvote"]').attributes('aria-pressed')).toBe('true')
+  expect(wrapper.get('[aria-label="Vote on this discussion"]').text()).toContain('3')
+  expect(wrapper.get('textarea').element.value).toBe('My draft')
+  expect(fetch).toHaveBeenCalledWith('/api/community/discussions/3/vote', expect.objectContaining({
+    method: 'PUT', headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': 'csrf' },
+    body: JSON.stringify({ value: 1 }),
+  }))
+  await wrapper.get('textarea').setValue(token)
+  await wrapper.get('form').trigger('submit')
+  await flushPromises()
+  expect(wrapper.get('ol[aria-label="Comments"] a').text()).toBe('@reader')
+  expect(wrapper.get('ol[aria-label="Comments"] a').attributes('href')).toBe('/community?filter_by=author&author_id=8')
+  expect(wrapper.get('textarea').element.value).toBe('')
+  expect(wrapper.get('[aria-label="Upvote"]').attributes('aria-pressed')).toBe('true')
 })

@@ -38,7 +38,14 @@ class DiscussionSummary(BaseModel):
     sign_id: int | None = None
     symbol_name: str | None = None
     tablet_filename: str = ""
+    score: int = 0
+    
+class VoteSet(BaseModel):
+    value: Literal[-1, 0, 1]
 
+class VoteState(BaseModel):
+    score: int
+    my_vote: int
 
 class DiscussionPage(BaseModel):
     items: list[DiscussionSummary]
