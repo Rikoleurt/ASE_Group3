@@ -410,7 +410,7 @@ def cmd_images(args: argparse.Namespace) -> None:
     docs = load_cached()
     usable = sum(signboxes.has_boxes(d) for d in docs.values())
     print(f"Fetching tracings and sign crops for {usable} tablets (resumable)...")
-    stats = signboxes.download_images(docs, delay=args.delay)
+    stats = signboxes.download_images(docs, delay=args.delay, tracings_only=args.tracings_only)
     print(f"  new {stats.requested}, already cached {stats.cached}, failed {stats.failed}")
 
 
@@ -700,6 +700,8 @@ def main() -> None:
 
     p_images = sub.add_parser("images", help="fetch tablet tracings and sign crops (resumable)")
     p_images.add_argument("--delay", type=float, default=0.4, help="seconds between requests")
+    p_images.add_argument("--tracings-only", action="store_true",
+                          help="only the whole-tablet tracings (what the web app's Tablets page shows), not the sign crops")
 
     p_dataset = sub.add_parser("dataset", help="build a YOLO sign-detection dataset from the tracings")
     p_dataset.add_argument("--labels", choices=["identity", "sign", "role"], default="identity",

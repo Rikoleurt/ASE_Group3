@@ -25,7 +25,7 @@ ERRORS = {code: {"model": ApiError} for code in (404, 503)}
 def tracing(slug: str) -> FilePath:
     path = glyph_index.tracing_path(slug)
     if path is None:
-        raise HTTPException(404, "This tablet's drawing is not on this server.")
+        raise HTTPException(404, f"This tablet's drawing is not on this server. {corpus.DOWNLOAD_HINT}")
     return path
 
 
@@ -36,9 +36,10 @@ def list_tablets(index: Index,
                  offset: Annotated[int, Query(ge=0, le=100_000)] = 0) -> TabletPage:
     """Tablets with published boxes, by corpus id; `q` matches the id ("HT 13", "ht13", "HT-13")."""
     needle = "".join(q.lower().split()).replace("-", "")
-    found = [tablet for tablet in corpus.tablets(index)
-             if needle in "".join(tablet.tablet.lower().split()).replace("-", "")]
-    return TabletPage(items=[TabletItem(**vars(tablet)) for tablet in found[offset:offset + limit]], total=len(found))
+    drawn, without_drawing = corpus.tablets(index)
+    found = [tablet for tablet in drawn if needle in "".join(tablet.tablet.lower().split()).replace("-", "")]
+    return TabletPage(items=[TabletItem(**vars(tablet)) for tablet in found[offset:offset + limit]], total=len(found),
+                      without_drawing=without_drawing, hint=corpus.DOWNLOAD_HINT if without_drawing else None)
 
 
 @router.get("/{slug}/image", response_class=FileResponse, responses={200: {"content": {"image/png": {}}}, **ERRORS})
