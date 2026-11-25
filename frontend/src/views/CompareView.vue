@@ -105,7 +105,8 @@ function missingFrom(place) {
         :to="{ path: `/tablets/${route.params.slug}/merge`, query: { v: KEYS } }"
         class="rounded bg-bar px-4 py-1.5 font-semibold hover:brightness-95"
         data-testid="merge-link"
-      >Merge into an edition</RouterLink>
+        >Merge into an edition</RouterLink
+      >
     </div>
 
     <p v-if="LOADING" role="status" class="mt-6">
