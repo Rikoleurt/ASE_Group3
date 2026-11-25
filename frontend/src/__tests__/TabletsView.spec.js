@@ -118,13 +118,73 @@ describe('Tablets page', () => {
   it('says when tablets are hidden because their drawings are not downloaded', async () => {
     vi.stubGlobal('fetch', vi.fn((url) => {
       if (url === '/api/users/me') return json(SESSION)
-      if (url.startsWith('/api/tablets?')) return json({ items: [], total: 0, without_drawing: 706, hint: 'Download them with: cd fraction-solver && python -m la.cli images --tracings-only' })
-      return json({ detail: "This tablet's drawing is not on this server. Download them with: cd fraction-solver && python -m la.cli images --tracings-only" }, 404)
+      if (url.startsWith('/api/tablets?')) return json({ items: [], total: 0, without_drawing: 706, hint: 'Download them with: python scripts/fetch_corpus.py' })
+      return json({ detail: "This tablet's drawing is not on this server. Download them with: python scripts/fetch_corpus.py" }, 404)
     }))
     await render('/tablets/HT-13')
     expect(wrapper.get('[data-testid="missing-drawings"]').text()).toContain('706 more tablets are hidden')
-    expect(wrapper.get('[data-testid="missing-drawings"]').text()).toContain('la.cli images --tracings-only')
+    expect(wrapper.get('[data-testid="missing-drawings"]').text()).toContain('scripts/fetch_corpus.py')
     expect(wrapper.get('[role="alert"]').text()).toContain("This tablet's drawing is not on this server.")
+  })
+
+  it('lets an admin download the missing drawings, shows progress, then lists the tablets', async () => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] })
+    let downloaded = false
+    let polls = 0
+    const fetch = vi.fn((url, options = {}) => {
+      const key = `${options.method ?? 'GET'} ${url}`
+      if (url === '/api/users/me') return json({ ...SESSION, admin: true })
+      if (url.startsWith('/api/tablets?')) return json(downloaded ? PAGE : { items: [], total: 0, without_drawing: 706, hint: 'Download them with: python scripts/fetch_corpus.py' })
+      if (key === 'POST /api/tablets/download') return json({ state: 'running', log: ['downloading linear_a_corpus.zip (1.9 MB)…'], error: null }, 202)
+      if (key === 'GET /api/tablets/download') {
+        polls += 1
+        downloaded = polls > 1
+        return json(downloaded ? { state: 'done', log: ['  unpacked 731 file(s) into fraction-solver/'], error: null }
+          : { state: 'running', log: ['downloading linear_a_tracings.zip (31.2 MB)…'], error: null })
+      }
+      return json({ detail: 'Not found.' }, 404)
+    })
+    vi.stubGlobal('fetch', fetch)
+    try {
+      await render('/tablets')
+      await wrapper.get('[data-testid="download-corpus"]').trigger('click')
+      await flushPromises()
+      const post = fetch.mock.calls.find(([url, options]) => url === '/api/tablets/download' && options?.method === 'POST')
+      expect(post[1].headers['X-CSRF-Token']).toBe('csrf')
+      expect(wrapper.get('[data-testid="download-corpus"]').attributes('disabled')).toBeDefined()
+      expect(wrapper.get('[data-testid="download-progress"]').text()).toContain('linear_a_corpus.zip')
+      await vi.advanceTimersByTimeAsync(1500)
+      await flushPromises()
+      expect(wrapper.get('[data-testid="download-progress"]').text()).toContain('linear_a_tracings.zip')
+      await vi.advanceTimersByTimeAsync(1500)
+      await flushPromises()
+      expect(wrapper.findAll('[data-testid="tablet-list"] button')).toHaveLength(2)
+      expect(wrapper.get('[data-testid="missing-drawings"]').text()).toContain('Downloaded.')
+      expect(wrapper.find('[data-testid="download-corpus"]').exists()).toBe(false)
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('tells others an admin can download the drawings, without a button', async () => {
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/api/users/me') return json(SESSION)
+      if (url.startsWith('/api/tablets?')) return json({ items: [], total: 0, without_drawing: 3, hint: 'Download them with: python scripts/fetch_corpus.py' })
+      return json({ detail: 'Not found.' }, 404)
+    }))
+    await render('/tablets')
+    expect(wrapper.find('[data-testid="download-corpus"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="missing-drawings"]').text()).toContain('An admin can download them from this page.')
+  })
+
+  it('offers the download to an admin when the corpus is not installed at all', async () => {
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/api/users/me') return json({ ...SESSION, admin: true })
+      if (url.startsWith('/api/tablets?')) return json({ detail: 'The cached lineara.eu corpus is not installed on this server.' }, 503)
+      return json({ detail: 'Not found.' }, 404)
+    }))
+    await render('/tablets')
+    expect(wrapper.get('[data-testid="download-corpus"]').text()).toContain('Download the drawings')
   })
 
   it('asks for a tablet when none is chosen', async () => {
