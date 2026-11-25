@@ -37,6 +37,7 @@ import useGlyphActivity from '../composables/useGlyphActivity.js?raw'
 import sketchPad from '../components/signs/SketchPad.vue?raw'
 import signView from '../views/SignView.vue?raw'
 import notificationBell from '../components/NotificationBell.vue?raw'
+import discussionLinks from '../components/DiscussionLinks.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -113,6 +114,8 @@ const CALLS = [
   { method: 'get', path: '/notifications/unread-count', source: notificationBell, snippet: "'/api/notifications/unread-count'" },
   { method: 'get', path: '/notifications', source: notificationBell, snippet: '/api/notifications?${query}' },
   { method: 'post', path: '/notifications/read', source: notificationBell, snippet: "'/api/notifications/read'" },
+  { method: 'get', path: '/community/linked', source: discussionLinks, snippet: '/api/community/linked?target=${encodeURIComponent(props.target)}' },
+  { method: 'get', path: '/community/discussions', source: discussionLinks, snippet: "'/api/community/discussions?limit=10'" },
   { method: 'get', path: '/glyphs/{sign}/occurrences', source: signView, snippet: '/api/glyphs/${encodeURIComponent(SIGN.value)}/occurrences?limit=${LIMIT}' },
   { method: 'get', path: '/box-sets/{set_id}/shares', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares' },
   { method: 'put', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },

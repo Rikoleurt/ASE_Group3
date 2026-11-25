@@ -1,12 +1,12 @@
 // Delimiters in labels are escaped; destinations are typed IDs only: numeric for users and
 // symbols, a catalogue sign number (e.g. AB81) for signs.
-const pattern = /@\[((?:\\[\\\]]|[^\]\\\r\n]){1,255})\]\((user:[0-9]{1,20}|symbol:[0-9]{1,20}:[0-9]{1,20}|sign:[A-Za-z0-9]{1,12})\)/g
+const pattern = /@\[((?:\\[\\\]]|[^\]\\\r\n]){1,255})\]\((user:[0-9]{1,20}|symbol:[0-9]{1,20}:[0-9]{1,20}|sign:[A-Za-z0-9]{1,12}|glyph:[A-Za-z0-9]+(?:-[A-Za-z0-9]+){0,6}:[0-9]{1,7}|edition:[0-9]{1,20})\)/g
 
 export function parseMentionTokens(body) {
   return [...body.matchAll(pattern)].map((match) => ({
     token: match[0], start: match.index, end: match.index + match[0].length,
     label: match[1].replace(/\\([\\\]])/g, '$1'),
-    key: match[2].startsWith('sign:') ? match[2]
+    key: /^(sign|glyph):/.test(match[2]) ? match[2]
       : match[2].split(':').map((part, index) => index ? String(BigInt(part)) : part).join(':'),
   }))
 }

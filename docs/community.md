@@ -183,3 +183,23 @@ case-insensitive searches, literal wildcards and parent context.
 The frontend test simulates the native `dialog.showModal()` operation because
 jsdom does not implement it. Lint and builds were not run. The development
 database was not migrated or used for the integration tests.
+
+## Linking discussions to glyphs, editions and signs (scholars' workbench)
+
+Discussions start from a saved analysis. The workbench links them to the corpus through mentions,
+so the community tables are unchanged:
+
+- **Mention kinds.** Besides users and symbols, a comment can mention:
+  - a corpus glyph, `@[HT 13 · ka](glyph:HT-13:5)` (a tablet and the scholars' position);
+  - an edition release, `@[Agreed, release 2](edition:7)`;
+  - a catalogue sign, `@[AB81 (ku)](sign:AB81)`.
+
+  A glyph shows its tablet's thumbnail and links to the tablet; an edition links to its
+  release. A glyph not in the corpus, or a release whose edition is private, cannot be
+  mentioned.
+- **Discussions panel.** A box in the editor (one that started as a scholars' sign), a
+  release's page and a sign's page each list the discussions that mention them
+  (`GET /community/linked?target=glyph:HT-13:5`).
+- **Mention it in a discussion.** The same panel opens a recent discussion with the mention
+  already in its comment box.
+

@@ -2,6 +2,7 @@
 // One release of an edition (workbench, story E): a snapshot that never changes, so this page is
 // its permalink, to share and cite. It shows the boxes on the tablet, the reading, who made it and
 // what it was merged from.
+import DiscussionLinks from '../components/DiscussionLinks.vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
@@ -81,6 +82,11 @@ function sourceName(source) {
         Merged from {{ RELEASE.merged_from.map(sourceName).join(', ') }}.
       </p>
       <p v-if="RELEASE.notes" class="mt-3 rounded-lg bg-card p-3">{{ RELEASE.notes }}</p>
+      <DiscussionLinks
+        class="max-w-xl"
+        :target="`edition:${RELEASE.id}`"
+        :label="`${TITLE}, release ${RELEASE.number}`"
+      />
 
       <div class="mt-6 lg:w-3/4">
         <TabletOverlay :signs="RELEASE.reading.signs" :formulas="RELEASE.reading.formulas">

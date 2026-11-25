@@ -7,13 +7,16 @@ from backend.app.model.analysis import DetectedSign
 
 class MentionTarget(BaseModel):
     key: str
-    kind: Literal['user', 'symbol', 'sign']
+    kind: Literal['user', 'symbol', 'sign', 'glyph', 'edition']
     label: str
     available: bool = True
     user_id: int | None = None
     analysis_id: int | None = None
     sign_id: int | None = None
     sign_code: str | None = None  # a catalogue sign, for kind 'sign' (e.g. "AB81")
+    glyph_tablet: str | None = None  # kind 'glyph': the tablet's slug (and for 'edition', its tablet)
+    glyph_position: int | None = None  # kind 'glyph': the scholars' position
+    release_id: int | None = None  # kind 'edition': the release
     tablet_filename: str | None = None
     image_url: str | None = None
     discussion_id: int | None = None

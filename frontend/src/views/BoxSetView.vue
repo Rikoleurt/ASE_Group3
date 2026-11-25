@@ -2,6 +2,7 @@
 // Your corrected copy of a tablet's boxes (#85): move, resize, draw and delete boxes, name
 // each box's sign, then save. Saving sends every change as one batch; the reading below
 // (lines, transliteration, fraction check) is worked out again from the saved boxes.
+import DiscussionLinks from '../components/DiscussionLinks.vue'
 import { useGlyphActivity } from '../composables/useGlyphActivity'
 import ReleasePanel from '../components/versions/ReleasePanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
@@ -421,6 +422,11 @@ watch(() => route.params.id, load, { immediate: true })
             </div>
             </template>
             <MarksPanel :box="SELECTED" :disabled="!CAN_EDIT || LOCKED" @update="(marks) => set.setMarks(SELECTED.id, marks)" />
+            <DiscussionLinks
+              v-if="copy.source.tablet && positionOf(SELECTED) != null"
+              :target="`glyph:${copy.source.tablet}:${positionOf(SELECTED)}`"
+              :label="`${copy.source.tablet.replaceAll('-', ' ')} · ${signName(SELECTED.sign)}`"
+            />
           </template>
         </section>
 

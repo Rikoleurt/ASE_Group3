@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { communityApi } from '../composables/communityApi'
 import { sessionUser } from '../state/session'
@@ -73,6 +73,18 @@ async function load() {
   } finally {
     if (request === requestId) loading.value = false
   }
+  if (request === requestId) await prefillMention()
+}
+
+// Sent here to mention a glyph, an edition or a sign (workbench, story L): put the mention in the
+// comment box, then drop it from the address so a reload does not add it again.
+async function prefillMention() {
+  const key = typeof route.query.mention === 'string' ? route.query.mention : ''
+  const label = typeof route.query.label === 'string' ? route.query.label.slice(0, 255) : ''
+  if (!/^(glyph|edition|sign):/.test(key) || !label || !sessionUser.value || !discussion.value) return
+  await nextTick()
+  mentionComposer.value?.insertMention({ key, kind: key.split(':')[0], label })
+  router.replace({ path: route.path })
 }
 
 async function submit() {

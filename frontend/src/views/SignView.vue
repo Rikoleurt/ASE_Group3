@@ -1,6 +1,7 @@
 <script setup>
 // One sign (workbench, story B): its typical drawing, character and reading, and its occurrences
 // across the corpus, most typical first, each linking to its tablet.
+import DiscussionLinks from '../components/DiscussionLinks.vue'
 import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import SignPreview from '../components/signs/SignPreview.vue'
@@ -83,6 +84,7 @@ function failed(item) {
       </div>
     </div>
 
+    <DiscussionLinks class="max-w-xl" :target="`sign:${SIGN}`" :label="ENTRY?.name ?? SIGN" />
     <p v-if="LOADING" role="status" class="mt-6">Loading the occurrences…</p>
     <p v-else-if="ERROR" role="alert" class="mt-6 text-confidence-low">{{ ERROR }}</p>
     <template v-else-if="PAGE">

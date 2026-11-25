@@ -7,7 +7,7 @@ from backend.app.model.analysis import DetectedSign
 from backend.app.model.mention import MentionTarget, ResolvedMention
 
 MENTION_PATTERN = re.compile(
-    r'@\[((?:\\[\\\]]|[^\]\\\r\n]){1,255})\]\((user:[0-9]{1,20}|symbol:[0-9]{1,20}:[0-9]{1,20}|sign:[A-Za-z0-9]{1,12})\)'
+    r'@\[((?:\\[\\\]]|[^\]\\\r\n]){1,255})\]\((user:[0-9]{1,20}|symbol:[0-9]{1,20}:[0-9]{1,20}|sign:[A-Za-z0-9]{1,12}|glyph:[A-Za-z0-9]+(?:-[A-Za-z0-9]+){0,6}:[0-9]{1,7}|edition:[0-9]{1,20})\)'
 )
 MAX_MENTIONS = 20
 
@@ -26,6 +26,9 @@ class MentionReference:
     analysis_id: int | None = None
     sign_id: int | None = None
     sign_code: str | None = None  # a catalogue sign, e.g. "AB81"
+    glyph_tablet: str | None = None  # a corpus glyph: its tablet's slug and position (workbench, story L)
+    glyph_position: int | None = None
+    release_id: int | None = None  # a released edition (workbench, story L)
 
 
 @dataclass
@@ -56,6 +59,20 @@ def parse_mentions(body: str, *, strict: bool = False) -> list[MentionReference]
         if parts[0] == 'sign':
             references.append(MentionReference(token=match[0], key=match[2], label=label, kind='sign',
                                                sign_code=parts[1]))
+            continue
+        if parts[0] == 'glyph':
+            if len(parts[1]) <= 64:
+                references.append(MentionReference(token=match[0], key=match[2], label=label, kind='glyph',
+                                                   glyph_tablet=parts[1], glyph_position=int(parts[2])))
+            elif strict:
+                raise InvalidMention('A mention has an invalid identifier.')
+            continue
+        if parts[0] == 'edition':
+            if 0 < int(parts[1]) <= 2**64 - 1:
+                references.append(MentionReference(token=match[0], key=match[2], label=label, kind='edition',
+                                                   release_id=int(parts[1])))
+            elif strict:
+                raise InvalidMention('A mention has an invalid identifier.')
             continue
         identifier = int(parts[1])
         sign_id = int(parts[2]) if parts[0] == 'symbol' else None
@@ -123,6 +140,49 @@ def catalogue_signs(wanted: dict[str, str]) -> dict[str, MentionTarget]:
     return found
 
 
+def corpus_glyphs(wanted: dict) -> dict[str, MentionTarget]:
+    """Mentions of corpus glyphs (a tablet and the scholars' position): available when the corpus
+    has that occurrence; shown with the tablet's thumbnail, the glyph outlined."""
+    if not wanted:
+        return {}
+    from backend.app import glyph_index
+    try:
+        index = glyph_index.get_index()
+    except glyph_index.CorpusMissing:
+        return {}
+    found = {}
+    for key, ref in wanted.items():
+        occurrence = index.lookup(ref.glyph_tablet, ref.glyph_position)
+        if occurrence is not None:
+            name = occurrence.reading or occurrence.sign
+            found[key] = MentionTarget(
+                key=key, kind='glyph', label=f'{occurrence.tablet} · {name}', glyph_tablet=ref.glyph_tablet,
+                glyph_position=ref.glyph_position,
+                image_url=f'/api/tablets/{ref.glyph_tablet}/thumbnail.png?position={ref.glyph_position}')
+    return found
+
+
+def released_editions(wanted: dict) -> dict[str, MentionTarget]:
+    """Mentions of edition releases: available while the edition is open to everyone."""
+    if not wanted:
+        return {}
+    from mysql.connector import Error as DatabaseError
+
+    from backend.app.data_controller.edition_data_controller import EditionDataController
+    controller = EditionDataController()
+    found = {}
+    for key, ref in wanted.items():
+        try:
+            row = controller.release(ref.release_id)
+        except DatabaseError:
+            row = None
+        if row is not None and row['everyone'] != 'none':
+            title = row['title'] or f"{row['owner']}'s edition of {row['tablet_slug'].replace('-', ' ')}"
+            found[key] = MentionTarget(key=key, kind='edition', label=f"{title}, release {row['number']}",
+                                       release_id=row['id'], glyph_tablet=row['tablet_slug'])
+    return found
+
+
 def resolve_mentions(cursor, bodies: list[str]) -> list[list[ResolvedMention]]:
     parsed = [parse_mentions(body) for body in bodies]
     user_ids = sorted({ref.user_id for refs in parsed for ref in refs if ref.kind == 'user'})
@@ -137,6 +197,8 @@ def resolve_mentions(cursor, bodies: list[str]) -> list[list[ResolvedMention]]:
     analyses = {ref.analysis_id for refs in parsed for ref in refs if ref.kind == 'symbol'}
     targets.update({key: item.target for key, item in public_symbols(cursor, analyses).items()})
     targets.update(catalogue_signs({ref.key: ref.sign_code for refs in parsed for ref in refs if ref.kind == 'sign'}))
+    targets.update(corpus_glyphs({ref.key: ref for refs in parsed for ref in refs if ref.kind == 'glyph'}))
+    targets.update(released_editions({ref.key: ref for refs in parsed for ref in refs if ref.kind == 'edition'}))
     resolved = []
     for refs in parsed:
         mentions = []
@@ -144,6 +206,7 @@ def resolve_mentions(cursor, bodies: list[str]) -> list[list[ResolvedMention]]:
             target = targets.get(ref.key) or MentionTarget(
                 key=ref.key, kind=ref.kind, label=ref.label, available=False,
                 user_id=ref.user_id, analysis_id=ref.analysis_id, sign_id=ref.sign_id, sign_code=ref.sign_code,
+                glyph_tablet=ref.glyph_tablet, glyph_position=ref.glyph_position, release_id=ref.release_id,
             )
             mentions.append(ResolvedMention(**target.model_dump(), token=ref.token))
         resolved.append(mentions)
@@ -156,5 +219,5 @@ def validate_mentions(cursor, body: str) -> list[ResolvedMention]:
         raise InvalidMention(f'A comment can contain at most {MAX_MENTIONS} mentions.')
     mentions = resolve_mentions(cursor, [body])[0]
     if any(not mention.available for mention in mentions):
-        raise InvalidMention('A mentioned user, public symbol or sign is no longer available. Remove or replace the mention.')
+        raise InvalidMention('A mentioned user, symbol, sign, glyph or edition is not available. Remove or replace the mention.')
     return mentions

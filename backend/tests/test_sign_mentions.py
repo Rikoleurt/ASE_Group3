@@ -66,5 +66,5 @@ def test_a_comment_cannot_mention_a_sign_outside_the_catalogue():
     assert [m.sign_code for m in mentions.validate_mentions(None, "is it @[ku](sign:AB81)?")] == [
         "AB81"
     ]
-    with pytest.raises(mentions.InvalidMention, match="sign is no longer available"):
+    with pytest.raises(mentions.InvalidMention, match="sign, glyph or edition is not available"):
         mentions.validate_mentions(None, "@[?](sign:ZZ9)")

@@ -2822,6 +2822,56 @@
         "title": "Line",
         "type": "object"
       },
+      "LinkedDiscussion": {
+        "properties": {
+          "author": {
+            "title": "Author",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "mentioned_at": {
+            "format": "date-time",
+            "title": "Mentioned At",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "author",
+          "mentioned_at"
+        ],
+        "title": "LinkedDiscussion",
+        "type": "object"
+      },
+      "LinkedDiscussions": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/LinkedDiscussion"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target",
+          "items"
+        ],
+        "title": "LinkedDiscussions",
+        "type": "object"
+      },
       "LoginResponse": {
         "properties": {
           "admin": {
@@ -2931,6 +2981,28 @@
             ],
             "title": "Discussion Id"
           },
+          "glyph_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Glyph Position"
+          },
+          "glyph_tablet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Glyph Tablet"
+          },
           "image_url": {
             "anyOf": [
               {
@@ -2950,7 +3022,9 @@
             "enum": [
               "user",
               "symbol",
-              "sign"
+              "sign",
+              "glyph",
+              "edition"
             ],
             "title": "Kind",
             "type": "string"
@@ -2958,6 +3032,17 @@
           "label": {
             "title": "Label",
             "type": "string"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
           },
           "sign_code": {
             "anyOf": [
@@ -3649,6 +3734,28 @@
             ],
             "title": "Discussion Id"
           },
+          "glyph_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Glyph Position"
+          },
+          "glyph_tablet": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Glyph Tablet"
+          },
           "image_url": {
             "anyOf": [
               {
@@ -3668,7 +3775,9 @@
             "enum": [
               "user",
               "symbol",
-              "sign"
+              "sign",
+              "glyph",
+              "edition"
             ],
             "title": "Kind",
             "type": "string"
@@ -3676,6 +3785,17 @@
           "label": {
             "title": "Label",
             "type": "string"
+          },
+          "release_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Release Id"
           },
           "sign_code": {
             "anyOf": [
@@ -9276,6 +9396,60 @@
           }
         ],
         "summary": "Set Vote",
+        "tags": [
+          "community"
+        ]
+      }
+    },
+    "/community/linked": {
+      "get": {
+        "description": "The discussions that mention `target`: glyph:<tablet>:<position>, edition:<release id> or\nsign:<sign ID>, as written in mentions.",
+        "operationId": "linked_discussions_community_linked_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "target",
+            "required": true,
+            "schema": {
+              "maxLength": 100,
+              "title": "Target",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LinkedDiscussions"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Linked Discussions",
         "tags": [
           "community"
         ]
