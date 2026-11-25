@@ -41,6 +41,19 @@ How a sketch is scored (`backend/app/sketch_search.py`):
    blended with the neighbour bank's (the best cosine to each sign's training crops), with the
    reader's own weights (`models/linear_a_reader.json`).
 
+## Drawing pad and Find a sign
+
+- **Draw it.** Every sign picker (the box editor, the correction form) has a ✎ **Draw it**
+  button. It opens a drawing pad that takes a mouse, a finger or a pen, with undo, clear and a
+  pen width. The suggestions update 400 ms after the last stroke, and only the latest answer is
+  shown. Picking one fills the picker.
+- **Find a sign** (`/signs`, **Signs** in the top bar). Every catalogue sign is listed with its
+  typical drawing, with a search by number, reading or name, and the drawing pad beside it.
+- **A sign's page** (`/signs/AB81`). It shows the sign's reading and its occurrences across
+  the corpus, most typical first, each linking to its tablet. Unusual forms are marked. An
+  occurrence whose crop is not downloaded shows its tablet's thumbnail instead, or a
+  placeholder when that tablet's drawing is missing too.
+
 ## How well it works
 
 Measured with `python scripts/eval_sketch.py` before building the drawing pad. There are no

@@ -5,6 +5,7 @@
 import { computed, ref, watch } from 'vue'
 import { useCatalogue } from '../../composables/useCatalogue'
 import SignPreview from './SignPreview.vue'
+import SketchPad from './SketchPad.vue'
 import { searchSigns } from './signSearch'
 
 const props = defineProps({
@@ -19,6 +20,7 @@ const emit = defineEmits(['pick'])
 const CATALOGUE = useCatalogue()
 const BY_SIGN = computed(() => Object.fromEntries(CATALOGUE.value.map((sign) => [sign.sign, sign])))
 const QUERY = ref('')
+const SKETCHING = ref(false) // the drawing pad is open (workbench, story B)
 const ACTIVE = ref(0)
 const MATCHES = computed(() => searchSigns(CATALOGUE.value, QUERY.value))
 const LIST_ID = computed(() => `${props.inputId}-matches`)
@@ -73,7 +75,28 @@ function choose() {
       </div>
     </div>
 
-    <label class="mt-4 block text-sm font-semibold" :for="inputId">{{ label }}</label>
+    <div class="mt-4 flex items-end justify-between gap-2">
+      <label class="block text-sm font-semibold" :for="inputId">{{ label }}</label>
+      <button
+        type="button"
+        class="cursor-pointer rounded border border-ink/30 px-2 py-0.5 text-sm hover:bg-bar"
+        :aria-expanded="SKETCHING"
+        data-testid="sketch-open"
+        @click="SKETCHING = !SKETCHING"
+      >
+        ✎ {{ SKETCHING ? 'Close drawing' : 'Draw it' }}
+      </button>
+    </div>
+    <SketchPad
+      v-if="SKETCHING"
+      class="mt-2 rounded-lg bg-white/60 p-2"
+      @pick="
+        (sign) => {
+          SKETCHING = false
+          pick(sign)
+        }
+      "
+    />
     <input
       :id="inputId"
       v-model="QUERY"

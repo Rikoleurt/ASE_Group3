@@ -57,6 +57,7 @@ const pageLinks = [
     {to: '/', label: 'Home', icon: 'home'},
     {to: '/analysis', label: 'Analysis', icon: 'search'},
     {to: '/tablets', label: 'Tablets', icon: 'book'},
+    {to: '/signs', label: 'Signs', icon: 'pen'},
     {to: '/community', label: 'Community', icon: 'lines'},
     {to: '/benchmarks', label: 'Benchmarks', icon: 'chart'},
 ]
@@ -83,6 +84,9 @@ const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visibl
 
                 <svg v-if="link.icon === 'home'" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="currentColor" d="M12 3 1.5 12.5H5V21h5.5v-6h3v6H19v-8.5h3.5z" />
+                </svg>
+                <svg v-else-if="link.icon === 'pen'" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M4 20l4-1 11-11-3-3L5 16l-1 4zM14 6l3 3" />
                 </svg>
                 <svg v-else-if="link.icon === 'book'" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="currentColor" fill-rule="evenodd" d="M6 2h13a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 4v2.5h7V6Z" />
