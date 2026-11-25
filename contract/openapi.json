@@ -1072,6 +1072,17 @@
             ],
             "title": "Author"
           },
+          "box_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Box Id"
+          },
           "copy_id": {
             "anyOf": [
               {
@@ -2409,6 +2420,27 @@
         "title": "FractionTerm",
         "type": "object"
       },
+      "GlyphActivity": {
+        "properties": {
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tablet",
+          "counts"
+        ],
+        "title": "GlyphActivity",
+        "type": "object"
+      },
       "GlyphBox": {
         "description": "Top-left corner and size as fractions of the tablet drawing.",
         "properties": {
@@ -2610,6 +2642,28 @@
           "credit"
         ],
         "title": "GlyphOccurrencePage",
+        "type": "object"
+      },
+      "GlyphSeen": {
+        "properties": {
+          "position": {
+            "maximum": 1000000.0,
+            "minimum": 0.0,
+            "title": "Position",
+            "type": "integer"
+          },
+          "tablet": {
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+            "title": "Tablet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tablet",
+          "position"
+        ],
+        "title": "GlyphSeen",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -9374,6 +9428,94 @@
         ]
       }
     },
+    "/glyphs/seen": {
+      "post": {
+        "description": "You opened this glyph: its bubble starts again from now.",
+        "operationId": "glyph_seen_glyphs_seen_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GlyphSeen"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Glyph Seen",
+        "tags": [
+          "activity"
+        ]
+      }
+    },
     "/glyphs/sketch": {
       "post": {
         "description": "The signs that look most like a sketch: a PNG of strokes on a transparent background (as a\ncanvas exports) or dark strokes on a light one. The sketch is redrawn with the corpus\ntracings' pen and named by the reader (classifier blended with its neighbour bank).\n\nPublic, limited to 60 sketches a minute per address; the image is not stored.",
@@ -10894,6 +11036,86 @@
         "summary": "Tablet Fraction Signs",
         "tags": [
           "tablet-reading"
+        ]
+      }
+    },
+    "/tablets/{slug}/glyph-activity": {
+      "get": {
+        "description": "Per glyph (by the scholars' position): others' glyph comments, and comments and saved\nchanges on boxes that started as that sign in copies you can open, since you last opened it\n(the last two weeks for a glyph you never opened).",
+        "operationId": "glyph_activity_tablets__slug__glyph_activity_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GlyphActivity"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Glyph Activity",
+        "tags": [
+          "activity"
         ]
       }
     },

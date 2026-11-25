@@ -33,6 +33,7 @@ import editionsPanel from '../components/versions/EditionsPanel.vue?raw'
 import releasePanel from '../components/versions/ReleasePanel.vue?raw'
 import editionView from '../views/EditionView.vue?raw'
 import votingRightsEditor from '../components/admin/VotingRightsEditor.vue?raw'
+import useGlyphActivity from '../composables/useGlyphActivity.js?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -100,6 +101,8 @@ const CALLS = [
   { method: 'get', path: '/editions/{release_id}', source: editionView, snippet: '/api/editions/${encodeURIComponent(route.params.id)}' },
   { method: 'get', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: '/api/admin/users/${props.user.id}/voting' },
   { method: 'put', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: "method: 'PUT'" },
+  { method: 'get', path: '/tablets/{slug}/glyph-activity', source: useGlyphActivity, snippet: '/api/tablets/${encodeURIComponent(slug.value)}/glyph-activity' },
+  { method: 'post', path: '/glyphs/seen', source: useGlyphActivity, snippet: "'/api/glyphs/seen'" },
   { method: 'get', path: '/box-sets/{set_id}/shares', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares' },
   { method: 'put', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
   { method: 'delete', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },

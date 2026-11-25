@@ -58,6 +58,7 @@ def test_merging_keeps_the_chosen_boxes_with_their_source_and_credit(
         assert (kept["sign"], kept["origin"], kept["changed"]) == ("AB01", "scholar", False)
         assert kept["source"] == {
             "kind": "copy",
+            "box_id": theirs["boxes"][0]["id"],
             "copy_id": theirs["id"],
             "version": 1,
             "author": "u8",
@@ -79,7 +80,7 @@ def test_the_scholars_box_keeps_its_position_as_source(monkeypatch, corpus_index
     (kept,) = made.json()["boxes"]
     assert (kept["sign"], kept["source"]) == (
         "AB77",
-        {"kind": "scholar", "copy_id": None, "version": None, "author": None},
+        {"kind": "scholar", "box_id": 1, "copy_id": None, "version": None, "author": None},
     )
     assert made.json()["title"] is None and made.json()["contributors"] == []
 

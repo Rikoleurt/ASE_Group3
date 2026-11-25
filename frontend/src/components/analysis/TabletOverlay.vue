@@ -7,8 +7,10 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { ROLES, formulaColor, prefersStill, roleKey } from './colors.js'
 import SignCard from './SignCard.vue'
+import GlyphBadges from '../versions/GlyphBadges.vue'
 
 const props = defineProps({
+  badges: { type: Object, default: () => ({}) }, // sign id -> new activity (workbench)
   signs: { type: Array, default: () => [] },
   formulas: { type: Array, default: () => [] },
   selectedId: { type: [Number, String], default: null },
@@ -71,6 +73,7 @@ watch(() => props.signs, hideCard)
 
 
 const SHOWN = ref(true)
+const BADGES = computed(() => props.signs.filter((sign) => props.badges[sign.id]).map((sign) => ({ key: sign.id, box: sign.box, count: props.badges[sign.id] })))
 const STILL = prefersStill()
 const MARKERS = computed(() => new Set(props.formulas.flatMap((formula) => formula.marker_ids)))
 // Formula boxes appear once every sign's box is on.
@@ -157,6 +160,7 @@ function describe(sign) {
         @keydown.tab="focusDiscussion"
       />
     </svg>
+    <GlyphBadges :items="BADGES" />
     <SignCard
       v-if="SHOWN && ACTIVE_SIGN"
       :sign="ACTIVE_SIGN"

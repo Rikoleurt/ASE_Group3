@@ -99,6 +99,7 @@ class BoxSource(BaseModel):
     """Where a box came from: the scholars' or the model's sign it started as, or another
     copy's box at a version (merged editions), with that box's author for credit."""
     kind: Literal["scholar", "model", "copy"]
+    box_id: int | None = None  # the sign's id there: its position for the scholars', the box's id in a copy
     copy_id: int | None = None
     version: int | None = None
     author: str | None = None  # username

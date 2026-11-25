@@ -2,15 +2,19 @@
 // Draws several versions' boxes over the tablet in the slot, one colour per version. Each place
 // (a cluster of matching boxes) can be clicked or focused to select it; the selected place is
 // highlighted. Coordinates are fractions of the image.
+import { computed } from 'vue'
+import GlyphBadges from './GlyphBadges.vue'
 import { VERSION_COLOURS } from './versions'
 
-defineProps({
+const props = defineProps({
+  badges: { type: Object, default: () => ({}) }, // place index -> new activity (workbench)
   clusters: { type: Array, default: () => [] }, // [{ box, members: { key: { box, sign, label } }, status }]
   keys: { type: Array, default: () => [] }, // version keys, in colour order
   hidden: { type: Array, default: () => [] }, // version keys not drawn
   selected: { type: Number, default: null }, // index into clusters
 })
 const emit = defineEmits(['select'])
+const BADGES = computed(() => props.clusters.map((place, index) => ({ key: index, box: place.box, count: props.badges[index] })).filter((item) => item.count))
 
 const percent = (value) => value * 100
 // Each version's box is drawn a little inside the previous one's, so boxes in the same place
@@ -76,5 +80,6 @@ const inset = (colour, side) => Math.min(colour * 0.35, percent(side) / 5)
         </template>
       </g>
     </svg>
+    <GlyphBadges :items="BADGES" />
   </div>
 </template>

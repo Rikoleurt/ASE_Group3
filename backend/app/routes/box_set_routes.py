@@ -54,7 +54,7 @@ def _edited(row: dict) -> EditedBox:
         model_confidence=row["model_confidence"],
         candidates=json.loads(candidates) if isinstance(candidates, (str, bytes)) else candidates or [],
         changed=original is None or not same(original, state(box, row["sign"])),
-        source=BoxSource(kind=row["source_kind"], copy_id=row.get("source_set_id"), version=row.get("source_version"),
+        source=BoxSource(kind=row["source_kind"], box_id=row.get("source_box_id"), copy_id=row.get("source_set_id"), version=row.get("source_version"),
                          author=row.get("source_author")) if row.get("source_kind") else None,
     )
 

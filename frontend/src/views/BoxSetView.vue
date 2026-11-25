@@ -2,6 +2,7 @@
 // Your corrected copy of a tablet's boxes (#85): move, resize, draw and delete boxes, name
 // each box's sign, then save. Saving sends every change as one batch; the reading below
 // (lines, transliteration, fraction check) is worked out again from the saved boxes.
+import { useGlyphActivity } from '../composables/useGlyphActivity'
 import ReleasePanel from '../components/versions/ReleasePanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
@@ -21,6 +22,12 @@ const router = useRouter()
 const set = useBoxSet()
 const { copy, boxes, loading, saving, error, conflict, changes, dirty, history } = set
 const SELECTED_ID = ref(null)
+// Bubbles with new activity on boxes that started as a scholars' sign (workbench, story I).
+const TABLET = computed(() => copy.value?.source.tablet ?? null)
+const { COUNTS: ACTIVITY, seen } = useGlyphActivity(TABLET)
+const positionOf = (box) => (box?.source?.kind === 'scholar' ? box.source.box_id : null)
+const BADGES = computed(() => Object.fromEntries(boxes.value.filter((box) => ACTIVITY.value[positionOf(box)]).map((box) => [box.id, ACTIVITY.value[positionOf(box)]])))
+watch(SELECTED_ID, (id) => seen(positionOf(boxes.value.find((box) => box.id === id))))
 const MODE = ref('select')
 const CATALOGUE = useCatalogue()
 const IMAGE_MISSING = ref(false)
@@ -241,6 +248,7 @@ watch(() => route.params.id, load, { immediate: true })
         <BoxEditor
           v-else
           ref="EDITOR"
+          :badges="BADGES"
           :image-url="`/api${copy.image_url}`"
           :alt="copy.source.filename || 'Tablet'"
           :boxes="boxes"

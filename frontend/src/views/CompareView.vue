@@ -3,6 +3,7 @@
 // corrected copies, each in its own colour on the tablet. Their boxes are matched into places;
 // each place agrees, has different signs, or is missing from some versions. The versions are in
 // the URL (/tablets/HT-13/compare?v=scholar&v=copy:4).
+import { useGlyphActivity } from '../composables/useGlyphActivity'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SignPreview from '../components/signs/SignPreview.vue'
@@ -19,6 +20,10 @@ const RESULT = ref(null)
 const LOADING = ref(false)
 const ERROR = ref('')
 const SELECTED = ref(null)
+// Bubbles with new activity on places the scholars have a sign in (workbench, story I).
+const { COUNTS: ACTIVITY, seen } = useGlyphActivity(computed(() => route.params.slug))
+const BADGES = computed(() => Object.fromEntries((RESULT.value?.clusters ?? []).map((place, index) => [index, ACTIVITY.value[place.members.scholar?.id]]).filter(([, count]) => count)))
+watch(SELECTED, (index) => seen(RESULT.value?.clusters[index]?.members.scholar?.id))
 const ONLY_DIFFERENCES = ref(false)
 const HIDDEN = ref([])
 
@@ -172,6 +177,7 @@ function missingFrom(place) {
             :keys="KEYS"
             :hidden="HIDDEN"
             :selected="SELECTED"
+            :badges="BADGES"
             @select="SELECTED = $event"
           >
             <img

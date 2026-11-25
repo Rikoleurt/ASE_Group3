@@ -4,6 +4,7 @@
 // keep, or leave it out. Defaults follow the majority; places where every version agrees need
 // no attention, so only the differences are listed at first. The versions are in the URL
 // (/tablets/HT-13/merge?v=scholar&v=copy:4).
+import { useGlyphActivity } from '../composables/useGlyphActivity'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import SignPreview from '../components/signs/SignPreview.vue'
@@ -24,6 +25,10 @@ const LOADING = ref(false)
 const ERROR = ref('')
 const PICKS = ref([])
 const SELECTED = ref(null)
+// Bubbles with new activity on places the scholars have a sign in (workbench, story I).
+const { COUNTS: ACTIVITY, seen } = useGlyphActivity(computed(() => route.params.slug))
+const BADGES = computed(() => Object.fromEntries((RESULT.value?.clusters ?? []).map((place, index) => [index, ACTIVITY.value[place.members.scholar?.id]]).filter(([, count]) => count)))
+watch(SELECTED, (index) => seen(RESULT.value?.clusters[index]?.members.scholar?.id))
 const ONLY_DIFFERENCES = ref(true)
 const TITLE = ref('')
 const SAVING = ref(false)
@@ -213,6 +218,7 @@ async function create() {
             :clusters="RESULT.clusters"
             :keys="KEYS"
             :selected="SELECTED"
+            :badges="BADGES"
             @select="SELECTED = $event"
           >
             <img

@@ -2,6 +2,7 @@
 // Corpus tablets (#82): find a tablet, see its tracing with the scholars' published boxes or
 // the reader's own, and start correcting them (#83, #85). The tablet is in the URL
 // (/tablets/HT-13), and so is the source (?boxes=model).
+import { useGlyphActivity } from '../composables/useGlyphActivity'
 import EditionsPanel from '../components/versions/EditionsPanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -46,6 +47,8 @@ let searched = ''
 let request = 0
 
 const SLUG = computed(() => route.params.slug || null)
+// Bubbles with new activity on the scholars' glyphs (their sign ids are positions); opening one clears it.
+const { COUNTS: ACTIVITY, seen } = useGlyphActivity(SLUG)
 const SOURCE = computed(() => (route.query.boxes === 'model' ? 'model' : 'scholar'))
 
 let listId = 0
@@ -342,7 +345,12 @@ function compareVersions() {
             </section>
             <EditionsPanel :slug="SLUG" class="mt-4 lg:w-3/4" />
             <div class="mt-4 lg:w-3/4">
-              <TabletOverlay :signs="BOXES.signs" :formulas="BOXES.formulas">
+              <TabletOverlay
+                :signs="BOXES.signs"
+                :formulas="BOXES.formulas"
+                :badges="SOURCE === 'scholar' ? ACTIVITY : {}"
+                @select="(sign) => SOURCE === 'scholar' && seen(sign.id)"
+              >
                 <img :src="`/api${BOXES.image_url}`" :alt="`${BOXES.tablet} tracing`" class="w-full rounded-lg bg-white" />
               </TabletOverlay>
             </div>

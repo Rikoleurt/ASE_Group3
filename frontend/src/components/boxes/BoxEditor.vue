@@ -7,8 +7,10 @@
 import { computed, ref, watch } from 'vue'
 import { ROLES, roleKey } from '../analysis/colors.js'
 import { MIN_SIDE } from '../../composables/useBoxSet'
+import GlyphBadges from '../versions/GlyphBadges.vue'
 
 const props = defineProps({
+  badges: { type: Object, default: () => ({}) }, // box id -> new activity (workbench)
   imageUrl: { type: String, required: true },
   alt: { type: String, default: 'Tablet' },
   boxes: { type: Array, required: true }, // [{ id, box, sign, ... }]
@@ -23,6 +25,7 @@ const props = defineProps({
 const emit = defineEmits(['select', 'begin', 'place', 'end', 'draw', 'remove', 'nudge', 'image-error'])
 
 const SURFACE = ref(null)
+const BADGES = computed(() => props.boxes.filter((box) => props.badges[box.id]).map((box) => ({ key: box.id, box: box.box, count: props.badges[box.id] })))
 const DRAFT = ref(null) // the box being drawn
 const STEP = 0.002 // one arrow press: about 2 px on a 1000 px tablet
 const CORNERS = [
@@ -226,6 +229,7 @@ const pct = (value) => value * 100
         fill="none"
       />
     </svg>
+    <GlyphBadges :items="BADGES" />
     <template v-if="SELECTED && !readOnly && mode === 'select'">
       <span
         v-for="corner in CORNERS"

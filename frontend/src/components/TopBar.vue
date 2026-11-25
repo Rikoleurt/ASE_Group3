@@ -2,6 +2,7 @@
 // The top bar: the main pages in one row, the two HT 13 demo pages under "Demos", and
 // everything about your account (shared copies, review, admin, profile, log out) under the
 // profile button, so the bar fits on one line.
+import { SHOW_ACTIVITY } from '../state/preferences'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { loadSession, logoutSession, sessionAdmin, sessionReviewer, sessionUser } from '../state/session'
@@ -150,6 +151,10 @@ const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visibl
                     <RouterLink to="/shared" :class="itemClass" exact-active-class="font-bold">Shared with me</RouterLink>
                     <RouterLink v-if="sessionReviewer" to="/review" :class="itemClass" exact-active-class="font-bold">Review corrections</RouterLink>
                     <RouterLink v-if="sessionAdmin" to="/admin" :class="itemClass" exact-active-class="font-bold">Admin</RouterLink>
+                    <label :class="[itemClass, 'flex cursor-pointer items-center gap-2 border-t border-ink/10']" data-testid="activity-toggle">
+                        <input v-model="SHOW_ACTIVITY" type="checkbox" class="h-4 w-4" />
+                        Show activity on glyphs
+                    </label>
                     <button
                         type="button"
                         :class="[itemClass, 'w-full cursor-pointer border-t border-ink/10 text-left disabled:cursor-wait']"
