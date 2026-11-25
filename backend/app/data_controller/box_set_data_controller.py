@@ -168,12 +168,14 @@ class BoxSetDataController(DataController):
 
     # Comments (#86).
 
-    def comments(self, set_id: int, box_id: int | None = None) -> list[dict]:
-        """Oldest first; with box_id, that box's thread only."""
+    def comments(self, set_id: int, box_id: int | None = None, limit: int = 500) -> list[dict]:
+        """The newest `limit` comments, oldest first; with box_id, that box's thread only."""
         clause, params = (" AND c.box_id = %s", (set_id, box_id)) if box_id is not None else ("", (set_id,))
-        return self._rows(
+        rows = self._rows(
             "SELECT c.id, c.box_id, c.author_id, u.username, c.body, c.created_at FROM box_comment c "
-            "LEFT JOIN `user` u ON u.id = c.author_id WHERE c.set_id = %s" + clause + " ORDER BY c.id", params)
+            "LEFT JOIN `user` u ON u.id = c.author_id WHERE c.set_id = %s" + clause + " ORDER BY c.id DESC LIMIT %s",
+            (*params, limit))
+        return rows[::-1]
 
     def comment(self, set_id: int, comment_id: int) -> dict | None:
         rows = self._rows("SELECT id, author_id FROM box_comment WHERE id = %s AND set_id = %s", (comment_id, set_id))
@@ -225,14 +227,15 @@ class BoxSetDataController(DataController):
             finally:
                 cursor.close()
 
-    def revert(self, set_id: int, author_id: int, change_id: int, version: int) -> int:
+    def revert(self, set_id: int, author_id: int, change_id: int, version: int,
+               known_sign: Callable[[str], str | None] | None = None) -> int:
         """Undo one change; returns the new version. Raises StaleVersion, MissingChange or EditError."""
         with self.connection() as connection:
             cursor = connection.cursor(dictionary=True)
             try:
                 current = self._lock(cursor, set_id, version)
-                cursor.execute("SELECT id, action, box_id, before_state, after_state, reverted_by_id FROM box_change "
-                               "WHERE id = %s AND set_id = %s", (change_id, set_id))
+                cursor.execute("SELECT id, action, box_id, before_state, after_state, reverts_id, reverted_by_id "
+                               "FROM box_change WHERE id = %s AND set_id = %s", (change_id, set_id))
                 row = cursor.fetchone()
                 if row is None:
                     raise MissingChange()
@@ -241,10 +244,15 @@ class BoxSetDataController(DataController):
                 change = {"id": row["id"], "box_id": row["box_id"], "reverted_by": row["reverted_by_id"],
                           "before": json.loads(row["before_state"]) if row["before_state"] else None,
                           "after": json.loads(row["after_state"])}
-                step = plan_revert(change, _box_state(box) if box else None)
+                cursor.execute("SELECT COUNT(*) AS live FROM box WHERE set_id = %s AND deleted = FALSE", (set_id,))
+                live = cursor.fetchone()["live"]
+                step = plan_revert(change, _box_state(box) if box else None, live, known_sign)
                 self._write_box(cursor, step)
                 revert_id = self._record(cursor, set_id, author_id, current + 1, step)
                 cursor.execute("UPDATE box_change SET reverted_by_id = %s WHERE id = %s", (revert_id, change_id))
+                if row["action"] == "revert" and row["reverts_id"] is not None:
+                    # Undoing an undo: the change it undid is in effect again, so it can be undone again.
+                    cursor.execute("UPDATE box_change SET reverted_by_id = NULL WHERE id = %s", (row["reverts_id"],))
                 return self._bump(cursor, set_id, current)
             finally:
                 cursor.close()

@@ -68,7 +68,7 @@ async function load() {
     if (!response.ok) throw new Error('The corrections could not be loaded. Please try again.')
     ITEMS.value = await response.json()
   } catch (failure) {
-    ERROR.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+    ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
     LOADING.value = false
   }
@@ -100,7 +100,7 @@ async function decide(item, decision) {
     ITEMS.value = ITEMS.value.filter((other) => other.id !== item.id)
     NOTICE.value = `${decision === 'approved' ? 'Approved' : 'Rejected'}: ${proposal(item)} for sign ${item.sign_id} of analysis ${item.analysis_id}.`
   } catch (failure) {
-    ITEM_ERRORS.value = { ...ITEM_ERRORS.value, [item.id]: failure instanceof TypeError ? 'Couldnt reach the server' : failure.message }
+    ITEM_ERRORS.value = { ...ITEM_ERRORS.value, [item.id]: failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message }
   } finally {
     DECIDING.value = null
   }
@@ -120,7 +120,7 @@ async function exportApproved() {
     link.click()
     URL.revokeObjectURL(url)
   } catch (failure) {
-    ERROR.value = failure instanceof TypeError ? 'Couldnt reach the server' : failure.message
+    ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
     EXPORTING.value = false
   }

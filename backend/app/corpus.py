@@ -5,6 +5,7 @@ index); the reader's come from running the sign reader on the tablet's tracing, 
 tablet and model version. Both are returned as DetectedSign lists, like an analysis, so the
 overlay, the reading and corrected copies (#83) treat them the same way.
 """
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -30,9 +31,21 @@ class TabletSummary:
     signs: int  # signs with a published box
 
 
-def tablets(index: glyph_index.GlyphIndex) -> list[TabletSummary]:
-    """Tablets that have published boxes, by corpus id."""
-    return _tablets(id(index), index)
+DOWNLOAD_HINT = "Download them with: python scripts/fetch_corpus.py"
+_drawn: dict[int, tuple[float, list[TabletSummary], int]] = {}
+_DRAWN_SECONDS = 60  # drawings downloaded while the server runs show up within a minute
+
+
+def tablets(index: glyph_index.GlyphIndex) -> tuple[list[TabletSummary], int]:
+    """Tablets with published boxes whose drawing is on this server, by corpus id, and how many
+    more have boxes but no drawing here (the drawings are downloaded separately; see DOWNLOAD_HINT)."""
+    now = time.monotonic()
+    cached = _drawn.get(id(index))
+    if cached is None or now - cached[0] > _DRAWN_SECONDS:
+        every = _tablets(id(index), index)
+        drawn = [tablet for tablet in every if glyph_index.tracing_path(tablet.slug) is not None]
+        cached = _drawn[id(index)] = (now, drawn, len(every) - len(drawn))
+    return cached[1], cached[2]
 
 
 @lru_cache(maxsize=2)
@@ -60,19 +73,44 @@ def scholar_signs(index: glyph_index.GlyphIndex, slug: str) -> list[DetectedSign
             for o in occurrences]
 
 
+class ReaderBusy(Exception):
+    """The reader is reading another tablet; reading is one at a time."""
+
+
 _MODEL_LOCK = Lock()
+_MODEL_CACHE: dict[tuple, list[DetectedSign]] = {}
+_CACHE_LOCK = Lock()
+CACHE_SIZE = 1024  # more than the corpus (706 tablets), so a sweep over every tablet does not evict
 
 
 def model_signs(slug: str, path: Path) -> list[DetectedSign]:
-    """The reader's boxes on the tablet's tracing, computed once per tablet and model version."""
-    with _MODEL_LOCK:  # one reading per tablet at a time; the reader itself is serialised anyway
-        signs = _model_signs(slug, str(path), path.stat().st_mtime_ns, tablet_demo.model_version())
-    return [sign.model_copy(deep=True) for sign in signs]  # callers fill in line and order
+    """The reader's boxes on the tablet's tracing, computed once per tablet and model version.
+
+    A tablet not read yet takes the reader for ~20 s. Only one runs at a time, and a request that
+    finds the reader busy is refused (ReaderBusy) rather than queued, so a burst of requests cannot
+    tie up the server's worker threads (#98)."""
+    key = (slug, str(path), path.stat().st_mtime_ns, tablet_demo.model_version())
+    with _CACHE_LOCK:
+        cached = _MODEL_CACHE.get(key)
+    if cached is None:
+        if not _MODEL_LOCK.acquire(blocking=False):
+            raise ReaderBusy("The reader is busy with another tablet. Please try again in a moment.")
+        try:
+            with _CACHE_LOCK:
+                cached = _MODEL_CACHE.get(key)
+            if cached is None:
+                cached = _read_tablet(slug, path)
+                with _CACHE_LOCK:
+                    if len(_MODEL_CACHE) >= CACHE_SIZE:
+                        _MODEL_CACHE.pop(next(iter(_MODEL_CACHE)))  # oldest first
+                    _MODEL_CACHE[key] = cached
+        finally:
+            _MODEL_LOCK.release()
+    return [sign.model_copy(deep=True) for sign in cached]  # callers fill in line and order
 
 
-@lru_cache(maxsize=256)
-def _model_signs(slug: str, path: str, _modified_ns: int, _version: str) -> list[DetectedSign]:
-    read = tablet_demo.predictions_for(tablet_demo.read_image(Path(path)), tablet=slug)
+def _read_tablet(slug: str, path: Path) -> list[DetectedSign]:
+    read = tablet_demo.predictions_for(tablet_demo.read_image(path), tablet=slug)
     if not read["trained"]:
         raise ReaderMissing("The Linear A sign reader is not installed (python scripts/fetch_models.py).")
     catalogue = _catalogue()

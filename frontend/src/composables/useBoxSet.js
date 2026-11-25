@@ -99,7 +99,7 @@ export function useBoxSet() {
       }
       accept(await response.json())
     } catch (failed) {
-      error.value = failed instanceof TypeError ? 'Couldnt reach the server' : failed.message
+      error.value = failed instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failed.message
       if (failed.status === 401) throw failed
     } finally {
       loading.value = false
@@ -186,11 +186,17 @@ export function useBoxSet() {
       accept(await response.json())
       return true
     } catch (failed) {
-      error.value = failed instanceof TypeError ? 'Couldnt reach the server' : failed.message
+      error.value = failed instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failed.message
       return false
     } finally {
       saving.value = false
     }
+  }
+
+  /** A 409 from elsewhere (the history's undo): offer the newer copy it carries. */
+  function showConflict(body) {
+    conflict.value = body.current
+    error.value = body.detail
   }
 
   /** After a 409: drop this tab's unsaved changes and take the newer copy. */
@@ -199,5 +205,5 @@ export function useBoxSet() {
     error.value = ''
   }
 
-  return { copy, boxes, history, loading, saving, error, conflict, changes, dirty, load, accept, addBox, setBox, setSign, removeBox, beginGesture, place, endGesture, undo, discard, save, takeNewer }
+  return { copy, boxes, history, loading, saving, error, conflict, changes, dirty, load, accept, addBox, setBox, setSign, removeBox, beginGesture, place, endGesture, undo, discard, save, takeNewer, showConflict }
 }

@@ -36,10 +36,18 @@ export async function loadSession() {
   return acceptSession(await response.json())
 }
 
-export async function sessionFetch(url, options = {}) {
+export async function sessionFetch(url, { anyUser = false, ...options } = {}) {
   const write = options.method && options.method !== 'GET'
-  // Refresh before a write: another tab may have logged in as a different user.
-  if (write) await loadSession()
+  // Refresh before a write: another tab may have logged in as a different user. Then this page
+  // still shows the first user's work, so refuse the write instead of saving it as someone else
+  // (#98). Logging out (anyUser) is always allowed.
+  if (write) {
+    const before = sessionUser.value?.id
+    await loadSession()
+    if (!anyUser && before != null && sessionUser.value?.id !== before) {
+      throw Object.assign(new Error('You logged in as someone else in another tab. Reload this page to continue.'), { status: 409 })
+    }
+  }
   const response = await fetch(url, {
     ...options,
     cache: 'no-store',
@@ -56,7 +64,7 @@ export function loginDestination(route) {
 
 export async function logoutSession() {
   try {
-    const response = await sessionFetch('/api/users/logout', { method: 'POST' })
+    const response = await sessionFetch('/api/users/logout', { method: 'POST', anyUser: true })
     if (!response.ok && response.status !== 401) throw new Error('Logout failed')
   } catch (failure) {
     if (failure.status !== 401) throw failure

@@ -8,6 +8,7 @@ from mysql.connector import Error as DatabaseError
 from backend.app.auth import (CurrentUser, AuthenticatedWrite, COOKIE_NAME, SESSION_SECONDS,
                               cookie_secure, csrf_token, is_admin, is_reviewer, token_hash, require_ajax)
 from backend.app.model.user import SessionUser
+from backend.app.rate_limit import FAILED_LOGINS
 from backend.app.model.analysis import AnalysisHistoryDetail, AnalysisHistoryPage, ApiError, AnalysisComment, CommentCreate
 from backend.app.data_controller.analysis_data_controller import AnalysisDataController
 
@@ -67,6 +68,11 @@ def register(payload: UserCreate, user_data_controller: UserController) -> UserP
 
 @router.post("/login", response_model=LoginResponse, dependencies=[Depends(require_ajax)], responses={401: {"model": ApiError}, 403: {"model": ApiError}, 503: {"model": ApiError}})
 def login(payload: UserLogin, user_data_controller: UserController, request: Request, response: Response) -> LoginResponse:
+    # Guessing passwords: at most 10 failures per account and per client address in 15 minutes.
+    account = f"account:{(payload.email or payload.username or '').strip().casefold()}"
+    address = f"address:{request.client.host if request.client else 'unknown'}"
+    for key in (account, address):
+        FAILED_LOGINS.check(key, "Too many failed logins. Please wait a few minutes and try again.")
     user = user_data_controller.authenticate(
         email=str(payload.email) if payload.email is not None else None,
         username=payload.username,
@@ -74,6 +80,8 @@ def login(payload: UserLogin, user_data_controller: UserController, request: Req
     )
 
     if user is None:
+        FAILED_LOGINS.record(account)
+        FAILED_LOGINS.record(address)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password.",
@@ -164,16 +172,24 @@ def history_detail(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: 
     return result
 
 
-@router.get("/{user_id}/email", response_model=UserEmail)
-def get_email(user_id: Annotated[int, Path(gt=0)], user_data_controller: UserController) -> UserEmail:
+def _self_or_admin(user_id: int, user: UserPublic) -> None:
+    """Accounts are private: you may look up yourself, and admins anyone. Others get 404, as if missing."""
+    if user_id != user.id and not is_admin(user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+
+@router.get("/{user_id}/email", response_model=UserEmail, responses={401: {"model": ApiError}, 404: {"model": ApiError}})
+def get_email(user_id: Annotated[int, Path(gt=0)], user: CurrentUser, user_data_controller: UserController) -> UserEmail:
+    _self_or_admin(user_id, user)
     email = user_data_controller.get_email_by_id(user_id)
     if email is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
     return UserEmail(email=email)
 
 
-@router.get("/{user_id}/username", response_model=UserUsername)
-def get_username(user_id: Annotated[int, Path(gt=0)], user_data_controller: UserController) -> UserUsername:
+@router.get("/{user_id}/username", response_model=UserUsername, responses={401: {"model": ApiError}, 404: {"model": ApiError}})
+def get_username(user_id: Annotated[int, Path(gt=0)], user: CurrentUser, user_data_controller: UserController) -> UserUsername:
+    _self_or_admin(user_id, user)
     username = user_data_controller.get_username_by_id(user_id)
     if username is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
@@ -195,7 +211,7 @@ def list_comments(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: C
              responses={401: {"model": ApiError}, 404: {"model": ApiError}, 422: {"description": "Invalid comment"},
                         503: {"model": ApiError}})
 def add_comment(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], payload: CommentCreate,
-                user: CurrentUser, controller: HistoryController):
+                user: AuthenticatedWrite, controller: HistoryController):
     try:
         result = controller.add_comment(user.id, analysis_id, payload.body)
     except DatabaseError as error:
@@ -207,7 +223,7 @@ def add_comment(analysis_id: Annotated[int, Path(gt=0, le=2**64 - 1)], payload: 
 
 @router.delete("/me/comments/{comment_id}", status_code=204, response_class=Response,
                responses={401: {"model": ApiError}, 404: {"model": ApiError}, 503: {"model": ApiError}})
-def delete_comment(comment_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: CurrentUser, controller: HistoryController):
+def delete_comment(comment_id: Annotated[int, Path(gt=0, le=2**64 - 1)], user: AuthenticatedWrite, controller: HistoryController):
     try:
         deleted = controller.delete_comment(user.id, comment_id)
     except DatabaseError as error:

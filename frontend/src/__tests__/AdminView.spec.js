@@ -68,7 +68,8 @@ describe('Admin page', () => {
     expect(box(0, 'admin').attributes('title')).toBe('You cannot remove your own admin role.')
     expect(box(0, 'reviewer').attributes('disabled')).toBeUndefined()
     expect(box(2, 'reviewer').attributes('disabled')).toBeDefined()
-    expect(box(2, 'reviewer').attributes('title')).toContain('SIGN_REVIEWERS')
+    expect(box(2, 'reviewer').attributes('title')).toBe('Always a reviewer (set in the server settings).')
+    expect(rows()[2].text()).toContain('Always a reviewer (set in the server settings).')
   })
 
   it('grants a role and says so', async () => {

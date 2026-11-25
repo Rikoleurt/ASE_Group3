@@ -82,11 +82,13 @@ carries the credit line.
 |---|---|
 | `GET /tablets?q=&limit=&offset=` | tablets with published boxes; `q` matches the id loosely (`ht13`, `HT 13`, `HT-13`) |
 | `GET /tablets/{slug}/image` | the full tracing |
-| `GET /tablets/{slug}/boxes?source=scholar\|model` | the boxes and their reading, in an analysis's shape |
+| `GET /tablets/{slug}/boxes?source=scholar\|model` | the boxes and their reading, in an analysis's shape; the model's need a login |
 
 The scholars' boxes come from the training annotations (`fraction-solver/out/yolo_signs/annotations.json`,
 loaded by the glyph index). The model's are read from the tracing the first time they are asked
-for (about 20 s on a laptop CPU) and kept in memory per tablet and model version. A scholar's box
+for (about 20 s on a laptop CPU) and kept in memory per tablet and model version, for the whole
+corpus. Reading runs one tablet at a time: a request that finds the reader busy gets 503 ("try
+again in a moment") instead of waiting, so a burst of requests cannot tie up the server. A scholar's box
 counts as 100% confident and has no model guesses. A tablet copy's image is the tracing.
 
 ## Sharing (#84)
@@ -99,8 +101,8 @@ includes the ones above it:
 | View | see the copy, its change log and its image |
 | Comment | also comment on boxes (#86) |
 | Edit | also save changes and undo them |
-| Manage | also share the copy, and change or revoke others' access |
-| Owner | also delete the copy. Nobody can change the owner's access |
+| Manage | also share the copy, and change or revoke others' access, except Manage itself |
+| Owner | also give, change or take away Manage, and delete the copy. Nobody can change the owner's access |
 
 A user's level is the higher of their own share and the copy's level for everyone logged in
 (`box_set.everyone`: none, view, comment or edit; never manage). The rules are in
@@ -132,11 +134,11 @@ discarded. The panel filters by person and by the selected box.
 
 **Comments** sit beside it: the selected box's thread, or the whole copy's thread when no box is
 selected. Anyone who can see the copy reads them; Comment access writes them. Plain text, 1 to
-2000 characters after trimming. Authors delete their own; the owner and managers can delete any.
+2000 characters after trimming; at most 10 a minute per person (429). Authors delete their own; the owner and managers can delete any.
 
 | Route | Who | Does |
 |---|---|---|
-| `GET /box-sets/{id}/comments?box_id=` | view | oldest first; `box_id` for one box's thread |
+| `GET /box-sets/{id}/comments?box_id=&limit=` | view | the newest 500 (or `limit`), oldest first; `box_id` for one box's thread |
 | `POST /box-sets/{id}/comments` `{box_id?, body}` | comment | `box_id` must be a box on the copy, or null for the copy |
 | `DELETE /box-sets/{id}/comments/{comment}` | author, or manage | 403 for someone else's comment |
 

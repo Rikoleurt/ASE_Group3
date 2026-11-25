@@ -134,12 +134,13 @@ def image_path(doc: dict, url: str) -> Path:
     return IMAGE_DIR / slug(doc) / url.rsplit("/", 1)[-1]
 
 
-def download_images(docs: dict[str, dict], delay: float = 0.4) -> fetch.FetchStats:
-    """Fetch every tracing and sign crop into the image cache. Resumable, like `la.fetch`."""
+def download_images(docs: dict[str, dict], delay: float = 0.4, tracings_only: bool = False) -> fetch.FetchStats:
+    """Fetch every tracing and sign crop into the image cache. Resumable, like `la.fetch`.
+    `tracings_only` skips the sign crops: the web app's Tablets page needs only the tracings."""
     stats = fetch.FetchStats()
     usable = [d for d in docs.values() if has_boxes(d)]
     for i, doc in enumerate(usable, 1):
-        urls = [doc["tracing"]] + [s["image"] for s in doc["signs"] if s.get("image")]
+        urls = [doc["tracing"]] + ([] if tracings_only else [s["image"] for s in doc["signs"] if s.get("image")])
         for url in urls:
             path = image_path(doc, url)
             if path.exists():

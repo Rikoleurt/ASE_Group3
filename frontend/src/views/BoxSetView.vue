@@ -3,7 +3,7 @@
 // each box's sign, then save. Saving sends every change as one batch; the reading below
 // (lines, transliteration, fraction check) is worked out again from the saved boxes.
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
+import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import BoxEditor from '../components/boxes/BoxEditor.vue'
 import ShareDialog from '../components/boxes/ShareDialog.vue'
 import HistoryPanel from '../components/boxes/HistoryPanel.vue'
@@ -29,6 +29,12 @@ const CAN_EDIT = computed(() => RANK[copy.value?.permission] >= RANK.edit)
 const CAN_SHARE = computed(() => RANK[copy.value?.permission] >= RANK.manage)
 const CAN_COMMENT = computed(() => RANK[copy.value?.permission] >= RANK.comment)
 const GHOST = ref(null) // the box as it was before the change picked in the history
+const EDITOR = ref(null)
+const HISTORY_BUSY = ref(false) // an undo from the history is on its way
+// Editing pauses while a save or an undo is in flight: their reply replaces the boxes, and
+// anything changed meanwhile would be silently lost (#98).
+const LOCKED = computed(() => !CAN_EDIT.value || saving.value || HISTORY_BUSY.value)
+const EVERYONE_TEXT = { view: 'view', comment: 'comment', edit: 'edit' }
 
 // A change picked in the history: select its box if it is still there, and outline where it was.
 function showChange(change) {
@@ -46,9 +52,10 @@ function showChange(change) {
 function reverted(newer) {
   set.accept(newer)
   GHOST.value = null
-  NOTICE.value = 'The change was undone.'
+  if (!boxes.value.some((box) => box.id === SELECTED_ID.value)) SELECTED_ID.value = null
+  NOTICE.value = 'The change was reverted.'
 }
-const LEVEL_TEXT = { view: 'can view', comment: 'can view and comment', edit: 'can edit', manage: 'can edit and share' }
+const LEVEL_TEXT = { view: 'can view', comment: 'can view and comment', edit: 'can edit', manage: 'can manage' }
 
 const SELECTED = computed(() => boxes.value.find((box) => box.id === SELECTED_ID.value) ?? null)
 // The reading's sign for each box whose sign has not changed since the last save; boxes
@@ -73,16 +80,25 @@ const ORDERED = computed(() => {
   return [...boxes.value].sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9) || a.id - b.id)
 })
 
-const signName = (sign) => (sign ? GLYPHS.value[sign]?.name ?? sign : 'Unnamed')
+// "No sign yet" in lists and headings; HistoryPanel and the screen-reader labels use it too.
+const signName = (sign) => (sign ? GLYPHS.value[sign]?.name ?? sign : 'No sign yet')
 const glyphOf = (sign) => (sign ? GLYPHS.value[sign]?.glyph ?? '' : '')
 
+let loadId = 0
 async function load() {
+  const mine = ++loadId
+  // A different copy (or a reload) starts clean (#98).
+  SELECTED_ID.value = null
+  GHOST.value = null
+  NOTICE.value = ''
+  SHARING.value = false
+  IMAGE_MISSING.value = false
+  MODE.value = 'select'
   try {
     await set.load(route.params.id)
   } catch (failed) {
-    if (failed.status === 401) await router.push({ path: '/login', query: { redirect: route.fullPath } })
+    if (mine === loadId && failed.status === 401) await router.push({ path: '/login', query: { redirect: route.fullPath } })
   }
-  SELECTED_ID.value = null
 }
 
 async function loadCatalogue() {
@@ -95,16 +111,19 @@ async function loadCatalogue() {
 }
 
 function draw(box) {
+  NOTICE.value = ''
   SELECTED_ID.value = set.addBox(box)
   MODE.value = 'select' // name the new box next
 }
 
 function remove(id) {
+  NOTICE.value = ''
   set.removeBox(id)
   if (SELECTED_ID.value === id) SELECTED_ID.value = null
 }
 
 function pick(sign) {
+  NOTICE.value = ''
   if (SELECTED.value) set.setSign(SELECTED.value.id, sign)
   QUERY.value = ''
 }
@@ -122,12 +141,14 @@ function discard() {
   if (window.confirm('Throw away your unsaved changes?')) {
     set.discard()
     SELECTED_ID.value = null
+    NOTICE.value = ''
   }
 }
 
 function onKey(event) {
   const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)
-  if (typing) return
+  // Shortcuts wait for a drag, a save or an undo to finish (#98).
+  if (typing || LOCKED.value || EDITOR.value?.busy()) return
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
     event.preventDefault()
     set.undo()
@@ -143,7 +164,9 @@ function warnBeforeClosing(event) {
   event.returnValue = ''
 }
 
-onBeforeRouteLeave(() => !dirty.value || window.confirm('You have unsaved changes. Leave without saving?'))
+const leave = () => !dirty.value || window.confirm('You have unsaved changes. Leave without saving?')
+onBeforeRouteLeave(leave)
+onBeforeRouteUpdate(leave) // another copy at the same page
 onMounted(() => {
   window.addEventListener('keydown', onKey)
   window.addEventListener('beforeunload', warnBeforeClosing)
@@ -159,15 +182,16 @@ watch(() => route.params.id, load, { immediate: true })
 <template>
   <main class="mx-auto max-w-6xl px-6 py-10">
     <RouterLink
-      v-if="copy?.source.analysis_id"
+      v-if="copy?.source.analysis_id && copy.permission === 'owner'"
       :to="`/profile/history/${copy.source.analysis_id}`"
       class="underline"
     >← Saved analysis</RouterLink>
+    <RouterLink v-else-if="copy?.source.analysis_id" to="/shared" class="underline">← Shared with me</RouterLink>
     <RouterLink v-else-if="copy?.source.tablet" :to="`/tablets/${copy.source.tablet}`" class="underline">← {{ copy.source.tablet.replaceAll('-', ' ') }}</RouterLink>
     <div class="mt-4 flex flex-wrap items-center gap-4">
       <h1 class="text-3xl font-bold">{{ copy && !CAN_EDIT ? 'Corrected boxes' : 'Correct the boxes' }}</h1>
       <button v-if="CAN_SHARE" type="button" class="cursor-pointer rounded border border-ink/30 px-4 py-1.5 hover:bg-ink/5" :aria-expanded="SHARING" data-testid="share" @click="SHARING = !SHARING">
-        Share{{ copy.everyone !== 'none' ? ' (everyone can ' + copy.everyone + ')' : '' }}
+        Share<template v-if="copy.everyone !== 'none'"> · everyone logged in can {{ EVERYONE_TEXT[copy.everyone] }}</template>
       </button>
     </div>
     <p v-if="copy" class="mt-1 text-ink/70" data-testid="copy-owner">
@@ -175,7 +199,7 @@ watch(() => route.params.id, load, { immediate: true })
       <template v-if="copy.permission === 'owner'">your corrected copy</template>
       <template v-else>{{ copy.owner }}'s corrected copy, shared with you: you {{ LEVEL_TEXT[copy.permission] }}</template><template v-if="copy.source.tablet">, started from the {{ copy.start === 'scholar' ? "scholars'" : "model's" }} boxes</template>
     </p>
-    <ShareDialog v-if="SHARING && copy" :set-id="copy.id" class="mt-4 max-w-xl" @close="SHARING = false" @changed="copy.everyone = $event.everyone" />
+    <ShareDialog v-if="SHARING && copy" :set-id="copy.id" :is-owner="copy.permission === 'owner'" class="mt-4 max-w-xl" @close="SHARING = false" @changed="copy.everyone = $event.everyone" />
 
     <p v-if="loading" role="status" class="mt-6">Loading…</p>
     <p v-else-if="error && !copy" role="alert" class="mt-6">{{ error }}</p>
@@ -190,10 +214,11 @@ watch(() => route.params.id, load, { immediate: true })
             class="cursor-pointer rounded px-3 py-1.5 text-sm hover:bg-bar"
             :class="{ 'bg-bar font-semibold': MODE === option.value }"
             :aria-pressed="MODE === option.value"
+            :disabled="LOCKED"
             :data-testid="`mode-${option.value}`"
             @click="MODE = option.value"
           >{{ option.label }}</button>
-          <button type="button" class="cursor-pointer rounded px-3 py-1.5 text-sm hover:bg-bar disabled:opacity-50" :disabled="!history.length" data-testid="undo" title="Ctrl+Z" @click="set.undo()">Undo</button>
+          <button type="button" class="cursor-pointer rounded px-3 py-1.5 text-sm hover:bg-bar disabled:opacity-50" :disabled="!history.length || LOCKED" :title="history.length ? 'Undo your last unsaved edit (Ctrl+Z)' : 'Nothing to undo'" data-testid="undo" @click="set.undo()">Undo last edit</button>
           <span class="ml-auto text-sm" :class="dirty ? 'font-semibold' : 'text-ink/70'" role="status" data-testid="save-state">
             {{ dirty ? `${changes.length} unsaved change${changes.length === 1 ? '' : 's'}` : 'All changes saved' }}
           </span>
@@ -206,6 +231,7 @@ watch(() => route.params.id, load, { immediate: true })
         <p v-if="IMAGE_MISSING" role="alert" class="rounded-lg bg-card p-4">The tablet image could not be loaded.</p>
         <BoxEditor
           v-else
+          ref="EDITOR"
           :image-url="`/api${copy.image_url}`"
           :alt="copy.source.filename || 'Tablet'"
           :boxes="boxes"
@@ -213,8 +239,9 @@ watch(() => route.params.id, load, { immediate: true })
           :markers="MARKERS"
           :selected-id="SELECTED_ID"
           :mode="MODE"
-          :read-only="!CAN_EDIT"
+          :read-only="LOCKED"
           :ghost="GHOST"
+          :name="signName"
           @select="SELECTED_ID = $event"
           @begin="set.beginGesture()"
           @place="set.place"
@@ -229,15 +256,15 @@ watch(() => route.params.id, load, { immediate: true })
         </p>
         <p v-else class="mt-2 text-sm text-ink/70">
           Drag a box to move it and its corners to resize it. In <em>Draw a box</em> mode, drag on the tablet.
-          Dashed boxes are ones you changed; grey ones have no sign yet. Arrow keys move the selected box,
-          Shift with arrows resizes it, Delete removes it, Ctrl+Z undoes.
+          Dashed boxes differ from where this copy started; boxes you drew or renamed stay grey until you save.
+          Arrow keys move the selected box, Shift with arrows resizes it, Delete removes it, Ctrl+Z undoes your last edit.
         </p>
       </section>
 
       <aside class="flex flex-col gap-6 lg:flex-1">
         <div v-if="conflict" role="alert" class="rounded-2xl border border-confidence-low p-4" data-testid="conflict">
           <p>{{ error }}</p>
-          <button type="button" class="mt-2 cursor-pointer underline" @click="set.takeNewer(); SELECTED_ID = null">Load their version (drops your unsaved changes)</button>
+          <button type="button" class="mt-2 cursor-pointer underline" @click="set.takeNewer(); SELECTED_ID = null">Load the latest saved version (your unsaved changes will be lost)</button>
         </div>
         <p v-else-if="error" role="alert" class="text-confidence-low">{{ error }}</p>
         <p v-if="NOTICE && !dirty" role="status" class="rounded-lg bg-accent/10 p-3">{{ NOTICE }}</p>
@@ -325,18 +352,20 @@ watch(() => route.params.id, load, { immediate: true })
         <BoxComments
           :set-id="copy.id"
           :box-id="SELECTED_ID"
-          :box-name="SELECTED ? signName(SELECTED.sign) : ''"
+          :box-name="SELECTED ? (SELECTED.sign ? signName(SELECTED.sign) : 'this box with no sign') : ''"
           :can-comment="CAN_COMMENT"
         />
         <HistoryPanel
           :set-id="copy.id"
           :version="copy.version"
           :can-revert="CAN_EDIT"
-          :unsaved="dirty"
+          :unsaved="dirty || saving"
           :selected-box-id="SELECTED_ID"
           :name="signName"
           @select="showChange"
           @reverted="reverted"
+          @conflict="set.showConflict"
+          @busy="HISTORY_BUSY = $event"
         />
       </aside>
     </div>
@@ -346,9 +375,8 @@ watch(() => route.params.id, load, { immediate: true })
       <p class="mt-1 text-ink/70">{{ dirty ? 'Save to update the reading with your latest changes.' : copy.reading.summary }}</p>
       <p class="mt-2"><span class="text-ink/70">Transliteration:</span> {{ copy.reading.symbol_interpretation }}</p>
       <FractionCheck :analysis="READING" class="mt-6" />
-      <p class="mt-8 text-sm text-ink/70" data-testid="training-note">
-        Corrected boxes may be used to train the sign reader. They are exported by the site's admins, with the copy's
-        owner shown by account number only.
+      <p v-if="CAN_EDIT" class="mt-8 text-sm text-ink/70" data-testid="training-note">
+        Corrected boxes may be used to train the sign reader. Admins export them with an account number, not a name.
       </p>
     </section>
   </main>

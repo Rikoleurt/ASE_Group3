@@ -31,6 +31,7 @@ def tracing(tmp_path):
 def corpus_index(monkeypatch, tracing):
     index = glyph_fixtures.index(with_embeddings=False)
     corpus._tablets.cache_clear()
+    corpus._drawn.clear()
     app.dependency_overrides[glyph_routes.get_index] = lambda: index
     monkeypatch.setattr(glyph_index, "get_index", lambda: index)
     monkeypatch.setattr(glyph_index, "tracing_path", lambda slug: tracing if slug == "HT-1" else None)
@@ -47,7 +48,8 @@ def client(corpus_index):
 
 
 def test_lists_tablets_with_published_boxes_and_matches_ids_loosely(client):
-    assert client.get("/tablets").json() == {"items": [{"slug": "HT-1", "tablet": "HT 1", "signs": 1}], "total": 1}
+    assert client.get("/tablets").json() == {"items": [{"slug": "HT-1", "tablet": "HT 1", "signs": 1}], "total": 1,
+                                             "without_drawing": 0, "hint": None}
     for query in ("ht1", "HT 1", "ht-1"):
         assert client.get("/tablets", params={"q": query}).json()["total"] == 1
     assert client.get("/tablets", params={"q": "KN"}).json()["total"] == 0  # no published boxes
@@ -69,15 +71,31 @@ def test_scholar_boxes_read_like_an_analysis(client):
     assert body["symbol_interpretation"]
 
 
-def test_model_boxes_come_from_the_reader(client, corpus_index, tracing):
-    body = client.get("/tablets/HT-1/boxes", params={"source": "model"}).json()
+def test_model_boxes_come_from_the_reader(monkeypatch, corpus_index, tracing):
+    with login(monkeypatch) as client:
+        body = client.get("/tablets/HT-1/boxes", params={"source": "model"}).json()
     assert [(s["sign"], s["confidence"]) for s in body["signs"]] == [("AB77", 70.0)]
     corpus_index.assert_called_once_with("HT-1", tracing)
 
 
-def test_missing_reader_or_tablet(client, corpus_index):
+def test_model_boxes_need_a_login(client, corpus_index):
+    """Reading a tablet runs the model, as an upload does: anonymous visitors see the scholars' boxes (#98)."""
+    assert client.get("/tablets/HT-1/boxes", params={"source": "model"}).status_code == 401
+    assert client.get("/tablets/HT-1/boxes").status_code == 200
+    corpus_index.assert_not_called()
+
+
+def test_a_busy_reader_refuses_instead_of_queueing(monkeypatch, corpus_index):
+    corpus_index.side_effect = corpus.ReaderBusy("The reader is busy with another tablet. Please try again in a moment.")
+    with login(monkeypatch) as client:
+        response = client.get("/tablets/HT-1/boxes", params={"source": "model"})
+    assert (response.status_code, response.json()["detail"]) == (503, "The reader is busy with another tablet. Please try again in a moment.")
+
+
+def test_missing_reader_or_tablet(client, corpus_index, monkeypatch):
     corpus_index.side_effect = corpus.ReaderMissing("The Linear A sign reader is not installed.")
-    assert client.get("/tablets/HT-1/boxes", params={"source": "model"}).status_code == 503
+    with login(monkeypatch) as logged_in:
+        assert logged_in.get("/tablets/HT-1/boxes", params={"source": "model"}).status_code == 503
     assert client.get("/tablets/NOPE/boxes").status_code == 404
     assert client.get("/tablets/HT-1/boxes", params={"source": "guess"}).status_code == 422
 
@@ -139,3 +157,36 @@ def test_copy_requests_are_checked(monkeypatch, corpus_index, fake):
         assert owner.get("/tablets/HT-1/box-set").status_code == 404
         corpus_index.side_effect = corpus.ReaderMissing("No reader.")
         assert owner.post("/box-sets", json={"tablet": "HT-1", "start": "model"}).status_code == 503
+
+
+def test_model_readings_are_cached_and_one_at_a_time(monkeypatch, tracing):
+    """The real model_signs: a second request for a tablet comes from memory, and a request for an
+    unread tablet while the reader is busy is refused rather than queued (#98)."""
+    corpus._MODEL_CACHE.clear()
+    reads = MagicMock(return_value=[sign.model_copy(deep=True) for sign in MODEL])
+    monkeypatch.setattr(corpus, "_read_tablet", reads)
+    monkeypatch.setattr(corpus.tablet_demo, "model_version", lambda: "v1")
+    assert [s.sign for s in corpus.model_signs("HT-1", tracing)] == ["AB77"]
+    assert [s.sign for s in corpus.model_signs("HT-1", tracing)] == ["AB77"]
+    reads.assert_called_once()
+    assert corpus._MODEL_LOCK.acquire(blocking=False)  # someone else is reading
+    try:
+        with pytest.raises(corpus.ReaderBusy):
+            corpus.model_signs("HT-2", tracing.with_name("HT-1.png"))  # same file, different tablet key
+        assert [s.sign for s in corpus.model_signs("HT-1", tracing)] == ["AB77"]  # cached: no wait
+    finally:
+        corpus._MODEL_LOCK.release()
+        corpus._MODEL_CACHE.clear()
+
+
+def test_tablets_without_a_downloaded_drawing_are_hidden_and_explained(monkeypatch, corpus_index):
+    """A fresh clone has the transcriptions but not the drawings (git-ignored): the list shows only
+    tablets it can draw, says how many are hidden, and how to download them."""
+    monkeypatch.setattr(glyph_index, "tracing_path", lambda slug: None)
+    with TestClient(app) as client:
+        page = client.get("/tablets").json()
+        assert (page["items"], page["total"], page["without_drawing"]) == ([], 0, 1)
+        assert "scripts/fetch_corpus.py" in page["hint"]
+        missing = client.get("/tablets/HT-1/boxes")
+    assert missing.status_code == 404
+    assert "not on this server" in missing.json()["detail"] and "scripts/fetch_corpus.py" in missing.json()["detail"]

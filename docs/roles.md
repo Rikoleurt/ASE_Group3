@@ -29,8 +29,8 @@ From then on, admins manage roles on the **Admin** page.
 
 ## Rules
 
-- An admin cannot remove their own admin role, so a site never loses its last admin
-  by accident. Another admin can.
+- An admin cannot remove their own admin role, and nobody can remove the last admin's
+  (409): the site always keeps one.
 - Users named in `SIGN_REVIEWERS` are reviewers whatever their role says. The admin
   page shows them as reviewers and explains why the box is locked.
 - Role changes apply on the user's next request; no new login is needed.
@@ -59,7 +59,10 @@ the sign corrections reviewers approved (#52), to train the reader on:
 | `GET /admin/export/corrections` | JSON in the training annotations' shape: per copy its image size and each box's sign, pixel `xyxy`, where it came from (`model`, `scholar`, `user`), whether the user changed it, and the original sign; then `label_corrections`, #52's approved export |
 | `GET /admin/export/corrections.zip` | a YOLO dataset: `images/copy-<id>.png\|jpg`, `labels/copy-<id>.txt` (`class cx cy w h`), `classes.txt` and the JSON as `corrections.json` |
 
-Both are admins only (403 for everyone else). Deleted boxes are left out. Boxes with no sign stay
+By default only copies whose owner is an admin or a reviewer are exported: anyone can register
+and correct boxes, so other users' copies are not vetted. `?everyone=true` (the *Include copies by
+all users* box) adds them; every copy carries `owner_trusted`. Both are admins only (403 for everyone else).
+The zip is written to a temporary file and streamed, then deleted. Deleted boxes are left out. Boxes with no sign stay
 in the JSON (sign null) but cannot be YOLO labels; the zip counts them in
 `corrections.json` (`unnamed_boxes_left_out`). A copy whose image is missing on the server is
 listed under `missing_images` and left out of the zip's images and labels. Owners appear only as

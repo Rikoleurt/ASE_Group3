@@ -61,6 +61,23 @@ async def private_responses(request, call_next):
     return response
 
 
+# Upload size limits, checked before the body is read: FastAPI parses a multipart body before
+# any route dependency runs, so a check inside the route would come after the whole upload (#98).
+BODY_LIMITS = {"/analysis": 10 * 1024 * 1024 + 64 * 1024}
+
+
+@app.middleware("http")
+async def limit_upload_size(request, call_next):
+    limit = BODY_LIMITS.get(request.url.path) if request.method == "POST" else None
+    if limit is not None:
+        declared = request.headers.get("content-length", "")
+        if not declared.isdigit():
+            return JSONResponse({"detail": "Uploads must declare their size."}, status_code=411)
+        if int(declared) > limit:
+            return JSONResponse({"detail": "The image is larger than 10 MB."}, status_code=413)
+    return await call_next(request)
+
+
 # Quick debug to test backend connectivity to the frontend.
 @app.get("/health")
 def health() -> dict[str, str]:
