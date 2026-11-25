@@ -115,6 +115,18 @@ describe('Tablets page', () => {
     expect(wrapper.get('[role="alert"]').text()).toBe('The Linear A sign reader is not installed.')
   })
 
+  it('says when tablets are hidden because their drawings are not downloaded', async () => {
+    vi.stubGlobal('fetch', vi.fn((url) => {
+      if (url === '/api/users/me') return json(SESSION)
+      if (url.startsWith('/api/tablets?')) return json({ items: [], total: 0, without_drawing: 706, hint: 'Download them with: cd fraction-solver && python -m la.cli images --tracings-only' })
+      return json({ detail: "This tablet's drawing is not on this server. Download them with: cd fraction-solver && python -m la.cli images --tracings-only" }, 404)
+    }))
+    await render('/tablets/HT-13')
+    expect(wrapper.get('[data-testid="missing-drawings"]').text()).toContain('706 more tablets are hidden')
+    expect(wrapper.get('[data-testid="missing-drawings"]').text()).toContain('la.cli images --tracings-only')
+    expect(wrapper.get('[role="alert"]').text()).toContain("This tablet's drawing is not on this server.")
+  })
+
   it('asks for a tablet when none is chosen', async () => {
     stubServer({})
     await render('/tablets')

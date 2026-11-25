@@ -19,6 +19,8 @@ const router = useRouter()
 const QUERY = ref('')
 const TABLETS = ref([])
 const TOTAL = ref(0)
+const WITHOUT_DRAWING = ref(0) // tablets hidden because their drawing is not downloaded on this server
+const HINT = ref('')
 const LISTING = ref(false)
 const LIST_ERROR = ref('')
 const BOXES = ref(null)
@@ -46,6 +48,8 @@ async function list(more = false) {
     if (mine !== listId) return
     TABLETS.value = more ? [...TABLETS.value, ...page.items] : page.items
     TOTAL.value = page.total
+    WITHOUT_DRAWING.value = page.without_drawing ?? 0
+    HINT.value = page.hint ?? ''
   } catch (failure) {
     if (mine === listId) LIST_ERROR.value = failure instanceof TypeError ? "Couldn't reach the server. Check your connection and try again." : failure.message
   } finally {
@@ -69,7 +73,7 @@ async function show() {
     if (mine !== request) return
     if (!response.ok) {
       const body = await response.json().catch(() => null)
-      throw new Error(response.status === 404 ? 'Tablet not found.' : body?.detail || 'The boxes could not be loaded.')
+      throw new Error(typeof body?.detail === 'string' ? body.detail : response.status === 404 ? 'Tablet not found.' : 'The boxes could not be loaded.')
     }
     BOXES.value = await response.json()
   } catch (failure) {
@@ -145,6 +149,10 @@ watch([SLUG, () => sessionUser.value?.id], checkCopy, { immediate: true })
         </form>
         <p v-if="LIST_ERROR" role="alert" class="mt-3 text-confidence-low">{{ LIST_ERROR }}</p>
         <p class="mt-3 text-sm text-ink/70" role="status">{{ LISTING ? 'Loading…' : `${TOTAL} tablet${TOTAL === 1 ? '' : 's'}` }}</p>
+        <p v-if="WITHOUT_DRAWING" class="mt-2 rounded-lg bg-card p-2 text-xs text-ink/80" data-testid="missing-drawings">
+          {{ WITHOUT_DRAWING }} more tablet{{ WITHOUT_DRAWING === 1 ? ' is' : 's are' }} hidden: {{ WITHOUT_DRAWING === 1 ? 'its drawing is' : 'their drawings are' }} not downloaded on this server.
+          {{ HINT }}
+        </p>
         <ul class="mt-2 max-h-[60vh] overflow-auto" data-testid="tablet-list">
           <li v-for="tablet in TABLETS" :key="tablet.slug">
             <button

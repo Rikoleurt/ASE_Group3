@@ -31,6 +31,7 @@ def tracing(tmp_path):
 def corpus_index(monkeypatch, tracing):
     index = glyph_fixtures.index(with_embeddings=False)
     corpus._tablets.cache_clear()
+    corpus._drawn.clear()
     app.dependency_overrides[glyph_routes.get_index] = lambda: index
     monkeypatch.setattr(glyph_index, "get_index", lambda: index)
     monkeypatch.setattr(glyph_index, "tracing_path", lambda slug: tracing if slug == "HT-1" else None)
@@ -47,7 +48,8 @@ def client(corpus_index):
 
 
 def test_lists_tablets_with_published_boxes_and_matches_ids_loosely(client):
-    assert client.get("/tablets").json() == {"items": [{"slug": "HT-1", "tablet": "HT 1", "signs": 1}], "total": 1}
+    assert client.get("/tablets").json() == {"items": [{"slug": "HT-1", "tablet": "HT 1", "signs": 1}], "total": 1,
+                                             "without_drawing": 0, "hint": None}
     for query in ("ht1", "HT 1", "ht-1"):
         assert client.get("/tablets", params={"q": query}).json()["total"] == 1
     assert client.get("/tablets", params={"q": "KN"}).json()["total"] == 0  # no published boxes
@@ -175,3 +177,16 @@ def test_model_readings_are_cached_and_one_at_a_time(monkeypatch, tracing):
     finally:
         corpus._MODEL_LOCK.release()
         corpus._MODEL_CACHE.clear()
+
+
+def test_tablets_without_a_downloaded_drawing_are_hidden_and_explained(monkeypatch, corpus_index):
+    """A fresh clone has the transcriptions but not the drawings (git-ignored): the list shows only
+    tablets it can draw, says how many are hidden, and how to download them."""
+    monkeypatch.setattr(glyph_index, "tracing_path", lambda slug: None)
+    with TestClient(app) as client:
+        page = client.get("/tablets").json()
+        assert (page["items"], page["total"], page["without_drawing"]) == ([], 0, 1)
+        assert "la.cli images --tracings-only" in page["hint"]
+        missing = client.get("/tablets/HT-1/boxes")
+    assert missing.status_code == 404
+    assert "not on this server" in missing.json()["detail"] and "la.cli images" in missing.json()["detail"]

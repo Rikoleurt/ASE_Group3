@@ -251,3 +251,17 @@ def test_invalid_options_do_not_clear_an_existing_dataset(corpus, tmp_path, opti
     with pytest.raises(ValueError):
         signboxes.build_dataset(corpus, out=out, **options)
     assert marker.read_bytes() == b"keep"
+
+
+def test_tracings_only_skips_the_sign_crops(tmp_path, monkeypatch):
+    """The web app's Tablets page needs only the tracings: --tracings-only fetches 1 file per tablet."""
+    monkeypatch.setattr(signboxes, "IMAGE_DIR", tmp_path)
+    fetched = []
+    monkeypatch.setattr(signboxes.fetch, "_get", lambda url: fetched.append(url) or b"png")
+    monkeypatch.setattr(signboxes.time, "sleep", lambda seconds: None)
+    doc = {"id": "HT 1", "url": "https://lineara.eu/documents/HT-1/", "tracing": "https://x/HT-1-100w-a.png",
+           "signs": [{"position": 1, "image": "https://x/HT-1_1-10w-b.png"}, {"position": 2, "image": "https://x/HT-1_2-10w-c.png"}]}
+    signboxes.download_images({"HT 1": doc}, delay=0, tracings_only=True)
+    assert fetched == ["https://x/HT-1-100w-a.png"]
+    signboxes.download_images({"HT 1": doc}, delay=0)
+    assert fetched[1:] == ["https://x/HT-1_1-10w-b.png", "https://x/HT-1_2-10w-c.png"]  # the tracing is cached

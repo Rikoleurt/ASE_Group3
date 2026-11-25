@@ -5,6 +5,7 @@ index); the reader's come from running the sign reader on the tablet's tracing, 
 tablet and model version. Both are returned as DetectedSign lists, like an analysis, so the
 overlay, the reading and corrected copies (#83) treat them the same way.
 """
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -30,9 +31,21 @@ class TabletSummary:
     signs: int  # signs with a published box
 
 
-def tablets(index: glyph_index.GlyphIndex) -> list[TabletSummary]:
-    """Tablets that have published boxes, by corpus id."""
-    return _tablets(id(index), index)
+DOWNLOAD_HINT = "Download them with: cd fraction-solver && python -m la.cli images --tracings-only"
+_drawn: dict[int, tuple[float, list[TabletSummary], int]] = {}
+_DRAWN_SECONDS = 60  # drawings downloaded while the server runs show up within a minute
+
+
+def tablets(index: glyph_index.GlyphIndex) -> tuple[list[TabletSummary], int]:
+    """Tablets with published boxes whose drawing is on this server, by corpus id, and how many
+    more have boxes but no drawing here (the drawings are downloaded separately; see DOWNLOAD_HINT)."""
+    now = time.monotonic()
+    cached = _drawn.get(id(index))
+    if cached is None or now - cached[0] > _DRAWN_SECONDS:
+        every = _tablets(id(index), index)
+        drawn = [tablet for tablet in every if glyph_index.tracing_path(tablet.slug) is not None]
+        cached = _drawn[id(index)] = (now, drawn, len(every) - len(drawn))
+    return cached[1], cached[2]
 
 
 @lru_cache(maxsize=2)

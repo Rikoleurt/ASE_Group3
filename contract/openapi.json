@@ -2748,6 +2748,17 @@
       },
       "TabletPage": {
         "properties": {
+          "hint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Hint"
+          },
           "items": {
             "items": {
               "$ref": "#/components/schemas/TabletItem"
@@ -2757,6 +2768,11 @@
           },
           "total": {
             "title": "Total",
+            "type": "integer"
+          },
+          "without_drawing": {
+            "default": 0,
+            "title": "Without Drawing",
             "type": "integer"
           }
         },

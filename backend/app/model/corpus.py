@@ -17,6 +17,8 @@ class TabletItem(BaseModel):
 class TabletPage(BaseModel):
     items: list[TabletItem]
     total: int
+    without_drawing: int = 0  # tablets with boxes whose drawing is not downloaded on this server
+    hint: str | None = None  # how to download the missing drawings
 
 
 class Credit(BaseModel):
