@@ -43,18 +43,16 @@ describe('Zoom frame', () => {
     expect(wrapper.get('[data-testid="zoom-level"]').text()).toBe('125%')
     expect(content().attributes('style')).toContain('width: 125%')
     // test-utils cannot set ctrlKey on its stand-in event: send a real WheelEvent.
-    wrapper
-      .get('[data-testid="zoom-frame"]')
-      .element.dispatchEvent(
-        new WheelEvent('wheel', {
-          deltaY: -500,
-          ctrlKey: true,
-          clientX: 10,
-          clientY: 10,
-          bubbles: true,
-          cancelable: true,
-        }),
-      )
+    wrapper.get('[data-testid="zoom-frame"]').element.dispatchEvent(
+      new WheelEvent('wheel', {
+        deltaY: -500,
+        ctrlKey: true,
+        clientX: 10,
+        clientY: 10,
+        bubbles: true,
+        cancelable: true,
+      }),
+    )
     await nextTick()
     expect(Number.parseInt(wrapper.get('[data-testid="zoom-level"]').text())).toBeGreaterThan(125)
     const before = wrapper.get('[data-testid="zoom-level"]').text()
