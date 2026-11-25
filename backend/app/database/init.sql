@@ -105,6 +105,7 @@ CREATE TABLE IF NOT EXISTS box (
     source_box_id BIGINT UNSIGNED NULL,
     source_version INT UNSIGNED NULL,
     source_author_id BIGINT UNSIGNED NULL,
+    marks JSON NULL,  -- epigraphic marks (workbench): certainty, damage, alternatives, word_end, line, seq
     INDEX ix_box_set (set_id, id),
     FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

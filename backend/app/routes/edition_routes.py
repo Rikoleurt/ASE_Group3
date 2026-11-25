@@ -33,7 +33,7 @@ from backend.app.model.edition import (
     VotingRights,
     VotingRightsChange,
 )
-from backend.app.routes.box_set_routes import Controller, _catalogue, access, build
+from backend.app.routes.box_set_routes import Controller, _catalogue, access, build, manual_lines
 from backend.app.routes.version_routes import _optional_user
 from backend.app.sharing import level_of
 
@@ -82,7 +82,10 @@ def _release(row: dict, reading: bool = False) -> Release:
             )
             for box in release.boxes
         ]
-        release.reading = Reading(**read_signs(signs))
+        marks = {box.id: box.marks.model_dump() for box in release.boxes}
+        release.reading = Reading(
+            **read_signs(signs, grouped=manual_lines(signs, marks), marks=marks)
+        )
     return release
 
 
@@ -135,6 +138,7 @@ def release_edition(
                 "box": box.box.model_dump(),
                 "sign": box.sign,
                 "source": box.source.model_dump() if box.source else None,
+                "marks": box.marks.model_dump(),
             }
             for box in copy.boxes
         ],

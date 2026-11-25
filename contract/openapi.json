@@ -6,6 +6,16 @@
           "box": {
             "$ref": "#/components/schemas/EditBox"
           },
+          "marks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoxMarks"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "op": {
             "const": "add",
             "title": "Op",
@@ -754,6 +764,74 @@
         "title": "BoxChangePage",
         "type": "object"
       },
+      "BoxMarks": {
+        "description": "Epigraphic marks on a box (workbench, story F), in GORILA/SigLA conventions: how sure the\nreading is, how well the sign is preserved, other readings, the end of a word, and the box's\nplace in the reading order when set by hand (line and seq; None: worked out from the layout).",
+        "properties": {
+          "alternatives": {
+            "items": {
+              "maxLength": 32,
+              "minLength": 1,
+              "type": "string"
+            },
+            "maxItems": 5,
+            "title": "Alternatives",
+            "type": "array"
+          },
+          "certainty": {
+            "default": "certain",
+            "enum": [
+              "certain",
+              "uncertain",
+              "illegible"
+            ],
+            "title": "Certainty",
+            "type": "string"
+          },
+          "damage": {
+            "default": "none",
+            "enum": [
+              "none",
+              "partial",
+              "restored"
+            ],
+            "title": "Damage",
+            "type": "string"
+          },
+          "line": {
+            "anyOf": [
+              {
+                "maximum": 500.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Line"
+          },
+          "seq": {
+            "anyOf": [
+              {
+                "maximum": 5000.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq"
+          },
+          "word_end": {
+            "default": false,
+            "title": "Word End",
+            "type": "boolean"
+          }
+        },
+        "title": "BoxMarks",
+        "type": "object"
+      },
       "BoxSet": {
         "properties": {
           "boxes": {
@@ -1131,6 +1209,15 @@
             "default": false,
             "title": "Deleted",
             "type": "boolean"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/BoxMarks",
+            "default": {
+              "alternatives": [],
+              "certainty": "certain",
+              "damage": "none",
+              "word_end": false
+            }
           },
           "sign": {
             "anyOf": [
@@ -2085,6 +2172,15 @@
           "id": {
             "title": "Id",
             "type": "integer"
+          },
+          "marks": {
+            "$ref": "#/components/schemas/BoxMarks",
+            "default": {
+              "alternatives": [],
+              "certainty": "certain",
+              "damage": "none",
+              "word_end": false
+            }
           },
           "model_confidence": {
             "anyOf": [
@@ -3336,6 +3432,15 @@
             "title": "Id",
             "type": "integer"
           },
+          "marks": {
+            "$ref": "#/components/schemas/BoxMarks",
+            "default": {
+              "alternatives": [],
+              "certainty": "certain",
+              "damage": "none",
+              "word_end": false
+            }
+          },
           "sign": {
             "anyOf": [
               {
@@ -4355,6 +4460,16 @@
             "exclusiveMinimum": 0.0,
             "title": "Box Id",
             "type": "integer"
+          },
+          "marks": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoxMarks"
+              },
+              {
+                "type": "null"
+              }
+            ]
           },
           "op": {
             "const": "update",

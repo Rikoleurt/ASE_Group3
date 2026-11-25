@@ -6,13 +6,13 @@ from typing import Callable
 from mysql.connector.errorcode import ER_DUP_ENTRY, ER_NO_REFERENCED_ROW_2
 from mysql.connector.errors import IntegrityError
 
-from backend.app.box_edits import GEOMETRY, Step, plan, plan_revert, state
+from backend.app.box_edits import GEOMETRY, Step, marks_of, plan, plan_revert, state
 from backend.app.data_controller.data_controller import DataController
 from backend.app.model.box_set import Change
 
 BOX_COLUMNS = ("id, x, y, w, h, sign, deleted, origin, original_x, original_y, original_w, original_h, "
                "model_sign, model_confidence, candidates, source_kind, source_set_id, source_box_id, "
-               "source_version, source_author_id")
+               "source_version, source_author_id, marks")
 MAX_VERSIONS = 100  # copies listed per tablet
 
 
@@ -33,7 +33,7 @@ def _now() -> datetime:
 
 
 def _box_state(row: dict) -> dict:
-    return state(row, row["sign"], row["deleted"])
+    return state(row, row["sign"], row["deleted"], row.get("marks"))
 
 
 class BoxSetDataController(DataController):
@@ -144,14 +144,14 @@ class BoxSetDataController(DataController):
                 rows = [(set_id, *(item["box"][name] for name in GEOMETRY), item.get("sign"), item["origin"],
                          *(item["box"][name] for name in GEOMETRY), item.get("sign"), json.dumps([]),
                          item["source_kind"], item.get("source_set_id"), item.get("source_box_id"),
-                         item.get("source_version"), item.get("source_author_id"))
+                         item.get("source_version"), item.get("source_author_id"), json.dumps(marks_of(item.get("marks"))))
                         for item in boxes]
                 if rows:
                     cursor.executemany(
                         "INSERT INTO box (set_id, x, y, w, h, sign, origin, original_x, original_y, original_w, "
                         "original_h, model_sign, candidates, source_kind, source_set_id, source_box_id, "
-                        "source_version, source_author_id) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", rows,
+                        "source_version, source_author_id, marks) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", rows,
                     )
             finally:
                 cursor.close()
@@ -268,7 +268,7 @@ class BoxSetDataController(DataController):
             cursor = connection.cursor(dictionary=True)
             try:
                 current = self._lock(cursor, set_id, version)
-                cursor.execute("SELECT id, x, y, w, h, sign, deleted FROM box WHERE set_id = %s", (set_id,))
+                cursor.execute("SELECT id, x, y, w, h, sign, deleted, marks FROM box WHERE set_id = %s", (set_id,))
                 boxes = {row["id"]: _box_state(row) for row in cursor.fetchall()}
                 steps = plan(changes, boxes, known_sign)
                 if not steps:
@@ -277,8 +277,10 @@ class BoxSetDataController(DataController):
                     if step.action == "add":
                         box = step.after["box"]
                         cursor.execute(
-                            "INSERT INTO box (set_id, x, y, w, h, sign, origin) VALUES (%s, %s, %s, %s, %s, %s, 'user')",
-                            (set_id, *(box[name] for name in GEOMETRY), step.after["sign"]),
+                            "INSERT INTO box (set_id, x, y, w, h, sign, origin, marks) "
+                            "VALUES (%s, %s, %s, %s, %s, %s, 'user', %s)",
+                            (set_id, *(box[name] for name in GEOMETRY), step.after["sign"],
+                             json.dumps(marks_of(step.after.get("marks")))),
                         )
                         step.box_id = cursor.lastrowid
                     else:
@@ -300,7 +302,7 @@ class BoxSetDataController(DataController):
                 row = cursor.fetchone()
                 if row is None:
                     raise MissingChange()
-                cursor.execute("SELECT id, x, y, w, h, sign, deleted FROM box WHERE id = %s", (row["box_id"],))
+                cursor.execute("SELECT id, x, y, w, h, sign, deleted, marks FROM box WHERE id = %s", (row["box_id"],))
                 box = cursor.fetchone()
                 change = {"id": row["id"], "box_id": row["box_id"], "reverted_by": row["reverted_by_id"],
                           "before": json.loads(row["before_state"]) if row["before_state"] else None,
@@ -351,8 +353,9 @@ class BoxSetDataController(DataController):
     @staticmethod
     def _write_box(cursor, step: Step) -> None:
         box = step.after["box"]
-        cursor.execute("UPDATE box SET x = %s, y = %s, w = %s, h = %s, sign = %s, deleted = %s WHERE id = %s",
-                       (*(box[name] for name in GEOMETRY), step.after["sign"], step.after["deleted"], step.box_id))
+        cursor.execute("UPDATE box SET x = %s, y = %s, w = %s, h = %s, sign = %s, deleted = %s, marks = %s WHERE id = %s",
+                       (*(box[name] for name in GEOMETRY), step.after["sign"], step.after["deleted"],
+                        json.dumps(marks_of(step.after.get("marks"))), step.box_id))
 
     @staticmethod
     def _record(cursor, set_id: int, author_id: int, version: int, step: Step) -> int:

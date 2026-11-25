@@ -56,7 +56,25 @@ function describe(change) {
   if (before.sign !== after.sign) parts.push(after.sign ? `Renamed ${nameOf(before.sign)} to ${nameOf(after.sign)}` : `Cleared the sign of ${nameOf(before.sign)}`)
   const geometry = [moved(before.box, after.box) && 'moved', resized(before.box, after.box) && 'resized'].filter(Boolean).join(' and ')
   if (geometry) parts.push(parts.length ? `${geometry} it` : `${geometry[0].toUpperCase()}${geometry.slice(1)} ${nameOf(after.sign)}`)
+  const marks = markChanges(before.marks, after.marks)
+  if (marks) parts.push(parts.length ? marks : `Marked ${nameOf(after.sign)}: ${marks}`)
   return parts.join(' and ')
+}
+
+// What changed in a box's epigraphic marks (workbench, story F), e.g. "uncertain, word end".
+const MARK_WORDS = {
+  certainty: { certain: 'certain', uncertain: 'uncertain', illegible: 'illegible' },
+  damage: { none: 'whole', partial: 'partly preserved', restored: 'restored' },
+}
+function markChanges(before = {}, after = {}) {
+  const words = []
+  for (const key of ['certainty', 'damage']) {
+    if ((before?.[key] ?? Object.keys(MARK_WORDS[key])[0]) !== (after?.[key] ?? Object.keys(MARK_WORDS[key])[0])) words.push(MARK_WORDS[key][after?.[key]] ?? after?.[key])
+  }
+  if (Boolean(before?.word_end) !== Boolean(after?.word_end)) words.push(after?.word_end ? 'word end' : 'no word end')
+  if (JSON.stringify(before?.alternatives ?? []) !== JSON.stringify(after?.alternatives ?? [])) words.push('other readings')
+  if ((before?.line ?? null) !== (after?.line ?? null) || (before?.seq ?? null) !== (after?.seq ?? null)) words.push('reading order')
+  return words.join(', ')
 }
 
 const when = (stamp) => new Date(stamp).toLocaleString()

@@ -19,6 +19,8 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/201_box_set_versions.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/202_box_set_editions.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/203_edition_releases_votes.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/204_glyph_seen.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/205_box_marks.sql
 ```
 
 ## Tables
@@ -48,6 +50,28 @@ of it you can open: yours, and others' shared with you or with everyone.
 Each box also records where it came from (`source_kind`, `source_box_id`): the scholars' or the
 model's sign it started as. Merged editions (story D) add another copy's box at a version
 (`source_set_id`, `source_version`) and its author (`source_author_id`), who is credited.
+
+## Epigraphic marks and reading order (workbench)
+
+Each box can carry marks in GORILA/SigLA conventions, set in the editor's box panel. They are
+saved, shown in the history and undone like any other change, and kept in merges and releases.
+
+| Mark | Choices | In the transliteration |
+|---|---|---|
+| Reading | certain, uncertain (shortcut **U**), illegible | uncertain signs dotted under (ḳụ); illegible as • |
+| Preservation | whole, partly preserved, lost and restored | ⸢ku⸣ for partly preserved; [ku] for restored |
+| Word end | after this sign (shortcut **W**) | the word ends here, wherever the gap |
+| Other possible readings | up to five catalogue signs | listed on the box |
+
+**Reading order.** It is worked out from the layout unless a scholar sets it by hand:
+
+1. Click **Reading order**, then the boxes in order; **New line** starts the next line.
+2. **Done** keeps the order; **Use the automatic order** removes it.
+
+Boxes left out of a hand-set order follow it, in the automatic order.
+
+The marks are stored as JSON in `box.marks` (migration
+`migration-workbench/205_box_marks.sql`). Changes saved before them read as no marks.
 
 ## Merging versions into an edition (workbench)
 

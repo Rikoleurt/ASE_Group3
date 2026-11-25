@@ -201,17 +201,21 @@ class AnalysisDataController(DataController):
         return deleted
 
 
-def read_signs(signs: list[DetectedSign], trained: bool = True) -> dict:
+def read_signs(signs: list[DetectedSign], trained: bool = True, grouped: list[list[DetectedSign]] | None = None,
+               marks: dict[int, dict] | None = None) -> dict:
     """Reading order, lines, transliteration and fraction formulas for a tablet's signs.
 
     Used for the model's signs and for corrected boxes (#83). Fills in each sign's line,
-    order and meaning, and returns the AnalysisResult fields that depend on the signs."""
+    order and meaning, and returns the AnalysisResult fields that depend on the signs.
+    `grouped` gives the lines in reading order when a scholar set it by hand; `marks` (sign id ->
+    epigraphic marks) decorate the transliteration (workbench, story F)."""
     # Reading order, transliteration and fractions only mean something for Linear A signs.
-    grouped = group_lines(signs) if trained else [signs] if signs else []
+    if grouped is None:
+        grouped = group_lines(signs) if trained else [signs] if signs else []
     for number, line in enumerate(grouped):
         for position, sign in enumerate(line):
             sign.line, sign.order = number, position
-    lines = [_line(number, line) for number, line in enumerate(grouped)] if trained else []
+    lines = [_line(number, line, marks) for number, line in enumerate(grouped)] if trained else []
     formulas = find_formulas(grouped) if trained else []
     by_id = {sign.id: sign for sign in signs}
     if trained:
@@ -243,8 +247,8 @@ def _fallback(signs: list[DetectedSign]) -> str:
     return ", ".join(sign.label for sign in signs) or "No signs found"
 
 
-def _line(number: int, line: list[DetectedSign]) -> Line:
-    text, gloss = line_text(line)
+def _line(number: int, line: list[DetectedSign], marks: dict[int, dict] | None = None) -> Line:
+    text, gloss = line_text(line, marks)
     return Line(index=number, sign_ids=[sign.id for sign in line], text=text, gloss=gloss)
 
 

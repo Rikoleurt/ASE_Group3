@@ -14,7 +14,7 @@ const percent = (value) => `${Math.round(value * 100000) / 1000}%`
     :key="item.key"
     class="pointer-events-none absolute z-20 flex h-5 min-w-5 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-accent px-1 text-xs font-bold text-white shadow ring-2 ring-white"
     :style="{ left: percent(item.box.x + item.box.w), top: percent(item.box.y) }"
-    :aria-label="`${item.count} new`"
+    :aria-label="typeof item.count === 'number' ? `${item.count} new` : String(item.count)"
     data-testid="glyph-badge"
     >{{ item.count > 99 ? '99+' : item.count }}</span
   >

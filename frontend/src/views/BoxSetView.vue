@@ -13,7 +13,8 @@ import BoxComments from '../components/boxes/BoxComments.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
 import SignPicker from '../components/signs/SignPicker.vue'
 import SignPreview from '../components/signs/SignPreview.vue'
-import { useBoxSet } from '../composables/useBoxSet'
+import { marksOf, useBoxSet } from '../composables/useBoxSet'
+import MarksPanel from '../components/boxes/MarksPanel.vue'
 import { useCatalogue } from '../composables/useCatalogue'
 import '../components/analysis/linearA.css'
 
@@ -22,6 +23,34 @@ const router = useRouter()
 const set = useBoxSet()
 const { copy, boxes, loading, saving, error, conflict, changes, dirty, history } = set
 const SELECTED_ID = ref(null)
+// Setting the reading order by hand (workbench, story F): lines of box ids, clicked in order.
+const ORDERING = ref(null)
+const ORDER_BADGES = computed(() => Object.fromEntries((ORDERING.value ?? []).flatMap((ids, line) => ids.map((id, seq) => [id, `${line + 1}·${seq + 1}`]))))
+
+function startOrdering() {
+  SELECTED_ID.value = null
+  ORDERING.value = [[]]
+}
+
+function chooseBox(id) {
+  if (!ORDERING.value) {
+    SELECTED_ID.value = id
+    return
+  }
+  if (id == null || ORDERING.value.some((ids) => ids.includes(id))) return
+  const lines = ORDERING.value.map((ids) => [...ids])
+  lines[lines.length - 1].push(id)
+  ORDERING.value = lines
+}
+
+function newLine() {
+  if (ORDERING.value.at(-1).length) ORDERING.value = [...ORDERING.value, []]
+}
+
+function finishOrdering(apply) {
+  if (apply) set.setOrder(ORDERING.value.filter((ids) => ids.length))
+  ORDERING.value = null
+}
 // Bubbles with new activity on boxes that started as a scholars' sign (workbench, story I).
 const TABLET = computed(() => copy.value?.source.tablet ?? null)
 const { COUNTS: ACTIVITY, seen } = useGlyphActivity(TABLET)
@@ -152,6 +181,16 @@ function onKey(event) {
   const typing = ['INPUT', 'TEXTAREA', 'SELECT'].includes(event.target?.tagName)
   // Shortcuts wait for a drag, a save or an undo to finish (#98).
   if (typing || LOCKED.value || EDITOR.value?.busy()) return
+  const plain = !event.ctrlKey && !event.metaKey && !event.altKey
+  if (plain && CAN_EDIT.value && SELECTED.value && ['u', 'w'].includes(event.key.toLowerCase())) {
+    // U: uncertain reading on or off; W: a word ends after this sign (workbench, story F).
+    event.preventDefault()
+    const marks = marksOf(SELECTED.value)
+    set.setMarks(SELECTED.value.id, event.key.toLowerCase() === 'u'
+      ? { certainty: marks.certainty === 'uncertain' ? 'certain' : 'uncertain' }
+      : { word_end: !marks.word_end })
+    return
+  }
   if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') {
     event.preventDefault()
     set.undo()
@@ -234,6 +273,15 @@ watch(() => route.params.id, load, { immediate: true })
             :data-testid="`mode-${option.value}`"
             @click="MODE = option.value"
           >{{ option.label }}</button>
+          <button
+            type="button"
+            class="cursor-pointer rounded px-3 py-1.5 text-sm hover:bg-bar"
+            :class="{ 'bg-bar font-semibold': ORDERING }"
+            :aria-pressed="Boolean(ORDERING)"
+            :disabled="LOCKED"
+            data-testid="mode-order"
+            @click="ORDERING ? finishOrdering(false) : startOrdering()"
+          >Reading order</button>
           <button type="button" class="cursor-pointer rounded px-3 py-1.5 text-sm hover:bg-bar disabled:opacity-50" :disabled="!history.length || LOCKED" :title="history.length ? 'Undo your last unsaved edit (Ctrl+Z)' : 'Nothing to undo'" data-testid="undo" @click="set.undo()">Undo last edit</button>
           <span class="ml-auto text-sm" :class="dirty ? 'font-semibold' : 'text-ink/70'" role="status" data-testid="save-state">
             {{ dirty ? `${changes.length} unsaved change${changes.length === 1 ? '' : 's'}` : 'All changes saved' }}
@@ -244,11 +292,18 @@ watch(() => route.params.id, load, { immediate: true })
           </button>
         </div>
 
+        <div v-if="ORDERING" class="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-card p-2 text-sm" role="status" data-testid="ordering">
+          <span>Click the boxes in reading order: line {{ ORDERING.length }}, sign {{ ORDERING.at(-1).length + 1 }}.</span>
+          <button type="button" class="cursor-pointer rounded border border-ink/30 px-2 py-0.5 hover:bg-bar" data-testid="order-new-line" @click="newLine">New line</button>
+          <button type="button" class="cursor-pointer rounded bg-bar px-2 py-0.5 font-semibold" data-testid="order-done" @click="finishOrdering(true)">Done</button>
+          <button type="button" class="cursor-pointer underline" data-testid="order-automatic" @click="ORDERING = [[]]; finishOrdering(true)">Use the automatic order</button>
+          <button type="button" class="cursor-pointer underline" @click="finishOrdering(false)">Cancel</button>
+        </div>
         <p v-if="IMAGE_MISSING" role="alert" class="rounded-lg bg-card p-4">The tablet image could not be loaded.</p>
         <BoxEditor
           v-else
           ref="EDITOR"
-          :badges="BADGES"
+          :badges="ORDERING ? ORDER_BADGES : BADGES"
           :image-url="`/api${copy.image_url}`"
           :alt="copy.source.filename || 'Tablet'"
           :boxes="boxes"
@@ -259,7 +314,7 @@ watch(() => route.params.id, load, { immediate: true })
           :read-only="LOCKED"
           :ghost="GHOST"
           :name="signName"
-          @select="SELECTED_ID = $event"
+          @select="chooseBox"
           @begin="set.beginGesture()"
           @place="set.place"
           @end="set.endGesture()"
@@ -314,6 +369,7 @@ watch(() => route.params.id, load, { immediate: true })
               <button type="button" class="cursor-pointer text-sm text-confidence-low underline" data-testid="delete-box" @click="remove(SELECTED.id)">Delete this box</button>
             </div>
             </template>
+            <MarksPanel :box="SELECTED" :disabled="!CAN_EDIT || LOCKED" @update="(marks) => set.setMarks(SELECTED.id, marks)" />
           </template>
         </section>
 

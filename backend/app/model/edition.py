@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field, field_validator
 
 from backend.app.model.analysis import Box
-from backend.app.model.box_set import BoxSource, MergedFrom, Reading
+from backend.app.model.box_set import BoxMarks, BoxSource, MergedFrom, Reading
 
 MIN_REASON = 15  # characters: an override or a removal of voting rights must say why
 
@@ -26,6 +26,7 @@ class ReleasedBox(BaseModel):
     box: Box
     sign: str | None
     source: BoxSource | None = None
+    marks: BoxMarks = BoxMarks()
 
 
 class Release(BaseModel):

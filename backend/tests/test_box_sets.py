@@ -121,7 +121,7 @@ class FakeController:
                                   "origin": item["origin"], **{f"original_{k}": v for k, v in item["box"].items()},
                                   "model_sign": item["sign"], "model_confidence": None, "candidates": "[]",
                                   **{k: item.get(k) for k in ("source_kind", "source_set_id", "source_box_id",
-                                                              "source_version", "source_author_id")}}
+                                                              "source_version", "source_author_id", "marks")}}
         return set_id
 
     def contributors(self, set_id):
@@ -183,7 +183,8 @@ class FakeController:
                 self.boxes[step.box_id] = {"id": step.box_id, "set": set_id, "origin": "user", "original_x": None,
                                            "original_y": None, "original_w": None, "original_h": None,
                                            "model_sign": None, "model_confidence": None, "candidates": None}
-            self.boxes[step.box_id].update(**step.after["box"], sign=step.after["sign"], deleted=step.after["deleted"])
+            self.boxes[step.box_id].update(**step.after["box"], sign=step.after["sign"], deleted=step.after["deleted"],
+                                            marks=step.after.get("marks"))
             change_id = len(self.log) + 1
             self.log[change_id] = {"id": change_id, "set": set_id, "author_id": author_id, "username": "owner",
                                    "created_at": STAMP, "version": version, "action": step.action,
@@ -196,7 +197,7 @@ class FakeController:
 
     def apply(self, set_id, author_id, version, changes, known_sign):
         self._lock(set_id, version)
-        current = {b["id"]: state(b, b["sign"], b["deleted"]) for b in self.boxes.values() if b["set"] == set_id}
+        current = {b["id"]: state(b, b["sign"], b["deleted"], b.get("marks")) for b in self.boxes.values() if b["set"] == set_id}
         steps = plan(changes, current, known_sign)
         return self._write(set_id, author_id, steps) if steps else version
 
@@ -209,7 +210,7 @@ class FakeController:
         live = sum(1 for b in self.boxes.values() if b["set"] == set_id and not b["deleted"])
         step = plan_revert({"id": row["id"], "box_id": row["box_id"], "reverted_by": row["reverted_by_id"],
                             "before": row["before_state"], "after": row["after_state"]},
-                           state(target, target["sign"], target["deleted"]), live, known_sign)
+                           state(target, target["sign"], target["deleted"], target.get("marks")), live, known_sign)
         version = self._write(set_id, author_id, [step])
         if row["action"] == "revert" and row["reverts_id"]:
             self.log[row["reverts_id"]]["reverted_by_id"] = None  # redo: the undone change is in effect again

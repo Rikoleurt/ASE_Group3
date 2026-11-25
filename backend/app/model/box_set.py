@@ -33,10 +33,24 @@ class EditBox(Box):
         return self
 
 
+class BoxMarks(BaseModel):
+    """Epigraphic marks on a box (workbench, story F), in GORILA/SigLA conventions: how sure the
+    reading is, how well the sign is preserved, other readings, the end of a word, and the box's
+    place in the reading order when set by hand (line and seq; None: worked out from the layout)."""
+
+    certainty: Literal["certain", "uncertain", "illegible"] = "certain"
+    damage: Literal["none", "partial", "restored"] = "none"
+    alternatives: list[SignId] = Field(default_factory=list, max_length=5)
+    word_end: bool = False
+    line: int | None = Field(default=None, ge=0, le=500)
+    seq: int | None = Field(default=None, ge=0, le=5000)
+
+
 class AddBox(BaseModel):
     op: Literal["add"]
     box: EditBox
     sign: SignId | None = None  # None: drawn but not named yet
+    marks: BoxMarks | None = None
 
 
 class UpdateBox(BaseModel):
@@ -45,13 +59,16 @@ class UpdateBox(BaseModel):
     box_id: int = Field(gt=0)
     box: EditBox | None = None
     sign: SignId | None = None
+    marks: BoxMarks | None = None  # replaces all of the box's marks
 
     @model_validator(mode="after")
     def changes_something(self):
-        if "box" not in self.model_fields_set and "sign" not in self.model_fields_set:
-            raise ValueError("Give box, sign or both.")
+        if not {"box", "sign", "marks"} & self.model_fields_set:
+            raise ValueError("Give box, sign, marks or several.")
         if "box" in self.model_fields_set and self.box is None:
             raise ValueError("box cannot be null.")
+        if "marks" in self.model_fields_set and self.marks is None:
+            raise ValueError("marks cannot be null.")
         return self
 
 
@@ -122,6 +139,7 @@ class EditedBox(BaseModel):
     model_confidence: float | None  # the model's confidence; None for scholars' and drawn boxes
     candidates: list[Candidate]  # the model's top guesses, for the sign picker
     source: BoxSource | None = None  # None for boxes drawn by hand
+    marks: BoxMarks = BoxMarks()
     changed: bool  # moved, resized or relabelled since the copy was made (always True for drawn boxes)
 
 
@@ -177,6 +195,7 @@ class BoxState(BaseModel):
     box: Box
     sign: str | None
     deleted: bool = False
+    marks: BoxMarks = BoxMarks()  # epigraphic marks (workbench); defaults for changes saved before them
 
 
 class BoxChange(BaseModel):

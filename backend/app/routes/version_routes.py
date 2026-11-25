@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, st
 from mysql.connector import Error as DatabaseError
 
 from backend.app import box_matching, corpus, glyph_index
+from backend.app.box_edits import marks_of
 from backend.app.auth import COOKIE_NAME, AuthenticatedWrite, CurrentUser, current_user
 from backend.app.data_controller.analysis_data_controller import describe_sign
 from backend.app.model.analysis import ApiError
@@ -126,6 +127,7 @@ def _version(
             "box": {name: row[name] for name in ("x", "y", "w", "h")},
             "sign": row["sign"],
             "origin": row["origin"],
+            "marks": marks_of(row.get("marks")),
         }
         for row in record["boxes"]
         if not row["deleted"]
@@ -262,6 +264,7 @@ def merge_versions(
                 "source_box_id": chosen["id"],
                 "source_version": version.version if copied else None,
                 "source_author_id": owner_id if copied else None,
+                "marks": chosen.get("marks"),
             }
         )
     if not boxes:

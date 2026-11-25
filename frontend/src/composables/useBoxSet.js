@@ -21,6 +21,11 @@ export function clampBox({ x, y, w, h }) {
   }
 }
 
+// A box's epigraphic marks (workbench, story F), as the API gives them when none are set.
+export const NO_MARKS = Object.freeze({ certainty: 'certain', damage: 'none', alternatives: [], word_end: false, line: null, seq: null })
+export const marksOf = (box) => ({ ...NO_MARKS, ...(box?.marks ?? {}), alternatives: [...(box?.marks?.alternatives ?? [])] })
+const sameMarks = (a, b) => JSON.stringify(marksOf(a)) === JSON.stringify(marksOf(b))
+
 /**
  * The changes that turn the saved boxes into the working ones, in the API's shape.
  * Boxes the user drew have negative ids until they are saved.
@@ -37,17 +42,19 @@ export function diff(saved, working) {
     const change = { op: 'update', box_id: before.id }
     if (!sameBox(before.box, after.box)) change.box = { ...after.box }
     if (before.sign !== after.sign) change.sign = after.sign
-    if ('box' in change || 'sign' in change) changes.push(change)
+    if (!sameMarks(before, after)) change.marks = marksOf(after)
+    if ('box' in change || 'sign' in change || 'marks' in change) changes.push(change)
   }
   for (const box of working) {
-    if (box.id < 0) changes.push({ op: 'add', box: { ...box.box }, sign: box.sign })
+    if (box.id < 0) changes.push({ op: 'add', box: { ...box.box }, sign: box.sign, ...(sameMarks(box, {}) ? {} : { marks: marksOf(box) }) })
   }
   return changes
 }
 
-const copyBoxes = (boxes) => boxes.map((box) => ({ ...box, box: { ...box.box } }))
+const copyBoxes = (boxes) => boxes.map((box) => ({ ...box, box: { ...box.box }, marks: marksOf(box) }))
 const sameBoxes = (a, b) =>
-  a.length === b.length && a.every((box, index) => box.id === b[index].id && box.sign === b[index].sign && sameBox(box.box, b[index].box))
+  a.length === b.length &&
+  a.every((box, index) => box.id === b[index].id && box.sign === b[index].sign && sameBox(box.box, b[index].box) && sameMarks(box, b[index]))
 
 /** Open (or make, the first time) your corrected copy of an analysis; resolves to its id. */
 export async function openCopy(analysisId) {
@@ -159,6 +166,23 @@ export function useBoxSet() {
     })
   }
 
+  // Change some of a box's marks; `marks` holds only the fields to change.
+  function setMarks(id, marks) {
+    change((next) => {
+      const found = next.find((item) => item.id === id)
+      if (found) found.marks = { ...marksOf(found), ...marks }
+    })
+  }
+
+  // The reading order set by hand: `lines` is a list of lines, each a list of box ids in order.
+  // Boxes left out go back to the automatic order.
+  function setOrder(lines) {
+    change((next) => {
+      const place = new Map(lines.flatMap((ids, line) => ids.map((id, seq) => [id, { line, seq }])))
+      for (const box of next) box.marks = { ...marksOf(box), line: null, seq: null, ...(place.get(box.id) ?? {}) }
+    })
+  }
+
   function removeBox(id) {
     change((next) => {
       const index = next.findIndex((item) => item.id === id)
@@ -205,5 +229,5 @@ export function useBoxSet() {
     error.value = ''
   }
 
-  return { copy, boxes, history, loading, saving, error, conflict, changes, dirty, load, accept, addBox, setBox, setSign, removeBox, beginGesture, place, endGesture, undo, discard, save, takeNewer, showConflict }
+  return { copy, boxes, history, loading, saving, error, conflict, changes, dirty, load, accept, addBox, setBox, setSign, removeBox, beginGesture, place, endGesture, undo, discard, save, takeNewer, showConflict, setMarks, setOrder }
 }

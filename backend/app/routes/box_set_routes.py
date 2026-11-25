@@ -14,14 +14,15 @@ from mysql.connector import Error as DatabaseError
 from backend.app import corpus, glyph_index, tablet_demo
 from backend.app.routes.community_routes import tablet_response
 from backend.app.auth import AuthenticatedWrite, CurrentUser
-from backend.app.box_edits import GEOMETRY, EditError, same, state
+from backend.app.box_edits import GEOMETRY, EditError, marks_of, same, state
+from backend.app.reading_pipeline.lines import group_lines
 from backend.app.data_controller.analysis_data_controller import describe_sign, read_signs
 from backend.app.data_controller.box_set_data_controller import (BoxSetDataController, MissingChange, NotEditable,
                                                                  StaleVersion)
 from backend.app.data_controller.correction_data_controller import catalogue_sign
 from backend.app.model.analysis import ApiError, DetectedSign
 from backend.app.model.box_set import (Author, BoxChange, BoxChangePage, BoxSet, BoxSetConflict, BoxSetCreate,
-                                       BoxSetEdit, BoxSetSource, BoxSource, BoxState, EditedBox, MergedFrom, Reading,
+                                       BoxMarks, BoxSetEdit, BoxSetSource, BoxSource, BoxState, EditedBox, MergedFrom, Reading,
                                        Revert)
 from backend.app.model.user import UserPublic
 from backend.app.sharing import REFUSALS, allows, level_of
@@ -53,10 +54,26 @@ def _edited(row: dict) -> EditedBox:
         id=row["id"], box=box, sign=row["sign"], origin=row["origin"], model_sign=row["model_sign"],
         model_confidence=row["model_confidence"],
         candidates=json.loads(candidates) if isinstance(candidates, (str, bytes)) else candidates or [],
-        changed=original is None or not same(original, state(box, row["sign"])),
+        changed=original is None or not same(original, state(box, row["sign"], marks=row.get("marks"))),
+        marks=BoxMarks(**marks_of(row.get("marks"))),
         source=BoxSource(kind=row["source_kind"], box_id=row.get("source_box_id"), copy_id=row.get("source_set_id"), version=row.get("source_version"),
                          author=row.get("source_author")) if row.get("source_kind") else None,
     )
+
+
+def manual_lines(signs: list[DetectedSign], marks: dict[int, dict]) -> list[list[DetectedSign]] | None:
+    """The lines in the order a scholar set by hand (each box's line, then seq, then left to
+    right), followed by the boxes they did not place, grouped as usual; None when none is set."""
+    placed = [sign for sign in signs if marks.get(sign.id, {}).get("line") is not None]
+    if not placed:
+        return None
+    lines: dict[int, list[DetectedSign]] = {}
+    for sign in placed:
+        lines.setdefault(marks[sign.id]["line"], []).append(sign)
+    ordered = [sorted(line, key=lambda s: (marks[s.id]["seq"] is None, marks[s.id]["seq"] or 0, s.box.x))
+               for _number, line in sorted(lines.items())]
+    rest = [sign for sign in signs if sign not in placed]
+    return ordered + (group_lines(rest) if rest else [])
 
 
 def _reading(boxes: list[EditedBox]) -> Reading:
@@ -69,7 +86,8 @@ def _reading(boxes: list[EditedBox]) -> Reading:
         confidence = box.model_confidence if kept else 100.0
         signs.append(DetectedSign(id=box.id, **describe_sign(box.sign, catalogue), confidence=confidence,
                                   detection_confidence=confidence, box=box.box, candidates=box.candidates))
-    return Reading(**read_signs(signs))
+    marks = {box.id: box.marks.model_dump() for box in boxes}
+    return Reading(**read_signs(signs, grouped=manual_lines(signs, marks), marks=marks))
 
 
 def _merged_from(value) -> list[MergedFrom]:

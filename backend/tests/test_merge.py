@@ -2,6 +2,7 @@
 
 import json
 
+from backend.app.box_edits import marks_of
 from backend.tests.test_box_sets import login, sql_controller
 from backend.tests.test_corpus_tablets import corpus_index, fake, tracing  # noqa: F401  (fixtures)
 
@@ -164,6 +165,7 @@ def test_sql_writes_the_edition_and_its_boxes_sources(monkeypatch):
             12,
             3,
             8,
+            json.dumps(marks_of(None)),  # no marks: the defaults
         )
     ]
 

@@ -43,15 +43,38 @@ def meaning(sign) -> str | None:
     return None
 
 
-def line_text(line: Sequence) -> tuple[str, str]:
-    """(transliteration, gloss) of one line: syllables joined by hyphens into words."""
+UNDERDOT = "\u0323"
+
+
+def marked(text: str, marks: dict | None) -> str:
+    """A sign's token with its epigraphic marks (GORILA/SigLA conventions): illegible as •,
+    uncertain dotted under each letter, partly preserved in half brackets, restored in brackets."""
+    if not marks:
+        return text
+    if marks.get("certainty") == "illegible":
+        text = "•"
+    elif marks.get("certainty") == "uncertain":
+        text = "".join(char + UNDERDOT if char.isalnum() else char for char in text)
+    if marks.get("damage") == "partial":
+        text = f"⸢{text}⸣"
+    elif marks.get("damage") == "restored":
+        text = f"[{text}]"
+    return text
+
+
+def line_text(line: Sequence, marks: dict | None = None) -> tuple[str, str]:
+    """(transliteration, gloss) of one line: syllables joined by hyphens into words. `marks`
+    (sign id -> epigraphic marks) decorates each sign, and a word ends wherever word_end is set."""
+    marks = marks or {}
     words: list[tuple[str, str, object]] = []  # (word, role, its first sign)
     for previous, sign in zip([None, *line], line):
-        if previous is not None and _joins(previous, sign, line):
+        text = marked(token(sign), marks.get(getattr(sign, "id", None)))
+        ended = previous is not None and (marks.get(getattr(previous, "id", None)) or {}).get("word_end")
+        if previous is not None and not ended and _joins(previous, sign, line):
             word, role, first = words[-1]
-            words[-1] = (f"{word}-{token(sign)}", role, first)
+            words[-1] = (f"{word}-{text}", role, first)
         else:
-            words.append((token(sign), sign.role, sign))
+            words.append((text, sign.role, sign))
     text = " ".join(word for word, _, _ in words)
     gloss = " ".join(_gloss(word, role, first) for word, role, first in words)
     return text, gloss
