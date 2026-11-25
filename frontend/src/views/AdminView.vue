@@ -1,6 +1,7 @@
 <script setup>
 // Admins find users and grant or remove the admin and reviewer roles (#80).
 // The server checks the role on every request; this page only hides what it would refuse.
+import VotingRightsEditor from '../components/admin/VotingRightsEditor.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { loadSession, sessionFetch, sessionUser } from '../state/session'
@@ -108,12 +109,15 @@ async function toggle(user, role, event) {
 const EXPORTING = ref('')
 // Anyone can register and correct boxes: by default the export takes admins' and reviewers' copies only (#98).
 const EVERYONE = ref(false)
+// Or each tablet's accepted edition release only: one agreed version per tablet (workbench).
+const ACCEPTED_ONLY = ref(false)
+const VOTING = ref(null) // the user whose voting rights are open
 
 async function download(kind) {
   EXPORTING.value = kind
   ERROR.value = ''
   try {
-    const suffix = EVERYONE.value ? '?everyone=true' : ''
+    const suffix = ACCEPTED_ONLY.value ? '?accepted_only=true' : EVERYONE.value ? '?everyone=true' : ''
     const response = await sessionFetch(`${kind === 'zip' ? '/api/admin/export/corrections.zip' : '/api/admin/export/corrections'}${suffix}`)
     if (!response.ok) throw new Error(await detail(response, 'The export failed. Please try again.'))
     const blob = kind === 'zip' ? await response.blob() : new Blob([JSON.stringify(await response.json(), null, 2)], { type: 'application/json' })
@@ -158,6 +162,10 @@ onMounted(async () => {
           <input v-model="EVERYONE" type="checkbox" data-testid="export-everyone" />
           Include copies by all users, not only admins and reviewers (not reviewed)
         </label>
+        <label class="mt-2 flex items-center gap-2 text-sm">
+          <input v-model="ACCEPTED_ONLY" type="checkbox" data-testid="export-accepted" />
+          Only each tablet's accepted edition (one agreed version per tablet, instead of every copy)
+        </label>
         <div class="mt-3 flex flex-wrap gap-3">
           <button type="button" class="cursor-pointer rounded border border-ink/30 px-4 py-2 hover:bg-ink/5 disabled:opacity-60" :disabled="EXPORTING !== ''" data-testid="export-json" @click="download('json')">
             {{ EXPORTING === 'json' ? 'Exporting…' : 'Export corrections (JSON)' }}
@@ -194,6 +202,7 @@ onMounted(async () => {
           <tr class="border-b border-ink/20">
             <th scope="col" class="py-2 pr-4">User</th>
             <th v-for="role in ROLES" :key="role.key" scope="col" class="py-2 pr-4 text-center">{{ role.label }}</th>
+            <th scope="col" class="py-2 pr-4 text-center">Voting</th>
           </tr>
         </thead>
         <tbody>
@@ -216,9 +225,15 @@ onMounted(async () => {
               />
               <span v-if="lockReason(user, role.key)" class="block text-xs text-ink/60">{{ lockReason(user, role.key) }}</span>
             </td>
+            <td class="py-2 pr-4 text-center">
+              <span v-if="isSelf(user)" class="text-xs text-ink/60">Not your own</span>
+              <button v-else type="button" class="cursor-pointer text-sm underline" :aria-expanded="VOTING?.id === user.id" data-testid="voting-open" @click="VOTING = VOTING?.id === user.id ? null : user">Voting rights</button>
+            </td>
           </tr>
         </tbody>
       </table>
+
+      <VotingRightsEditor v-if="VOTING" :key="VOTING.id" :user="VOTING" class="mt-4 max-w-xl" @close="VOTING = null" />
 
       <nav v-if="TOTAL > PAGE_SIZE" aria-label="Pages" class="mt-4 flex items-center gap-4">
         <button type="button" class="cursor-pointer rounded px-3 py-1 hover:bg-bar disabled:opacity-50" :disabled="!PAGES.previous || LOADING" @click="load(OFFSET - PAGE_SIZE)">Previous</button>

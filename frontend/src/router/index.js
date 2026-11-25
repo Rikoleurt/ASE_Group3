@@ -31,6 +31,7 @@ const routes = [
   { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
   { path: '/box-sets/:id', name: 'box-set', component: () => import('../views/BoxSetView.vue') },
   { path: '/tablets/:slug/compare', name: 'compare', component: () => import('../views/CompareView.vue') },
+  { path: '/editions/:id', name: 'edition', component: () => import('../views/EditionView.vue') },
   { path: '/tablets/:slug/merge', name: 'merge', component: () => import('../views/MergeView.vue') },
   { path: '/tablets/:slug?', name: 'tablets', component: () => import('../views/TabletsView.vue') },
   { path: '/shared', name: 'shared', component: () => import('../views/SharedView.vue') },

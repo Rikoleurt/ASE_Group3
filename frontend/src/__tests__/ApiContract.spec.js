@@ -29,6 +29,10 @@ import useCatalogue from '../composables/useCatalogue.js?raw'
 import signPreview from '../components/signs/SignPreview.vue?raw'
 import compareView from '../views/CompareView.vue?raw'
 import mergeView from '../views/MergeView.vue?raw'
+import editionsPanel from '../components/versions/EditionsPanel.vue?raw'
+import releasePanel from '../components/versions/ReleasePanel.vue?raw'
+import editionView from '../views/EditionView.vue?raw'
+import votingRightsEditor from '../components/admin/VotingRightsEditor.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -86,6 +90,16 @@ const CALLS = [
   { method: 'get', path: '/tablets/{slug}/compare', source: compareView, snippet: '/api/tablets/${encodeURIComponent(route.params.slug)}/compare?${query}' },
   { method: 'get', path: '/tablets/{slug}/compare', source: mergeView, snippet: '/api/tablets/${encodeURIComponent(route.params.slug)}/compare?${query}' },
   { method: 'post', path: '/box-sets/merge', source: mergeView, snippet: "'/api/box-sets/merge'" },
+  { method: 'get', path: '/tablets/{slug}/editions', source: editionsPanel, snippet: '/api/tablets/${encodeURIComponent(props.slug)}/editions' },
+  { method: 'put', path: '/tablets/{slug}/vote', source: editionsPanel, snippet: "send(`${base.value}/vote`, 'PUT'" },
+  { method: 'delete', path: '/tablets/{slug}/vote', source: editionsPanel, snippet: "send(`${base.value}/vote`, 'DELETE')" },
+  { method: 'put', path: '/tablets/{slug}/edition-override', source: editionsPanel, snippet: "send(`${base.value}/edition-override`, 'PUT'" },
+  { method: 'post', path: '/tablets/{slug}/edition-override/clear', source: editionsPanel, snippet: "send(`${base.value}/edition-override/clear`, 'POST'" },
+  { method: 'get', path: '/box-sets/{set_id}/releases', source: releasePanel, snippet: '/api/box-sets/${props.setId}/releases' },
+  { method: 'post', path: '/box-sets/{set_id}/releases', source: releasePanel, snippet: "method: 'POST'" },
+  { method: 'get', path: '/editions/{release_id}', source: editionView, snippet: '/api/editions/${encodeURIComponent(route.params.id)}' },
+  { method: 'get', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: '/api/admin/users/${props.user.id}/voting' },
+  { method: 'put', path: '/admin/users/{user_id}/voting', source: votingRightsEditor, snippet: "method: 'PUT'" },
   { method: 'get', path: '/box-sets/{set_id}/shares', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares' },
   { method: 'put', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
   { method: 'delete', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },

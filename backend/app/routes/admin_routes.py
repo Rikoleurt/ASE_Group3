@@ -15,6 +15,7 @@ from backend.app.data_controller.user_data_controller import LastAdmin, UserData
 from backend.app.training_export import ExportDataController
 from backend.app.model.analysis import ApiError
 from backend.app.model.user import AdminUser, AdminUserPage, RoleUpdate
+from backend.app.routes.edition_routes import Editions  # accepted editions for the export (workbench)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 Identifier = Annotated[int, Path(gt=0, le=2**64 - 1)]
@@ -77,26 +78,31 @@ Corrections = Annotated[CorrectionDataController, Depends(get_correction_control
 
 
 def _export_data(exports: ExportDataController, corrections: CorrectionDataController,
-                 everyone: bool) -> tuple[list, list]:
+                 everyone: bool, accepted_only: bool = False, editions=None) -> tuple[list, list]:
     try:
+        if accepted_only:
+            from backend.app.routes.edition_routes import accepted_copies  # noqa: PLC0415
+            return accepted_copies(editions), corrections.export_approved()
         return exports.copies(everyone), corrections.export_approved()
     except DatabaseError as error:
         raise HTTPException(503, "Correction storage is unavailable.") from error
 
 
 @router.get("/export/corrections", responses=DENIED)
-def export_corrections(_admin: Admin, exports: Exports, corrections: Corrections, everyone: bool = False) -> dict:
+def export_corrections(_admin: Admin, exports: Exports, corrections: Corrections, editions: Editions,
+                       everyone: bool = False, accepted_only: bool = False) -> dict:
     """Corrected copies' boxes in the training annotations' shape, and the approved label corrections.
-    Copies by admins and reviewers only, unless `everyone` (anyone can register and edit)."""
-    return training_export.corrections(*_export_data(exports, corrections, everyone))
+    Copies by admins and reviewers only, unless `everyone` (anyone can register and edit);
+    `accepted_only` gives each tablet's accepted edition release instead, one per tablet."""
+    return training_export.corrections(*_export_data(exports, corrections, everyone, accepted_only, editions))
 
 
 @router.get("/export/corrections.zip", response_class=FileResponse,
             responses={**DENIED, 200: {"content": {"application/zip": {}}, "description": "YOLO images, labels and classes"}})
 def export_corrections_zip(_admin: Admin, exports: Exports, corrections: Corrections,
-                           everyone: bool = False) -> FileResponse:
+                           editions: Editions, everyone: bool = False, accepted_only: bool = False) -> FileResponse:
     """The same as a YOLO dataset: images/, labels/, classes.txt and corrections.json, streamed from disk."""
-    path = training_export.yolo_zip(*_export_data(exports, corrections, everyone))
+    path = training_export.yolo_zip(*_export_data(exports, corrections, everyone, accepted_only, editions))
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
     return FileResponse(path, media_type="application/zip", filename=f"corrections-{stamp}.zip",
                         headers={"Cache-Control": "no-store"}, background=BackgroundTask(os.remove, path))

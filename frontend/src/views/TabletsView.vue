@@ -2,6 +2,7 @@
 // Corpus tablets (#82): find a tablet, see its tracing with the scholars' published boxes or
 // the reader's own, and start correcting them (#83, #85). The tablet is in the URL
 // (/tablets/HT-13), and so is the source (?boxes=model).
+import EditionsPanel from '../components/versions/EditionsPanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
@@ -339,6 +340,7 @@ function compareVersions() {
               </ul>
               <p v-if="!COPIES.length" class="mt-1 text-sm text-ink/60">No corrected copies yet: yours, and those shared with you, will be listed here.</p>
             </section>
+            <EditionsPanel :slug="SLUG" class="mt-4 lg:w-3/4" />
             <div class="mt-4 lg:w-3/4">
               <TabletOverlay :signs="BOXES.signs" :formulas="BOXES.formulas">
                 <img :src="`/api${BOXES.image_url}`" :alt="`${BOXES.tablet} tracing`" class="w-full rounded-lg bg-white" />

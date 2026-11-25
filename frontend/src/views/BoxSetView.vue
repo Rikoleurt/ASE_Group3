@@ -2,6 +2,7 @@
 // Your corrected copy of a tablet's boxes (#85): move, resize, draw and delete boxes, name
 // each box's sign, then save. Saving sends every change as one batch; the reading below
 // (lines, transliteration, fraction check) is worked out again from the saved boxes.
+import ReleasePanel from '../components/versions/ReleasePanel.vue'
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { onBeforeRouteLeave, onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import BoxEditor from '../components/boxes/BoxEditor.vue'
@@ -194,6 +195,15 @@ watch(() => route.params.id, load, { immediate: true })
       <template v-if="copy.permission === 'owner'">your {{ copy.kind === 'edition' ? 'edition' : 'corrected copy' }}</template>
       <template v-else>{{ copy.owner }}'s {{ copy.kind === 'edition' ? 'edition' : 'corrected copy' }}, shared with you: you {{ LEVEL_TEXT[copy.permission] }}</template><template v-if="copy.source.tablet && copy.kind !== 'edition'">, started from the {{ copy.start === 'scholar' ? "scholars'" : "model's" }} boxes</template>
     </p>
+    <ReleasePanel
+      v-if="copy?.kind === 'edition' && copy.source.tablet"
+      :key="copy.id"
+      :set-id="copy.id"
+      :can-release="CAN_SHARE"
+      :dirty="dirty"
+      class="mt-4 max-w-xl"
+      @released="copy.everyone = copy.everyone === 'none' ? 'view' : copy.everyone"
+    />
     <p v-if="copy?.kind === 'edition' && copy.merged_from.length" class="mt-1 text-sm text-ink/70" data-testid="merged-from">
       Merged from {{ copy.merged_from.map(mergedName).join(', ') }}.
       <template v-if="copy.contributors.length">Contributors: {{ copy.contributors.join(', ') }}.</template>

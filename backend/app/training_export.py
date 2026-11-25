@@ -11,7 +11,8 @@ in the JSON, with sign null, so nothing the users drew is lost.
 
 Anyone can register and correct boxes, so by default only copies whose owner is trusted (an
 admin or a reviewer, the people who already vet sign corrections) are exported; `everyone`
-includes the rest, marked untrusted (#98).
+includes the rest, marked untrusted (#98). `accepted_only` exports instead each tablet's accepted
+edition release (workbench, story E): one clean version per tablet, as images named edition-<id>.
 """
 import json
 import tempfile
@@ -73,7 +74,7 @@ def _changed(box: dict) -> bool:
 
 def _image_name(copy: dict) -> str:
     extension = ".jpg" if copy["format"] == "JPEG" else ".png"  # a tablet's tracing is a PNG
-    return f"copy-{copy['id']}{extension}"
+    return f"{copy.get('image_stem') or 'copy-' + str(copy['id'])}{extension}"
 
 
 def corrections(copies: list[dict], label_corrections: list) -> dict:

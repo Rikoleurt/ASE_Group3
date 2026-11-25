@@ -18,6 +18,7 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-86/086_box_comments.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/201_box_set_versions.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/202_box_set_editions.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/203_edition_releases_votes.sql
 ```
 
 ## Tables
@@ -72,6 +73,8 @@ whose box to keep, or to leave the place out.
 - **Afterwards:** the edition opens in the normal editor (history, comments, sharing).
 
 Migration: `migration-workbench/202_box_set_editions.sql`.
+
+Releasing editions, voting on them and the community edition are described in [editions.md](editions.md).
 
 ## API
 
