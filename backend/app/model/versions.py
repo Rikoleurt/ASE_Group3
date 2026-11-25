@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 
 from backend.app.model.analysis import Box
 
@@ -59,3 +59,26 @@ class TabletComparison(BaseModel):
     versions: list[TabletVersion]  # in the order asked for
     clusters: list[CompareCluster]  # in reading order
     agreement: list[Agreement]  # every pair of versions
+
+
+class MergeSource(BaseModel):
+    key: str = Field(pattern=r"^(scholar|model|copy:[1-9][0-9]{0,19})$")
+    version: int | None = Field(default=None, ge=0)  # a copy's version as the merge page saw it
+
+
+class MergeRequest(BaseModel):
+    """Merge versions of a tablet into a new edition (workbench, story D). `picks` has one entry per
+    place of GET /compare for these sources in this order: the version whose box to keep there,
+    or null to leave the place out."""
+
+    tablet: str = Field(pattern=r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$", max_length=64)
+    title: str | None = Field(default=None, min_length=1, max_length=120)
+    sources: list[MergeSource] = Field(min_length=2, max_length=6)
+    picks: list[str | None] = Field(max_length=2000)
+
+    @field_validator("title")
+    @classmethod
+    def tidy_title(cls, title: str | None) -> str | None:
+        if title is None:
+            return None
+        return " ".join(title.split()) or None

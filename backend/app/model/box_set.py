@@ -95,6 +95,23 @@ class BoxSetCreate(BaseModel):
         return self
 
 
+class BoxSource(BaseModel):
+    """Where a box came from: the scholars' or the model's sign it started as, or another
+    copy's box at a version (merged editions), with that box's author for credit."""
+    kind: Literal["scholar", "model", "copy"]
+    copy_id: int | None = None
+    version: int | None = None
+    author: str | None = None  # username
+
+
+class MergedFrom(BaseModel):
+    key: str  # "scholar", "model" or "copy:<id>"
+    kind: Literal["scholar", "model", "copy", "edition"]
+    title: str | None = None
+    owner: str | None = None
+    version: int | None = None  # the copy's version when it was merged
+
+
 class EditedBox(BaseModel):
     id: int
     box: Box
@@ -103,6 +120,7 @@ class EditedBox(BaseModel):
     model_sign: str | None  # the sign when the copy was made (the model's or the scholars'); None for drawn boxes
     model_confidence: float | None  # the model's confidence; None for scholars' and drawn boxes
     candidates: list[Candidate]  # the model's top guesses, for the sign picker
+    source: BoxSource | None = None  # None for boxes drawn by hand
     changed: bool  # moved, resized or relabelled since the copy was made (always True for drawn boxes)
 
 
@@ -130,6 +148,8 @@ class BoxSet(BaseModel):
     source: BoxSetSource
     title: str | None = None  # a tablet copy's name, if it has one
     kind: Literal["copy", "edition"] = "copy"  # an edition is merged from several versions (workbench)
+    merged_from: list[MergedFrom] = []  # an edition's sources
+    contributors: list[str] = []  # usernames: authors of merged boxes and everyone who saved a change
     start: Literal["model", "scholar"]
     version: int  # send it back with each edit; it goes up by one per save
     width: int

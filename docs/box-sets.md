@@ -17,6 +17,7 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-84/084_box_set_sharing.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-86/086_box_comments.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/201_box_set_versions.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/202_box_set_editions.sql
 ```
 
 ## Tables
@@ -47,6 +48,31 @@ Each box also records where it came from (`source_kind`, `source_box_id`): the s
 model's sign it started as. Merged editions (story D) add another copy's box at a version
 (`source_set_id`, `source_version`) and its author (`source_author_id`), who is credited.
 
+## Merging versions into an edition (workbench)
+
+From the versions list (or the compare page), **Merge into an edition** opens
+`/tablets/HT-13/merge?v=…`. The page lists the same places as compare and asks, place by place,
+whose box to keep, or to leave the place out.
+
+- **Defaults:** the sign most versions agree on. Between equally common signs, the scholars'
+  sign wins if they have one there, otherwise the earliest version's.
+- **What is shown:** only the places where the versions differ are listed at first, as
+  agreeing places need no choice.
+- **Bulk choices:** "Majority everywhere", and "Take every box from" one version.
+
+`POST /box-sets/merge` creates the edition (`kind: "edition"`), a new copy of your own:
+
+- **No trusted geometry:** the server rebuilds the places from the versions as they are now,
+  and never takes a box's position from the page.
+- **Stale versions:** a copy whose version changed since the page loaded is refused with 409,
+  as is a different number of places. The page then offers a reload.
+- **Credit:** each box keeps its source, the copy and version it came from and that copy's
+  owner. The edition lists what it was merged from (`merged_from`) and its `contributors`:
+  authors of merged boxes and everyone who saved a change.
+- **Afterwards:** the edition opens in the normal editor (history, comments, sharing).
+
+Migration: `migration-workbench/202_box_set_editions.sql`.
+
 ## API
 
 | Route | Does |
@@ -56,6 +82,7 @@ model's sign it started as. Merged editions (story D) add another copy's box at 
 | `POST /box-sets` `{tablet, start, new: true, title?}` | another copy of the tablet, with an optional title (up to 120 characters) |
 | `GET /tablets/{slug}/versions` | the scholars', the model's and the copies you can open (logged out: the first two) |
 | `GET /tablets/{slug}/compare?v=…&v=…` | two to six versions (`scholar`, `model`, `copy:<id>`) matched into places, with agreement per pair (login needed) |
+| `POST /box-sets/merge` `{tablet, title?, sources: [{key, version?}], picks: [key or null per place]}` | a new edition merged from 2 to 6 versions (201); 409 if a version changed since the merge page loaded |
 | `GET /analysis/{id}/box-set`, `GET /tablets/{slug}/box-set` | your copy of that analysis or tablet, or 404 |
 | `GET /box-sets/{id}` | the copy, with its boxes and the reading worked out from them |
 | `PATCH /box-sets/{id}` `{version, changes}` | one save, all or nothing (see below) |

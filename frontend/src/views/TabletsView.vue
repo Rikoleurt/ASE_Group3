@@ -195,6 +195,10 @@ function versionName(version) {
   return version.title ? `${whose} ${what}: ${version.title}` : `${whose} ${what}`
 }
 
+function mergeVersions() {
+  router.push({ path: `/tablets/${SLUG.value}/merge`, query: { v: COMPARE.value } })
+}
+
 function compareVersions() {
   router.push({ path: `/tablets/${SLUG.value}/compare`, query: { v: COMPARE.value } })
 }
@@ -306,8 +310,15 @@ function compareVersions() {
                   data-testid="compare-versions"
                   @click="compareVersions"
                 >Compare {{ COMPARE.length >= 2 ? COMPARE.length : '' }} versions</button>
+                <button
+                  type="button"
+                  class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="COMPARE.length < 2"
+                  data-testid="merge-versions"
+                  @click="mergeVersions"
+                >Merge into an edition</button>
               </div>
-              <p class="text-sm text-ink/70">Tick two to {{ MAX_COMPARE }} to see where they agree and differ.</p>
+              <p class="text-sm text-ink/70">Tick two to {{ MAX_COMPARE }} to see where they agree and differ, or to merge them into an edition of your own.</p>
               <ul class="mt-2">
                 <li v-for="version in VERSIONS" :key="version.key" class="flex items-center gap-3 py-1" data-testid="version">
                   <input

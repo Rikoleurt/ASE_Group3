@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS box_set (
     tablet_slug VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
     title VARCHAR(120) NULL,  -- several copies of a tablet per user may each have a title (workbench)
     kind ENUM('copy', 'edition') NOT NULL DEFAULT 'copy',  -- an edition is merged from several versions
+    merged_from JSON NULL,  -- an edition's sources: [{key, kind, title, owner, version}]
     start ENUM('model', 'scholar') NOT NULL,
     version INT UNSIGNED NOT NULL DEFAULT 0,
     everyone ENUM('none', 'view', 'comment', 'edit') NOT NULL DEFAULT 'none',  -- access for all logged-in users (#84)

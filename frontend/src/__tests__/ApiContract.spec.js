@@ -28,6 +28,7 @@ import boxComments from '../components/boxes/BoxComments.vue?raw'
 import useCatalogue from '../composables/useCatalogue.js?raw'
 import signPreview from '../components/signs/SignPreview.vue?raw'
 import compareView from '../views/CompareView.vue?raw'
+import mergeView from '../views/MergeView.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -83,6 +84,8 @@ const CALLS = [
   { method: 'get', path: '/tablets', source: tabletsView, snippet: '/api/tablets?${query}' },
   { method: 'get', path: '/tablets/{slug}/versions', source: tabletsView, snippet: '/api/tablets/${encodeURIComponent(SLUG.value)}/versions' },
   { method: 'get', path: '/tablets/{slug}/compare', source: compareView, snippet: '/api/tablets/${encodeURIComponent(route.params.slug)}/compare?${query}' },
+  { method: 'get', path: '/tablets/{slug}/compare', source: mergeView, snippet: '/api/tablets/${encodeURIComponent(route.params.slug)}/compare?${query}' },
+  { method: 'post', path: '/box-sets/merge', source: mergeView, snippet: "'/api/box-sets/merge'" },
   { method: 'get', path: '/box-sets/{set_id}/shares', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares' },
   { method: 'put', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
   { method: 'delete', path: '/box-sets/{set_id}/shares/{user_id}', source: shareDialog, snippet: '/api/box-sets/${props.setId}/shares/${user.id}' },
@@ -202,6 +205,11 @@ describe('API contract', () => {
     )
     expect(responseFields('patch', '/box-sets/{set_id}', '409').sort()).toEqual(['current', 'detail'])
     expect(requestFields('post', '/box-sets').sort()).toEqual(['analysis_id', 'new', 'start', 'tablet', 'title'])
+  })
+
+  it('the merge page sends the declared fields and reads the edition it returns', () => {
+    expect(requestFields('post', '/box-sets/merge').sort()).toEqual(['picks', 'sources', 'tablet', 'title'])
+    expect(responseFields('post', '/box-sets/merge', '201')).toEqual(expect.arrayContaining(['id', 'kind', 'merged_from', 'contributors']))
   })
 
   it('sharing sends and reads the declared fields', () => {

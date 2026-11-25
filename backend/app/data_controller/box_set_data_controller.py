@@ -125,10 +125,53 @@ class BoxSetDataController(DataController):
                 cursor.close()
         return set_id
 
+    def create_edition(self, owner_id: int, slug: str, title: str | None, width: int, height: int,
+                       boxes: list[dict], merged_from: list[dict]) -> int:
+        """A new edition of a tablet merged from several versions (workbench, story D), in one
+        transaction. Each box is {"box", "sign", "origin", "source_kind", "source_set_id",
+        "source_box_id", "source_version", "source_author_id"}; it starts unchanged."""
+        stamp = _now()
+        with self.connection() as connection:
+            cursor = connection.cursor()
+            try:
+                cursor.execute(
+                    "INSERT INTO box_set (owner_id, analysis_id, tablet_slug, title, kind, merged_from, start, version, "
+                    "width, height, created_at, updated_at) VALUES (%s, NULL, %s, %s, 'edition', %s, 'scholar', 0, "
+                    "%s, %s, %s, %s)",
+                    (owner_id, slug, title, json.dumps(merged_from), width, height, stamp, stamp),
+                )
+                set_id = cursor.lastrowid
+                rows = [(set_id, *(item["box"][name] for name in GEOMETRY), item.get("sign"), item["origin"],
+                         *(item["box"][name] for name in GEOMETRY), item.get("sign"), json.dumps([]),
+                         item["source_kind"], item.get("source_set_id"), item.get("source_box_id"),
+                         item.get("source_version"), item.get("source_author_id"))
+                        for item in boxes]
+                if rows:
+                    cursor.executemany(
+                        "INSERT INTO box (set_id, x, y, w, h, sign, origin, original_x, original_y, original_w, "
+                        "original_h, model_sign, candidates, source_kind, source_set_id, source_box_id, "
+                        "source_version, source_author_id) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", rows,
+                    )
+            finally:
+                cursor.close()
+        return set_id
+
+    def contributors(self, set_id: int) -> list[str]:
+        """Usernames credited for a copy: the authors of the boxes merged into it, and everyone
+        who saved a change to it, in alphabetical order."""
+        rows = self._rows(
+            "SELECT DISTINCT u.username FROM `user` u WHERE u.id IN ("
+            "SELECT b.source_author_id FROM box b WHERE b.set_id = %s AND b.source_author_id IS NOT NULL "
+            "UNION SELECT c.author_id FROM box_change c WHERE c.set_id = %s) ORDER BY u.username",
+            (set_id, set_id))
+        return [row["username"] for row in rows]
+
     def load(self, set_id: int) -> dict | None:
         """The copy with its owner, source and every box (deleted ones too, for undo); None if missing."""
         sets = self._rows(
-            "SELECT s.id, s.owner_id, u.username AS owner, s.analysis_id, s.tablet_slug, s.title, s.kind, s.start, "
+            "SELECT s.id, s.owner_id, u.username AS owner, s.analysis_id, s.tablet_slug, s.title, s.kind, "
+            "s.merged_from, s.start, "
             "s.version, s.everyone, "
             "s.width, s.height, s.created_at, s.updated_at, a.filename FROM box_set s "
             "JOIN `user` u ON u.id = s.owner_id LEFT JOIN analysis a ON a.id = s.analysis_id WHERE s.id = %s",
@@ -136,7 +179,11 @@ class BoxSetDataController(DataController):
         if not sets:
             return None
         found = sets[0]
-        found["boxes"] = self._rows(f"SELECT {BOX_COLUMNS} FROM box WHERE set_id = %s ORDER BY id", (set_id,))
+        found["boxes"] = self._rows(
+            "SELECT " + ", ".join(f"b.{column.strip()}" for column in BOX_COLUMNS.split(",")) +
+            ", su.username AS source_author FROM box b LEFT JOIN `user` su ON su.id = b.source_author_id "
+            "WHERE b.set_id = %s ORDER BY b.id", (set_id,))
+        found["contributors"] = self.contributors(set_id)
         return found
 
     # Sharing (#84). The rules are in backend/app/sharing.py.

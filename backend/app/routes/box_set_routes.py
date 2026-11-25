@@ -21,7 +21,8 @@ from backend.app.data_controller.box_set_data_controller import (BoxSetDataContr
 from backend.app.data_controller.correction_data_controller import catalogue_sign
 from backend.app.model.analysis import ApiError, DetectedSign
 from backend.app.model.box_set import (Author, BoxChange, BoxChangePage, BoxSet, BoxSetConflict, BoxSetCreate,
-                                       BoxSetEdit, BoxSetSource, BoxState, EditedBox, Reading, Revert)
+                                       BoxSetEdit, BoxSetSource, BoxSource, BoxState, EditedBox, MergedFrom, Reading,
+                                       Revert)
 from backend.app.model.user import UserPublic
 from backend.app.sharing import REFUSALS, allows, level_of
 
@@ -53,6 +54,8 @@ def _edited(row: dict) -> EditedBox:
         model_confidence=row["model_confidence"],
         candidates=json.loads(candidates) if isinstance(candidates, (str, bytes)) else candidates or [],
         changed=original is None or not same(original, state(box, row["sign"])),
+        source=BoxSource(kind=row["source_kind"], copy_id=row.get("source_set_id"), version=row.get("source_version"),
+                         author=row.get("source_author")) if row.get("source_kind") else None,
     )
 
 
@@ -69,6 +72,11 @@ def _reading(boxes: list[EditedBox]) -> Reading:
     return Reading(**read_signs(signs))
 
 
+def _merged_from(value) -> list[MergedFrom]:
+    items = json.loads(value) if isinstance(value, (str, bytes)) else value or []
+    return [MergedFrom(**item) for item in items]
+
+
 def build(record: dict) -> BoxSet:
     boxes = [_edited(row) for row in record["boxes"] if not row["deleted"]]
     source = (BoxSetSource(kind="analysis", analysis_id=record["analysis_id"], filename=record["filename"])
@@ -76,7 +84,8 @@ def build(record: dict) -> BoxSet:
     return BoxSet(
         id=record["id"], owner=record["owner"], permission=record.get("permission", "owner"),
         everyone=record.get("everyone") or "none", source=source, title=record.get("title"),
-        kind=record.get("kind") or "copy", start=record["start"], version=record["version"],
+        kind=record.get("kind") or "copy", merged_from=_merged_from(record.get("merged_from")),
+        contributors=record.get("contributors") or [], start=record["start"], version=record["version"],
         width=record["width"], height=record["height"], image_url=f"/box-sets/{record['id']}/image",
         created_at=record["created_at"], updated_at=record["updated_at"], boxes=boxes, reading=_reading(boxes),
     )

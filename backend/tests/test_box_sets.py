@@ -108,6 +108,27 @@ class FakeController:
                                   "source_box_id": sign.get("id")}
         return set_id, True
 
+    def create_edition(self, owner_id, slug, title, width, height, boxes, merged_from):
+        set_id = len(self.sets) + 1
+        self.sets[set_id] = {"id": set_id, "owner_id": owner_id, "owner": self.usernames.get(owner_id, "owner"),
+                             "analysis_id": None, "tablet_slug": slug, "title": title, "kind": "edition",
+                             "merged_from": merged_from, "start": "scholar", "version": 0, "everyone": "none",
+                             "width": width, "height": height, "created_at": STAMP, "updated_at": STAMP,
+                             "filename": None}
+        for item in boxes:
+            box_id = len(self.boxes) + 1
+            self.boxes[box_id] = {"id": box_id, "set": set_id, **item["box"], "sign": item["sign"], "deleted": False,
+                                  "origin": item["origin"], **{f"original_{k}": v for k, v in item["box"].items()},
+                                  "model_sign": item["sign"], "model_confidence": None, "candidates": "[]",
+                                  **{k: item.get(k) for k in ("source_kind", "source_set_id", "source_box_id",
+                                                              "source_version", "source_author_id")}}
+        return set_id
+
+    def contributors(self, set_id):
+        authors = {b.get("source_author_id") for b in self.boxes.values() if b["set"] == set_id}
+        authors |= {r["author_id"] for r in self.log.values() if r["set"] == set_id}
+        return sorted(self.usernames[a] for a in authors if a in self.usernames)
+
     def versions_for_tablet(self, user_id, slug):
         rows = []
         for key, value in self.sets.items():
@@ -146,7 +167,9 @@ class FakeController:
 
     def load(self, set_id):
         found = self.sets.get(set_id)
-        return found and {**found, "boxes": [dict(b) for b in self.boxes.values() if b["set"] == set_id]}
+        boxes = [{**b, "source_author": self.usernames.get(b.get("source_author_id"))}
+                 for b in self.boxes.values() if b["set"] == set_id]
+        return found and {**found, "boxes": boxes, "contributors": self.contributors(set_id)}
 
     def _lock(self, set_id, version):
         if self.sets[set_id]["version"] != version:

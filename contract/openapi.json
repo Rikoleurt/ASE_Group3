@@ -763,6 +763,14 @@
             "title": "Boxes",
             "type": "array"
           },
+          "contributors": {
+            "default": [],
+            "items": {
+              "type": "string"
+            },
+            "title": "Contributors",
+            "type": "array"
+          },
           "created_at": {
             "format": "date-time",
             "title": "Created At",
@@ -798,6 +806,14 @@
             ],
             "title": "Kind",
             "type": "string"
+          },
+          "merged_from": {
+            "default": [],
+            "items": {
+              "$ref": "#/components/schemas/MergedFrom"
+            },
+            "title": "Merged From",
+            "type": "array"
           },
           "owner": {
             "title": "Owner",
@@ -1040,6 +1056,58 @@
           "kind"
         ],
         "title": "BoxSetSource",
+        "type": "object"
+      },
+      "BoxSource": {
+        "description": "Where a box came from: the scholars' or the model's sign it started as, or another\ncopy's box at a version (merged editions), with that box's author for credit.",
+        "properties": {
+          "author": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Author"
+          },
+          "copy_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Copy Id"
+          },
+          "kind": {
+            "enum": [
+              "scholar",
+              "model",
+              "copy"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "BoxSource",
         "type": "object"
       },
       "BoxState": {
@@ -2034,6 +2102,16 @@
               }
             ],
             "title": "Sign"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BoxSource"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -2653,6 +2731,144 @@
           "label"
         ],
         "title": "MentionTarget",
+        "type": "object"
+      },
+      "MergeRequest": {
+        "description": "Merge versions of a tablet into a new edition (workbench, story D). `picks` has one entry per\nplace of GET /compare for these sources in this order: the version whose box to keep there,\nor null to leave the place out.",
+        "properties": {
+          "picks": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "maxItems": 2000,
+            "title": "Picks",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/MergeSource"
+            },
+            "maxItems": 6,
+            "minItems": 2,
+            "title": "Sources",
+            "type": "array"
+          },
+          "tablet": {
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+            "title": "Tablet",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "tablet",
+          "sources",
+          "picks"
+        ],
+        "title": "MergeRequest",
+        "type": "object"
+      },
+      "MergeSource": {
+        "properties": {
+          "key": {
+            "pattern": "^(scholar|model|copy:[1-9][0-9]{0,19})$",
+            "title": "Key",
+            "type": "string"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "key"
+        ],
+        "title": "MergeSource",
+        "type": "object"
+      },
+      "MergedFrom": {
+        "properties": {
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "scholar",
+              "model",
+              "copy",
+              "edition"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "key",
+          "kind"
+        ],
+        "title": "MergedFrom",
         "type": "object"
       },
       "Reading": {
@@ -4994,6 +5210,121 @@
         "summary": "Create Box Set",
         "tags": [
           "box sets"
+        ]
+      }
+    },
+    "/box-sets/merge": {
+      "post": {
+        "description": "Merge versions of a tablet into a new edition of your own (workbench, story D).\n\nThe places are worked out again here, from the versions as they are now, exactly as\nGET /compare does for the same sources in the same order; `picks` chooses, place by place,\nwhose box to keep (or none). A copy that changed since the merge page loaded it (its\n`version` differs) is refused with 409, as is a different number of places. Each box keeps\nwhere it came from and its author, who is credited on the edition.",
+        "operationId": "merge_versions_box_sets_merge_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-csrf-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Csrf-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BoxSet"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Forbidden"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Conflict"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Merge Versions",
+        "tags": [
+          "tablet versions"
         ]
       }
     },

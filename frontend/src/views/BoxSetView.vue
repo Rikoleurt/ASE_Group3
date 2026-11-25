@@ -77,6 +77,14 @@ const ORDERED = computed(() => {
   return [...boxes.value].sort((a, b) => (order.get(a.id) ?? 1e9) - (order.get(b.id) ?? 1e9) || a.id - b.id)
 })
 
+// How an edition names one of the versions it was merged from.
+function mergedName(source) {
+  if (source.kind === 'scholar') return "the scholars' boxes"
+  if (source.kind === 'model') return "the model's boxes"
+  const what = `${source.owner}'s ${source.kind === 'edition' ? 'edition' : 'copy'}`
+  return source.title ? `${what} “${source.title}”` : what
+}
+
 // "No sign yet" in lists and headings; HistoryPanel and the screen-reader labels use it too.
 const signName = (sign) => (sign ? GLYPHS.value[sign]?.name ?? sign : 'No sign yet')
 const glyphOf = (sign) => (sign ? GLYPHS.value[sign]?.glyph ?? '' : '')
@@ -182,8 +190,13 @@ watch(() => route.params.id, load, { immediate: true })
     </div>
     <p v-if="copy" class="mt-1 text-ink/70" data-testid="copy-owner">
       {{ copy.source.filename || copy.source.tablet.replaceAll('-', ' ') }} ·
-      <template v-if="copy.permission === 'owner'">your corrected copy</template>
-      <template v-else>{{ copy.owner }}'s corrected copy, shared with you: you {{ LEVEL_TEXT[copy.permission] }}</template><template v-if="copy.source.tablet">, started from the {{ copy.start === 'scholar' ? "scholars'" : "model's" }} boxes</template>
+      <template v-if="copy.title">“{{ copy.title }}” · </template>
+      <template v-if="copy.permission === 'owner'">your {{ copy.kind === 'edition' ? 'edition' : 'corrected copy' }}</template>
+      <template v-else>{{ copy.owner }}'s {{ copy.kind === 'edition' ? 'edition' : 'corrected copy' }}, shared with you: you {{ LEVEL_TEXT[copy.permission] }}</template><template v-if="copy.source.tablet && copy.kind !== 'edition'">, started from the {{ copy.start === 'scholar' ? "scholars'" : "model's" }} boxes</template>
+    </p>
+    <p v-if="copy?.kind === 'edition' && copy.merged_from.length" class="mt-1 text-sm text-ink/70" data-testid="merged-from">
+      Merged from {{ copy.merged_from.map(mergedName).join(', ') }}.
+      <template v-if="copy.contributors.length">Contributors: {{ copy.contributors.join(', ') }}.</template>
     </p>
     <ShareDialog v-if="SHARING && copy" :set-id="copy.id" :is-owner="copy.permission === 'owner'" class="mt-4 max-w-xl" @close="SHARING = false" @changed="copy.everyone = $event.everyone" />
 
@@ -268,6 +281,12 @@ watch(() => route.params.id, load, { immediate: true })
               The model read {{ signName(SELECTED.model_sign) }}<template v-if="SELECTED.model_confidence"> ({{ Math.round(SELECTED.model_confidence) }}%)</template>.
             </p>
             <p v-else-if="SELECTED.origin === 'user' || SELECTED.id < 0" class="text-sm text-ink/70">Drawn by hand.</p>
+            <p v-if="copy.kind === 'edition' && (SELECTED.source?.kind === 'scholar' || SELECTED.source?.kind === 'model')" class="text-sm text-ink/70" data-testid="box-source">
+              From the {{ SELECTED.source.kind === 'scholar' ? "scholars'" : "model's" }} boxes.
+            </p>
+            <p v-else-if="SELECTED.source?.kind === 'copy'" class="text-sm text-ink/70" data-testid="box-source">
+              From {{ SELECTED.source.author ?? 'a' }}'s copy<template v-if="SELECTED.source.version != null"> (version {{ SELECTED.source.version }})</template>.
+            </p>
 
             <template v-if="CAN_EDIT">
             <SignPicker :selected="SELECTED.sign" :candidates="SELECTED.candidates ?? []" @pick="pick" />

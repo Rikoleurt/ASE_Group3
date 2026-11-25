@@ -98,9 +98,15 @@ function missingFrom(place) {
     <RouterLink :to="`/tablets/${route.params.slug}`" class="underline"
       >← {{ RESULT?.tablet ?? route.params.slug.replaceAll('-', ' ') }}</RouterLink
     >
-    <h1 class="mt-2 text-3xl font-bold">
-      Compare versions{{ RESULT ? ` of ${RESULT.tablet}` : '' }}
-    </h1>
+    <div class="mt-2 flex flex-wrap items-center gap-4">
+      <h1 class="text-3xl font-bold">Compare versions{{ RESULT ? ` of ${RESULT.tablet}` : '' }}</h1>
+      <RouterLink
+        v-if="RESULT"
+        :to="{ path: `/tablets/${route.params.slug}/merge`, query: { v: KEYS } }"
+        class="rounded bg-bar px-4 py-1.5 font-semibold hover:brightness-95"
+        data-testid="merge-link"
+      >Merge into an edition</RouterLink>
+    </div>
 
     <p v-if="LOADING" role="status" class="mt-6">
       Matching the versions' boxes… the model's first reading of a tablet can take half a minute.

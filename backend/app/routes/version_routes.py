@@ -8,23 +8,25 @@ import re
 from itertools import combinations
 from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Path, Query, Request, Response
+from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, status
 from mysql.connector import Error as DatabaseError
 
 from backend.app import box_matching, corpus, glyph_index
-from backend.app.auth import COOKIE_NAME, CurrentUser, current_user
+from backend.app.auth import COOKIE_NAME, AuthenticatedWrite, CurrentUser, current_user
 from backend.app.data_controller.analysis_data_controller import describe_sign
 from backend.app.model.analysis import ApiError
 from backend.app.model.user import UserPublic
 from backend.app.model.versions import (
     Agreement,
     CompareCluster,
+    MergeRequest,
     TabletComparison,
     TabletVersion,
     TabletVersions,
     VersionBox,
 )
-from backend.app.routes.box_set_routes import UNAVAILABLE, Controller, _catalogue, access
+from backend.app.model.box_set import BoxSet
+from backend.app.routes.box_set_routes import UNAVAILABLE, Controller, _catalogue, _current, access
 from backend.app.sharing import level_of
 
 router = APIRouter(tags=["tablet versions"])
@@ -87,17 +89,21 @@ def tablet_versions(slug: Slug, request: Request, controller: Controller) -> Tab
     return TabletVersions(slug=slug, tablet=tablet, items=items)
 
 
-def _boxes(signs) -> list[dict]:
-    return [{"id": sign.id, "box": sign.box.model_dump(), "sign": sign.sign} for sign in signs]
+def _boxes(signs, origin: str) -> list[dict]:
+    return [
+        {"id": sign.id, "box": sign.box.model_dump(), "sign": sign.sign, "origin": origin}
+        for sign in signs
+    ]
 
 
 def _version(
     key: str, slug: str, index, user: UserPublic, controller
-) -> tuple[TabletVersion, list[dict]]:
-    """A version's description and its boxes; 404 for a copy you cannot see or of another tablet."""
+) -> tuple[TabletVersion, list[dict], int | None]:
+    """A version's description, its boxes (each with its origin) and, for a copy, its owner's id;
+    404 for a copy you cannot see or of another tablet."""
     if key == "scholar":
-        boxes = _boxes(corpus.scholar_signs(index, slug))
-        return TabletVersion(key=key, kind="scholar", box_count=len(boxes)), boxes
+        boxes = _boxes(corpus.scholar_signs(index, slug), "scholar")
+        return TabletVersion(key=key, kind="scholar", box_count=len(boxes)), boxes, None
     if key == "model":
         path = glyph_index.tracing_path(slug)
         if path is None:
@@ -105,12 +111,12 @@ def _version(
                 404, f"This tablet's drawing is not on this server. {corpus.DOWNLOAD_HINT}"
             )
         try:
-            boxes = _boxes(corpus.model_signs(slug, path))
+            boxes = _boxes(corpus.model_signs(slug, path), "model")
         except (corpus.ReaderMissing, corpus.ReaderBusy) as error:
             raise HTTPException(503, str(error)) from error
         except (FileNotFoundError, RuntimeError) as error:
             raise HTTPException(503, "The sign reader is unavailable.") from error
-        return TabletVersion(key=key, kind="model", box_count=len(boxes)), boxes
+        return TabletVersion(key=key, kind="model", box_count=len(boxes)), boxes, None
     record = access(controller, int(key.split(":")[1]), user)
     if record.get("tablet_slug") != slug:
         raise HTTPException(404, "Corrected copy not found.")
@@ -119,6 +125,7 @@ def _version(
             "id": row["id"],
             "box": {name: row[name] for name in ("x", "y", "w", "h")},
             "sign": row["sign"],
+            "origin": row["origin"],
         }
         for row in record["boxes"]
         if not row["deleted"]
@@ -134,7 +141,7 @@ def _version(
         version=record["version"],
         updated_at=record["updated_at"],
     )
-    return version, boxes
+    return version, boxes, record["owner_id"]
 
 
 @router.get("/tablets/{slug}/compare", response_model=TabletComparison, responses=ERRORS)
@@ -162,7 +169,7 @@ def compare_versions(
             404, f"This tablet's drawing is not on this server. {corpus.DOWNLOAD_HINT}"
         )
     found = [_version(key, slug, index, user, controller) for key in keys]
-    versions = {version.key: boxes for version, boxes in found}
+    versions = {version.key: boxes for version, boxes, _owner in found}
     clusters = box_matching.cluster(versions)
     catalogue = _catalogue()
 
@@ -177,7 +184,7 @@ def compare_versions(
         width=width,
         height=height,
         image_url=f"/tablets/{slug}/image",
-        versions=[version for version, _ in found],
+        versions=[version for version, _boxes, _owner in found],
         clusters=[
             CompareCluster(
                 box=place.box,
@@ -193,3 +200,87 @@ def compare_versions(
             for same, total in [box_matching.agreement(clusters, a, b)]
         ],
     )
+
+
+@router.post(
+    "/box-sets/merge",
+    response_model=BoxSet,
+    status_code=status.HTTP_201_CREATED,
+    responses={**ERRORS, 403: {"model": ApiError}, 409: {"model": ApiError}},
+)
+def merge_versions(
+    request: MergeRequest, user: AuthenticatedWrite, controller: Controller
+) -> BoxSet:
+    """Merge versions of a tablet into a new edition of your own (workbench, story D).
+
+    The places are worked out again here, from the versions as they are now, exactly as
+    GET /compare does for the same sources in the same order; `picks` chooses, place by place,
+    whose box to keep (or none). A copy that changed since the merge page loaded it (its
+    `version` differs) is refused with 409, as is a different number of places. Each box keeps
+    where it came from and its author, who is credited on the edition.
+    """
+    keys = [source.key for source in request.sources]
+    if len(set(keys)) != len(keys):
+        raise HTTPException(422, "Give each version once.")
+    index, _tablet_name = _tablet(request.tablet)
+    path = glyph_index.tracing_path(request.tablet)
+    if path is None:
+        raise HTTPException(
+            404, f"This tablet's drawing is not on this server. {corpus.DOWNLOAD_HINT}"
+        )
+    found = [_version(key, request.tablet, index, user, controller) for key in keys]
+    for source, (version, _boxes_, _owner) in zip(request.sources, found):
+        if source.version is not None and version.version != source.version:
+            name = f"{version.owner}'s {version.kind}" if version.owner else source.key
+            raise HTTPException(
+                409, f"{name} changed since you opened the merge. Reload to see the changes."
+            )
+    places = box_matching.cluster({version.key: boxes for version, boxes, _owner in found})
+    if len(request.picks) != len(places):
+        raise HTTPException(
+            409, "The versions changed since you opened the merge. Reload to see the changes."
+        )
+    described = {version.key: (version, owner) for version, _boxes_, owner in found}
+    boxes = []
+    for place, pick in zip(places, request.picks):
+        if pick is None:
+            continue
+        if pick not in place.members:
+            raise HTTPException(
+                422, "Each place can only keep a box one of its versions has there."
+            )
+        chosen = place.members[pick]
+        version, owner_id = described[pick]
+        copied = pick.startswith("copy:")
+        boxes.append(
+            {
+                "box": chosen["box"],
+                "sign": chosen["sign"],
+                "origin": chosen["origin"],
+                "source_kind": "copy" if copied else pick,
+                "source_set_id": int(pick[5:]) if copied else None,
+                "source_box_id": chosen["id"],
+                "source_version": version.version if copied else None,
+                "source_author_id": owner_id if copied else None,
+            }
+        )
+    if not boxes:
+        raise HTTPException(422, "Keep at least one box.")
+    merged_from = [
+        {
+            "key": version.key,
+            "kind": version.kind,
+            "title": version.title,
+            "owner": version.owner,
+            "version": version.version,
+        }
+        for version, _boxes_, _owner in found
+    ]
+    width, height = corpus.image_size(path)
+    try:
+        set_id = controller.create_edition(
+            user.id, request.tablet, request.title, width, height, boxes, merged_from
+        )
+    except DatabaseError as error:
+        raise HTTPException(503, UNAVAILABLE) from error
+    return _current(controller, set_id)
