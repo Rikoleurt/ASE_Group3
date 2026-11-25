@@ -5,14 +5,27 @@ from fastapi.responses import FileResponse
 from mysql.connector import Error as DatabaseError
 
 from backend.app.auth import AuthenticatedWrite, CurrentUser
-from backend.app.mentions import InvalidMention
+from backend.app.data_controller.community_data_controller import (
+    CommunityDataController,
+    DuplicateDiscussionTitle,
+)
 from backend.app.data_controller.mention_data_controller import MentionDataController
-from backend.app.model.mention import MentionPage, SymbolPreview
-from backend.app.data_controller.community_data_controller import CommunityDataController, DuplicateDiscussionTitle
-from backend.app.image_storage import image_path, crop_symbol
+from backend.app.image_storage import crop_symbol, image_path
+from backend.app.mentions import InvalidMention
 from backend.app.model.analysis import ApiError
-from backend.app.model.community import (DiscussionCreate, DiscussionSummary, DiscussionPage,
-                                         DiscussionDetail, CommunityCommentCreate, DiscussionComment, DiscussionFilter, VoteState, VoteSet)
+from backend.app.model.community import (
+    CommunityCommentCreate,
+    DiscussionComment,
+    DiscussionCreate,
+    DiscussionDetail,
+    DiscussionFilter,
+    DiscussionPage,
+    DiscussionSummary,
+    VoteSet,
+    VoteState,
+)
+from backend.app.model.mention import MentionPage, SymbolPreview
+from backend.app.notifications import notify, quote
 
 router = APIRouter(prefix="/community", tags=["community"], responses={404: {"model": ApiError}, 503: {"model": ApiError}})
 Controller = Annotated[CommunityDataController, Depends(CommunityDataController)]
@@ -110,6 +123,9 @@ def comment(discussion_id: DiscussionId, payload: CommunityCommentCreate, user: 
         raise HTTPException(422, str(error)) from error
     if result is None:
         raise HTTPException(404, "Discussion not found.")
+    mentioned = [mention.user_id for mention in result.mentions if mention.kind == "user" and mention.available]
+    notify(mentioned, "mention", user.id, f"{user.username} mentioned you in a discussion: {quote(result.body)}",
+           f"/community/{discussion_id}")
     return result
 
 

@@ -13,6 +13,7 @@ from backend.app.auth import AuthenticatedWrite, CurrentUser
 from backend.app.data_controller.box_set_data_controller import BoxSetDataController
 from backend.app.data_controller.user_data_controller import UserDataController
 from backend.app.model.analysis import ApiError
+from backend.app.notifications import copy_name, notify
 from backend.app.routes.box_set_routes import UNAVAILABLE, Controller, access
 from backend.app.sharing import EveryoneLevel, ShareLevel, allows, rank
 
@@ -106,6 +107,9 @@ def share(set_id: Identifier, user_id: Identifier, request: ShareRequest, user: 
             raise HTTPException(404, "User not found.")
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
+    can = {"view": "view it", "comment": "comment on it", "edit": "edit it", "manage": "manage it"}[request.permission]
+    notify([user_id], "share", user.id, f"{user.username} shared {copy_name(record)} with you: you can {can}.",
+           f"/box-sets/{set_id}", record.get("tablet_slug"))
     return _sharing(controller, set_id, record.get("everyone") or "none")
 
 

@@ -12,10 +12,11 @@ from fastapi import APIRouter, HTTPException, Path, Query, Request, Response, st
 from mysql.connector import Error as DatabaseError
 
 from backend.app import box_matching, corpus, glyph_index
-from backend.app.box_edits import marks_of
 from backend.app.auth import COOKIE_NAME, AuthenticatedWrite, CurrentUser, current_user
+from backend.app.box_edits import marks_of
 from backend.app.data_controller.analysis_data_controller import describe_sign
 from backend.app.model.analysis import ApiError
+from backend.app.model.box_set import BoxSet
 from backend.app.model.user import UserPublic
 from backend.app.model.versions import (
     Agreement,
@@ -26,7 +27,7 @@ from backend.app.model.versions import (
     TabletVersions,
     VersionBox,
 )
-from backend.app.model.box_set import BoxSet
+from backend.app.notifications import notify, tablet_name
 from backend.app.routes.box_set_routes import UNAVAILABLE, Controller, _catalogue, _current, access
 from backend.app.sharing import level_of
 
@@ -286,4 +287,18 @@ def merge_versions(
         )
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
+    # The owners of the copies whose boxes were kept (the scholars and the model are no one to tell).
+    used = {
+        described[f"copy:{kept['source_set_id']}"][1]
+        for kept in boxes
+        if kept["source_kind"] == "copy"
+    }
+    notify(
+        used,
+        "merge",
+        user.id,
+        f"{user.username} merged boxes from your copy of {tablet_name(request.tablet)} into an edition.",
+        f"/box-sets/{set_id}",
+        request.tablet,
+    )
     return _current(controller, set_id)

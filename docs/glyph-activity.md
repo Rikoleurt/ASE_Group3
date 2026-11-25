@@ -23,9 +23,36 @@ weeks.
 When you open a glyph, the time is stored in `glyph_seen` (migration
 `migration-workbench/204_glyph_seen.sql`).
 
+## Notifications
+
+The bell in the top bar shows how many notifications are unread. It checks every minute while the
+page is visible (there is no live connection). Its list marks a notification read when it is
+opened, and has **Mark all read**.
+
+You are told when someone:
+
+| Kind | What happened | Link |
+|---|---|---|
+| share | shares a copy with you, and at which level | the copy |
+| comment | comments on your copy or one of its boxes | the copy |
+| mention | @-mentions you in a discussion | the discussion |
+| vote | backs your released edition | the release |
+| override | an admin chooses an accepted edition for a tablet you released one of, or returns it to the vote, with the reason | the tablet |
+| merge | merges boxes from your copy into an edition | the edition |
+| voting_rights | an admin removes or restores your voting rights, with the reason | none |
+
+How it works:
+
+- **Never for your own actions.** You are not notified of what you did yourself.
+- **Never in the way.** A notification that cannot be saved is logged and never fails the change
+  that caused it (`backend/app/notifications.py`).
+- **Storage:** the `notification` table (migration
+  `migration-workbench/207_notifications.sql`); `GET /notifications`,
+  `GET /notifications/unread-count`, `POST /notifications/read` `{ids?}`.
+
 ## Not yet covered
 
-These will come with notifications (Phase 2):
+Not counted in the bubbles yet:
 
 - boxes merged into an edition from another copy;
 - signs of uploaded analyses;

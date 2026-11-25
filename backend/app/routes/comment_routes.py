@@ -13,6 +13,7 @@ from pydantic import BaseModel, Field, field_validator
 from backend.app.auth import AuthenticatedWrite, CurrentUser
 from backend.app.model.analysis import ApiError
 from backend.app.model.box_set import Author
+from backend.app.notifications import copy_name, notify, quote
 from backend.app.rate_limit import COMMENTS
 from backend.app.routes.box_set_routes import UNAVAILABLE, Controller, access
 from backend.app.sharing import allows
@@ -76,6 +77,8 @@ def add_comment(set_id: Identifier, request: CommentCreate, user: AuthenticatedW
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
     COMMENTS.record(f"user:{user.id}")
+    notify([record["owner_id"]], "comment", user.id, f"{user.username} commented on {copy_name(record)}: {quote(request.body)}",
+           f"/box-sets/{set_id}", record.get("tablet_slug"))
     return _comment(row, user.id, allows(record["permission"], "manage"))
 
 

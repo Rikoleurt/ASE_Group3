@@ -2,6 +2,7 @@
 // The top bar: the main pages in one row, the two HT 13 demo pages under "Demos", and
 // everything about your account (shared copies, review, admin, profile, log out) under the
 // profile button, so the bar fits on one line.
+import NotificationBell from './NotificationBell.vue'
 import { SHOW_ACTIVITY } from '../state/preferences'
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -129,6 +130,7 @@ const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visibl
 
         <div class="flex shrink-0 items-center gap-4">
             <p v-if="logoutError" role="alert">{{ logoutError }}</p>
+            <NotificationBell v-if="sessionUser" />
             <template v-if="!sessionUser">
                 <RouterLink to="/login" :class="linkClass" exact-active-class="font-bold underline">Log in</RouterLink>
                 <RouterLink to="/signup" :class="linkClass" exact-active-class="font-bold underline">Sign up</RouterLink>

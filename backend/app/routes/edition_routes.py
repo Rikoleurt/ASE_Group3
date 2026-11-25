@@ -33,6 +33,7 @@ from backend.app.model.edition import (
     VotingRights,
     VotingRightsChange,
 )
+from backend.app.notifications import notify, quote, tablet_name
 from backend.app.routes.box_set_routes import Controller, _catalogue, access, build, manual_lines
 from backend.app.routes.version_routes import _optional_user
 from backend.app.sharing import level_of
@@ -293,9 +294,19 @@ def vote(
         voting = _voting(editions, user)
         if not voting.allowed:
             raise HTTPException(403, voting.reason)
-        if request.release_id not in {row["id"] for row in editions.tablet_releases(slug)}:
+        releases = {row["id"]: row for row in editions.tablet_releases(slug)}
+        if request.release_id not in releases:
             raise HTTPException(404, "No such release of this tablet is open for voting.")
         editions.vote(slug, user.id, request.release_id)
+        backed = releases[request.release_id]
+        notify(
+            [backed["owner_id"]],
+            "vote",
+            user.id,
+            f"{user.username} backed your edition of {tablet_name(slug)} (release {backed['number']}).",
+            f"/editions/{backed['id']}",
+            slug,
+        )
         return _editions(slug, editions, user)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
@@ -317,9 +328,20 @@ def override(
     """Choose the tablet's accepted edition over the vote (admins). The reason (at least 15
     characters) is shown to everyone with the admin's name; the votes stay visible."""
     try:
-        if request.release_id not in {row["id"] for row in editions.tablet_releases(slug)}:
+        releases = {row["id"]: row for row in editions.tablet_releases(slug)}
+        if request.release_id not in releases:
             raise HTTPException(404, "No such release of this tablet is open to everyone.")
         editions.set_override(slug, request.release_id, admin.id, request.comment)
+        chosen = releases[request.release_id]
+        notify(
+            {row["owner_id"] for row in releases.values()},
+            "override",
+            admin.id,
+            f"An admin ({admin.username}) chose {chosen['owner']}'s edition (release {chosen['number']}) as the "
+            f"accepted edition of {tablet_name(slug)}: {quote(request.comment, 160)}",
+            f"/tablets/{slug}",
+            slug,
+        )
         return _editions(slug, editions, admin)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
@@ -335,6 +357,15 @@ def clear_override(
     try:
         if not editions.clear_override(slug, admin.id, request.comment):
             raise HTTPException(404, "This tablet has no override.")
+        notify(
+            {row["owner_id"] for row in editions.tablet_releases(slug)},
+            "override",
+            admin.id,
+            f"An admin ({admin.username}) returned the accepted edition of {tablet_name(slug)} to the vote: "
+            f"{quote(request.comment, 160)}",
+            f"/tablets/{slug}",
+            slug,
+        )
         return _editions(slug, editions, admin)
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
@@ -363,6 +394,14 @@ def set_voting_rights(
     try:
         if not editions.set_voting_rights(user_id, admin.id, request.can_vote, request.reason):
             raise HTTPException(404, "User not found.")
+        notify(
+            [user_id],
+            "voting_rights",
+            admin.id,
+            f"An admin ({admin.username}) {'restored' if request.can_vote else 'removed'} your voting rights "
+            f"on editions: {quote(request.reason, 160)}",
+            None,
+        )
         return VotingRights(**editions.voting_rights(user_id))
     except DatabaseError as error:
         raise HTTPException(503, UNAVAILABLE) from error
