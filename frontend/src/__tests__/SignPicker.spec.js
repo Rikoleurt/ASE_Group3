@@ -8,11 +8,35 @@ import { parseMentionTokens } from '../components/mentions/mentionSyntax'
 import { searchSigns } from '../components/signs/signSearch'
 
 const CATALOGUE = [
-  { sign: 'A301', name: 'A301', glyph: '\u{10643}', reading: null, preview_url: '/glyphs/A301/preview.png' },
-  { sign: 'AB01', name: 'AB01 (da)', glyph: '\u{10600}', reading: 'da', preview_url: '/glyphs/AB01/preview.png' },
-  { sign: 'AB81', name: 'AB81 (ku)', glyph: '\u{10642}', reading: 'ku', preview_url: '/glyphs/AB81/preview.png' },
+  {
+    sign: 'A301',
+    name: 'A301',
+    glyph: '\u{10643}',
+    reading: null,
+    preview_url: '/glyphs/A301/preview.png',
+  },
+  {
+    sign: 'AB01',
+    name: 'AB01 (da)',
+    glyph: '\u{10600}',
+    reading: 'da',
+    preview_url: '/glyphs/AB01/preview.png',
+  },
+  {
+    sign: 'AB81',
+    name: 'AB81 (ku)',
+    glyph: '\u{10642}',
+    reading: 'ku',
+    preview_url: '/glyphs/AB81/preview.png',
+  },
   { sign: 'AB80', name: 'AB80 (ma)', glyph: '\u{10641}', reading: 'ma', preview_url: null },
-  { sign: 'AB131a', name: 'AB131a (VIN)', glyph: '\u{1065C}', reading: null, preview_url: '/glyphs/AB131a/preview.png' },
+  {
+    sign: 'AB131a',
+    name: 'AB131a (VIN)',
+    glyph: '\u{1065C}',
+    reading: null,
+    preview_url: '/glyphs/AB131a/preview.png',
+  },
 ]
 
 let wrapper
@@ -23,9 +47,11 @@ afterEach(() => {
 })
 
 function serveCatalogue() {
-  const fetch = vi.fn(async (url) => (url === '/api/corrections/catalogue'
-    ? { ok: true, json: async () => CATALOGUE }
-    : { ok: false, status: 404, json: async () => ({}) }))
+  const fetch = vi.fn(async (url) =>
+    url === '/api/corrections/catalogue'
+      ? { ok: true, json: async () => CATALOGUE }
+      : { ok: false, status: 404, json: async () => ({}) },
+  )
   vi.stubGlobal('fetch', fetch)
   return fetch
 }
@@ -65,8 +91,15 @@ describe('Sign picker', () => {
 
   it("shows the model's guesses with drawings and marks the chosen one", async () => {
     serveCatalogue()
-    wrapper = mount(SignPicker, { props: { selected: 'AB81', candidates: [
-      { sign: 'AB81', label: 'AB81 (ku)', probability: 78 }, { sign: 'AB80', label: 'AB80 (ma)', probability: 12 }] } })
+    wrapper = mount(SignPicker, {
+      props: {
+        selected: 'AB81',
+        candidates: [
+          { sign: 'AB81', label: 'AB81 (ku)', probability: 78 },
+          { sign: 'AB80', label: 'AB80 (ma)', probability: 12 },
+        ],
+      },
+    })
     await flushPromises()
     const guesses = wrapper.findAll('[data-testid="candidate"]')
     expect(guesses.map((guess) => guess.attributes('aria-pressed'))).toEqual(['true', 'false'])
@@ -78,7 +111,10 @@ describe('Sign picker', () => {
   })
 
   it('says when nothing matches, and works without a catalogue', async () => {
-    vi.stubGlobal('fetch', vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) })))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => ({ ok: false, status: 503, json: async () => ({}) })),
+    )
     wrapper = mount(SignPicker)
     await flushPromises()
     await wrapper.get('#sign-search').setValue('zz')
@@ -88,7 +124,9 @@ describe('Sign picker', () => {
 
 describe('Sign preview', () => {
   it('falls back to the character when the picture fails to load', async () => {
-    wrapper = mount(SignPreview, { props: { sign: 'AB81', glyph: '\u{10642}', previewUrl: '/glyphs/AB81/preview.png' } })
+    wrapper = mount(SignPreview, {
+      props: { sign: 'AB81', glyph: '\u{10642}', previewUrl: '/glyphs/AB81/preview.png' },
+    })
     await wrapper.get('img').trigger('error')
     expect(wrapper.find('img').exists()).toBe(false)
     expect(wrapper.text()).toBe('\u{10642}')
@@ -97,8 +135,11 @@ describe('Sign preview', () => {
 
 describe('Sign mentions', () => {
   it('parses sign tokens without treating the sign number as a number', () => {
-    expect(parseMentionTokens('see @[AB81 (ku)](sign:AB81) and @[x](user:007)').map((token) => token.key))
-      .toEqual(['sign:AB81', 'user:7'])
+    expect(
+      parseMentionTokens('see @[AB81 (ku)](sign:AB81) and @[x](user:007)').map(
+        (token) => token.key,
+      ),
+    ).toEqual(['sign:AB81', 'user:7'])
   })
 
   it('offers catalogue signs with their drawings in the Signs tab', async () => {
@@ -108,7 +149,10 @@ describe('Sign mentions', () => {
     wrapper = mount(MentionComposer, { props: { discussionId: 4 } })
     expect(fetch).not.toHaveBeenCalledWith('/api/corrections/catalogue') // only when the Signs tab opens
     await wrapper.get('textarea').setValue('@ku')
-    await wrapper.findAll('button').find((button) => button.text() === 'Signs').trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Signs')
+      .trigger('click')
     await flushPromises()
     await vi.advanceTimersByTimeAsync(250) // the composer waits for typing to pause
     await flushPromises()
@@ -121,8 +165,20 @@ describe('Sign mentions', () => {
 
   it('shows a mentioned sign with its picture', () => {
     wrapper = mount(MentionText, {
-      props: { body: 'is this @[AB81 (ku)](sign:AB81)?', mentions: [{ token: '@[AB81 (ku)](sign:AB81)', key: 'sign:AB81',
-        kind: 'sign', label: 'AB81 (ku)', available: true, sign_code: 'AB81', image_url: '/api/glyphs/AB81/preview.png' }] },
+      props: {
+        body: 'is this @[AB81 (ku)](sign:AB81)?',
+        mentions: [
+          {
+            token: '@[AB81 (ku)](sign:AB81)',
+            key: 'sign:AB81',
+            kind: 'sign',
+            label: 'AB81 (ku)',
+            available: true,
+            sign_code: 'AB81',
+            image_url: '/api/glyphs/AB81/preview.png',
+          },
+        ],
+      },
       global: { stubs: { RouterLink: true } },
     })
     const chip = wrapper.get('[data-testid="sign-mention"]')

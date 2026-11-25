@@ -16,6 +16,7 @@ training crops, `la.reader.NeighbourBank`), and by their blend (the reader's own
 and without the pen normalisation. Reports top-1/5/12 over all signs and over the 20 signs
 with most training examples.
 """
+
 import argparse
 import json
 import sys
@@ -46,11 +47,15 @@ def jitter(ink: np.ndarray, rng: np.random.Generator) -> np.ndarray:
     centre = (canvas.shape[1] / 2, canvas.shape[0] / 2)
     matrix = cv2.getRotationMatrix2D(centre, angle, scale)
     matrix[0, 1] += shear
-    warped = cv2.warpAffine(canvas, matrix, (canvas.shape[1], canvas.shape[0]), flags=cv2.INTER_NEAREST)
+    warped = cv2.warpAffine(
+        canvas, matrix, (canvas.shape[1], canvas.shape[0]), flags=cv2.INTER_NEAREST
+    )
     return warped > 127
 
 
-def test_queries(index: glyph_index.GlyphIndex, rng: np.random.Generator) -> list[tuple[str, np.ndarray]]:
+def test_queries(
+    index: glyph_index.GlyphIndex, rng: np.random.Generator
+) -> list[tuple[str, np.ndarray]]:
     """(sign, sketch-like ink) for every test-split drawing whose crop is downloaded."""
     annotations = json.loads(glyph_index.ANNOTATIONS.read_text(encoding="utf-8"))
     slug_of = {tablet: slug for slug, tablet in index.slugs.items()}
@@ -76,6 +81,7 @@ def font_queries(names: list[str]) -> list[tuple[str, np.ndarray]]:
     from PIL import ImageFont
 
     from la import cropsplus
+
     face = ImageFont.truetype(str(cropsplus.FONT), cropsplus.FONT_PX)
     out = []
     for sign in names:
@@ -100,9 +106,16 @@ def summary(rank: np.ndarray, truth: list[str], top: set[str]) -> dict:
     chosen = np.array([sign in top for sign in truth])
 
     def at(mask):
-        return {f"top{k}": round(float((rank[mask] <= k).mean()) * 100, 1) if mask.any() else None for k in KS}
-    return {"queries": int(len(rank)), "all": at(np.ones(len(rank), bool)),
-            "top20_signs": {**at(chosen), "queries": int(chosen.sum())}}
+        return {
+            f"top{k}": round(float((rank[mask] <= k).mean()) * 100, 1) if mask.any() else None
+            for k in KS
+        }
+
+    return {
+        "queries": int(len(rank)),
+        "all": at(np.ones(len(rank), bool)),
+        "top20_signs": {**at(chosen), "queries": int(chosen.sum())},
+    }
 
 
 def main() -> int:
@@ -113,21 +126,35 @@ def main() -> int:
 
     scorer = sketch_search.scorer()
     if scorer is None:
-        print("The classifier or the neighbour bank is not installed (python scripts/fetch_models.py).", file=sys.stderr)
+        print(
+            "The classifier or the neighbour bank is not installed (python scripts/fetch_models.py).",
+            file=sys.stderr,
+        )
         return 1
     index = glyph_index.get_index()
     rng = np.random.default_rng(args.seed)
     counts = Counter(sign for sign in scorer.bank.signs.tolist() if sign != "unidentified")
     top = {sign for sign, _ in counts.most_common(TOP_SIGNS)}
-    report = {"model": tablet_demo.CLASSIFIER_WEIGHTS.name, "top20_signs": sorted(top), "proxies": {}}
-    for proxy, queries in (("sketch-like test tracings", test_queries(index, rng)),
-                           ("font characters", font_queries(scorer.names))):
+    report = {
+        "model": tablet_demo.CLASSIFIER_WEIGHTS.name,
+        "top20_signs": sorted(top),
+        "proxies": {},
+    }
+    for proxy, queries in (
+        ("sketch-like test tracings", test_queries(index, rng)),
+        ("font characters", font_queries(scorer.names)),
+    ):
         truth = [sign for sign, _ in queries]
         inks = [ink for _, ink in queries]
         classifier, neighbours, blend = scorer.scores(inks)
-        report["proxies"][proxy] = {method: summary(ranks(matrix, scorer.names, truth), truth, top)
-                                    for method, matrix in (("classifier", classifier), ("neighbours", neighbours),
-                                                           ("blend", blend))}
+        report["proxies"][proxy] = {
+            method: summary(ranks(matrix, scorer.names, truth), truth, top)
+            for method, matrix in (
+                ("classifier", classifier),
+                ("neighbours", neighbours),
+                ("blend", blend),
+            )
+        }
     text = json.dumps(report, indent=2)
     print(text)
     if args.out:

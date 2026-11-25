@@ -25,7 +25,10 @@ export function searchSigns(catalogue, text, limit = MAX_MATCHES) {
   return catalogue
     .map((sign, index) => ({ sign, index, rank: rank(sign, query) }))
     .filter((entry) => entry.rank !== null)
-    .sort((a, b) => a.rank - b.rank || Number(!a.sign.reading) - Number(!b.sign.reading) || a.index - b.index)
+    .sort(
+      (a, b) =>
+        a.rank - b.rank || Number(!a.sign.reading) - Number(!b.sign.reading) || a.index - b.index,
+    )
     .slice(0, limit)
     .map((entry) => entry.sign)
 }

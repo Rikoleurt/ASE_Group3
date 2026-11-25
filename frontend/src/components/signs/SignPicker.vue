@@ -22,7 +22,9 @@ const QUERY = ref('')
 const ACTIVE = ref(0)
 const MATCHES = computed(() => searchSigns(CATALOGUE.value, QUERY.value))
 const LIST_ID = computed(() => `${props.inputId}-matches`)
-watch(MATCHES, () => { ACTIVE.value = 0 })
+watch(MATCHES, () => {
+  ACTIVE.value = 0
+})
 
 const entry = (sign) => BY_SIGN.value[sign] ?? { sign, name: sign, glyph: '', preview_url: null }
 
@@ -57,8 +59,16 @@ function choose() {
           data-testid="candidate"
           @click="pick(candidate.sign)"
         >
-          <SignPreview :sign="candidate.sign" :glyph="entry(candidate.sign).glyph" :preview-url="entry(candidate.sign).preview_url" :size="32" />
-          <span>{{ candidate.label }} <span class="text-ink/60">{{ Math.round(candidate.probability) }}%</span></span>
+          <SignPreview
+            :sign="candidate.sign"
+            :glyph="entry(candidate.sign).glyph"
+            :preview-url="entry(candidate.sign).preview_url"
+            :size="32"
+          />
+          <span
+            >{{ candidate.label }}
+            <span class="text-ink/60">{{ Math.round(candidate.probability) }}%</span></span
+          >
         </button>
       </div>
     </div>
@@ -81,8 +91,20 @@ function choose() {
       @keydown.enter.prevent="choose"
       @keydown.esc="QUERY = ''"
     />
-    <ul v-if="MATCHES.length" :id="LIST_ID" role="listbox" class="mt-1 max-h-64 overflow-auto rounded border border-ink/15 bg-white" data-testid="sign-matches">
-      <li v-for="(sign, index) in MATCHES" :id="`${LIST_ID}-${index}`" :key="sign.sign" role="option" :aria-selected="index === ACTIVE">
+    <ul
+      v-if="MATCHES.length"
+      :id="LIST_ID"
+      role="listbox"
+      class="mt-1 max-h-64 overflow-auto rounded border border-ink/15 bg-white"
+      data-testid="sign-matches"
+    >
+      <li
+        v-for="(sign, index) in MATCHES"
+        :id="`${LIST_ID}-${index}`"
+        :key="sign.sign"
+        role="option"
+        :aria-selected="index === ACTIVE"
+      >
         <button
           type="button"
           tabindex="-1"
@@ -91,12 +113,25 @@ function choose() {
           @mouseenter="ACTIVE = index"
           @click="pick(sign.sign)"
         >
-          <SignPreview :sign="sign.sign" :glyph="sign.glyph" :preview-url="sign.preview_url" :size="40" />
-          <span v-if="sign.preview_url" class="linear-a text-xl" aria-hidden="true">{{ sign.glyph }}</span>
+          <SignPreview
+            :sign="sign.sign"
+            :glyph="sign.glyph"
+            :preview-url="sign.preview_url"
+            :size="40"
+          />
+          <span v-if="sign.preview_url" class="linear-a text-xl" aria-hidden="true">{{
+            sign.glyph
+          }}</span>
           <span class="min-w-0 flex-1">
             <span class="font-semibold">{{ sign.sign }}</span>
             <span v-if="sign.reading" class="text-ink/70"> {{ sign.reading }}</span>
-            <span v-if="sign.name && sign.name !== sign.sign && !sign.name.includes(`(${sign.reading})`)" class="block truncate text-xs text-ink/60">{{ sign.name }}</span>
+            <span
+              v-if="
+                sign.name && sign.name !== sign.sign && !sign.name.includes(`(${sign.reading})`)
+              "
+              class="block truncate text-xs text-ink/60"
+              >{{ sign.name }}</span
+            >
           </span>
         </button>
       </li>

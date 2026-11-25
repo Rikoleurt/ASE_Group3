@@ -11,7 +11,12 @@ const props = defineProps({
 })
 
 const FAILED = ref(false)
-watch(() => props.previewUrl, () => { FAILED.value = false })
+watch(
+  () => props.previewUrl,
+  () => {
+    FAILED.value = false
+  },
+)
 </script>
 
 <template>
@@ -29,6 +34,8 @@ watch(() => props.previewUrl, () => { FAILED.value = false })
       class="h-full w-full object-contain"
       @error="FAILED = true"
     />
-    <span v-else class="linear-a" :style="{ fontSize: `${Math.round(size * 0.6)}px` }">{{ glyph || '?' }}</span>
+    <span v-else class="linear-a" :style="{ fontSize: `${Math.round(size * 0.6)}px` }">{{
+      glyph || '?'
+    }}</span>
   </span>
 </template>
