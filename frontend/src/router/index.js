@@ -30,6 +30,7 @@ const routes = [
   { path: '/review', name: 'review', component: () => import('../views/ReviewView.vue') },
   { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
   { path: '/box-sets/:id', name: 'box-set', component: () => import('../views/BoxSetView.vue') },
+  { path: '/tablets/:slug/compare', name: 'compare', component: () => import('../views/CompareView.vue') },
   { path: '/tablets/:slug?', name: 'tablets', component: () => import('../views/TabletsView.vue') },
   { path: '/shared', name: 'shared', component: () => import('../views/SharedView.vue') },
   {

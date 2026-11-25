@@ -11,7 +11,9 @@ from backend.app.data_controller.data_controller import DataController
 from backend.app.model.box_set import Change
 
 BOX_COLUMNS = ("id, x, y, w, h, sign, deleted, origin, original_x, original_y, original_w, original_h, "
-               "model_sign, model_confidence, candidates")
+               "model_sign, model_confidence, candidates, source_kind, source_set_id, source_box_id, "
+               "source_version, source_author_id")
+MAX_VERSIONS = 100  # copies listed per tablet
 
 
 class StaleVersion(Exception):
@@ -40,22 +42,32 @@ class BoxSetDataController(DataController):
         return rows[0]["id"] if rows else None
 
     def find_for_tablet(self, owner_id: int, slug: str) -> int | None:
-        rows = self._rows("SELECT id FROM box_set WHERE owner_id = %s AND tablet_slug = %s", (owner_id, slug))
+        """The owner's most recently changed copy of a corpus tablet (they may have several)."""
+        rows = self._rows("SELECT id FROM box_set WHERE owner_id = %s AND tablet_slug = %s "
+                          "ORDER BY updated_at DESC, id DESC LIMIT 1", (owner_id, slug))
         return rows[0]["id"] if rows else None
 
     def create_from_tablet(self, owner_id: int, slug: str, start: str, signs: list[dict], width: int,
-                           height: int) -> tuple[int, bool]:
-        """The owner's copy of a corpus tablet, made from the given boxes (model's or scholars') if new.
-        Each sign is {"box": {...}, "sign", "confidence", "candidates"}."""
-        existing = self.find_for_tablet(owner_id, slug)
-        if existing is not None:
+                           height: int, *, new: bool = False, title: str | None = None) -> tuple[int, bool]:
+        """The owner's latest copy of a corpus tablet, or a new one (always when `new`) made from the
+        given boxes (model's or scholars'). Each sign is {"id", "box": {...}, "sign", "confidence",
+        "candidates"}; its id is kept as the box's source."""
+        if not new and (existing := self.find_for_tablet(owner_id, slug)) is not None:
             return existing, False
-        try:
-            return self._insert(owner_id, None, slug, start, width, height, signs), True
-        except IntegrityError as error:
-            if error.errno != ER_DUP_ENTRY:
-                raise
-            return self.find_for_tablet(owner_id, slug), False
+        return self._insert(owner_id, None, slug, start, width, height, signs, title=title), True
+
+    def versions_for_tablet(self, user_id: int, slug: str) -> list[dict]:
+        """The copies of a tablet the user can open: their own, and others' shared with them or with
+        everyone. Their own first, then the most recently changed."""
+        return self._rows(
+            "SELECT s.id, s.owner_id, u.username AS owner, s.title, s.kind, s.start, s.everyone, s.version, "
+            "sh.permission AS share, s.created_at, s.updated_at, "
+            "(SELECT COUNT(*) FROM box b WHERE b.set_id = s.id AND NOT b.deleted) AS box_count "
+            "FROM box_set s JOIN `user` u ON u.id = s.owner_id "
+            "LEFT JOIN box_set_share sh ON sh.set_id = s.id AND sh.user_id = %s "
+            "WHERE s.tablet_slug = %s AND (s.owner_id = %s OR sh.user_id IS NOT NULL OR s.everyone <> 'none') "
+            "ORDER BY s.owner_id = %s DESC, s.updated_at DESC, s.id DESC LIMIT %s",
+            (user_id, slug, user_id, user_id, MAX_VERSIONS))
 
     def create_from_analysis(self, owner_id: int, analysis_id: int) -> tuple[int, bool] | None:
         """The owner's copy of their own analysis, made from the model's boxes if it does not exist yet.
@@ -84,29 +96,30 @@ class BoxSetDataController(DataController):
         return set_id, True
 
     def _insert(self, owner_id: int, analysis_id: int | None, slug: str | None, start: str, width: int,
-                height: int, signs: list[dict]) -> int:
-        """A new copy and its starting boxes, in one transaction. `start` is also each box's origin."""
+                height: int, signs: list[dict], *, title: str | None = None) -> int:
+        """A new copy and its starting boxes, in one transaction. `start` is also each box's origin,
+        and each box records the sign it started as (its id among the model's or scholars' signs)."""
         stamp = _now()
         with self.connection() as connection:
             cursor = connection.cursor()
             try:
                 cursor.execute(
-                    "INSERT INTO box_set (owner_id, analysis_id, tablet_slug, start, version, width, height, "
-                    "created_at, updated_at) VALUES (%s, %s, %s, %s, 0, %s, %s, %s, %s)",
-                    (owner_id, analysis_id, slug, start, width, height, stamp, stamp),
+                    "INSERT INTO box_set (owner_id, analysis_id, tablet_slug, title, start, version, width, height, "
+                    "created_at, updated_at) VALUES (%s, %s, %s, %s, %s, 0, %s, %s, %s, %s)",
+                    (owner_id, analysis_id, slug, title, start, width, height, stamp, stamp),
                 )
                 set_id = cursor.lastrowid
                 # A scholar's box carries no model confidence.
                 boxes = [(set_id, *(sign["box"][name] for name in GEOMETRY), sign.get("sign"), start,
                           *(sign["box"][name] for name in GEOMETRY), sign.get("sign"),
                           sign.get("confidence") if start == "model" else None,
-                          json.dumps(sign.get("candidates") or []))
+                          json.dumps(sign.get("candidates") or []), start, sign.get("id"))
                          for sign in signs]
                 if boxes:
                     cursor.executemany(
                         "INSERT INTO box (set_id, x, y, w, h, sign, origin, original_x, original_y, original_w, "
-                        "original_h, model_sign, model_confidence, candidates) "
-                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", boxes,
+                        "original_h, model_sign, model_confidence, candidates, source_kind, source_box_id) "
+                        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)", boxes,
                     )
             finally:
                 cursor.close()
@@ -115,7 +128,8 @@ class BoxSetDataController(DataController):
     def load(self, set_id: int) -> dict | None:
         """The copy with its owner, source and every box (deleted ones too, for undo); None if missing."""
         sets = self._rows(
-            "SELECT s.id, s.owner_id, u.username AS owner, s.analysis_id, s.tablet_slug, s.start, s.version, s.everyone, "
+            "SELECT s.id, s.owner_id, u.username AS owner, s.analysis_id, s.tablet_slug, s.title, s.kind, s.start, "
+            "s.version, s.everyone, "
             "s.width, s.height, s.created_at, s.updated_at, a.filename FROM box_set s "
             "JOIN `user` u ON u.id = s.owner_id LEFT JOIN analysis a ON a.id = s.analysis_id WHERE s.id = %s",
             (set_id,))

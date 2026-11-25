@@ -1,8 +1,9 @@
 # Corrected copies of a tablet's boxes (#83)
 
 A user corrects the reader's boxes on a **copy**: move, resize, draw and delete boxes, and
-name each box's sign. The analysis itself never changes. Each user has one copy per upload
-and one per corpus tablet (#82). A copy is private until its owner shares it (see Sharing).
+name each box's sign. The analysis itself never changes. Each user has one copy per upload,
+and any number of copies of a corpus tablet (#82; several since the scholars' workbench), each
+with an optional title. A copy is private until its owner shares it (see Sharing).
 
 ## Setup
 
@@ -15,6 +16,7 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-83/083_box_sets.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-84/084_box_set_sharing.sql
 mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-86/086_box_comments.sql
+mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/migration-workbench/201_box_set_versions.sql
 ```
 
 ## Tables
@@ -25,12 +27,35 @@ mysql -h 127.0.0.1 -P 3306 -u YOUR_MYSQL_USER -p ase3 < backend/app/database/mig
 | `box` | each box as a fraction of the image, its sign, where it came from (model, scholar, user), and the model's original box, sign, confidence and top guesses. A deleted box stays, marked `deleted`, so it can be brought back |
 | `box_change` | every change: who, when, the version it made, the box before and after (`{box, sign, deleted}`), and which change it undid or was undone by |
 
+## Versions of a tablet, and comparing them (workbench)
+
+A corpus tablet's **versions** are the scholars' published boxes, the model's, and every copy
+of it you can open: yours, and others' shared with you or with everyone.
+
+- **The Tablets page lists them.** Tick two to six of them and **Compare**.
+- **The compare page** (`/tablets/HT-13/compare?v=scholar&v=copy:4`) matches their boxes into
+  *places* (`backend/app/box_matching.py`):
+  - boxes overlapping at least 40% (intersection over union) are one place, with one box per
+    version at most;
+  - each place *agrees*, has *different signs*, or is *missing* from some versions;
+  - it is flagged when its boxes overlap less than 80%, i.e. they sit in different places;
+  - places are listed in reading order, with how often each pair of versions agrees.
+- **Colours.** Each version has its own colour (Okabe-Ito, distinguishable with colour-vision
+  deficiencies). Boxes in the same place are drawn nested, so every colour stays visible.
+
+Each box also records where it came from (`source_kind`, `source_box_id`): the scholars' or the
+model's sign it started as. Merged editions (story D) add another copy's box at a version
+(`source_set_id`, `source_version`) and its author (`source_author_id`), who is credited.
+
 ## API
 
 | Route | Does |
 |---|---|
 | `POST /box-sets` `{analysis_id}` | opens your copy of your analysis, making it from the model's boxes the first time (201; 200 if it existed) |
-| `POST /box-sets` `{tablet, start}` | the same for a corpus tablet, starting from the model's boxes (`start: "model"`, the default) or the scholars' (`"scholar"`). A later request returns the existing copy, whatever its start |
+| `POST /box-sets` `{tablet, start}` | the same for a corpus tablet, starting from the model's boxes (`start: "model"`, the default) or the scholars' (`"scholar"`). A later request returns your most recently changed copy, whatever its start |
+| `POST /box-sets` `{tablet, start, new: true, title?}` | another copy of the tablet, with an optional title (up to 120 characters) |
+| `GET /tablets/{slug}/versions` | the scholars', the model's and the copies you can open (logged out: the first two) |
+| `GET /tablets/{slug}/compare?v=…&v=…` | two to six versions (`scholar`, `model`, `copy:<id>`) matched into places, with agreement per pair (login needed) |
 | `GET /analysis/{id}/box-set`, `GET /tablets/{slug}/box-set` | your copy of that analysis or tablet, or 404 |
 | `GET /box-sets/{id}` | the copy, with its boxes and the reading worked out from them |
 | `PATCH /box-sets/{id}` `{version, changes}` | one save, all or nothing (see below) |

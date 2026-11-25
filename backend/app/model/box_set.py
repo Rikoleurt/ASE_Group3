@@ -79,6 +79,8 @@ class BoxSetCreate(BaseModel):
     analysis_id: int | None = Field(default=None, gt=0, le=2**64 - 1)
     tablet: str | None = Field(default=None, pattern=r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$", max_length=64)
     start: Literal["model", "scholar"] = "model"
+    new: bool = False  # a tablet: make another copy rather than open your latest one
+    title: str | None = Field(default=None, min_length=1, max_length=120)  # a name for a new tablet copy
 
     @model_validator(mode="after")
     def one_source(self):
@@ -86,6 +88,10 @@ class BoxSetCreate(BaseModel):
             raise ValueError("Give analysis_id or tablet, not both.")
         if self.analysis_id is not None and self.start != "model":
             raise ValueError("An upload has no scholars' boxes: start from the model.")
+        if self.analysis_id is not None and (self.new or self.title):
+            raise ValueError("An upload has one corrected copy: new copies and titles are for tablets.")
+        if self.title is not None:
+            self.title = " ".join(self.title.split()) or None
         return self
 
 
@@ -122,6 +128,8 @@ class BoxSet(BaseModel):
     permission: Literal["view", "comment", "edit", "manage", "owner"]  # what you may do with it (#84)
     everyone: Literal["none", "view", "comment", "edit"]  # access for every logged-in user
     source: BoxSetSource
+    title: str | None = None  # a tablet copy's name, if it has one
+    kind: Literal["copy", "edition"] = "copy"  # an edition is merged from several versions (workbench)
     start: Literal["model", "scholar"]
     version: int  # send it back with each edit; it goes up by one per save
     width: int

@@ -103,26 +103,6 @@ def test_missing_reader_or_tablet(client, corpus_index, monkeypatch):
 @pytest.fixture
 def fake():
     controller = FakeController()
-
-    def create_from_tablet(owner_id, slug, start, signs, width, height):
-        if (existing := controller.find_for_tablet(owner_id, slug)) is not None:
-            return existing, False
-        set_id = len(controller.sets) + 1
-        controller.sets[set_id] = {"id": set_id, "owner_id": owner_id, "owner": "owner", "analysis_id": None,
-                                   "tablet_slug": slug, "start": start, "version": 0, "width": width, "height": height,
-                                   "created_at": STAMP, "updated_at": STAMP, "filename": None}
-        for sign in signs:
-            box_id = len(controller.boxes) + 1
-            controller.boxes[box_id] = {"id": box_id, "set": set_id, **sign["box"], "sign": sign["sign"], "deleted": False,
-                                        "origin": start, **{f"original_{k}": v for k, v in sign["box"].items()},
-                                        "model_sign": sign["sign"],
-                                        "model_confidence": sign["confidence"] if start == "model" else None,
-                                        "candidates": sign["candidates"]}
-        return set_id, True
-
-    controller.find_for_tablet = lambda owner_id, slug: next(
-        (key for key, value in controller.sets.items() if value["owner_id"] == owner_id and value["tablet_slug"] == slug), None)
-    controller.create_from_tablet = create_from_tablet
     app.dependency_overrides[get_box_set_data_controller] = lambda: controller
     return controller
 

@@ -75,7 +75,8 @@ def build(record: dict) -> BoxSet:
               if record["analysis_id"] is not None else BoxSetSource(kind="tablet", tablet=record["tablet_slug"]))
     return BoxSet(
         id=record["id"], owner=record["owner"], permission=record.get("permission", "owner"),
-        everyone=record.get("everyone") or "none", source=source, start=record["start"], version=record["version"],
+        everyone=record.get("everyone") or "none", source=source, title=record.get("title"),
+        kind=record.get("kind") or "copy", start=record["start"], version=record["version"],
         width=record["width"], height=record["height"], image_url=f"/box-sets/{record['id']}/image",
         created_at=record["created_at"], updated_at=record["updated_at"], boxes=boxes, reading=_reading(boxes),
     )
@@ -121,7 +122,9 @@ def _conflict(controller: BoxSetDataController, set_id: int, level: str) -> JSON
 def create_box_set(request: BoxSetCreate, user: AuthenticatedWrite, controller: Controller,
                    response: Response) -> BoxSet:
     """Open your corrected copy of one of your analyses or of a corpus tablet, making it the first time:
-    an analysis from the model's boxes, a tablet from the model's or the scholars' (`start`)."""
+    an analysis from the model's boxes, a tablet from the model's or the scholars' (`start`).
+    A tablet may have several copies: `new` makes another (with an optional `title`) instead of
+    opening your most recently changed one."""
     if request.tablet is not None:
         set_id, created = _tablet_copy(request, user, controller)
         if not created:
@@ -144,7 +147,7 @@ def create_box_set(request: BoxSetCreate, user: AuthenticatedWrite, controller: 
 def _tablet_copy(request: BoxSetCreate, user: UserPublic, controller: BoxSetDataController) -> tuple[int, bool]:
     slug = request.tablet
     try:
-        existing = controller.find_for_tablet(user.id, slug)
+        existing = None if request.new else controller.find_for_tablet(user.id, slug)
         if existing is not None:
             return existing, False
         index = glyph_index.get_index()
@@ -154,7 +157,8 @@ def _tablet_copy(request: BoxSetCreate, user: UserPublic, controller: BoxSetData
         signs = corpus.scholar_signs(index, slug) if request.start == "scholar" else corpus.model_signs(slug, path)
         width, height = corpus.image_size(path)
         return controller.create_from_tablet(user.id, slug, request.start,
-                                             [sign.model_dump(mode="json") for sign in signs], width, height)
+                                             [sign.model_dump(mode="json") for sign in signs], width, height,
+                                             new=request.new, title=request.title)
     except glyph_index.CorpusMissing as error:
         raise HTTPException(503, str(error)) from error
     except (corpus.ReaderMissing, corpus.ReaderBusy) as error:
@@ -168,7 +172,8 @@ def _tablet_copy(request: BoxSetCreate, user: UserPublic, controller: BoxSetData
 @router.get("/tablets/{slug}/box-set", response_model=BoxSet, responses=ERRORS)
 def tablet_box_set(slug: Annotated[str, Path(pattern=r"^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$", max_length=64)],
                    user: CurrentUser, controller: Controller) -> BoxSet:
-    """Your corrected copy of a corpus tablet, if you made one (404 otherwise)."""
+    """Your most recently changed copy of a corpus tablet, if you made one (404 otherwise).
+    GET /tablets/{slug}/versions lists all of them."""
     try:
         set_id = controller.find_for_tablet(user.id, slug)
     except DatabaseError as error:

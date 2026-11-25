@@ -94,6 +94,34 @@
         "title": "AdminUserPage",
         "type": "object"
       },
+      "Agreement": {
+        "properties": {
+          "a": {
+            "title": "A",
+            "type": "string"
+          },
+          "b": {
+            "title": "B",
+            "type": "string"
+          },
+          "same": {
+            "title": "Same",
+            "type": "integer"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "a",
+          "b",
+          "same",
+          "total"
+        ],
+        "title": "Agreement",
+        "type": "object"
+      },
       "AnalysisComment": {
         "properties": {
           "analysis_id": {
@@ -762,6 +790,15 @@
             "title": "Image Url",
             "type": "string"
           },
+          "kind": {
+            "default": "copy",
+            "enum": [
+              "copy",
+              "edition"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
           "owner": {
             "title": "Owner",
             "type": "string"
@@ -790,6 +827,17 @@
             ],
             "title": "Start",
             "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           },
           "updated_at": {
             "format": "date-time",
@@ -857,6 +905,11 @@
             ],
             "title": "Analysis Id"
           },
+          "new": {
+            "default": false,
+            "title": "New",
+            "type": "boolean"
+          },
           "start": {
             "default": "model",
             "enum": [
@@ -878,6 +931,19 @@
               }
             ],
             "title": "Tablet"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 120,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
           }
         },
         "title": "BoxSetCreate",
@@ -1146,6 +1212,41 @@
           "body"
         ],
         "title": "CommunityCommentCreate",
+        "type": "object"
+      },
+      "CompareCluster": {
+        "properties": {
+          "box": {
+            "$ref": "#/components/schemas/Box"
+          },
+          "members": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/VersionBox"
+            },
+            "title": "Members",
+            "type": "object"
+          },
+          "moved": {
+            "title": "Moved",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "agree",
+              "differs",
+              "missing"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "box",
+          "members",
+          "status",
+          "moved"
+        ],
+        "title": "CompareCluster",
         "type": "object"
       },
       "CorpusDownload": {
@@ -3269,6 +3370,63 @@
         "title": "TabletBoxes",
         "type": "object"
       },
+      "TabletComparison": {
+        "properties": {
+          "agreement": {
+            "items": {
+              "$ref": "#/components/schemas/Agreement"
+            },
+            "title": "Agreement",
+            "type": "array"
+          },
+          "clusters": {
+            "items": {
+              "$ref": "#/components/schemas/CompareCluster"
+            },
+            "title": "Clusters",
+            "type": "array"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "image_url": {
+            "title": "Image Url",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/TabletVersion"
+            },
+            "title": "Versions",
+            "type": "array"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "width",
+          "height",
+          "image_url",
+          "versions",
+          "clusters",
+          "agreement"
+        ],
+        "title": "TabletComparison",
+        "type": "object"
+      },
       "TabletItem": {
         "properties": {
           "signs": {
@@ -3327,6 +3485,140 @@
           "total"
         ],
         "title": "TabletPage",
+        "type": "object"
+      },
+      "TabletVersion": {
+        "properties": {
+          "box_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Box Count"
+          },
+          "key": {
+            "title": "Key",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "scholar",
+              "model",
+              "copy",
+              "edition"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "mine": {
+            "default": false,
+            "title": "Mine",
+            "type": "boolean"
+          },
+          "needs_login": {
+            "default": false,
+            "title": "Needs Login",
+            "type": "boolean"
+          },
+          "owner": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Owner"
+          },
+          "permission": {
+            "anyOf": [
+              {
+                "enum": [
+                  "view",
+                  "comment",
+                  "edit",
+                  "manage",
+                  "owner"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Permission"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          },
+          "updated_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Updated At"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "key",
+          "kind"
+        ],
+        "title": "TabletVersion",
+        "type": "object"
+      },
+      "TabletVersions": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TabletVersion"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          },
+          "tablet": {
+            "title": "Tablet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "tablet",
+          "items"
+        ],
+        "title": "TabletVersions",
         "type": "object"
       },
       "UpdateBox": {
@@ -3552,6 +3844,46 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "VersionBox": {
+        "properties": {
+          "box": {
+            "$ref": "#/components/schemas/Box"
+          },
+          "id": {
+            "title": "Id",
+            "type": "integer"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Label"
+          },
+          "sign": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign"
+          }
+        },
+        "required": [
+          "id",
+          "box",
+          "sign"
+        ],
+        "title": "VersionBox",
         "type": "object"
       },
       "VoteSet": {
@@ -4552,7 +4884,7 @@
     },
     "/box-sets": {
       "post": {
-        "description": "Open your corrected copy of one of your analyses or of a corpus tablet, making it the first time:\nan analysis from the model's boxes, a tablet from the model's or the scholars' (`start`).",
+        "description": "Open your corrected copy of one of your analyses or of a corpus tablet, making it the first time:\nan analysis from the model's boxes, a tablet from the model's or the scholars' (`start`).\nA tablet may have several copies: `new` makes another (with an optional `title`) instead of\nopening your most recently changed one.",
         "operationId": "create_box_set_box_sets_post",
         "parameters": [
           {
@@ -8463,7 +8795,7 @@
     },
     "/tablets/{slug}/box-set": {
       "get": {
-        "description": "Your corrected copy of a corpus tablet, if you made one (404 otherwise).",
+        "description": "Your most recently changed copy of a corpus tablet, if you made one (404 otherwise).\nGET /tablets/{slug}/versions lists all of them.",
         "operationId": "tablet_box_set_tablets__slug__box_set_get",
         "parameters": [
           {
@@ -8627,6 +8959,102 @@
         "summary": "Tablet Boxes",
         "tags": [
           "corpus tablets"
+        ]
+      }
+    },
+    "/tablets/{slug}/compare": {
+      "get": {
+        "description": "Two to six versions of a tablet side by side: their boxes matched by overlap into places,\neach place marked as agreeing, differing in sign, or missing from some versions, in reading\norder; and how often each pair of versions agrees. Needs a login (the model's boxes run the reader).",
+        "operationId": "compare_versions_tablets__slug__compare_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Version keys from /versions, 2 to 6",
+            "in": "query",
+            "name": "v",
+            "required": true,
+            "schema": {
+              "description": "Version keys from /versions, 2 to 6",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 6,
+              "minItems": 2,
+              "title": "V",
+              "type": "array"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TabletComparison"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "security": [
+          {
+            "APIKeyCookie": []
+          }
+        ],
+        "summary": "Compare Versions",
+        "tags": [
+          "tablet versions"
         ]
       }
     },
@@ -8911,6 +9339,81 @@
         "summary": "Tablet Thumbnail",
         "tags": [
           "glyphs"
+        ]
+      }
+    },
+    "/tablets/{slug}/versions": {
+      "get": {
+        "description": "The versions of a tablet you can see: the scholars' boxes, the model's (with a login), and\nthe corrected copies you can open, your own first. Logged out, only the first two.",
+        "operationId": "tablet_versions_tablets__slug__versions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "slug",
+            "required": true,
+            "schema": {
+              "maxLength": 64,
+              "pattern": "^[A-Za-z0-9]+(?:-[A-Za-z0-9]+)*$",
+              "title": "Slug",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TabletVersions"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unauthorized"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Tablet Versions",
+        "tags": [
+          "tablet versions"
         ]
       }
     },

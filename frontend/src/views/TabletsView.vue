@@ -36,6 +36,11 @@ const ERROR = ref('')
 const COPY_ID = ref(null) // your corrected copy of this tablet, if you made one
 const OPENING = ref(false)
 const OPEN_ERROR = ref('')
+// The tablet's versions (workbench): the scholars', the model's and the copies you can open.
+const VERSIONS = ref([])
+const COMPARE = ref([]) // version keys ticked for comparing, 2 to 6
+const MAX_COMPARE = 6
+const COPIES = computed(() => VERSIONS.value.filter((version) => version.kind === 'copy' || version.kind === 'edition'))
 let searched = ''
 let request = 0
 
@@ -108,8 +113,9 @@ function setSource(source) {
   router.replace({ path: route.path, query: source === 'model' ? { boxes: 'model' } : {} })
 }
 
-async function correct() {
-  if (COPY_ID.value) {
+// Open your latest copy, or (`another`, or when you have none) start a new one from the boxes on show.
+async function correct(another = false) {
+  if (COPY_ID.value && !another) {
     await router.push(`/box-sets/${COPY_ID.value}`)
     return
   }
@@ -119,7 +125,7 @@ async function correct() {
     const response = await sessionFetch('/api/box-sets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tablet: SLUG.value, start: SOURCE.value }),
+      body: JSON.stringify({ tablet: SLUG.value, start: SOURCE.value, ...(another ? { new: true } : {}) }),
     })
     if (response.status === 401) {
       await router.push({ path: '/login', query: { redirect: route.fullPath } })
@@ -169,6 +175,29 @@ onMounted(async () => {
 })
 watch([SLUG, SOURCE], show, { immediate: true })
 watch([SLUG, () => sessionUser.value?.id], checkCopy, { immediate: true })
+
+let versionsId = 0
+async function loadVersions() {
+  const mine = ++versionsId
+  VERSIONS.value = []
+  COMPARE.value = []
+  if (!SLUG.value) return
+  const response = await fetch(`/api/tablets/${encodeURIComponent(SLUG.value)}/versions`).catch(() => null)
+  if (mine === versionsId && response?.ok) VERSIONS.value = (await response.json()).items
+}
+watch([SLUG, () => sessionUser.value?.id], loadVersions, { immediate: true })
+
+function versionName(version) {
+  if (version.kind === 'scholar') return "Scholars' boxes"
+  if (version.kind === 'model') return "Model's boxes"
+  const whose = version.mine ? 'Your' : `${version.owner}'s`
+  const what = version.kind === 'edition' ? 'edition' : 'copy'
+  return version.title ? `${whose} ${what}: ${version.title}` : `${whose} ${what}`
+}
+
+function compareVersions() {
+  router.push({ path: `/tablets/${SLUG.value}/compare`, query: { v: COMPARE.value } })
+}
 </script>
 
 <template>
@@ -253,11 +282,52 @@ watch([SLUG, () => sessionUser.value?.id], checkCopy, { immediate: true })
                 class="cursor-pointer rounded bg-bar px-5 py-1.5 font-semibold hover:brightness-95 disabled:opacity-60"
                 :disabled="OPENING"
                 data-testid="correct-boxes"
-                @click="correct"
+                @click="correct()"
               >{{ COPY_ID ? 'Open your corrected copy' : OPENING ? 'Opening…' : `Correct the ${SOURCE === 'model' ? "model's" : "scholars'"} boxes` }}</button>
-              <RouterLink v-else :to="{ path: '/login', query: { redirect: route.fullPath } }" class="underline">Log in to correct the boxes</RouterLink>
+              <button
+                v-if="sessionUser && COPY_ID"
+                type="button"
+                class="cursor-pointer rounded px-3 py-1.5 underline hover:bg-bar disabled:opacity-60"
+                :disabled="OPENING"
+                data-testid="new-copy"
+                @click="correct(true)"
+              >New copy from the {{ SOURCE === 'model' ? "model's" : "scholars'" }} boxes</button>
+              <RouterLink v-else-if="!sessionUser" :to="{ path: '/login', query: { redirect: route.fullPath } }" class="underline">Log in to correct the boxes</RouterLink>
               <p v-if="OPEN_ERROR" role="alert" class="text-confidence-low">{{ OPEN_ERROR }}</p>
             </div>
+
+            <section v-if="sessionUser && VERSIONS.length" class="mt-4 rounded-2xl bg-card p-4 lg:w-3/4" aria-labelledby="versions-h" data-testid="versions">
+              <div class="flex flex-wrap items-baseline justify-between gap-2">
+                <h3 id="versions-h" class="font-bold">Versions of this tablet</h3>
+                <button
+                  type="button"
+                  class="cursor-pointer rounded bg-bar px-3 py-1 text-sm font-semibold hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  :disabled="COMPARE.length < 2"
+                  data-testid="compare-versions"
+                  @click="compareVersions"
+                >Compare {{ COMPARE.length >= 2 ? COMPARE.length : '' }} versions</button>
+              </div>
+              <p class="text-sm text-ink/70">Tick two to {{ MAX_COMPARE }} to see where they agree and differ.</p>
+              <ul class="mt-2">
+                <li v-for="version in VERSIONS" :key="version.key" class="flex items-center gap-3 py-1" data-testid="version">
+                  <input
+                    :id="`compare-${version.key}`"
+                    v-model="COMPARE"
+                    type="checkbox"
+                    :value="version.key"
+                    :disabled="!COMPARE.includes(version.key) && COMPARE.length >= MAX_COMPARE"
+                    class="h-4 w-4"
+                  />
+                  <label :for="`compare-${version.key}`" class="flex-1">
+                    {{ versionName(version) }}
+                    <span v-if="version.box_count != null" class="ml-1 text-sm text-ink/60">· {{ version.box_count }} box{{ version.box_count === 1 ? '' : 'es' }}</span>
+                    <span v-if="version.permission && !version.mine" class="ml-1 text-sm text-ink/60">· you can {{ version.permission === 'manage' ? 'manage' : version.permission }}</span>
+                  </label>
+                  <RouterLink v-if="version.key.startsWith('copy:')" :to="`/box-sets/${version.key.slice(5)}`" class="text-sm underline">Open</RouterLink>
+                </li>
+              </ul>
+              <p v-if="!COPIES.length" class="mt-1 text-sm text-ink/60">No corrected copies yet: yours, and those shared with you, will be listed here.</p>
+            </section>
             <div class="mt-4 lg:w-3/4">
               <TabletOverlay :signs="BOXES.signs" :formulas="BOXES.formulas">
                 <img :src="`/api${BOXES.image_url}`" :alt="`${BOXES.tablet} tracing`" class="w-full rounded-lg bg-white" />

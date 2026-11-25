@@ -52,7 +52,7 @@ CREATE TABLE IF NOT EXISTS analysis (
     FOREIGN KEY (user_id) REFERENCES `user`(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Corrected copies of a tablet's boxes (#83): one per user per upload or corpus tablet.
+-- Corrected copies of a tablet's boxes (#83): one per user per upload, several per corpus tablet.
 -- Exactly one of analysis_id and tablet_slug is set (the API ensures it: MySQL allows no CHECK on
 -- a column with ON DELETE CASCADE). `version` goes up by one per save; an older one is refused.
 CREATE TABLE IF NOT EXISTS box_set (
@@ -60,6 +60,8 @@ CREATE TABLE IF NOT EXISTS box_set (
     owner_id BIGINT UNSIGNED NOT NULL,
     analysis_id BIGINT UNSIGNED NULL,
     tablet_slug VARCHAR(64) CHARACTER SET ascii COLLATE ascii_bin NULL,
+    title VARCHAR(120) NULL,  -- several copies of a tablet per user may each have a title (workbench)
+    kind ENUM('copy', 'edition') NOT NULL DEFAULT 'copy',  -- an edition is merged from several versions
     start ENUM('model', 'scholar') NOT NULL,
     version INT UNSIGNED NOT NULL DEFAULT 0,
     everyone ENUM('none', 'view', 'comment', 'edit') NOT NULL DEFAULT 'none',  -- access for all logged-in users (#84)
@@ -68,7 +70,7 @@ CREATE TABLE IF NOT EXISTS box_set (
     created_at DATETIME(6) NOT NULL,
     updated_at DATETIME(6) NOT NULL,
     CONSTRAINT uq_box_set_analysis UNIQUE (owner_id, analysis_id),
-    CONSTRAINT uq_box_set_tablet UNIQUE (owner_id, tablet_slug),
+    INDEX ix_box_set_tablet (tablet_slug, updated_at),
     FOREIGN KEY (owner_id) REFERENCES `user`(id) ON DELETE CASCADE,
     FOREIGN KEY (analysis_id) REFERENCES analysis(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
@@ -93,6 +95,13 @@ CREATE TABLE IF NOT EXISTS box (
     model_sign VARCHAR(32) NULL,
     model_confidence DOUBLE NULL,
     candidates JSON NULL,
+    -- Where the box came from (workbench): the scholars' or model's sign it started as, or another
+    -- copy's box at a version; its author is credited in merged editions. NULL for drawn boxes.
+    source_kind ENUM('scholar', 'model', 'copy') NULL,
+    source_set_id BIGINT UNSIGNED NULL,
+    source_box_id BIGINT UNSIGNED NULL,
+    source_version INT UNSIGNED NULL,
+    source_author_id BIGINT UNSIGNED NULL,
     INDEX ix_box_set (set_id, id),
     FOREIGN KEY (set_id) REFERENCES box_set(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

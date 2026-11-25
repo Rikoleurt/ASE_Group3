@@ -85,6 +85,41 @@ class FakeController:
                 for key, value in self.sets.items() if value["owner_id"] != user_id]
         return [row for row in rows if row["share"] or row["everyone"] != "none"][:limit]
 
+    # Tablet copies (#82; several per tablet since the workbench, story C).
+    def find_for_tablet(self, owner_id, slug):
+        mine = [value for value in self.sets.values() if value["owner_id"] == owner_id and value["tablet_slug"] == slug]
+        return max(mine, key=lambda value: (value["updated_at"], value["id"]))["id"] if mine else None
+
+    def create_from_tablet(self, owner_id, slug, start, signs, width, height, *, new=False, title=None):
+        if not new and (existing := self.find_for_tablet(owner_id, slug)) is not None:
+            return existing, False
+        set_id = len(self.sets) + 1
+        self.sets[set_id] = {"id": set_id, "owner_id": owner_id, "owner": self.usernames.get(owner_id, "owner"),
+                             "analysis_id": None, "tablet_slug": slug, "title": title, "kind": "copy", "start": start,
+                             "version": 0, "everyone": "none", "width": width, "height": height,
+                             "created_at": STAMP, "updated_at": STAMP, "filename": None}
+        for sign in signs:
+            box_id = len(self.boxes) + 1
+            self.boxes[box_id] = {"id": box_id, "set": set_id, **sign["box"], "sign": sign["sign"], "deleted": False,
+                                  "origin": start, **{f"original_{k}": v for k, v in sign["box"].items()},
+                                  "model_sign": sign["sign"],
+                                  "model_confidence": sign["confidence"] if start == "model" else None,
+                                  "candidates": sign["candidates"], "source_kind": start,
+                                  "source_box_id": sign.get("id")}
+        return set_id, True
+
+    def versions_for_tablet(self, user_id, slug):
+        rows = []
+        for key, value in self.sets.items():
+            share = self.share_rows.get((key, user_id))
+            everyone = value.get("everyone", "none")
+            if value["tablet_slug"] != slug or not (value["owner_id"] == user_id or share or everyone != "none"):
+                continue
+            count = sum(1 for b in self.boxes.values() if b["set"] == key and not b["deleted"])
+            rows.append({**value, "share": share, "everyone": everyone, "kind": value.get("kind", "copy"),
+                         "box_count": count})
+        return sorted(rows, key=lambda row: (row["owner_id"] != user_id, -row["updated_at"].timestamp(), -row["id"]))
+
     def find_for_analysis(self, owner_id, analysis_id):
         return next((key for key, value in self.sets.items()
                      if value["owner_id"] == owner_id and value["analysis_id"] == analysis_id), None)
@@ -379,10 +414,11 @@ def test_controller_copies_the_model_boxes(monkeypatch):
     cursor.lastrowid = 5
     assert controller.create_from_analysis(7, 12) == (5, True)
     sql, params = cursor.execute.call_args.args
-    assert sql.startswith("INSERT INTO box_set") and params[:6] == (7, 12, None, "model", 1000, 800)
+    assert sql.startswith("INSERT INTO box_set") and params[:7] == (7, 12, None, None, "model", 1000, 800)
     sql, rows = cursor.executemany.call_args.args
     assert sql.startswith("INSERT INTO box ") and len(rows) == 3
-    assert rows[2][:7] == (5, 0.3, 0.1, 0.05, 0.05, "A704", "model") and rows[2][-3:-1] == ("A704", 40.0)
+    assert rows[2][:7] == (5, 0.3, 0.1, 0.05, 0.05, "A704", "model") and rows[2][11:13] == ("A704", 40.0)
+    assert rows[2][-2:] == ("model", 3)  # each box records the sign it started as
 
 
 def test_a_copy_made_at_the_same_moment_elsewhere_is_reused(monkeypatch):
