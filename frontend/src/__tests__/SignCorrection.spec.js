@@ -35,7 +35,18 @@ describe('Sign correction', () => {
     render()
     expect(wrapper.get('[data-testid="correction-crop"]').attributes('src')).toBe(sign.crop)
     expect(wrapper.get('[data-testid="correction-original"]').text()).toContain('AB59 (ta)')
-    expect(wrapper.findAll('datalist option').map((option) => option.attributes('value'))).toEqual(['AB59', 'AB81'])
+  })
+
+  it('suggests signs with their pictures while typing, and shows the chosen one', async () => {
+    render()
+    await wrapper.get('#proposed-sign').setValue('k')
+    const suggestions = wrapper.findAll('[data-testid="correction-suggestions"] button')
+    expect(suggestions.map((button) => button.text())).toEqual(['\u{10642}AB81'])
+    expect(suggestions[0].find('[data-testid="sign-preview"]').exists()).toBe(true)
+    await suggestions[0].trigger('click')
+    expect(wrapper.get('#proposed-sign').element.value).toBe('AB81')
+    expect(wrapper.find('[data-testid="correction-suggestions"]').exists()).toBe(false)
+    expect(wrapper.get('[data-testid="correction-choice"]').text()).toContain('AB81')
   })
 
   it('submits a replacement from the catalogue with the CSRF token and confirms it', async () => {

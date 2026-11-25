@@ -12,6 +12,8 @@ class CatalogueSign(BaseModel):
     sign: str  # sign ID, e.g. "AB81"
     name: str  # e.g. "AB81 (ku)"
     glyph: str | None  # the Unicode Linear A character, when there is one
+    reading: str | None = None  # the sign's phonetic value, e.g. "ku", when it has one
+    preview_url: str | None = None  # a small picture: its most typical corpus drawing or its character
 
 
 class CorrectionCreate(BaseModel):

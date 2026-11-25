@@ -25,6 +25,8 @@ import shareDialog from '../components/boxes/ShareDialog.vue?raw'
 import sharedView from '../views/SharedView.vue?raw'
 import historyPanel from '../components/boxes/HistoryPanel.vue?raw'
 import boxComments from '../components/boxes/BoxComments.vue?raw'
+import useCatalogue from '../composables/useCatalogue.js?raw'
+import signPreview from '../components/signs/SignPreview.vue?raw'
 
 // Every call the frontend makes: the snippet must still be in the source file,
 // and the endpoint must exist in the contract.
@@ -65,12 +67,12 @@ const CALLS = [
   { method: 'delete', path: '/glyphs/annotations/{annotation_id}', source: glyphPane, snippet: '/api/glyphs/annotations/${comment.id}' },
   { method: 'get', path: '/tablets/{slug}/thumbnail.png', source: glyphPane, snippet: 'apiUrl(item.thumbnail_url)' },
   { method: 'get', path: '/tablets/{slug}/signs/{position}.png', source: glyphPane, snippet: 'apiUrl(item.crop_url)' },
-  { method: 'get', path: '/corrections/catalogue', source: analysisView, snippet: "'/api/corrections/catalogue'" },
+  { method: 'get', path: '/corrections/catalogue', source: useCatalogue, snippet: "'/api/corrections/catalogue'" },
+  { method: 'get', path: '/glyphs/{sign}/preview.png', source: signPreview, snippet: '`/api${previewUrl}`' },
   { method: 'post', path: '/analysis/{analysis_id}/corrections', source: signCorrection, snippet: '/api/analysis/${props.analysisId}/corrections' },
   { method: 'get', path: '/corrections', source: reviewView, snippet: '/api/corrections?status=${STATUS.value}&limit=200' },
   { method: 'post', path: '/corrections/{correction_id}/review', source: reviewView, snippet: '/api/corrections/${item.id}/review' },
   { method: 'get', path: '/corrections/export', source: reviewView, snippet: "'/api/corrections/export'" },
-  { method: 'get', path: '/corrections/catalogue', source: reviewView, snippet: "'/api/corrections/catalogue'" },
   { method: 'get', path: '/admin/users', source: adminView, snippet: '/api/admin/users?${query}' },
   { method: 'get', path: '/admin/export/corrections', source: adminView, snippet: "'/api/admin/export/corrections'" },
   { method: 'get', path: '/admin/export/corrections.zip', source: adminView, snippet: "'/api/admin/export/corrections.zip'" },

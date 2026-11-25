@@ -91,6 +91,7 @@ class GlyphIndex:
         self.z: dict[tuple[str, int], float] = {}
         self.centre: dict[str, np.ndarray] = {}
         self.embedding_info: dict | None = None
+        self._typical: dict[str, Occurrence | None] = {}
         if embeddings is not None:
             self._load_embeddings(embeddings)
 
@@ -134,6 +135,14 @@ class GlyphIndex:
     def is_outlier(self, occurrence: Occurrence) -> bool:
         z = self.z.get((occurrence.slug, occurrence.position))
         return z is not None and bool(clustering.is_outlier(np.array([z]))[0])
+
+    def typical(self, sign: str) -> Occurrence | None:
+        """The sign's most typical drawn occurrence (nearest its centre when there are
+        embeddings, else the first), for a preview: one with a crop or a box on its tracing."""
+        if sign not in self._typical:
+            _mode, ranked = self.ranked(sign)
+            self._typical[sign] = next((o for o, _ in ranked if o.has_crop or o.box), None)
+        return self._typical[sign]
 
     def ranked(self, sign: str, reference: np.ndarray | None = None
                ) -> tuple[str, list[tuple[Occurrence, float | None]]]:

@@ -63,7 +63,7 @@ describe('Analysis page', () => {
   it('opens the correction form for a clicked sign, with the sign catalogue', async () => {
     const fetch = await upload({ ok: true, json: async () => ({ ...analysis, analysis_id: 12, trained: true }) })
     fetch.mockImplementation((url) => Promise.resolve(url === '/api/corrections/catalogue'
-      ? { ok: true, json: async () => [{ sign: 'AB81', name: 'AB81 (ku)', glyph: null }] }
+      ? { ok: true, json: async () => [{ sign: 'AB81', name: 'AB81 (ku)', glyph: null, reading: 'ku', preview_url: '/glyphs/AB81/preview.png' }] }
       : url.startsWith('/api/glyphs/') ? NO_OCCURRENCES
         : { ok: true, json: async () => ({ user: { id: 1 }, csrf_token: 'csrf' }) }))
     expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
@@ -74,7 +74,8 @@ describe('Analysis page', () => {
     expect(fetch).toHaveBeenCalledWith('/api/corrections/catalogue')
     const form = wrapper.get('[data-testid="sign-correction"]')
     expect(form.get('[data-testid="correction-original"]').text()).toContain('VIN')
-    expect(form.findAll('datalist option').map((option) => option.attributes('value'))).toEqual(['AB81'])
+    await form.get('#proposed-sign').setValue('ku')
+    expect(form.findAll('[data-testid="correction-suggestions"] button').map((button) => button.text())).toEqual(['AB81 ku'])
     await form.findAll('button').find((button) => button.text() === 'Close').trigger('click')
     expect(wrapper.find('[data-testid="sign-correction"]').exists()).toBe(false)
   })

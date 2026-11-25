@@ -85,3 +85,16 @@ class Annotation(BaseModel):
 class AnnotationPage(BaseModel):
     items: list[Annotation]
     next_before: int | None
+
+
+class SketchCandidate(BaseModel):
+    sign: str  # e.g. "AB81"
+    name: str  # e.g. "AB81 (ku)"
+    reading: str | None = None
+    glyph: str | None = None  # the Unicode character, when there is one
+    preview_url: str | None = None
+    score: float  # the reader's blended probability, 0-100
+
+
+class SketchCandidates(BaseModel):
+    items: list[SketchCandidate]  # the most similar signs first

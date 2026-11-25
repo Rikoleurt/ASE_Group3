@@ -565,6 +565,27 @@
         "title": "Body_occurrences_for_crop_glyphs__sign__occurrences_search_post",
         "type": "object"
       },
+      "Body_sketch_glyphs_sketch_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "limit": {
+            "default": 12,
+            "maximum": 30.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_sketch_glyphs_sketch_post",
+        "type": "object"
+      },
       "Box": {
         "description": "Top-left corner and size, as fractions of the image's width and height.",
         "properties": {
@@ -1032,6 +1053,28 @@
           "name": {
             "title": "Name",
             "type": "string"
+          },
+          "preview_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Url"
+          },
+          "reading": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading"
           },
           "sign": {
             "title": "Sign",
@@ -2448,7 +2491,8 @@
           "kind": {
             "enum": [
               "user",
-              "symbol"
+              "symbol",
+              "sign"
             ],
             "title": "Kind",
             "type": "string"
@@ -2456,6 +2500,17 @@
           "label": {
             "title": "Label",
             "type": "string"
+          },
+          "sign_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign Code"
           },
           "sign_id": {
             "anyOf": [
@@ -2601,7 +2656,8 @@
           "kind": {
             "enum": [
               "user",
-              "symbol"
+              "symbol",
+              "sign"
             ],
             "title": "Kind",
             "type": "string"
@@ -2609,6 +2665,17 @@
           "label": {
             "title": "Label",
             "type": "string"
+          },
+          "sign_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sign Code"
           },
           "sign_id": {
             "anyOf": [
@@ -3031,6 +3098,78 @@
           "status"
         ],
         "title": "SignCorrection",
+        "type": "object"
+      },
+      "SketchCandidate": {
+        "properties": {
+          "glyph": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Glyph"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "preview_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Preview Url"
+          },
+          "reading": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reading"
+          },
+          "score": {
+            "title": "Score",
+            "type": "number"
+          },
+          "sign": {
+            "title": "Sign",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sign",
+          "name",
+          "score"
+        ],
+        "title": "SketchCandidate",
+        "type": "object"
+      },
+      "SketchCandidates": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/SketchCandidate"
+            },
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "items"
+        ],
+        "title": "SketchCandidates",
         "type": "object"
       },
       "SymbolPreview": {
@@ -7455,6 +7594,88 @@
         ]
       }
     },
+    "/glyphs/sketch": {
+      "post": {
+        "description": "The signs that look most like a sketch: a PNG of strokes on a transparent background (as a\ncanvas exports) or dark strokes on a light one. The sketch is redrawn with the corpus\ntracings' pen and named by the reader (classifier blended with its neighbour bank).\n\nPublic, limited to 60 sketches a minute per address; the image is not stored.",
+        "operationId": "sketch_glyphs_sketch_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_sketch_glyphs_sketch_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SketchCandidates"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Request Entity Too Large"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Unprocessable Entity"
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Too Many Requests"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Service Unavailable"
+          }
+        },
+        "summary": "Sketch",
+        "tags": [
+          "glyphs"
+        ]
+      }
+    },
     "/glyphs/{sign}/annotations": {
       "get": {
         "operationId": "annotations_glyphs__sign__annotations_get",
@@ -7895,6 +8116,56 @@
           }
         ],
         "summary": "Occurrences For Crop",
+        "tags": [
+          "glyphs"
+        ]
+      }
+    },
+    "/glyphs/{sign}/preview.png": {
+      "get": {
+        "description": "A small picture of the sign for pickers and search results: its most typical drawing\nin the corpus (from the scholars' sign boxes), or its Unicode character when the corpus\nhas no drawing of it. Sign IDs are matched however they are written (AB1, AB01).",
+        "operationId": "sign_preview_glyphs__sign__preview_png_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "sign",
+            "required": true,
+            "schema": {
+              "pattern": "^[A-Za-z0-9]{1,12}$",
+              "title": "Sign",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/png": {}
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiError"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Sign Preview",
         "tags": [
           "glyphs"
         ]

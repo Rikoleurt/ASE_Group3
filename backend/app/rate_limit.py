@@ -59,3 +59,5 @@ FAILED_LOGINS = RateLimit(limit=10, seconds=15 * 60)
 COMMENTS = RateLimit(limit=10, seconds=60)
 # Uploads per user per day (each keeps up to 10 MB on disk and runs the reader).
 UPLOADS = RateLimit(limit=200, seconds=24 * 60 * 60)
+# Sketch searches per client address (public; each runs the classifier on one small image).
+SKETCHES = RateLimit(limit=60, seconds=60)

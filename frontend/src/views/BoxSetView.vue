@@ -9,7 +9,10 @@ import ShareDialog from '../components/boxes/ShareDialog.vue'
 import HistoryPanel from '../components/boxes/HistoryPanel.vue'
 import BoxComments from '../components/boxes/BoxComments.vue'
 import FractionCheck from '../components/analysis/FractionCheck.vue'
+import SignPicker from '../components/signs/SignPicker.vue'
+import SignPreview from '../components/signs/SignPreview.vue'
 import { useBoxSet } from '../composables/useBoxSet'
+import { useCatalogue } from '../composables/useCatalogue'
 import '../components/analysis/linearA.css'
 
 const route = useRoute()
@@ -18,8 +21,7 @@ const set = useBoxSet()
 const { copy, boxes, loading, saving, error, conflict, changes, dirty, history } = set
 const SELECTED_ID = ref(null)
 const MODE = ref('select')
-const CATALOGUE = ref([])
-const QUERY = ref('')
+const CATALOGUE = useCatalogue()
 const IMAGE_MISSING = ref(false)
 const NOTICE = ref('')
 const SHARING = ref(false)
@@ -68,11 +70,6 @@ const READ = computed(() => {
 })
 const MARKERS = computed(() => new Set((copy.value?.reading.formulas ?? []).flatMap((formula) => formula.marker_ids)))
 const GLYPHS = computed(() => Object.fromEntries(CATALOGUE.value.map((sign) => [sign.sign, sign])))
-const MATCHES = computed(() => {
-  const query = QUERY.value.trim().toLowerCase()
-  if (!query) return []
-  return CATALOGUE.value.filter((sign) => sign.sign.toLowerCase().includes(query) || sign.name.toLowerCase().includes(query)).slice(0, 12)
-})
 const READING = computed(() => copy.value && { ...copy.value.reading, width: copy.value.width, height: copy.value.height, trained: true })
 const ORDERED = computed(() => {
   // The box list follows reading order; boxes not read yet (new since the save) come last.
@@ -101,15 +98,6 @@ async function load() {
   }
 }
 
-async function loadCatalogue() {
-  try {
-    const response = await fetch('/api/corrections/catalogue')
-    if (response.ok) CATALOGUE.value = await response.json()
-  } catch {
-    // Without the catalogue the picker offers the model's guesses only.
-  }
-}
-
 function draw(box) {
   NOTICE.value = ''
   SELECTED_ID.value = set.addBox(box)
@@ -125,7 +113,6 @@ function remove(id) {
 function pick(sign) {
   NOTICE.value = ''
   if (SELECTED.value) set.setSign(SELECTED.value.id, sign)
-  QUERY.value = ''
 }
 
 async function save() {
@@ -170,7 +157,6 @@ onBeforeRouteUpdate(leave) // another copy at the same page
 onMounted(() => {
   window.addEventListener('keydown', onKey)
   window.addEventListener('beforeunload', warnBeforeClosing)
-  loadCatalogue()
 })
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onKey)
@@ -274,6 +260,7 @@ watch(() => route.params.id, load, { immediate: true })
           <p v-if="!SELECTED" class="mt-2 text-ink/70">Click a box on the tablet, or one in the list below.</p>
           <template v-else>
             <p class="mt-2 text-lg">
+              <SignPreview v-if="SELECTED.sign" :sign="SELECTED.sign" :glyph="glyphOf(SELECTED.sign)" :preview-url="GLYPHS[SELECTED.sign]?.preview_url ?? null" :size="48" class="mr-2 align-middle" />
               <span class="linear-a text-3xl" aria-hidden="true">{{ glyphOf(SELECTED.sign) }}</span>
               <span class="font-semibold" data-testid="selected-sign">{{ signName(SELECTED.sign) }}</span>
             </p>
@@ -282,44 +269,8 @@ watch(() => route.params.id, load, { immediate: true })
             </p>
             <p v-else-if="SELECTED.origin === 'user' || SELECTED.id < 0" class="text-sm text-ink/70">Drawn by hand.</p>
 
-            <div v-if="CAN_EDIT && SELECTED.candidates?.length" class="mt-4">
-              <h3 class="text-sm font-semibold">The model's guesses</h3>
-              <div class="mt-1 flex flex-wrap gap-2">
-                <button
-                  v-for="candidate in SELECTED.candidates"
-                  :key="candidate.sign"
-                  type="button"
-                  class="cursor-pointer rounded border border-ink/20 px-2 py-1 text-sm hover:bg-bar"
-                  :class="{ 'bg-bar font-semibold': candidate.sign === SELECTED.sign }"
-                  :aria-pressed="candidate.sign === SELECTED.sign"
-                  data-testid="candidate"
-                  @click="pick(candidate.sign)"
-                >
-                  <span class="linear-a" aria-hidden="true">{{ glyphOf(candidate.sign) }}</span>
-                  {{ candidate.label }} <span class="text-ink/60">{{ Math.round(candidate.probability) }}%</span>
-                </button>
-              </div>
-            </div>
-
             <template v-if="CAN_EDIT">
-            <label class="mt-4 block text-sm font-semibold" for="sign-search">Find another sign</label>
-            <input
-              id="sign-search"
-              v-model="QUERY"
-              type="search"
-              placeholder="AB81, ku, VIN…"
-              autocomplete="off"
-              class="mt-1 w-full rounded border border-ink/30 bg-white px-3 py-1.5"
-              @keydown.enter.prevent="MATCHES.length && pick(MATCHES[0].sign)"
-            />
-            <ul v-if="MATCHES.length" class="mt-1 max-h-48 overflow-auto rounded border border-ink/15 bg-white" data-testid="sign-matches">
-              <li v-for="sign in MATCHES" :key="sign.sign">
-                <button type="button" class="w-full cursor-pointer px-3 py-1 text-left hover:bg-bar" @click="pick(sign.sign)">
-                  <span class="linear-a" aria-hidden="true">{{ sign.glyph }}</span> {{ sign.name }}
-                </button>
-              </li>
-            </ul>
-            <p v-else-if="QUERY.trim()" class="mt-1 text-sm text-ink/70">No sign matches.</p>
+            <SignPicker :selected="SELECTED.sign" :candidates="SELECTED.candidates ?? []" @pick="pick" />
 
             <div class="mt-4 flex flex-wrap gap-3">
               <button v-if="SELECTED.sign" type="button" class="cursor-pointer text-sm underline" data-testid="clear-sign" @click="pick(null)">Clear the sign</button>

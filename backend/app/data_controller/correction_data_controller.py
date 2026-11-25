@@ -45,15 +45,29 @@ def _natural(sign: CatalogueSign) -> list:
     return [int(part) if part.isdigit() else part for part in re.split(r"(\d+)", sign.sign)]
 
 
+def _preview(sign: str) -> str:
+    # Every catalogue sign has a drawing in the corpus or a Unicode character, or both;
+    # the endpoint answers 404 for the few with neither and the picker then shows none.
+    return f"/glyphs/{sign}/preview.png"
+
+
 def catalogue() -> list[CatalogueSign]:
     """Signs a correction may propose: the classifier's classes, plus every Unicode Linear A sign."""
     classifier = tablet_demo.active_classifier()
     named = tablet_demo.sign_catalogue(classifier) if classifier else {}
-    signs = {sign_key(sign): CatalogueSign(sign=sign, name=entry.get("name") or sign, glyph=glyph(sign))
+    signs = {sign_key(sign): CatalogueSign(sign=sign, name=entry.get("name") or sign, glyph=glyph(sign),
+                                           reading=entry.get("reading") or None, preview_url=_preview(sign))
              for sign, entry in named.items() if sign != "unidentified"}
     for key, character in _index().items():
-        signs.setdefault(key, CatalogueSign(sign=_sigla(key), name=_sigla(key), glyph=character))
+        signs.setdefault(key, CatalogueSign(sign=_sigla(key), name=_sigla(key), glyph=character,
+                                            preview_url=_preview(_sigla(key))))
     return sorted(signs.values(), key=_natural)
+
+
+def catalogue_spelling(sign: str) -> str:
+    """The dataset's spelling of any way of writing a sign (ab1, AB001 -> AB01), without
+    checking that the sign exists."""
+    return _sigla(sign_key(sign))
 
 
 def catalogue_sign(proposed: str) -> str | None:

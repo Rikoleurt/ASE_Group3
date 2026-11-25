@@ -4,6 +4,8 @@
 // submission before it becomes training data; the saved analysis is not changed.
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { sessionFetch } from '../../state/session'
+import SignPreview from '../signs/SignPreview.vue'
+import { searchSigns } from '../signs/signSearch'
 import './linearA.css'
 
 const props = defineProps({
@@ -38,6 +40,8 @@ const MATCH = computed(() => {
   const wanted = PROPOSED.value.trim().toLowerCase()
   return props.catalogue.find((entry) => entry.sign.toLowerCase() === wanted) ?? null
 })
+// Suggestions while typing a reading, number or name; hidden once a sign is chosen exactly.
+const SUGGESTIONS = computed(() => (MATCH.value ? [] : searchSigns(props.catalogue, PROPOSED.value, 8)))
 
 async function submit(uncertain) {
   if (PENDING.value) return
@@ -103,19 +107,29 @@ async function submit(uncertain) {
 
     <form v-else class="mt-6 flex flex-col gap-3" @submit.prevent="submit(false)">
       <label for="proposed-sign" class="font-semibold">Correct sign</label>
-      <input
-        id="proposed-sign"
-        v-model="PROPOSED"
-        list="sign-catalogue"
-        autocomplete="off"
-        placeholder="e.g. AB81"
-        class="rounded border border-ink/30 bg-page px-3 py-1.5"
-      />
-      <datalist id="sign-catalogue">
-        <option v-for="entry in catalogue" :key="entry.sign" :value="entry.sign">
-          {{ entry.glyph ? `${entry.glyph} ` : '' }}{{ entry.name }}
-        </option>
-      </datalist>
+      <div class="flex items-center gap-3">
+        <input
+          id="proposed-sign"
+          v-model="PROPOSED"
+          autocomplete="off"
+          placeholder="AB81, ku, VIN…"
+          class="min-w-0 flex-1 rounded border border-ink/30 bg-page px-3 py-1.5"
+          @keydown.enter.prevent="SUGGESTIONS.length === 1 ? (PROPOSED = SUGGESTIONS[0].sign) : submit(false)"
+        />
+        <span v-if="MATCH" class="flex items-center gap-2" data-testid="correction-choice">
+          <SignPreview :sign="MATCH.sign" :glyph="MATCH.glyph" :preview-url="MATCH.preview_url" :size="40" />
+          <span><span class="font-semibold">{{ MATCH.sign }}</span> <span v-if="MATCH.reading" class="text-ink/70">{{ MATCH.reading }}</span></span>
+        </span>
+      </div>
+      <ul v-if="SUGGESTIONS.length" class="max-h-56 overflow-auto rounded border border-ink/15 bg-white" data-testid="correction-suggestions">
+        <li v-for="entry in SUGGESTIONS" :key="entry.sign">
+          <button type="button" class="flex w-full cursor-pointer items-center gap-3 px-2 py-1 text-left hover:bg-bar" @click="PROPOSED = entry.sign">
+            <SignPreview :sign="entry.sign" :glyph="entry.glyph" :preview-url="entry.preview_url" :size="36" />
+            <span v-if="entry.preview_url" class="linear-a text-xl" aria-hidden="true">{{ entry.glyph }}</span>
+            <span><span class="font-semibold">{{ entry.sign }}</span> <span v-if="entry.reading" class="text-ink/70">{{ entry.reading }}</span></span>
+          </button>
+        </li>
+      </ul>
 
       <label for="correction-note" class="font-semibold">Note <span class="font-normal text-ink/70">(optional)</span></label>
       <textarea

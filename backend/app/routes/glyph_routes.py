@@ -10,11 +10,14 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Path, Query, 
 from mysql.connector import Error as DatabaseError
 from PIL import Image, ImageDraw
 
-from backend.app import glyph_index
+from backend.app import glyph_index, reading, sketch_search
+from backend.app.rate_limit import SKETCHES
 from backend.app.auth import AuthenticatedWrite
+from backend.app.data_controller.correction_data_controller import catalogue, catalogue_spelling, sign_key
 from backend.app.data_controller.glyph_data_controller import GlyphDataController
 from backend.app.model.analysis import ApiError
-from backend.app.model.glyph import (Annotation, AnnotationCreate, AnnotationPage, GlyphBox,
+from backend.app.model.glyph import (Annotation, AnnotationCreate, AnnotationPage, GlyphBox, SketchCandidate,
+                                     SketchCandidates,
                                      GlyphOccurrence, GlyphOccurrencePage)
 from backend.app.reading import CREDIT
 from backend.app.reading_pipeline.glyphs import glyph as unicode_glyph
@@ -85,6 +88,97 @@ def characters(signs: Annotated[str, Query(min_length=1, max_length=400)]) -> di
     return {sign: unicode_glyph(sign) for sign in dict.fromkeys(wanted)}
 
 
+PREVIEW_PX = 96  # the previews in sign pickers are drawn at up to 48 CSS px, so 2x for sharp screens
+PREVIEW_PAD = 0.08  # a little of the tablet around a box cut from its tracing
+_previews: dict[tuple[int, str], bytes | None] = {}
+
+
+def _on_white(image: Image.Image) -> Image.Image:
+    rgba = image.convert("RGBA")
+    flat = Image.new("RGBA", rgba.size, "white")
+    flat.alpha_composite(rgba)  # SigLA strokes live in the alpha channel
+    return flat.convert("L")
+
+
+def _framed(image: Image.Image) -> bytes:
+    """The image scaled to fit a white PREVIEW_PX square, centred, as PNG."""
+    image.thumbnail((PREVIEW_PX - 8, PREVIEW_PX - 8), Image.LANCZOS)
+    square = Image.new("L", (PREVIEW_PX, PREVIEW_PX), 255)
+    square.paste(image, ((PREVIEW_PX - image.width) // 2, (PREVIEW_PX - image.height) // 2))
+    out = BytesIO()
+    square.save(out, "PNG", optimize=True)
+    return out.getvalue()
+
+
+def _drawn_preview(occurrence: glyph_index.Occurrence) -> bytes | None:
+    """The occurrence's own drawing if its crop is downloaded, else its box cut from the tracing."""
+    crop = reading.sign_image(occurrence.slug, occurrence.position) if occurrence.has_crop else None
+    if crop is not None:
+        with Image.open(crop) as source:
+            return _framed(_on_white(source))
+    tracing = glyph_index.tracing_path(occurrence.slug)
+    if tracing is None or occurrence.box is None:
+        return None
+    with Image.open(tracing) as source:
+        image = _on_white(source)
+    x, y, w, h = occurrence.box
+    pad_x, pad_y = w * PREVIEW_PAD, h * PREVIEW_PAD
+    left, top = max(0.0, x - pad_x), max(0.0, y - pad_y)
+    right, bottom = min(1.0, x + w + pad_x), min(1.0, y + h + pad_y)
+    if right <= left or bottom <= top:
+        return None
+    return _framed(image.crop((round(left * image.width), round(top * image.height),
+                               max(round(left * image.width) + 1, round(right * image.width)),
+                               max(round(top * image.height) + 1, round(bottom * image.height)))))
+
+
+@lru_cache(maxsize=1)
+def _font():
+    from PIL import ImageFont
+
+    from la import cropsplus
+    return ImageFont.truetype(str(cropsplus.FONT), cropsplus.FONT_PX)
+
+
+def _font_preview(sign: str) -> bytes | None:
+    """The sign's Unicode character in Noto Sans Linear A, for signs with no drawing."""
+    character = unicode_glyph(sign)
+    if not character:
+        return None
+    try:
+        from la import cropsplus
+        mask = cropsplus.font_mask(character, _font())
+    except OSError:  # the font file is missing
+        return None
+    if mask is None:
+        return None
+    return _framed(Image.fromarray(np.where(mask, 0, 255).astype(np.uint8)))
+
+
+def preview_png(index: glyph_index.GlyphIndex, sign: str) -> bytes | None:
+    """The picture shown beside a sign in pickers: its most typical drawing in the corpus,
+    else its Unicode character. Cached per index (a new download builds a new index)."""
+    key = (id(index), sign)
+    if key not in _previews:
+        if len(_previews) > 2048:
+            _previews.clear()
+        occurrence = index.typical(sign)
+        _previews[key] = (_drawn_preview(occurrence) if occurrence else None) or _font_preview(sign)
+    return _previews[key]
+
+
+@router.get("/glyphs/{sign}/preview.png", response_class=Response,
+            responses={404: {"model": ApiError}, 200: {"content": {"image/png": {}}}})
+def sign_preview(sign: Annotated[str, SIGN_PATH], index: Index) -> Response:
+    """A small picture of the sign for pickers and search results: its most typical drawing
+    in the corpus (from the scholars' sign boxes), or its Unicode character when the corpus
+    has no drawing of it. Sign IDs are matched however they are written (AB1, AB01)."""
+    png = preview_png(index, catalogue_spelling(sign))
+    if png is None:
+        raise HTTPException(404, "No drawing or character for this sign.")
+    return Response(png, media_type="image/png", headers={"Cache-Control": "public, max-age=86400"})
+
+
 @router.get("/glyphs/{sign}/occurrences", response_model=GlyphOccurrencePage, responses=ERRORS)
 def occurrences(sign: Annotated[str, SIGN_PATH], index: Index,
                 limit: Annotated[int, Query(ge=1, le=100)] = 30,
@@ -108,6 +202,44 @@ def limit_body(request: Request) -> None:
     declared = request.headers.get("content-length", "")
     if not declared.isdigit() or int(declared) > glyphembed.MAX_CROP_BYTES + 64 * 1024:
         raise HTTPException(413, "The crop is larger than 2 MB.")
+
+
+MAX_SKETCH_BYTES = 256 * 1024
+
+
+@router.post("/glyphs/sketch", response_model=SketchCandidates, dependencies=[Depends(limit_body)],
+             responses={**ERRORS, 413: {"model": ApiError}, 422: {"model": ApiError}, 429: {"model": ApiError}})
+def sketch(request: Request, file: Annotated[UploadFile, File()],
+           limit: Annotated[int, Form(ge=1, le=30)] = 12) -> SketchCandidates:
+    """The signs that look most like a sketch: a PNG of strokes on a transparent background (as a
+    canvas exports) or dark strokes on a light one. The sketch is redrawn with the corpus
+    tracings' pen and named by the reader (classifier blended with its neighbour bank).
+
+    Public, limited to 60 sketches a minute per address; the image is not stored.
+    """
+    SKETCHES.check(f"address:{request.client.host if request.client else 'unknown'}",
+                   "Too many sketch searches. Try again in a minute.")
+    data = file.file.read(MAX_SKETCH_BYTES + 1)
+    if len(data) > MAX_SKETCH_BYTES:
+        raise HTTPException(413, "The sketch is larger than 256 KB.")
+    SKETCHES.record(f"address:{request.client.host if request.client else 'unknown'}")
+    try:
+        found = sketch_search.candidates(data, top=limit)
+    except glyphembed.BadCrop as error:
+        raise HTTPException(422, str(error)) from error
+    except sketch_search.SketchBusy as error:
+        raise HTTPException(503, str(error)) from error
+    except (FileNotFoundError, RuntimeError) as error:
+        raise HTTPException(503, "The sign reader is unavailable.") from error
+    named = {sign_key(entry.sign): entry for entry in catalogue()}
+    items = []
+    for sign, score in found:
+        entry = named.get(sign_key(sign))
+        items.append(SketchCandidate(
+            sign=entry.sign if entry else sign, name=entry.name if entry else sign,
+            reading=entry.reading if entry else None, glyph=entry.glyph if entry else unicode_glyph(sign),
+            preview_url=f"/glyphs/{entry.sign if entry else sign}/preview.png", score=round(score * 100, 2)))
+    return SketchCandidates(items=items)
 
 
 @router.post("/glyphs/{sign}/occurrences/search", response_model=GlyphOccurrencePage,

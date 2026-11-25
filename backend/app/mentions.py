@@ -7,7 +7,7 @@ from backend.app.model.analysis import DetectedSign
 from backend.app.model.mention import MentionTarget, ResolvedMention
 
 MENTION_PATTERN = re.compile(
-    r'@\[((?:\\[\\\]]|[^\]\\\r\n]){1,255})\]\((user:[0-9]{1,20}|symbol:[0-9]{1,20}:[0-9]{1,20})\)'
+    r'@\[((?:\\[\\\]]|[^\]\\\r\n]){1,255})\]\((user:[0-9]{1,20}|symbol:[0-9]{1,20}:[0-9]{1,20}|sign:[A-Za-z0-9]{1,12})\)'
 )
 MAX_MENTIONS = 20
 
@@ -25,6 +25,7 @@ class MentionReference:
     user_id: int | None = None
     analysis_id: int | None = None
     sign_id: int | None = None
+    sign_code: str | None = None  # a catalogue sign, e.g. "AB81"
 
 
 @dataclass
@@ -52,6 +53,10 @@ def parse_mentions(body: str, *, strict: bool = False) -> list[MentionReference]
     for match in MENTION_PATTERN.finditer(body):
         label = re.sub(r'\\([\\\]])', r'\1', match[1])
         parts = match[2].split(':')
+        if parts[0] == 'sign':
+            references.append(MentionReference(token=match[0], key=match[2], label=label, kind='sign',
+                                               sign_code=parts[1]))
+            continue
         identifier = int(parts[1])
         sign_id = int(parts[2]) if parts[0] == 'symbol' else None
         if not 0 < identifier <= 2**64 - 1 or (sign_id is not None and sign_id > 2**63 - 1):
@@ -102,6 +107,22 @@ def public_symbols(cursor, analysis_ids: set[int]) -> dict[str, PublicSymbol]:
     return symbols
 
 
+def catalogue_signs(wanted: dict[str, str]) -> dict[str, MentionTarget]:
+    """Mentions of catalogue signs (key -> sign as written), with the catalogue's name and the
+    sign's preview picture. A sign not in the catalogue is left out (shown as unavailable)."""
+    if not wanted:
+        return {}
+    from backend.app.data_controller.correction_data_controller import catalogue, sign_key
+    signs = {sign_key(sign.sign): sign for sign in catalogue()}
+    found = {}
+    for key, code in wanted.items():
+        sign = signs.get(sign_key(code))
+        if sign is not None:
+            found[key] = MentionTarget(key=key, kind='sign', label=sign.name, sign_code=sign.sign,
+                                       image_url=f'/api{sign.preview_url}' if sign.preview_url else None)
+    return found
+
+
 def resolve_mentions(cursor, bodies: list[str]) -> list[list[ResolvedMention]]:
     parsed = [parse_mentions(body) for body in bodies]
     user_ids = sorted({ref.user_id for refs in parsed for ref in refs if ref.kind == 'user'})
@@ -115,13 +136,14 @@ def resolve_mentions(cursor, bodies: list[str]) -> list[list[ResolvedMention]]:
             targets[key] = MentionTarget(key=key, kind='user', label=row['username'], user_id=row['id'])
     analyses = {ref.analysis_id for refs in parsed for ref in refs if ref.kind == 'symbol'}
     targets.update({key: item.target for key, item in public_symbols(cursor, analyses).items()})
+    targets.update(catalogue_signs({ref.key: ref.sign_code for refs in parsed for ref in refs if ref.kind == 'sign'}))
     resolved = []
     for refs in parsed:
         mentions = []
         for ref in refs:
             target = targets.get(ref.key) or MentionTarget(
                 key=ref.key, kind=ref.kind, label=ref.label, available=False,
-                user_id=ref.user_id, analysis_id=ref.analysis_id, sign_id=ref.sign_id,
+                user_id=ref.user_id, analysis_id=ref.analysis_id, sign_id=ref.sign_id, sign_code=ref.sign_code,
             )
             mentions.append(ResolvedMention(**target.model_dump(), token=ref.token))
         resolved.append(mentions)
@@ -134,5 +156,5 @@ def validate_mentions(cursor, body: str) -> list[ResolvedMention]:
         raise InvalidMention(f'A comment can contain at most {MAX_MENTIONS} mentions.')
     mentions = resolve_mentions(cursor, [body])[0]
     if any(not mention.available for mention in mentions):
-        raise InvalidMention('A mentioned user or public symbol is no longer available. Remove or replace the mention.')
+        raise InvalidMention('A mentioned user, public symbol or sign is no longer available. Remove or replace the mention.')
     return mentions

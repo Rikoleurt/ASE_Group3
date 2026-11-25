@@ -10,6 +10,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { loadSession, sessionFetch, sessionUser } from '../../state/session'
+import SignPreview from '../signs/SignPreview.vue'
 import '../analysis/linearA.css'
 
 const props = defineProps({
@@ -348,6 +349,7 @@ const when = (iso) => new Date(iso).toISOString().slice(0, 10)
         @click="openTab(tab.sign)"
         @keydown="moveTab($event, index)"
       >
+        <SignPreview :sign="tab.sign" :glyph="characters[tab.sign] || ''" :preview-url="`/glyphs/${encodeURIComponent(tab.sign)}/preview.png`" :size="28" class="mr-2 align-middle" />
         <span v-if="characters[tab.sign]" class="linear-a mr-1 text-lg align-middle" aria-hidden="true" data-testid="glyph-tab-character">{{ characters[tab.sign] }}</span>{{ tab.label }}<span v-if="tab.probability !== undefined"> · {{ percent(tab.probability) }}</span>
       </button>
     </div>

@@ -9,6 +9,7 @@ import ShareAnalysis from '../components/ShareAnalysis.vue'
 import GlyphOccurrencesPane from '../components/glyphs/GlyphOccurrencesPane.vue'
 import SignCorrection from '../components/analysis/SignCorrection.vue'
 import { openCopy } from '../composables/useBoxSet'
+import { catalogueReady } from '../composables/useCatalogue'
 import SymbolDiscussionDialog from '../components/SymbolDiscussionDialog.vue'
 
 const ALLOWED_TYPES = ['image/png', 'image/jpeg']
@@ -81,13 +82,9 @@ async function analyze(file) {
 }
 
 async function loadCatalogue() {
-    if (CATALOGUE.value.length) return
-    try {
-        const response = await fetch('/api/corrections/catalogue')
-        if (response.ok) CATALOGUE.value = await response.json()
-    } catch {
-        // The form still explains that a sign must come from the list.
-    }
+    // Loaded on the first click (the shared catalogue); the form still explains that a sign
+    // must come from the list if it cannot be loaded.
+    if (!CATALOGUE.value.length) CATALOGUE.value = await catalogueReady()
 }
 
 function selectSign(sign) {

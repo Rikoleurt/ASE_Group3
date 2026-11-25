@@ -1,6 +1,8 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { communityApi } from '../../composables/communityApi'
+import { catalogueReady } from '../../composables/useCatalogue'
+import { searchSigns } from '../signs/signSearch'
 import LoadingIndicator from '../LoadingIndicator.vue'
 import { decodeDraft, encodeDraft, updateRanges } from './mentionSyntax'
 
@@ -23,6 +25,17 @@ const loading = ref(false)
 const error = ref('')
 const inputError = ref('')
 const open = computed(() => trigger.value !== null && !props.disabled)
+const CATALOGUE = ref([]) // loaded when the Signs tab is first opened
+watch(kind, async (value) => {
+  if (value === 'sign' && !CATALOGUE.value.length) CATALOGUE.value = await catalogueReady()
+})
+const KINDS = { symbol: 'Symbols of this tablet', sign: 'Signs', user: 'Users' }
+
+// A catalogue sign as a mention: shown with its typical drawing, inserted as @AB81 (ku).
+function signTarget(sign) {
+  return { key: `sign:${sign.sign}`, kind: 'sign', label: sign.name || sign.sign, sign_code: sign.sign,
+    image_url: sign.preview_url ? `/api${sign.preview_url}` : null }
+}
 let generation = 0
 let timer
 let request
@@ -38,6 +51,7 @@ watch(() => props.modelValue, (body) => {
 }, { immediate: true })
 
 function trackSelection() {
+  if (!input.value) return // a late key or click event after the composer was removed
   selection.value = { start: input.value.selectionStart, end: input.value.selectionEnd }
 }
 
@@ -118,6 +132,11 @@ function onKeydown(event) {
 
 async function loadSuggestions(append = false) {
   if (!open.value || loading.value || (append && nextAfter.value === null)) return
+  if (kind.value === 'sign') { // searched here: the catalogue is already loaded for the pickers
+    items.value = searchSigns(CATALOGUE.value, trigger.value.q, 10).map(signTarget)
+    nextAfter.value = null
+    return
+  }
   const current = generation
   const controller = new AbortController()
   request = controller
@@ -137,7 +156,7 @@ async function loadSuggestions(append = false) {
   }
 }
 
-watch([() => trigger.value?.q, kind, () => props.discussionId, () => props.disabled], () => {
+watch([() => trigger.value?.q, kind, () => props.discussionId, () => props.disabled, () => CATALOGUE.value], () => {
   generation++
   request?.abort()
   clearTimeout(timer)
@@ -160,13 +179,13 @@ defineExpose({ insertMention })
       class="mt-2 w-full rounded border border-ink/30 bg-white px-3 py-2"
       @input="onInput" @select="trackSelection" @click="trackSelection(); detectTrigger()"
       @keyup="trackSelection" @keydown="onKeydown" />
-    <p id="mention-help" class="mt-1 text-sm text-ink/70">Type @ to mention a user or a symbol from this tablet.</p>
+    <p id="mention-help" class="mt-1 text-sm text-ink/70">Type @ to mention a user, a symbol from this tablet or a sign (by number or reading).</p>
     <p v-if="inputError" role="alert" class="mt-2 text-conf-low">{{ inputError }}</p>
     <div v-if="open" class="mt-2 rounded-xl border border-ink/20 bg-page p-3 shadow-lg">
       <div role="group" aria-label="Mention type" class="flex gap-2">
-        <button v-for="option in ['symbol', 'user']" :key="option" type="button" :aria-pressed="kind === option"
+        <button v-for="(name, option) in KINDS" :key="option" type="button" :aria-pressed="kind === option"
           class="rounded px-3 py-1 font-semibold hover:bg-bar" :class="kind === option ? 'bg-bar' : 'bg-card'" @click="kind = option">
-          {{ option === 'symbol' ? 'Symbols of this tablet' : 'Users' }}
+          {{ name }}
         </button>
       </div>
       <div role="region" aria-label="Mention results" :aria-busy="loading"
@@ -174,14 +193,14 @@ defineExpose({ insertMention })
         <LoadingIndicator v-if="loading" class="mt-3" label="Loading suggestions…" />
         <p v-if="error" role="alert" class="mt-3 text-conf-low">{{ error }}</p>
         <button v-if="error" type="button" class="mt-2 hover:underline" @click="loadSuggestions(items.length > 0)">Try again</button>
-        <p v-else-if="!loading && !items.length" class="mt-3 text-sm">No matching suggestions.</p>
+        <p v-else-if="!loading && !items.length" class="mt-3 text-sm">{{ kind === 'sign' && !trigger?.q ? 'Type a sign\'s number or reading, e.g. @ku or @AB81.' : 'No matching suggestions.' }}</p>
         <ul id="mention-options" role="listbox" aria-label="Mention suggestions" class="mt-2">
           <li v-for="(item, index) in items" :key="item.key" role="presentation">
             <button :id="`mention-option-${index}`" type="button" role="option" :aria-selected="active === index" tabindex="-1"
               class="flex w-full items-center gap-3 rounded p-2 text-left hover:bg-bar" :class="active === index ? 'bg-bar' : ''"
               @mousedown.prevent @click="choose(item)">
               <img v-if="item.image_url" :src="item.image_url" alt="" loading="lazy" class="h-14 w-14 rounded bg-white object-contain" />
-              <span><strong>@{{ item.label }}</strong><span v-if="item.kind === 'symbol'" class="block text-xs">Occurrence {{ item.sign_id }} · {{ item.tablet_filename }}</span></span>
+              <span><strong>@{{ item.label }}</strong><span v-if="item.kind === 'symbol'" class="block text-xs">Occurrence {{ item.sign_id }} · {{ item.tablet_filename }}</span><span v-else-if="item.kind === 'sign'" class="block text-xs">Sign {{ item.sign_code }} in the catalogue</span></span>
             </button>
           </li>
         </ul>

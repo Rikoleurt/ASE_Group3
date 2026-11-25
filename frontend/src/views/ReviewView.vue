@@ -4,6 +4,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { sessionFetch } from '../state/session'
+import { catalogueReady } from '../composables/useCatalogue'
 import '../components/analysis/linearA.css'
 
 const STATUSES = [
@@ -44,12 +45,8 @@ function proposal(item) {
 }
 
 async function loadGlyphs() {
-  try {
-    const response = await fetch('/api/corrections/catalogue')
-    if (response.ok) GLYPHS.value = Object.fromEntries((await response.json()).map((sign) => [sign.sign, sign.glyph]))
-  } catch {
-    // Glyphs only decorate the sign IDs.
-  }
+  // Glyphs only decorate the sign IDs, so a missing catalogue leaves them plain.
+  GLYPHS.value = Object.fromEntries((await catalogueReady()).map((sign) => [sign.sign, sign.glyph]))
 }
 
 async function load() {
