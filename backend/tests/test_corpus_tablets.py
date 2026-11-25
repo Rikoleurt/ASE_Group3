@@ -186,7 +186,7 @@ def test_tablets_without_a_downloaded_drawing_are_hidden_and_explained(monkeypat
     with TestClient(app) as client:
         page = client.get("/tablets").json()
         assert (page["items"], page["total"], page["without_drawing"]) == ([], 0, 1)
-        assert "la.cli images --tracings-only" in page["hint"]
+        assert "scripts/fetch_corpus.py" in page["hint"]
         missing = client.get("/tablets/HT-1/boxes")
     assert missing.status_code == 404
-    assert "not on this server" in missing.json()["detail"] and "la.cli images" in missing.json()["detail"]
+    assert "not on this server" in missing.json()["detail"] and "scripts/fetch_corpus.py" in missing.json()["detail"]
