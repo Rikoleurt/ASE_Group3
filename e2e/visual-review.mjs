@@ -17,6 +17,7 @@
 //   - at 390 px, touch targets of at least 40 px (text links inside sentences excepted);
 //   - at 1440 px, keyboard focus is visible on the first 25 controls, and the top bar fits on
 //     one line.
+// Pages are loaded with reduced motion, so animations do not catch the checks mid-fade.
 // Writes <out>/shots/*.png, <out>/report.json and <out>/report.md.
 
 import { createRequire } from 'node:module'
@@ -41,7 +42,7 @@ const results = []
 // --- visitors ------------------------------------------------------------------------------
 
 async function visitor(role, width) {
-  const context = await browser.newContext({ viewport: { width, height: HEIGHTS[width] ?? 900 } })
+  const context = await browser.newContext({ viewport: { width, height: HEIGHTS[width] ?? 900 }, reducedMotion: 'reduce' }) // pages at rest: no fade-ins mid-check
   const login = process.env[`VISUAL_${role.toUpperCase()}`]
   if (login) {
     const [email, password] = login.split(/:(.*)/s)
@@ -58,6 +59,7 @@ async function api(context, method, url, data) {
   const csrf = me.ok() ? (await me.json()).csrf_token : undefined
   const response = await context.request.fetch(`${BASE}/api${url}`, {
     method,
+    timeout: 120000, // the first analysis loads the reader
     headers: csrf ? { 'X-CSRF-Token': csrf } : {},
     ...(data instanceof Object && data.multipart ? { multipart: data.multipart } : data ? { data } : {}),
   })

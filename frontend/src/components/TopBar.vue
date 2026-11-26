@@ -67,18 +67,19 @@ const demoLinks = [
     {to: '/tablet-reading', label: 'Tablet reading (HT 13)'},
 ]
 
-const linkClass = 'inline-flex min-h-10 items-center gap-1.5 whitespace-nowrap hover:underline focus-visible:underline'
-const activeClass = 'font-bold underline'
+const linkClass = 'inline-flex min-h-10 min-w-10 items-center justify-center gap-1.5 whitespace-nowrap hover:underline focus-visible:underline'
+const activeClass = 'font-bold underline max-sm:rounded-lg max-sm:bg-black/10' // icons only on phones: a tint marks the page
 const menuClass = 'absolute right-0 top-full z-40 mt-2 min-w-48 rounded-xl bg-card py-2 shadow-lg ring-1 ring-ink/10'
 const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visible:bg-bar'
 </script>
 
 <template>
     <header ref="BAR" class="flex min-h-[60px] items-center justify-between gap-4 bg-bar px-5 py-2 text-ink">
-        <nav class="flex min-w-0 flex-wrap items-center gap-x-5 gap-y-2" aria-label="Main">
+        <nav class="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-1 sm:gap-x-5 sm:gap-y-2" aria-label="Main">
             <RouterLink v-for="link in pageLinks"
                 :key="link.to"
                 :to="link.to"
+                :title="link.label"
                 :class="linkClass"
                 :exact-active-class="link.to === '/' ? activeClass : undefined"
                 :active-class="link.to === '/' ? undefined : activeClass">
@@ -104,7 +105,8 @@ const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visibl
                 </svg>
 
                 <!-- The bold copy reserves the width, so the bar does not shift when a link becomes active. -->
-                <span class="grid">
+                <!-- On phones the icons stand alone (the bar would take four rows); the label stays for screen readers. -->
+                <span class="grid max-sm:sr-only">
                     <span class="invisible col-start-1 row-start-1 font-bold" aria-hidden="true">{{ link.label }}</span>
                     <span class="col-start-1 row-start-1">{{ link.label }}</span>
                 </span>
