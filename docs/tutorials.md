@@ -18,31 +18,35 @@ the feature itself.
   **Not now** or every lesson has been watched.
 - **Content:** the lessons (titles, summaries, steps and the page each one opens) are in
   `frontend/src/state/tutorials.js`.
-- **Files:** the videos are in `frontend/public/tutorials/<lesson>.mp4`, each with a poster
-  `<lesson>.jpg`. All 15 come to about 6 MB.
+- **Files:** the narrated videos are in `frontend/public/tutorials/<lesson>.mp4`, each with a poster
+  `<lesson>.jpg`. All 15 come to about 10 MB.
+
+## Narration
+
+Every caption is also read aloud, by the Windows voice "Microsoft Zira Desktop". Each caption stays
+on screen until it has been read. Readings, sign numbers and file formats are spelt out for the voice
+(`ka-ụ-[de] ta` is read "ka, u with a dot under it, de in square brackets, then ta"; `AB81` is
+"A B 81"). The spellings are listed in `e2e/narration.mjs`. Add one there when a new caption reads
+badly.
 
 ## Re-recording a lesson
 
 Re-record a lesson when the page it shows changes. The recorder drives a real browser through the
-lesson and writes a captioned video:
+lesson, and logs when each caption appears. On Windows it also speaks every caption.
 
 ```bash
 cd e2e && npm ci
 node record-tutorials.mjs out ../path/to/HT-13.png mark-damage,find-a-sign   # or no list: every lesson
+node encode-tutorials.mjs out mark-damage,find-a-sign                       # into frontend/public/tutorials
 ```
 
 - **What it needs:** the frontend running at `BASE` (default `http://localhost:5174`), logged in as
-  an admin, with HT 13's seeded versions and edition, as in the in-memory demo. Chrome must be
-  installed.
-- **Encoding:** encode each `out/<lesson>.webm` into the public folder. 15 fps keeps the files small
-  and the text sharp:
-
-```bash
-ffmpeg -i out/mark-damage.webm -c:v libx264 -preset slow -crf 30 -r 15 -pix_fmt yuv420p \
-  -movflags +faststart -an ../frontend/public/tutorials/mark-damage.mp4
-ffmpeg -ss 15 -i out/mark-damage.webm -frames:v 1 -q:v 8 -vf scale=800:-1 \
-  ../frontend/public/tutorials/mark-damage.jpg
-```
-
-- **New lessons:** add the lesson in `tutorials.js` and in `record-tutorials.mjs`. A test checks that
-  every lesson has its video and poster.
+  an admin, with HT 13's seeded versions and edition, as in the in-memory demo. It also needs Chrome
+  and ffmpeg installed.
+- **What encoding does:** `encode-tutorials.mjs` mixes each caption's voice in at the moment the
+  caption appears. It writes `<lesson>.mp4` (H.264 at 15 fps with mono AAC, so the files stay small
+  and the text sharp) and a poster `<lesson>.jpg`.
+- **Without a voice:** not on Windows, or with `NARRATION=off`, the lessons are recorded silent and
+  encoded without sound.
+- **New lessons:** add the lesson in `frontend/src/state/tutorials.js` and in
+  `record-tutorials.mjs`. A test checks that every lesson has its video and poster.

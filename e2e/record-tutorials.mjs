@@ -3,13 +3,18 @@
 //
 //   cd e2e && node record-tutorials.mjs <out dir> <tablet image.png> [lesson,lesson]
 const { chromium } = await import('@playwright/test').catch(() => import('playwright-core'))
-import { mkdirSync, renameSync, existsSync, rmSync } from 'node:fs'
+import { mkdirSync, renameSync, existsSync, rmSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { CAN_SPEAK, captionsIn, prepare } from './narration.mjs'
 
 const [outDir, tablet] = process.argv.slice(2)
 const BASE = process.env.BASE ?? 'http://localhost:5174'
 const SIZE = { width: 1280, height: 800 }
 mkdirSync(outDir, { recursive: true })
+
+// The narration: every caption spoken in advance, so each one stays up until it has been read out.
+const VOICE_DIR = join(outDir, 'voice')
+const VOICES = CAN_SPEAK ? prepare(captionsIn(readFileSync(new URL(import.meta.url), 'utf8')), VOICE_DIR) : {}
 
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 
@@ -42,9 +47,17 @@ async function scene(name, run) {
   await context.addInitScript(OVERLAY)
   const page = await context.newPage()
   page.setDefaultTimeout(120000)
+  const t0 = Date.now() // the video starts with the page
+  const cues = [] // when each spoken caption appears, for encode-tutorials.mjs
   const say = async (text, ms = 1800) => {
     await page.evaluate((t) => { const c = document.getElementById('demo-caption'); if (c) { c.textContent = t; c.style.display = t ? 'block' : 'none' } }, text)
-    await page.waitForTimeout(ms)
+    if (!text) return page.waitForTimeout(ms)
+    const shown = Date.now()
+    if (!VOICES[text] && CAN_SPEAK) Object.assign(VOICES, prepare([text], VOICE_DIR)) // a caption built at run time
+    const voice = VOICES[text]
+    if (voice) cues.push({ at: (shown - t0) / 1000, wav: voice.wav, text })
+    const wanted = Math.max(ms, voice ? voice.seconds * 1000 + 450 : 0)
+    await page.waitForTimeout(Math.max(0, wanted - (Date.now() - shown)))
   }
   const pause = (ms = 700) => page.waitForTimeout(ms)
   const hover = async (locator) => {
@@ -68,6 +81,7 @@ async function scene(name, run) {
   const target = join(outDir, `${name}.webm`)
   if (existsSync(target)) rmSync(target)
   renameSync(await video.path(), target)
+  writeFileSync(join(outDir, `${name}.cues.json`), JSON.stringify(cues, null, 1))
   console.log('recorded', target)
 }
 
@@ -267,7 +281,7 @@ await lesson('compare-versions', async ({ page, say, click }) => {
   await say('Compare versions: scholars, the reader and colleagues often read a tablet differently.', 2800)
   const rows = page.getByTestId('version')
   await click(rows.nth(0).locator('input'))
-  await click(rows.nth(2).locator('input'))
+  await click(rows.filter({ hasText: "ahmed's copy" }).locator('input'))
   await say('Tick two or more versions, then Compare.', 1600)
   await click(page.getByTestId('compare-versions'))
   await page.getByTestId('agreement').waitFor()
