@@ -30,7 +30,7 @@ describe('Top bar', () => {
   it('lists each main page once, and the HT 13 demos under a menu', async () => {
     await render(null)
     const main = wrapper.findAll('nav[aria-label="Main"] > a').map((a) => a.attributes('href'))
-    expect(main).toEqual(['/', '/analysis', '/tablets', '/signs', '/community', '/benchmarks'])
+    expect(main).toEqual(['/', '/analysis', '/tablets', '/signs', '/community', '/benchmarks', '/tutorials'])
     expect(wrapper.find('a[href="/tablet-demo"]').isVisible()).toBe(false)
     await wrapper.get('[data-testid="demos-menu"]').trigger('click')
     expect(visible('a[href="/tablet-demo"]')).toBe(true)

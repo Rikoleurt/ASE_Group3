@@ -1,7 +1,10 @@
 <script setup>
+import WelcomeTour from '../components/WelcomeTour.vue'
 </script>
 <template>
   <main class="mx-auto flex max-w-3xl flex-col items-center gap-16 px-6 py-16 text-center">
+
+    <WelcomeTour />
 
     <section class="flex flex-col items-center gap-6">
       <h1 class="text-5xl font-light sm:text-7xl">Software Engineering Project Group 3</h1>

@@ -31,6 +31,7 @@ const routes = [
   { path: '/admin', name: 'admin', component: () => import('../views/AdminView.vue') },
   { path: '/box-sets/:id', name: 'box-set', component: () => import('../views/BoxSetView.vue') },
   { path: '/tablets/:slug/compare', name: 'compare', component: () => import('../views/CompareView.vue') },
+  { path: '/tutorials/:lesson?', name: 'tutorials', component: () => import('../views/TutorialsView.vue') },
   { path: '/queues', name: 'queues', component: () => import('../views/QueuesView.vue') },
   { path: '/signs', name: 'signs', component: () => import('../views/SignsView.vue') },
   { path: '/signs/:sign', name: 'sign', component: () => import('../views/SignView.vue') },

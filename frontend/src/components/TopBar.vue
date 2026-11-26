@@ -61,6 +61,7 @@ const pageLinks = [
     {to: '/signs', label: 'Signs', icon: 'pen'},
     {to: '/community', label: 'Community', icon: 'lines'},
     {to: '/benchmarks', label: 'Benchmarks', icon: 'chart'},
+    {to: '/tutorials', label: 'Tutorials', icon: 'play'},
 ]
 const demoLinks = [
     {to: '/tablet-demo', label: 'Tablet demo (HT 13)'},
@@ -99,6 +100,10 @@ const itemClass = 'block whitespace-nowrap px-4 py-1.5 hover:bg-bar focus-visibl
                 <svg v-else-if="link.icon === 'search'" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <circle cx="10.8" cy="10.8" r="7" fill="none" stroke="currentColor" stroke-width="2" />
                     <path d="m16 16 5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                </svg>
+                <svg v-else-if="link.icon === 'play'" class="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2" />
+                    <path fill="currentColor" d="M10 8.5v7l6-3.5z" />
                 </svg>
                 <svg v-else class="h-5 w-5 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
                     <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" d="M3 3v18h18M7 15l4-5 3 3 5-7" />
